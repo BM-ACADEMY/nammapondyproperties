@@ -2,10 +2,8 @@ import React from 'react'
 
 const Header = () => {
   return (
-    <div>
-      admin header
-    </div>
+    <div>Header</div>
   )
 }
 
-export default Header;
+export default Header

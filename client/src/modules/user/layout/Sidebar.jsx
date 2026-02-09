@@ -3,9 +3,9 @@ import React from 'react'
 const Sidebar = () => {
   return (
     <div>
-      admin sidebar
+      user sidebar
     </div>
   )
 }
 
-export default Sidebar;
+export default Sidebar
