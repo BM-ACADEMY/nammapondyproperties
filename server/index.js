@@ -7,14 +7,14 @@ const morgan = require("morgan");
 const connectDB = require("./config/db");
 
 // Import all routes
-const roleRoutes = require("./route/roleRoute");
-const userRoutes = require("./route/userRoute");
-const propertyRoutes = require("./route/propertyRoute");
-const propertyAttributeRoutes = require("./route/propertyAttributeRoute");
-const reviewRoutes = require("./route/reviewRoute");
-const whatsappLeadRoutes = require("./route/whatsappLeadRoute");
-const websiteSettingRoutes = require("./route/websiteSettingRoute");
-const socialMediaRoutes = require("./route/socialMediaRoute");
+const roleRoutes = require("./routes/roleRoute");
+const userRoutes = require("./routes/userRoute");
+const propertyRoutes = require("./routes/propertyRoute");
+const propertyAttributeRoutes = require("./routes/propertyAttributeRoute");
+const reviewRoutes = require("./routes/reviewRoute");
+const whatsappLeadRoutes = require("./routes/whatsappLeadRoute");
+const websiteSettingRoutes = require("./routes/websiteSettingRoute");
+const socialMediaRoutes = require("./routes/socialMediaRoute");
 
 
 const app = express();

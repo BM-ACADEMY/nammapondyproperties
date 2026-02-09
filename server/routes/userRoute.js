@@ -19,5 +19,7 @@ router.post('/send-otp', userController.sendOtp);
 router.post('/verify-otp', userController.verifyOtp);
 // Login with email and OTP (after verification)
 router.post('/login', userController.login);
+// Add this line
+router.post('/reset-password', userController.resetPassword);
 
 module.exports = router;
