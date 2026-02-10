@@ -1,29 +1,76 @@
 // controllers/userController.js
-const User = require('../models/User');
-const crypto = require('crypto'); // For generating OTP
-const nodemailer = require('nodemailer'); // Assume configured for sending emails
-// Note: Configure nodemailer transport in your app
 
-// Helper to send email (configure with your SMTP)
+const User = require('../models/User');
+const Role = require('../models/Role');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+
+// Helper function (keep or improve with env variables)
 const sendEmail = async (to, subject, text) => {
   const transporter = nodemailer.createTransport({
-    // Add your SMTP config here, e.g., Gmail, SendGrid
-    service: 'gmail',
+    service: 'gmail', // ← or use your preferred service
     auth: {
-      user: 'your-email@gmail.com',
-      pass: 'your-password'
-    }
+   user: process.env.USER_EMAIL,     // ← changed
+    pass: process.env.USER_PASS, // better to use app password
+
+    },
   });
-  await transporter.sendMail({ from: 'your-email@gmail.com', to, subject, text });
+
+  await transporter.sendMail({
+    from: process.env.USER_EMAIL, // ← changed
+    to,
+    subject,
+    text,
+  });
 };
 
 exports.createUser = async (req, res) => {
   try {
-    const user = new User(req.body);
+    const { name, email, phone, password } = req.body;
+
+    // Check if email already exists
+    let existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    // Get default "user" role
+    const userRole = await Role.findOne({ role_name: 'user' });
+    if (!userRole) {
+      return res.status(500).json({ error: 'Default user role not found' });
+    }
+
+    // Create user – password will be hashed automatically by pre-save hook
+    const user = new User({
+      name,
+      email,
+      phone,
+      password,           // ← will be hashed in pre('save')
+      role_id: userRole._id,
+      isVerified: false,
+    });
+
     await user.save();
-    res.status(201).json(user);
+
+    // Generate and send OTP for email verification
+    const otp = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6 chars
+    user.otp = otp;
+    user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    await sendEmail(
+      email,
+      'Verify Your Email - OTP',
+      `Welcome! Your OTP is: ${otp}\nIt expires in 10 minutes.`
+    );
+
+    res.status(201).json({
+      message: 'Account created. Please verify your email with the OTP sent.',
+      email: user.email,
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };
 
@@ -105,14 +152,57 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email } = req.body; // Assume OTP verified prior
+  const { email, password, verifiedViaOtp } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select('+password');
+    if (!user) return res.status(401).json({ error: 'User not found' });
+    if (!user.isVerified) return res.status(403).json({ error: 'Account not verified' });
+
+    let authenticated = false;
+
+    if (verifiedViaOtp === true) {
+      // Came from OTP flow → already verified in verifyOtp
+      authenticated = true;
+    } else if (password) {
+      authenticated = await user.comparePassword(password);
+    }
+
+    if (!authenticated) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Return token / user data...
+    res.json({ message: 'Login successful', user: { ...user.toObject(), password: undefined } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Add this new function
+// controllers/userController.js → resetPassword
+
+exports.resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+
   try {
     const user = await User.findOne({ email });
-    if (!user || !user.isVerified) return res.status(401).json({ error: 'Unauthorized or not verified' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-    // Generate JWT or session here (not implemented)
-    res.json({ message: 'Login successful', user });
+    if (!user.isVerified) {
+      return res.status(403).json({ error: 'Account not verified. Please verify first.' });
+    }
+
+    // Optional: add more password strength rules here if needed
+
+    user.password = newPassword; // ← will be hashed by pre-save hook
+    await user.save();
+
+    res.json({ message: 'Password reset successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
