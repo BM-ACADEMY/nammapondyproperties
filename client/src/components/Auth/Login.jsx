@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { Form, Input, Button, message, Card } from 'antd';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_URL; // Consistent with other files
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); // Use AuthContext
 
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      // Ensure API URL is correct. context uses VITE_API_URL.
       const res = await axios.post(`${API}/users/login`, {
         email: values.email,
         password: values.password,
@@ -19,13 +22,20 @@ export default function Login() {
 
       message.success('Login successful!');
 
-      // TODO: Save token/user to localStorage or context
-      // Example:
-      // localStorage.setItem('token', res.data.token);
-      // localStorage.setItem('user', JSON.stringify(res.data.user));
+      if (res.data.success) {
+        login(res.data.user, res.data.token);
 
-      navigate('/dashboard'); // ← change to your protected route
+        // Role based redirect
+        const role = res.data.user?.role?.name?.toUpperCase() || res.data.user?.role_id?.role_name?.toUpperCase();
+        if (role === 'ADMIN') navigate('/admin/dashboard');
+        else if (role === 'SELLER') navigate('/seller/dashboard');
+        else navigate('/');
+      } else {
+        message.error(res.data.message || 'Login failed');
+      }
+
     } catch (err) {
+      console.error(err);
       message.error(err.response?.data?.error || 'Login failed');
     } finally {
       setLoading(false);

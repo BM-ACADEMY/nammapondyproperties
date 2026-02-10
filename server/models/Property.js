@@ -11,7 +11,8 @@ const propertySchema = new mongoose.Schema({
   property_type: { type: String },
   status: { type: String, default: 'available' },
   is_verified: { type: Boolean, default: false },
-  images: [{ image_url: { type: String } }] // Embedded array for images
+  images: [{ image_url: { type: String } }], // Embedded array for images
+  view_count: { type: Number, default: 0 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Property', propertySchema);

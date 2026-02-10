@@ -4,7 +4,7 @@ import { Form, Input, Button, message, Card } from 'antd';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_URL;
 
 export default function Signup() {
   const [loading, setLoading] = useState(false);
@@ -74,14 +74,14 @@ export default function Signup() {
           <Form.Item
             label="Password"
             name="password"
-           rules={[
-  { required: true, message: 'Please enter your password' },
-  { min: 8, message: 'Password must be at least 8 characters' },
-  {
-    pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-    message: 'Password must contain uppercase, lowercase, number & special character',
-  },
-]}
+            rules={[
+              { required: true, message: 'Please enter your password' },
+              { min: 8, message: 'Password must be at least 8 characters' },
+              {
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+                message: 'Password must contain uppercase, lowercase, number & special character',
+              },
+            ]}
           >
             <Input.Password size="large" placeholder="••••••••" />
           </Form.Item>

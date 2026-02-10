@@ -13,5 +13,7 @@ router.get('/fetch-property-by-id/:id', propertyController.getPropertyById);
 router.put('/update-property-by-id/:id', propertyController.updateProperty);
 // Delete a property
 router.delete('/delete-property-by-id/:id', propertyController.deleteProperty);
+// Increment view count
+router.put('/increment-view-count/:id', propertyController.incrementViewCount);
 
 module.exports = router;

@@ -4,14 +4,22 @@ const User = require('../models/User');
 const Role = require('../models/Role');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
+
+// Generate JWT
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  });
+};
 
 // Helper function (keep or improve with env variables)
 const sendEmail = async (to, subject, text) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail', // ← or use your preferred service
     auth: {
-   user: process.env.USER_EMAIL,     // ← changed
-    pass: process.env.USER_PASS, // better to use app password
+      user: process.env.USER_EMAIL,     // ← changed
+      pass: process.env.USER_PASS, // better to use app password
 
     },
   });
@@ -155,7 +163,7 @@ exports.login = async (req, res) => {
   const { email, password, verifiedViaOtp } = req.body;
 
   try {
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select('+password').populate('role_id');
     if (!user) return res.status(401).json({ error: 'User not found' });
     if (!user.isVerified) return res.status(403).json({ error: 'Account not verified' });
 
@@ -173,7 +181,12 @@ exports.login = async (req, res) => {
     }
 
     // Return token / user data...
-    res.json({ message: 'Login successful', user: { ...user.toObject(), password: undefined } });
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: { ...user.toObject(), password: undefined },
+      token: generateToken(user._id),
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -204,5 +217,17 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('role_id');
+    res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server Error' });
   }
 };

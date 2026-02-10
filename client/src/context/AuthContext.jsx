@@ -103,21 +103,13 @@ export const AuthProvider = ({ children }) => {
             const tokenData = await tokenRes.json();
 
             if (tokenData?.success) {
-                setUser({
-                    success: true,
-                    message: "User fetched successfully",
-                    user: userData.user,
-                });
+                setUser(userData.user);
                 setToken(tokenData.token);
 
                 sessionStorage.setItem("token", tokenData.token);
                 sessionStorage.setItem(
                     "user",
-                    encryptData({
-                        success: true,
-                        message: "User fetched successfully",
-                        user: userData.user,
-                    })
+                    encryptData(userData.user)
                 );
             }
         } catch (err) {
@@ -129,6 +121,7 @@ export const AuthProvider = ({ children }) => {
 
     const isAuthenticated = Boolean(user && token);
 
+    // ... (previous code)
     return (
         <AuthContext.Provider
             value={{
@@ -146,3 +139,13 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
+
+export const useAuth = () => {
+    const context = React.useContext(AuthContext);
+    if (!context) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
+    return context;
+};
+
+import React from 'react';

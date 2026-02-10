@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Form, Input, Button, message, Card } from 'antd';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_URL;
 
 export default function ResendOtp() {
   const [loading, setLoading] = useState(false);

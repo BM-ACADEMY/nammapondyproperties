@@ -15,6 +15,7 @@ const reviewRoutes = require("./routes/reviewRoute");
 const whatsappLeadRoutes = require("./routes/whatsappLeadRoute");
 const websiteSettingRoutes = require("./routes/websiteSettingRoute");
 const socialMediaRoutes = require("./routes/socialMediaRoute");
+const testimonialRoutes = require("./routes/testimonialRoute");
 
 
 const app = express();
@@ -70,6 +71,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/whatsapp-leads", whatsappLeadRoutes);
 app.use("/api/website-settings", websiteSettingRoutes);
 app.use("/api/social-media", socialMediaRoutes);
+app.use("/api/testimonials", testimonialRoutes);
 
 
 /* ===============================

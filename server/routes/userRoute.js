@@ -1,25 +1,27 @@
-// routes/userRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { protect } = require('../middleware/authMiddleware');
 
-// Create a new user
-router.post('/create-user', userController.createUser);
-// Get all users
-router.get('/fetch-all-user', userController.getUsers);
-// Get a user by ID
-router.get('/fetch-user-by-id/:id', userController.getUserById);
-// Update a user
-router.put('/update-user-by-id/:id', userController.updateUser);
-// Delete a user
-router.delete('/delete-user-by-id/:id', userController.deleteUser);
-// Send OTP for email verification/login
-router.post('/send-otp', userController.sendOtp);
-// Verify OTP
-router.post('/verify-otp', userController.verifyOtp);
-// Login with email and OTP (after verification)
+// Auth Routes
+router.post('/register', userController.createUser); // Alias for consistency
+router.post('/create-user', userController.createUser); // Legacy support
 router.post('/login', userController.login);
-// Add this line
+router.get('/me', protect, userController.getMe);
+router.post('/send-otp', userController.sendOtp);
+router.post('/verify-otp', userController.verifyOtp);
 router.post('/reset-password', userController.resetPassword);
+
+// User Management Routes (Protected)
+router.get('/fetch-all-user', protect, userController.getUsers); // Legacy support
+router.get('/get-all-users', protect, userController.getUsers);
+
+router.get('/fetch-user-by-id/:id', protect, userController.getUserById); // Legacy support
+router.get('/get-user-by-id/:id', protect, userController.getUserById);
+
+router.put('/update-user-by-id/:id', protect, userController.updateUser);
+
+router.delete('/delete-user-by-id/:id', protect, userController.deleteUser);
 
 module.exports = router;

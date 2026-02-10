@@ -10,9 +10,10 @@ const PrivateRoute = ({ allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  const role = user?.user?.role?.role;
+  // Handle both nested { user: { role: { role } } } and direct { role: { role } } or { role: { name } } structures
+  const role = (user?.user?.role?.role || user?.role?.role || user?.role?.name || user?.role_id?.role_name)?.toUpperCase();
 
-  if (allowedRoles && !allowedRoles.includes(role)) {
+  if (allowedRoles && !allowedRoles.map(r => r.toUpperCase()).includes(role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
