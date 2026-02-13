@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
-import UsersList from "./pages/users/UsersList";
+import Users from "./pages/users/Users";
 import AdminProperties from "./pages/properties/AdminProperties";
 import AdminApprovals from "./pages/approvals/AdminApprovals";
 
@@ -11,9 +11,10 @@ const AdminRoute = () => {
       <Route element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="users" element={<UsersList />} />
+        <Route path="users" element={<Users />} />
         <Route path="properties" element={<AdminProperties />} />
         <Route path="approvals" element={<AdminApprovals />} />
+        <Route path="settings" element={<>setting</>} />
         {/* Settings route can be placeholder too if needed */}
       </Route>
     </Routes>
