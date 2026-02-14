@@ -26,7 +26,6 @@ const Header = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleMobileProperties = () =>
     setIsPropertiesMobileOpen(!isPropertiesMobileOpen);
-  const toggleUserMenu = () => setIsUserMenuOpen(!isUserMenuOpen);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -44,25 +43,6 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     navigate("/login");
-  };
-
-  const getDashboardLink = () => {
-    if (!user) return "/";
-    const role = (
-      user.role?.name ||
-      user.role?.role ||
-      user.role_id?.role_name ||
-      ""
-    )?.toUpperCase();
-
-    switch (role) {
-      case "ADMIN":
-        return "/admin/dashboard";
-      case "SELLER":
-        return "/seller/dashboard";
-      default:
-        return "/user/dashboard";
-    }
   };
 
   // --- Animation Variants ---
@@ -194,11 +174,13 @@ const Header = () => {
             </Link>
 
             {isAuthenticated ? (
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  onClick={toggleUserMenu}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none py-2"
-                >
+              <div
+                className="relative"
+                ref={userMenuRef}
+                onMouseEnter={() => setIsUserMenuOpen(true)}
+                onMouseLeave={() => setIsUserMenuOpen(false)}
+              >
+                <button className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none py-2">
                   <div className="bg-blue-100 p-2 rounded-full transition-transform hover:scale-105 active:scale-95">
                     <User className="h-5 w-5 text-blue-600" />
                   </div>
@@ -221,28 +203,71 @@ const Header = () => {
                         </p>
                       </div>
 
-                      <Link
-                        to="/user/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <User className="h-4 w-4 mr-2 text-gray-500" /> Profile
-                      </Link>
-                      <Link
-                        to="/user/reviews"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <Star className="h-4 w-4 mr-2 text-gray-500" /> Reviews
-                      </Link>
-                      <Link
-                        to={getDashboardLink()}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      >
-                        <LayoutDashboard className="h-4 w-4 mr-2 text-gray-500" />{" "}
-                        Dashboard
-                      </Link>
+                      {/* Role-based Menu Items */}
+                      {(() => {
+                        const role = (
+                          user?.role?.name ||
+                          user?.role?.role ||
+                          user?.role_id?.role_name ||
+                          ""
+                        ).toUpperCase();
+
+                        if (role === "ADMIN") {
+                          return (
+                            <Link
+                              to="/admin/dashboard"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                              onClick={() => setIsUserMenuOpen(false)}
+                            >
+                              <LayoutDashboard className="h-4 w-4 mr-2 text-gray-500" />{" "}
+                              Dashboard
+                            </Link>
+                          );
+                        } else if (role === "SELLER") {
+                          return (
+                            <>
+                              <Link
+                                to="/user/profile"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <User className="h-4 w-4 mr-2 text-gray-500" />{" "}
+                                Profile
+                              </Link>
+                              <Link
+                                to="/seller/dashboard"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <LayoutDashboard className="h-4 w-4 mr-2 text-gray-500" />{" "}
+                                Dashboard
+                              </Link>
+                            </>
+                          );
+                        } else {
+                          // Default USER
+                          return (
+                            <>
+                              <Link
+                                to="/user/profile"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <User className="h-4 w-4 mr-2 text-gray-500" />{" "}
+                                Profile
+                              </Link>
+                              <Link
+                                to="/user/reviews"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <Star className="h-4 w-4 mr-2 text-gray-500" />{" "}
+                                Reviews
+                              </Link>
+                            </>
+                          );
+                        }
+                      })()}
 
                       <div className="border-t border-gray-100 mt-1"></div>
                       <button
@@ -377,27 +402,66 @@ const Header = () => {
                       {user?.name || user?.user?.name}
                     </span>
                   </div>
-                  <Link
-                    to="/user/profile"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
-                  >
-                    <User className="h-4 w-4 mr-2" /> Profile
-                  </Link>
-                  <Link
-                    to="/user/reviews"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
-                  >
-                    <Star className="h-4 w-4 mr-2" /> Reviews
-                  </Link>
-                  <Link
-                    to={getDashboardLink()}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
-                  >
-                    <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
-                  </Link>
+                  {/* Role-based Mobile Menu Items */}
+                  {(() => {
+                    const role = (
+                      user?.role?.name ||
+                      user?.role?.role ||
+                      user?.role_id?.role_name ||
+                      ""
+                    ).toUpperCase();
+
+                    if (role === "ADMIN") {
+                      return (
+                        <Link
+                          to="/admin/dashboard"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
+                        >
+                          <LayoutDashboard className="h-4 w-4 mr-2" /> Dashboard
+                        </Link>
+                      );
+                    } else if (role === "SELLER") {
+                      return (
+                        <>
+                          <Link
+                            to="/user/profile"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
+                          >
+                            <User className="h-4 w-4 mr-2" /> Profile
+                          </Link>
+                          <Link
+                            to="/seller/dashboard"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
+                          >
+                            <LayoutDashboard className="h-4 w-4 mr-2" />{" "}
+                            Dashboard
+                          </Link>
+                        </>
+                      );
+                    } else {
+                      return (
+                        <>
+                          <Link
+                            to="/user/profile"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
+                          >
+                            <User className="h-4 w-4 mr-2" /> Profile
+                          </Link>
+                          <Link
+                            to="/user/reviews"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md flex items-center"
+                          >
+                            <Star className="h-4 w-4 mr-2" /> Reviews
+                          </Link>
+                        </>
+                      );
+                    }
+                  })()}
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-md flex items-center"

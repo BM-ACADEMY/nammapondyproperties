@@ -15,6 +15,7 @@ const AdminRoute = () => {
         <Route path="properties" element={<AdminProperties />} />
         <Route path="approvals" element={<AdminApprovals />} />
         <Route path="settings" element={<>setting</>} />
+        <Route path="properties/add" element={<>types</>}/>
         {/* Settings route can be placeholder too if needed */}
       </Route>
     </Routes>

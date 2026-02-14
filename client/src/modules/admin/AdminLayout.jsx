@@ -1,35 +1,23 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  Building,
-  FileCheck,
-  Settings,
-  LogOut,
-  Menu as MenuIcon,
-  Bell,
-  Search,
-  User,
-  ChevronDown,
-} from "lucide-react";
+import { Menu as MenuIcon, Bell, Search, User, LogOut } from "lucide-react";
 import {
   Layout,
-  Menu,
   Button,
   Avatar,
   Dropdown,
   Badge,
-  Input,
   Breadcrumb,
   theme,
 } from "antd";
 import { useAuth } from "../../context/AuthContext";
+import Sidebar from "./Sidebar";
 
-const { Header, Sider, Content } = Layout;
+const { Header, Content } = Layout;
 
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -42,10 +30,12 @@ const AdminLayout = () => {
   // Handle mobile responsiveness
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setCollapsed(true);
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
+        setCollapsed(true); // Default collapsed on mobile (drawer closed)
       } else {
-        setCollapsed(false);
+        setCollapsed(false); // Default expanded on desktop
       }
     };
 
@@ -56,41 +46,15 @@ const AdminLayout = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Menu items configuration
-  const menuItems = [
-    {
-      key: "/admin/dashboard",
-      icon: <LayoutDashboard size={20} />,
-      label: "Dashboard",
-      onClick: () => navigate("/admin/dashboard"),
-    },
-    {
-      key: "/admin/users",
-      icon: <Users size={20} />,
-      label: "Users",
-      onClick: () => navigate("/admin/users"),
-    },
-    {
-      key: "/admin/properties",
-      icon: <Building size={20} />,
-      label: "Properties",
-      onClick: () => navigate("/admin/properties"),
-    },
-    {
-      key: "/admin/approvals",
-      icon: <FileCheck size={20} />,
-      label: "Approvals",
-      onClick: () => navigate("/admin/approvals"),
-    },
-    {
-      key: "/admin/settings",
-      icon: <Settings size={20} />,
-      label: "Settings",
-      onClick: () => navigate("/admin/settings"),
-    },
-  ];
+  // ... menu parts ...
 
-  // User dropdown menu
+  // ... breadcrumb items ...
+
+  // User dropdown menu & breadcrumb logic remain same, just skipping lines for brevity in instruction if possible, but replace tool needs context.
+  // I will just replace the beginning of the component up to the return.
+
+  // ... (re-implementing the function body to ensure I don't miss anything) ...
+
   const userMenuParts = [
     {
       key: "1",
@@ -151,48 +115,17 @@ const AdminLayout = () => {
 
   return (
     <Layout className="min-h-screen">
-      <Sider
-        trigger={null}
-        collapsible
+      <Sidebar
         collapsed={collapsed}
-        width={250}
-        breakpoint="lg"
-        collapsedWidth="80"
-        className="shadow-xl z-20"
-        style={{
-          background: "#001529",
-          overflow: "auto",
-          height: "100vh",
-          position: "fixed",
-          left: 0,
-          top: 0,
-          bottom: 0,
-        }}
-      >
-        <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg">
-          {collapsed ? (
-            <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
-              NP
-            </div>
-          ) : (
-            <span className="text-white text-lg font-bold tracking-wide">
-              ADMIN PANEL
-            </span>
-          )}
-        </div>
-
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[pathname]}
-          items={menuItems}
-          className="px-2 border-none"
-          style={{ background: "transparent" }}
-        />
-      </Sider>
+        setCollapsed={setCollapsed}
+        isMobile={isMobile}
+      />
 
       <Layout
-        style={{ marginLeft: collapsed ? 80 : 250, transition: "all 0.2s" }}
+        style={{
+          marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
+          transition: "all 0.2s",
+        }}
       >
         <Header
           style={{
@@ -210,8 +143,9 @@ const AdminLayout = () => {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={collapsed ? <MenuIcon size={20} /> : <MenuIcon size={20} />}
+              icon={<MenuIcon size={20} />}
               onClick={() => setCollapsed(!collapsed)}
+              className="lg:hidden" // Hide on large screens
               style={{
                 fontSize: "16px",
                 width: 40,
