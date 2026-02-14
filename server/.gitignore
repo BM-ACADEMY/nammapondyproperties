@@ -1,9 +1,9 @@
 # Node modules
 node_modules/
 
-# Env files
-.env
-.env.local
+# # Env files
+# .env
+# .env.local
 
 # Logs
 logs/
