@@ -13,6 +13,8 @@ import OtpVerify from "./components/Auth/OtpVerify";
 import ForgotPassword from "./components/Auth/ForgotPassword";
 import ResetPassword from "./components/Auth/ResetPassword";
 
+const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
+
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen text-sm text-gray-500">
     Loading...
@@ -78,6 +80,11 @@ const AppRoutes = () => {
       />
 
       {/* Home Page Route (Catch-all for public/home) */}
+      <Route path="/favorites" element={
+        <Suspense fallback={<PageLoader />}>
+          <FavoritesPage />
+        </Suspense>
+      } />
       <Route path="/*" element={<HomePageRoute />} />
 
     </Routes>

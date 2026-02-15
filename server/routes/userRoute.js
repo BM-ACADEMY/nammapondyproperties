@@ -25,6 +25,11 @@ router.put('/update-user-by-id/:id', protect, upload.single('profile_image'), us
 
 router.delete('/delete-user-by-id/:id', protect, userController.deleteUser);
 
+// Wishlist Routes
+router.post('/add-to-wishlist', protect, userController.addToWishlist);
+router.post('/remove-from-wishlist', protect, userController.removeFromWishlist);
+router.get('/wishlist', protect, userController.getWishlist);
+
 // Admin Routes
 router.post('/create-user-by-admin', protect, userController.createUserByAdmin);
 

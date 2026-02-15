@@ -3,7 +3,9 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { MapPin, ArrowRight, BedDouble, Bath, Square, User, Calendar, Home, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import LoginModal from '../../../components/Auth/LoginModal';
 import { useAuth } from '../../../context/AuthContext';
+import WishlistButton from '../../../components/Common/WishlistButton';
 // Ensure AntD is installed, or use custom modal. The user has AntD.
 
 const PropertyDetails = () => {
@@ -117,6 +119,9 @@ const PropertyDetails = () => {
                                 />
                                 <div className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded text-sm font-semibold">
                                     {property.status.toUpperCase()}
+                                </div>
+                                <div className="absolute top-4 right-4 z-10">
+                                    <WishlistButton propertyId={property._id} />
                                 </div>
                             </div>
                             {/* Thumbnails */}

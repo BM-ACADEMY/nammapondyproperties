@@ -4,6 +4,8 @@ import { MapPin, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../../context/AuthContext';
+import LoginModal from '../../../components/Auth/LoginModal';
+import WishlistButton from '../../../components/Common/WishlistButton';
 
 const FeaturedProperties = () => {
     const [properties, setProperties] = useState([]);
@@ -117,6 +119,11 @@ const FeaturedProperties = () => {
                                 <span className="bg-gray-800/80 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-1 rounded">
                                     Delivery Date: Q1 2029
                                 </span>
+                            </div>
+
+                            {/* Wishlist Button - Top Right */}
+                            <div className="absolute top-4 right-4 z-20">
+                                <WishlistButton propertyId={property._id} />
                             </div>
 
                             {/* Bottom Content Area */}

@@ -347,3 +347,58 @@ exports.createUserByAdmin = async (req, res) => {
     res.status(500).json({ error: error.message || 'Server error' });
   }
 };
+
+// Wishlist Controller Methods
+exports.addToWishlist = async (req, res) => {
+  const { propertyId } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.wishlist.includes(propertyId)) {
+      return res.status(400).json({ message: 'Property already in wishlist' });
+    }
+
+    user.wishlist.push(propertyId);
+    await user.save();
+
+    res.status(200).json({ message: 'Property added to wishlist', wishlist: user.wishlist });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.removeFromWishlist = async (req, res) => {
+  const { propertyId } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.wishlist = user.wishlist.filter(id => id.toString() !== propertyId);
+    await user.save();
+
+    res.status(200).json({ message: 'Property removed from wishlist', wishlist: user.wishlist });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.getWishlist = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findById(userId).populate('wishlist');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.status(200).json({ wishlist: user.wishlist });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

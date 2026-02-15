@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema({
   otp: { type: String },
   otpExpires: { type: Date },
   isVerified: { type: Boolean, default: false },
-  profile_image: { type: String } // URL or path to image
+  profile_image: { type: String }, // URL or path to image
+  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Property' }]
 }, { timestamps: true });
 
 // Hash password before saving (only if password is modified)

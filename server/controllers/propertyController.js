@@ -128,11 +128,8 @@ exports.getFilters = async (req, res) => {
     const maxPrice = priceStats[0]?.maxPrice || 10000000;
 
     // Generate smart ranges
-    const priceRanges = [];
-    const step = 2000000; // 20 Lakhs steps, can be adjusted
-    // Or closer to user request "1l- 2l", maybe smaller steps for lower values?
-    // Let's use a tiered approach or simple steps for now.
-    // Let's do: 0-10L, 10L-20L, ... up to max.
+    // const priceRanges = []; // Removed duplicate
+    // const step = 2000000;
 
     // Better: Helper to format Indian currency
     const formatPrice = (price) => {
@@ -141,28 +138,44 @@ exports.getFilters = async (req, res) => {
       return `${price.toLocaleString()}`;
     };
 
-    // Create custom ranges based on max price
-    // Range size: if max < 50L -> 5L steps
-    // if max < 2Cr -> 20L steps
-    // else -> 50L steps
-    let rangeStep = 500000; // Default 5L
-    if (maxPrice > 20000000)
-      rangeStep = 5000000; // 50L
-    else if (maxPrice > 5000000)
-      rangeStep = 1000000; // 10L
-    else if (maxPrice > 2000000)
-      rangeStep = 500000; // 5L
-    else rangeStep = 100000; // 1L for very small
+    // Custom Logic for Smart Ranges based on user request ("1.1 to 1.4 -> round to 1.5")
+    // Use smaller steps for lower values.
+    const priceRanges = [];
 
-    for (let current = 0; current < maxPrice; current += rangeStep) {
-      const next = current + rangeStep;
-      priceRanges.push({
-        label: `${formatPrice(current)} - ${formatPrice(next)}`,
-        min: current,
-        max: next,
-      });
+    const generateRanges = (start, end, step) => {
+      for (let current = start; current < end; current += step) {
+        const next = current + step;
+        priceRanges.push({
+          label: `${formatPrice(current)} - ${formatPrice(next)}`,
+          min: current,
+          max: next,
+        });
+      }
+    };
+
+    // Define Tiers
+    // 0 - 20L -> 2L steps
+    // 20L - 50L -> 5L steps
+    // 50L - 1Cr -> 10L steps
+    // > 1Cr -> 25L steps
+
+    if (maxPrice <= 2000000) {
+      // Max is 20L, use 2L steps
+      generateRanges(0, maxPrice + 200000, 200000);
+    } else if (maxPrice <= 5000000) {
+      // Max is 50L.
+      generateRanges(0, 2000000, 200000); // 0-20L in 2L steps (10 items)
+      generateRanges(2000000, maxPrice + 500000, 500000); // 20L+ in 5L steps
+    } else {
+      // Max is high.
+      generateRanges(0, 2000000, 500000); // 0-20L in 5L steps
+      generateRanges(2000000, 5000000, 500000); // 20-50L in 5L steps
+      generateRanges(5000000, Math.min(maxPrice, 20000000), 2500000); // 50L-2Cr in 25L steps
+
+      if (maxPrice > 20000000) {
+        generateRanges(20000000, maxPrice + 5000000, 5000000); // >2Cr in 50L steps
+      }
     }
-    // Add "Above Max" if needed, or just ensure the loop covers it.
 
     // Filter out null/undefined/empty values
     const cleanLocations = locations.filter((l) => l);
