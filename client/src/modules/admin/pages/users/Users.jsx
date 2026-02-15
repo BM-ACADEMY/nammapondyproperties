@@ -13,13 +13,11 @@ import {
   Search,
   Edit2,
   Trash2,
-  Shield,
   Mail,
   Phone,
-  Filter,
 } from "lucide-react";
-import axios from "axios";
-import { useAuth } from "../../../../context/AuthContext";
+import api from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
@@ -34,9 +32,7 @@ const Users = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/users/get-all-users`,
-      );
+      const res = await api.get("/users/get-all-users");
       setUsers(res.data);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -55,12 +51,11 @@ const Users = () => {
       cancelText: "Cancel",
       onOk: async () => {
         try {
-          await axios.delete(
-            `${import.meta.env.VITE_API_URL}/users/delete-user-by-id/${userId}`,
-          );
+          await api.delete(`/users/delete-user-by-id/${userId}`);
           message.success("User deleted successfully");
           fetchUsers();
         } catch (error) {
+          console.error(error);
           message.error("Failed to delete user");
         }
       },

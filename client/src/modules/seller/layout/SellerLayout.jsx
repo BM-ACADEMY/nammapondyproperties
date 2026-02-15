@@ -1,7 +1,7 @@
 
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Building, PlusCircle, User, LogOut } from "lucide-react";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const SellerLayout = () => {
   const { pathname } = useLocation();

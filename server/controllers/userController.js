@@ -5,6 +5,8 @@ const Role = require('../models/Role');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
+const fs = require('fs');
+const path = require('path');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -84,7 +86,21 @@ exports.createUser = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().populate('role_id');
+    const { role } = req.query;
+    let query = {};
+
+    if (role) {
+      const roleDoc = await Role.findOne({ role_name: role.toLowerCase() });
+      if (roleDoc) {
+        query.role_id = roleDoc._id;
+      } else {
+        // If role name given but not found, return empty list or error?
+        // Let's return empty list to be safe
+        return res.json([]);
+      }
+    }
+
+    const users = await User.find(query).populate('role_id');
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -103,7 +119,49 @@ exports.getUserById = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const userId = req.params.id;
+    let updateData = req.body;
+
+    console.log("Update User Request:");
+    console.log("Content-Type:", req.headers['content-type']);
+    console.log("req.file:", req.file);
+    console.log("req.body:", JSON.stringify(req.body, null, 2));
+
+    // Check if image was uploaded
+    if (req.file) {
+      updateData.profile_image = `/uploads/profiles/${req.file.filename}`;
+
+      // Delete old image if exists
+      const oldUser = await User.findById(userId);
+      if (oldUser && oldUser.profile_image) {
+        const oldImagePath = path.join(__dirname, '..', oldUser.profile_image);
+        // Check if file exists before deleting
+        if (fs.existsSync(oldImagePath)) {
+          try {
+            fs.unlinkSync(oldImagePath);
+          } catch (err) {
+            console.error("Failed to delete old image:", err);
+          }
+        }
+      }
+    } else if (req.body.remove_image === 'true' || req.body.remove_image === true) {
+      // Handle image removal
+      const oldUser = await User.findById(userId);
+      if (oldUser && oldUser.profile_image) {
+        const oldImagePath = path.join(__dirname, '..', oldUser.profile_image);
+        if (fs.existsSync(oldImagePath)) {
+          try {
+            fs.unlinkSync(oldImagePath);
+          } catch (err) {
+            console.error("Failed to delete old image:", err);
+          }
+        }
+      }
+      updateData.profile_image = null; // Or empty string, depending on schema requirements (if required, this fails)
+      // Schema says: profile_image: { type: String } (not required by default unless specified)
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true }).populate('role_id');
     if (!user) return res.status(404).json({ error: 'User not found' });
     res.json(user);
   } catch (error) {
@@ -115,6 +173,19 @@ exports.deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Delete profile image if exists
+    if (user.profile_image) {
+      const imagePath = path.join(__dirname, '..', user.profile_image);
+      if (fs.existsSync(imagePath)) {
+        try {
+          fs.unlinkSync(imagePath);
+        } catch (err) {
+          console.error("Failed to delete user image:", err);
+        }
+      }
+    }
+
     res.json({ message: 'User deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -229,5 +300,50 @@ exports.getMe = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Server Error' });
+  }
+};
+
+exports.createUserByAdmin = async (req, res) => {
+  try {
+    const { name, email, phone, password, role } = req.body;
+
+    // Check if email already exists
+    let existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+
+    // Find Role
+    // Default to 'user' if not specified, or use the one provided (e.g., 'seller')
+    const roleName = role ? role.toLowerCase() : 'user';
+    const userRole = await Role.findOne({ role_name: roleName });
+    if (!userRole) {
+      return res.status(400).json({ error: `Role '${roleName}' not found` });
+    }
+
+    // Create user
+    const user = new User({
+      name,
+      email,
+      phone,
+      password, // hashed by pre-save
+      role_id: userRole._id,
+      isVerified: true, // Admin created users are verified by default
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      message: 'User created successfully by Admin',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: roleName,
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 };

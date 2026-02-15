@@ -11,7 +11,10 @@ const userSchema = new mongoose.Schema({
   status: { type: String, default: 'active' },
   otp: { type: String },
   otpExpires: { type: Date },
-  isVerified: { type: Boolean, default: false }
+  otp: { type: String },
+  otpExpires: { type: Date },
+  isVerified: { type: Boolean, default: false },
+  profile_image: { type: String } // URL or path to image
 }, { timestamps: true });
 
 // Hash password before saving (only if password is modified)
@@ -32,7 +35,7 @@ userSchema.pre('save', async function () {
   }
 });
 // Add a method to compare passwords
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

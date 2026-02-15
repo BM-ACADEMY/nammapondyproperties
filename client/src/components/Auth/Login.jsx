@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Form, Input, Button, message, Card } from 'antd';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 
@@ -9,9 +9,11 @@ const API = import.meta.env.VITE_API_URL; // Consistent with other files
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth(); // Use AuthContext
 
   const onFinish = async (values) => {
+
     setLoading(true);
     try {
       // Ensure API URL is correct. context uses VITE_API_URL.
@@ -23,11 +25,18 @@ export default function Login() {
       message.success('Login successful!');
 
       if (res.data.success) {
+        sessionStorage.setItem('token', res.data.token);
         login(res.data.user, res.data.token);
+
+        // Check for redirect path
+        const from = location.state?.from || '/';
 
         // Role based redirect
         const role = res.data.user?.role?.name?.toUpperCase() || res.data.user?.role_id?.role_name?.toUpperCase();
-        if (role === 'ADMIN') navigate('/admin/dashboard');
+
+        if (location.state?.from) {
+          navigate(location.state.from);
+        } else if (role === 'ADMIN') navigate('/admin/dashboard');
         else if (role === 'SELLER') navigate('/seller/dashboard');
         else navigate('/');
       } else {

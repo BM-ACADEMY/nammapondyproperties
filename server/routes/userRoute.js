@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // Auth Routes
 router.post('/register', userController.createUser); // Alias for consistency
@@ -20,8 +21,11 @@ router.get('/get-all-users', protect, userController.getUsers);
 router.get('/fetch-user-by-id/:id', protect, userController.getUserById); // Legacy support
 router.get('/get-user-by-id/:id', protect, userController.getUserById);
 
-router.put('/update-user-by-id/:id', protect, userController.updateUser);
+router.put('/update-user-by-id/:id', protect, upload.single('profile_image'), userController.updateUser);
 
 router.delete('/delete-user-by-id/:id', protect, userController.deleteUser);
+
+// Admin Routes
+router.post('/create-user-by-admin', protect, userController.createUserByAdmin);
 
 module.exports = router;

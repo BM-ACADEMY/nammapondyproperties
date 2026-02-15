@@ -1,13 +1,45 @@
 // controllers/propertyController.js
+const mongoose = require("mongoose");
 const Property = require("../models/Property");
+const WhatsappLead = require("../models/WhatsappLead");
 
 exports.createProperty = async (req, res) => {
   try {
-    const property = new Property(req.body);
+    console.log("Create Property Request Body:", req.body);
+    console.log("Create Property Files:", req.files);
+
+    // Handle Images
+    let images = [];
+    if (req.files && req.files.length > 0) {
+      images = req.files.map((file) => ({
+        image_url: `/uploads/properties/${file.filename}`,
+      }));
+    }
+
+    // Handle key_attributes parsing if sent as JSON string
+    let key_attributes = req.body.key_attributes;
+    if (typeof key_attributes === 'string') {
+      try {
+        key_attributes = JSON.parse(key_attributes);
+      } catch (e) {
+        console.error("Error parsing key_attributes:", e);
+        key_attributes = [];
+      }
+    }
+
+    const propertyData = {
+      ...req.body,
+      seller_id: (req.user && req.user._id) ? req.user._id : req.body.seller_id,
+      images: images,
+      key_attributes: key_attributes
+    };
+
+    const property = new Property(propertyData);
     await property.save();
     res.status(201).json(property);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("Create Property Error:", error); // Log full error
+    res.status(500).json({ error: error.message }); // Send 500 with message to see it in frontend
   }
 };
 
@@ -22,23 +54,19 @@ exports.getProperties = async (req, res) => {
       minPrice,
       maxPrice,
       approval,
+      is_verified,
     } = req.query;
     const query = {};
 
     if (type) query.property_type = type;
     if (approval) query.approval = approval;
-    if (location) query.location = location; // Exact match for location filter
+    if (location) query.location = location;
+    if (is_verified) query.is_verified = is_verified === 'true';
 
     if (search) {
-      // Search only in title and description, or if location is not selected, also location
       const searchRegex = { $regex: search, $options: "i" };
       const searchConditions = [{ title: searchRegex }];
-      // Only search location if not explicitly filtered?
-      // Actually usually user expects search to work broadly.
-      // But if 'location' filter is set, 'search' might be for keyword.
-      // Let's keep it broad for 'search'.
       searchConditions.push({ location: searchRegex });
-
       query.$or = searchConditions;
     }
 
@@ -62,6 +90,20 @@ exports.getProperties = async (req, res) => {
       currentPage: page,
       totalProperties: count,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.verifyProperty = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+    property.is_verified = !property.is_verified;
+    await property.save();
+    res.json({ message: `Property ${property.is_verified ? "verified" : "unverified"}`, property });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -201,6 +243,46 @@ exports.getPropertyApprovals = async (req, res) => {
     const approvals = Property.APPROVAL_TYPES;
     res.json(approvals);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getSellerStats = async (req, res) => {
+  try {
+    const sellerId = req.user.id; // Assumes auth middleware populates req.user
+
+    // 1. Total Properties
+    const totalProperties = await Property.countDocuments({ seller_id: sellerId });
+
+    // 2. Active Properties
+    const activeProperties = await Property.countDocuments({ seller_id: sellerId, status: 'available' });
+
+    // 3. Total Views (Aggregation)
+    const viewsAggregation = await Property.aggregate([
+      { $match: { seller_id: new mongoose.Types.ObjectId(sellerId) } },
+      { $group: { _id: null, totalViews: { $sum: "$view_count" } } }
+    ]);
+    const totalViews = viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
+
+    // 4. Total Leads
+    const totalLeads = await WhatsappLead.countDocuments({ seller_id: sellerId });
+
+    // 5. Top Performing Properties
+    const topProperties = await Property.find({ seller_id: sellerId })
+      .sort({ view_count: -1 })
+      .limit(5)
+      .select('title view_count status images');
+
+    res.json({
+      totalProperties,
+      activeProperties,
+      totalViews,
+      totalLeads,
+      topProperties
+    });
+
+  } catch (error) {
+    console.error("Error fetching seller stats:", error);
     res.status(500).json({ error: error.message });
   }
 };

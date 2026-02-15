@@ -6,6 +6,7 @@ import {
   Building,
   FileCheck,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -46,10 +47,14 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       children: [
         {
           key: "/admin/users",
-          label: "All Users",
+          label: "User List",
           onClick: () => navigate("/admin/users"),
         },
-        // Add more user sub-items if needed
+        {
+          key: "/admin/sellers",
+          label: "Seller List",
+          onClick: () => navigate("/admin/sellers"),
+        },
       ],
     },
     {
@@ -59,10 +64,27 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => navigate("/admin/approvals"),
     },
     {
-      key: "/admin/settings",
+      key: "/admin/enquiries",
+      icon: <MessageSquare size={20} />,
+      label: "Enquiries",
+      onClick: () => navigate("/admin/enquiries"),
+    },
+    {
+      key: "settings-sub",
       icon: <Settings size={20} />,
       label: "Settings",
-      onClick: () => navigate("/admin/settings"),
+      children: [
+        {
+          key: "/admin/profile",
+          label: "My Profile",
+          onClick: () => navigate("/admin/profile"),
+        },
+        {
+          key: "/admin/settings",
+          label: "General",
+          onClick: () => navigate("/admin/settings"),
+        },
+      ],
     },
   ];
 
@@ -99,7 +121,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         closable={false}
         onClose={() => setCollapsed(true)}
         open={!collapsed}
-        bodyStyle={{ padding: 0, background: "#001529" }}
+        styles={{ body: { padding: 0, background: "#001529" } }}
         width={250}
       >
         {SidebarContent}

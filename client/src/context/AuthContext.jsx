@@ -60,6 +60,8 @@ export const AuthProvider = ({ children }) => {
 
         setUser(userData);
         setToken(authToken);
+        sessionStorage.setItem("token", authToken);
+        sessionStorage.setItem("user", encryptData(userData));
     };
 
     const logout = () => {

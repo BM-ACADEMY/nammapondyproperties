@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Star, MessageSquarePlus } from "lucide-react";
 import { Modal, Form, Input, Rate, Button, message } from "antd";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Testimonials = () => {
   const [testimonials, setTestimonials] = useState([]);

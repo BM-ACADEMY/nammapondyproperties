@@ -1,7 +1,7 @@
 // models/Property.js
 const mongoose = require("mongoose");
 
-const PROPERTY_TYPES = ["Plot", "Villa", "Apartment", "Commercial"];
+const PROPERTY_TYPES = ["Plot", "Villa", "Apartment", "Commercial", "realestate_with_kamar"];
 const APPROVAL_TYPES = ["DTCP", "RERA", "PPA", "CMDA",];
 
 const propertySchema = new mongoose.Schema(
@@ -22,6 +22,7 @@ const propertySchema = new mongoose.Schema(
     images: [{ image_url: { type: String } }], // Embedded array for images
     view_count: { type: Number, default: 0 },
     approval: { type: String, enum: APPROVAL_TYPES }, // e.g., 'DTCP', 'RERA', 'None'
+    key_attributes: [{ key: String, value: String }], // Array of key-value pairs
   },
   { timestamps: true },
 );
