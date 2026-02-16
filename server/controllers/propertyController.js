@@ -18,7 +18,7 @@ exports.createProperty = async (req, res) => {
 
     // Handle key_attributes parsing if sent as JSON string
     let key_attributes = req.body.key_attributes;
-    if (typeof key_attributes === 'string') {
+    if (typeof key_attributes === "string") {
       try {
         key_attributes = JSON.parse(key_attributes);
       } catch (e) {
@@ -29,9 +29,9 @@ exports.createProperty = async (req, res) => {
 
     const propertyData = {
       ...req.body,
-      seller_id: (req.user && req.user._id) ? req.user._id : req.body.seller_id,
+      seller_id: req.user && req.user._id ? req.user._id : req.body.seller_id,
       images: images,
-      key_attributes: key_attributes
+      key_attributes: key_attributes,
     };
 
     const property = new Property(propertyData);
@@ -61,7 +61,7 @@ exports.getProperties = async (req, res) => {
     if (type) query.property_type = type;
     if (approval) query.approval = approval;
     if (location) query.location = location;
-    if (is_verified) query.is_verified = is_verified === 'true';
+    if (is_verified) query.is_verified = is_verified === "true";
 
     if (search) {
       const searchRegex = { $regex: search, $options: "i" };
@@ -103,7 +103,10 @@ exports.verifyProperty = async (req, res) => {
     }
     property.is_verified = !property.is_verified;
     await property.save();
-    res.json({ message: `Property ${property.is_verified ? "verified" : "unverified"}`, property });
+    res.json({
+      message: `Property ${property.is_verified ? "verified" : "unverified"}`,
+      property,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -111,8 +114,11 @@ exports.verifyProperty = async (req, res) => {
 
 exports.getFilters = async (req, res) => {
   try {
-    const types = await Property.distinct("property_type");
-    const approvals = await Property.distinct("approval");
+    const PropertyType = require("../models/PropertyType");
+    const ApprovalType = require("../models/ApprovalType");
+
+    const types = await PropertyType.distinct("name", { status: "active" });
+    const approvals = await ApprovalType.distinct("name", { status: "active" });
     const locations = await Property.distinct("location");
     const priceStats = await Property.aggregate([
       {
@@ -126,10 +132,6 @@ exports.getFilters = async (req, res) => {
 
     const minPrice = priceStats[0]?.minPrice || 0;
     const maxPrice = priceStats[0]?.maxPrice || 10000000;
-
-    // Generate smart ranges
-    // const priceRanges = []; // Removed duplicate
-    // const step = 2000000;
 
     // Better: Helper to format Indian currency
     const formatPrice = (price) => {
@@ -153,12 +155,6 @@ exports.getFilters = async (req, res) => {
       }
     };
 
-    // Define Tiers
-    // 0 - 20L -> 2L steps
-    // 20L - 50L -> 5L steps
-    // 50L - 1Cr -> 10L steps
-    // > 1Cr -> 25L steps
-
     if (maxPrice <= 2000000) {
       // Max is 20L, use 2L steps
       generateRanges(0, maxPrice + 200000, 200000);
@@ -179,12 +175,10 @@ exports.getFilters = async (req, res) => {
 
     // Filter out null/undefined/empty values
     const cleanLocations = locations.filter((l) => l);
-    const cleanApprovals = approvals.filter((a) => a);
 
     res.json({
-      types: Property.PROPERTY_TYPES, // Use defined constants for types to ensure order/completeness
-      approvals:
-        cleanApprovals.length > 0 ? cleanApprovals : Property.APPROVAL_TYPES,
+      types: types,
+      approvals: approvals,
       locations: cleanLocations,
       priceRanges,
       maxPrice,
@@ -244,8 +238,11 @@ exports.incrementViewCount = async (req, res) => {
 
 exports.getPropertyTypes = async (req, res) => {
   try {
-    const types = Property.PROPERTY_TYPES;
-    res.json(types);
+    const PropertyType = require("../models/PropertyType");
+    const types = await PropertyType.find({ status: "active" }).select(
+      "name -_id",
+    );
+    res.json(types.map((t) => t.name));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -253,8 +250,11 @@ exports.getPropertyTypes = async (req, res) => {
 
 exports.getPropertyApprovals = async (req, res) => {
   try {
-    const approvals = Property.APPROVAL_TYPES;
-    res.json(approvals);
+    const ApprovalType = require("../models/ApprovalType");
+    const approvals = await ApprovalType.find({ status: "active" }).select(
+      "name -_id",
+    );
+    res.json(approvals.map((a) => a.name));
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -265,35 +265,42 @@ exports.getSellerStats = async (req, res) => {
     const sellerId = req.user.id; // Assumes auth middleware populates req.user
 
     // 1. Total Properties
-    const totalProperties = await Property.countDocuments({ seller_id: sellerId });
+    const totalProperties = await Property.countDocuments({
+      seller_id: sellerId,
+    });
 
     // 2. Active Properties
-    const activeProperties = await Property.countDocuments({ seller_id: sellerId, status: 'available' });
+    const activeProperties = await Property.countDocuments({
+      seller_id: sellerId,
+      status: "available",
+    });
 
     // 3. Total Views (Aggregation)
     const viewsAggregation = await Property.aggregate([
       { $match: { seller_id: new mongoose.Types.ObjectId(sellerId) } },
-      { $group: { _id: null, totalViews: { $sum: "$view_count" } } }
+      { $group: { _id: null, totalViews: { $sum: "$view_count" } } },
     ]);
-    const totalViews = viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
+    const totalViews =
+      viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
 
     // 4. Total Leads
-    const totalLeads = await WhatsappLead.countDocuments({ seller_id: sellerId });
+    const totalLeads = await WhatsappLead.countDocuments({
+      seller_id: sellerId,
+    });
 
     // 5. Top Performing Properties
     const topProperties = await Property.find({ seller_id: sellerId })
       .sort({ view_count: -1 })
       .limit(5)
-      .select('title view_count status images');
+      .select("title view_count status images");
 
     res.json({
       totalProperties,
       activeProperties,
       totalViews,
       totalLeads,
-      topProperties
+      topProperties,
     });
-
   } catch (error) {
     console.error("Error fetching seller stats:", error);
     res.status(500).json({ error: error.message });

@@ -84,6 +84,21 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "General",
           onClick: () => navigate("/admin/settings"),
         },
+        {
+          key: "/admin/business-types",
+          label: "Business Types",
+          onClick: () => navigate("/admin/business-types"),
+        },
+        {
+          key: "/admin/property-types",
+          label: "Property Types",
+          onClick: () => navigate("/admin/property-types"),
+        },
+        {
+          key: "/admin/approval-types",
+          label: "Approval Types",
+          onClick: () => navigate("/admin/approval-types"),
+        },
       ],
     },
   ];
