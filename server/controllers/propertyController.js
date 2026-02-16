@@ -3,6 +3,17 @@ const mongoose = require("mongoose");
 const Property = require("../models/Property");
 const WhatsappLead = require("../models/WhatsappLead");
 
+const parseJSON = (data) => {
+  if (typeof data === "string") {
+    try {
+      return JSON.parse(data);
+    } catch (e) {
+      return data;
+    }
+  }
+  return data;
+};
+
 exports.createProperty = async (req, res) => {
   try {
     console.log("Create Property Request Body:", req.body);
@@ -16,22 +27,15 @@ exports.createProperty = async (req, res) => {
       }));
     }
 
-    // Handle key_attributes parsing if sent as JSON string
-    let key_attributes = req.body.key_attributes;
-    if (typeof key_attributes === "string") {
-      try {
-        key_attributes = JSON.parse(key_attributes);
-      } catch (e) {
-        console.error("Error parsing key_attributes:", e);
-        key_attributes = [];
-      }
-    }
+    const location = parseJSON(req.body.location);
+    const key_attributes = parseJSON(req.body.key_attributes);
 
     const propertyData = {
       ...req.body,
+      location, // Use parsed location
+      key_attributes,
       seller_id: req.user && req.user._id ? req.user._id : req.body.seller_id,
       images: images,
-      key_attributes: key_attributes,
     };
 
     const property = new Property(propertyData);
@@ -60,13 +64,15 @@ exports.getProperties = async (req, res) => {
 
     if (type) query.property_type = type;
     if (approval) query.approval = approval;
-    if (location) query.location = location;
+    if (location) query["location.city"] = location;
     if (is_verified) query.is_verified = is_verified === "true";
 
     if (search) {
       const searchRegex = { $regex: search, $options: "i" };
       const searchConditions = [{ title: searchRegex }];
-      searchConditions.push({ location: searchRegex });
+      searchConditions.push({ "location.address_line_1": searchRegex });
+      searchConditions.push({ "location.city": searchRegex });
+      searchConditions.push({ "location.state": searchRegex });
       query.$or = searchConditions;
     }
 
@@ -119,7 +125,8 @@ exports.getFilters = async (req, res) => {
 
     const types = await PropertyType.distinct("name", { status: "active" });
     const approvals = await ApprovalType.distinct("name", { status: "active" });
-    const locations = await Property.distinct("location");
+    // Fetch distinct cities instead of full location objects to prevent frontend crashes
+    const locations = await Property.distinct("location.city");
     const priceStats = await Property.aggregate([
       {
         $group: {
@@ -202,12 +209,68 @@ exports.getPropertyById = async (req, res) => {
 
 exports.updateProperty = async (req, res) => {
   try {
-    const property = await Property.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!property) return res.status(404).json({ error: "Property not found" });
+    console.log("Update Property Body:", req.body);
+
+    const { id } = req.params;
+    let property = await Property.findById(id);
+
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    // Helper to parse JSON fields
+    const parseJSON = (data) => {
+      if (typeof data === "string") {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          return data;
+        }
+      }
+      return data;
+    };
+
+    // Handle Location parsing
+    if (req.body.location) {
+      req.body.location = parseJSON(req.body.location);
+    }
+
+    // Handle Key Attributes parsing
+    if (req.body.key_attributes) {
+      req.body.key_attributes = parseJSON(req.body.key_attributes);
+    }
+
+    // Handle Image Deletion
+    const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
+    if (imagesToDelete.length > 0) {
+      property.images = property.images.filter(
+        (img) => !imagesToDelete.includes(img._id.toString()),
+      );
+    }
+
+    // Handle New Images
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map((file) => ({
+        image_url: `/uploads/properties/${file.filename}`,
+      }));
+      property.images.push(...newImages);
+    }
+
+    // Update other fields
+    const updates = { ...req.body };
+    delete updates.images; // Don't overwrite images array directly
+    delete updates.images_to_delete;
+
+    // Prevent overriding existing complex objects with undefined/null if not sent
+    if (!updates.location) delete updates.location;
+    if (!updates.key_attributes) delete updates.key_attributes;
+
+    Object.assign(property, updates);
+
+    await property.save();
     res.json(property);
   } catch (error) {
+    console.error("Update Property Error:", error);
     res.status(400).json({ error: error.message });
   }
 };

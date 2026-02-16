@@ -128,7 +128,9 @@ const FavoritesPage = () => {
                   </div>
                   <div className="flex items-center text-gray-500 text-sm mb-4">
                     <MapPin className="w-4 h-4 mr-1" />
-                    {property.location}
+                    {typeof property.location === "string"
+                      ? property.location
+                      : `${property.location?.city || ""}, ${property.location?.state || ""}`}
                   </div>
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                     {property.description}

@@ -10,7 +10,16 @@ const propertySchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String },
     price: { type: Number, required: true },
-    location: { type: String, required: true },
+    location: {
+      address_line_1: { type: String },
+      address_line_2: { type: String },
+      country: { type: String },
+      state: { type: String },
+      city: { type: String },
+      pincode: { type: String },
+      latitude: { type: Number },
+      longitude: { type: Number },
+    },
     area_size: { type: String },
     property_type: { type: String, required: true }, // Dynamic now
     status: { type: String, default: "available" },
