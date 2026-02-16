@@ -148,7 +148,7 @@ const BusinessTypeManager = () => {
             label="Name"
             rules={[{ required: true, message: "Please enter name" }]}
           >
-            <Input placeholder="e.g. Builder, Agent" />
+            <Input placeholder="e.g. Builder, Agent" disabled={!!editingType} />
           </Form.Item>
 
           <Form.Item name="status" label="Status" initialValue="active">

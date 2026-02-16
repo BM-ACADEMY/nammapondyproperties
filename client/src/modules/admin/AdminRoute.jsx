@@ -12,6 +12,8 @@ import AdminEnquiries from "./pages/enquiries/AdminEnquiries";
 import BusinessTypeManager from "./pages/BusinessTypeManager";
 import PropertyTypeManager from "./pages/PropertyTypeManager";
 import ApprovalTypeManager from "./pages/ApprovalTypeManager";
+import TestimonialManager from "./pages/TestimonialManager";
+import GeneralSettings from "./pages/settings/GeneralSettings";
 
 const AdminRoute = () => {
   return (
@@ -24,14 +26,15 @@ const AdminRoute = () => {
         <Route path="sellers" element={<SellerList />} />{" "}
         {/* Added sellers route */}
         <Route path="profile" element={<AdminProfile />} />
-        <Route path="properties" element={<AdminProperties />} />
+        <Route path="properties" element={<AdminProperties mode="admin" />} />
+        <Route path="seller-listings" element={<AdminProperties mode="seller" />} />
         <Route path="approvals" element={<AdminApprovals />} />
-        <Route path="settings" element={<>setting</>} />
         <Route path="properties/add" element={<AddProperty />} />
         <Route path="enquiries" element={<AdminEnquiries />} />
         <Route path="business-types" element={<BusinessTypeManager />} />
         <Route path="property-types" element={<PropertyTypeManager />} />
         <Route path="approval-types" element={<ApprovalTypeManager />} />
+        <Route path="testimonials" element={<TestimonialManager />} />
         {/* Settings route can be placeholder too if needed */}
       </Route>
     </Routes>

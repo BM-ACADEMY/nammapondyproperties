@@ -7,6 +7,7 @@ import {
   FileCheck,
   Settings,
   MessageSquare,
+  LibraryBig,
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -30,8 +31,13 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       children: [
         {
           key: "/admin/properties",
-          label: "All Properties",
-          onClick: () => navigate("/admin/properties"),
+          label: "Our Properties",
+          onClick: () => navigate("/admin/properties"), // Will need to handle mode via state or query param logic in component
+        },
+        {
+          key: "/admin/seller-listings", // New route for Seller Listings
+          label: "Seller Listings",
+          onClick: () => navigate("/admin/seller-listings"),
         },
         {
           key: "/admin/properties/add",
@@ -57,17 +63,23 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
       ],
     },
-    {
-      key: "/admin/approvals",
-      icon: <FileCheck size={20} />,
-      label: "Approvals",
-      onClick: () => navigate("/admin/approvals"),
-    },
+    // {
+    //   key: "/admin/approvals",
+    //   icon: <FileCheck size={20} />,
+    //   label: "Approvals",
+    //   onClick: () => navigate("/admin/approvals"),
+    // },
     {
       key: "/admin/enquiries",
-      icon: <MessageSquare size={20} />,
-      label: "Enquiries",
+      icon: <LibraryBig size={20} />,
+      label: "Enquiries Properties",
       onClick: () => navigate("/admin/enquiries"),
+    },
+    {
+      key: "/admin/testimonials",
+      icon: <MessageSquare size={20} />, // Reusing icon or using a new one like Star if available
+      label: "Testimonials",
+      onClick: () => navigate("/admin/testimonials"),
     },
     {
       key: "settings-sub",
@@ -78,11 +90,6 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           key: "/admin/profile",
           label: "My Profile",
           onClick: () => navigate("/admin/profile"),
-        },
-        {
-          key: "/admin/settings",
-          label: "General",
-          onClick: () => navigate("/admin/settings"),
         },
         {
           key: "/admin/business-types",

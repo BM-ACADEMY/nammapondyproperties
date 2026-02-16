@@ -10,6 +10,7 @@ const PropertyForm = ({
   onSubmit,
   loading = false,
   isEdit = false,
+  isSeller = false,
 }) => {
   const {
     register,
@@ -17,6 +18,7 @@ const PropertyForm = ({
     handleSubmit,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -37,6 +39,35 @@ const PropertyForm = ({
       key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
     },
   });
+
+  // Reset form when initialData changes (for edit mode)
+  useEffect(() => {
+    if (isEdit && initialData && Object.keys(initialData).length > 0) {
+      // Construct the reset object to match defaultValues structure
+      const resetValues = {
+        title: initialData.title || "",
+        description: initialData.description || "",
+        price: initialData.price || "",
+        area_size: initialData.area_size || "",
+        property_type: initialData.property_type || "",
+        approval: initialData.approval || "",
+        location: {
+          address_line_1: initialData.location?.address_line_1 || "",
+          address_line_2: initialData.location?.address_line_2 || "",
+          country: initialData.location?.country || "IN",
+          state: initialData.location?.state || "",
+          city: initialData.location?.city || "",
+          pincode: initialData.location?.pincode || "",
+        },
+        key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
+      };
+      // We also need to update existing images state
+      setExistingImages(initialData.images || []);
+
+      // Use the reset function from react-hook-form (need to destructure it)
+      reset(resetValues);
+    }
+  }, [initialData, isEdit]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -62,12 +93,13 @@ const PropertyForm = ({
   useEffect(() => {
     const fetchTypes = async () => {
       try {
+        const queryParam = isSeller ? "?role=seller" : "";
         const [pTypes, aTypes] = await Promise.all([
           axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/property-types`,
+            `${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`,
           ),
           axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/approval-types`,
+            `${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`,
           ),
         ]);
         setPropertyTypes(pTypes.data);
@@ -78,7 +110,7 @@ const PropertyForm = ({
       }
     };
     fetchTypes();
-  }, []);
+  }, [isSeller]);
 
   // Handle Image Selection
   const handleImageChange = (e) => {
@@ -480,12 +512,14 @@ const PropertyForm = ({
               className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md h-32"
             >
               <img
-                src={`${import.meta.env.VITE_API_URL}${img.image_url || img}`} // Handle object or string
+                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${img.image_url || img}`} // Handle object or string
                 alt={`Existing ${index}`}
                 className="w-full h-full object-cover"
-                onError={(e) =>
-                  (e.target.src = "https://via.placeholder.com/150")
-                } // Fallback
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='12' fill='%239ca3af' dominant-baseline='middle' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                }} // Fallback
               />
               <button
                 type="button"

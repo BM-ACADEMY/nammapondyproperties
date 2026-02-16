@@ -4,14 +4,14 @@ const router = express.Router();
 const websiteSettingController = require('../controllers/websiteSettingController');
 
 // Create a new website setting
-router.post('/create-website-setting', websiteSettingController.createWebsiteSetting);
+router.post('/', websiteSettingController.createWebsiteSetting);
 // Get all website settings
-router.get('/fetch-all-website-setting', websiteSettingController.getWebsiteSettings);
+router.get('/', websiteSettingController.getWebsiteSettings);
 // Get a website setting by ID
-router.get('/fetch-website-setting-by-id/:id', websiteSettingController.getWebsiteSettingById);
+router.get('/:id', websiteSettingController.getWebsiteSettingById);
 // Update a website setting
-router.put('/update-website-setting-by-id/:id', websiteSettingController.updateWebsiteSetting);
+router.put('/:id', websiteSettingController.updateWebsiteSetting);
 // Delete a website setting
-router.delete('/delete-website-setting-by-id/:id', websiteSettingController.deleteWebsiteSetting);
+router.delete('/:id', websiteSettingController.deleteWebsiteSetting);
 
 module.exports = router;

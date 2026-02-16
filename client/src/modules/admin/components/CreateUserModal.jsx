@@ -88,9 +88,10 @@ const CreateUserModal = ({ visible, onClose, initialRole, refreshData, editingUs
                         { type: "email", message: "Please enter a valid email" },
                     ]}
                 >
-                    {/* Email usually shouldn't be changed easily or needs unique check, disabling for edit simplification or allow if backend handles unique check */}
-                    <Input prefix={<Mail size={16} />} placeholder="Enter email address" disabled={isEdit} />
+                    <Input placeholder="Email" disabled={isEdit} prefix={<Mail size={16} />} />
                 </Form.Item>
+
+
 
                 <Form.Item
                     name="phone"

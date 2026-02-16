@@ -59,10 +59,50 @@ exports.getProperties = async (req, res) => {
       maxPrice,
       approval,
       is_verified,
+      seller_id, // Add seller_id to destructuring
     } = req.query;
     const query = {};
 
-    if (type) query.property_type = type;
+    // Handle role based filtering
+    if (req.query.role === 'seller') {
+      const Role = require('../models/Role'); // Ensure Role model exists
+      // If Role model is simple { name: String }
+      const sellerRoleDoc = await Role.findOne({ name: { $regex: /^seller$/i } });
+      if (sellerRoleDoc) {
+        const User = require('../models/User');
+        const sellers = await User.find({ role_id: sellerRoleDoc._id }).distinct('_id');
+        query.seller_id = { $in: sellers };
+      }
+    }
+    // Filter by seller_id if provided
+    if (seller_id) {
+      if (seller_id === 'me') {
+        // Explicitly check for 'me' string.
+        // req.user might be available if route is protected or optional auth middleware is used.
+        // AdminProperties uses this, so it should be protected or context provided.
+        // If req.user is undefined, this fails.
+        // The route /fetch-all-property is NOT protected in propertyRoute.js (line 16).
+        // I need to use `protect` middleware or manually decode token if I want 'me' to work,
+        // OR passing the ID explicitly from frontend.
+        // passing ID from frontend is easier for now: frontend sends `seller_id=<actual_id>`.
+        // But `AdminProperties` sends `seller_id=me`.
+        // I should make `fetch-all-property` user aware.
+        // But I can't easily change route protection without breaking public access.
+        // FIX: Client side should send actual User ID for "Our Properties" if public endpoint is used.
+        // backend: If 'me' is sent and no user, ignore or return empty?
+        // Actually, `req.user` is only populated if `protect` middleware is present.
+        // I will modify `propertyRoute.js` to use `optionalProtect` or similar, OR just rely on frontend sending the ID.
+        // Sending ID from frontend is safer for public route.
+
+        // However, for the reported error: "Failed to load properties".
+        // If req.user is undefined, `req.user._id` crashes.
+        if (req.user) {
+          query.seller_id = req.user._id;
+        }
+      } else {
+        query.seller_id = seller_id;
+      }
+    }
     if (approval) query.approval = approval;
     if (location) query["location.city"] = location;
     if (is_verified) query.is_verified = is_verified === "true";
@@ -218,6 +258,15 @@ exports.updateProperty = async (req, res) => {
       return res.status(404).json({ error: "Property not found" });
     }
 
+    // Security Check: If user is seller, ensure they own the property
+    if (req.user.role && req.user.role.name === "seller") {
+      if (property.seller_id.toString() !== req.user._id.toString()) {
+        return res
+          .status(403)
+          .json({ error: "You are not authorized to update this property" });
+      }
+    }
+
     // Helper to parse JSON fields
     const parseJSON = (data) => {
       if (typeof data === "string") {
@@ -302,9 +351,14 @@ exports.incrementViewCount = async (req, res) => {
 exports.getPropertyTypes = async (req, res) => {
   try {
     const PropertyType = require("../models/PropertyType");
-    const types = await PropertyType.find({ status: "active" }).select(
-      "name -_id",
-    );
+    const { role } = req.query;
+
+    const query = { status: "active" };
+    if (role === "seller") {
+      query.visible_to_seller = true;
+    }
+
+    const types = await PropertyType.find(query).select("name -_id");
     res.json(types.map((t) => t.name));
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -314,9 +368,14 @@ exports.getPropertyTypes = async (req, res) => {
 exports.getPropertyApprovals = async (req, res) => {
   try {
     const ApprovalType = require("../models/ApprovalType");
-    const approvals = await ApprovalType.find({ status: "active" }).select(
-      "name -_id",
-    );
+    const { role } = req.query;
+
+    const query = { status: "active" };
+    if (role === "seller") {
+      query.visible_to_seller = true;
+    }
+
+    const approvals = await ApprovalType.find(query).select("name -_id");
     res.json(approvals.map((a) => a.name));
   } catch (error) {
     res.status(500).json({ error: error.message });

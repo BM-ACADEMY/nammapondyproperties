@@ -88,6 +88,7 @@ const SellerList = () => {
                 </Tag>
             ),
         },
+
         {
             title: "Action",
             key: "action",

@@ -1,25 +1,36 @@
 import React, { useEffect, useState } from "react";
 import { Table, Tag, Space, Button, message, Popconfirm, Input } from "antd";
 import { Search } from "lucide-react";
-import api from "@/services/api"; // Assuming api service is available
+import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
-const AdminProperties = () => {
+const AdminProperties = ({ mode }) => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchProperties();
-    }, []);
+    }, [mode]);
 
     const fetchProperties = async () => {
         setLoading(true);
         try {
-            // Using the existing endpoint to fetch all properties
-            // Query params can be added for pagination if needed, but for now fetching all (or default limit)
-            const response = await api.get("/properties/fetch-all-property?limit=100");
+            let url = "/properties/fetch-all-property?limit=100";
+            if (mode === 'admin') {
+                // Fetch Admin's own properties
+                if (user && user._id) {
+                    url += `&seller_id=${user._id}`;
+                }
+            } else if (mode === 'seller') {
+                // Fetch ALL Sellers' properties
+                url += "&role=seller";
+            }
+
+            const response = await api.get(url);
             if (response.data && response.data.properties) {
                 setProperties(response.data.properties);
             }
@@ -140,7 +151,13 @@ const AdminProperties = () => {
             key: "action",
             render: (_, record) => (
                 <Space size="middle">
-                    <Button size="small" onClick={() => navigate(`/admin/properties/edit/${record._id}`)} disabled>Edit</Button>
+                    <Button
+                        size="small"
+                        onClick={() => navigate(`/admin/properties/add?edit=${record._id}`)}
+                        disabled={mode === 'seller'} // Disable editing for seller properties
+                    >
+                        Edit
+                    </Button>
                     <Popconfirm
                         title="Delete the property"
                         description="Are you sure to delete this property?"
@@ -158,7 +175,9 @@ const AdminProperties = () => {
     return (
         <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">All Properties</h1>
+                <h1 className="text-2xl font-bold text-gray-800">
+                    {mode === 'seller' ? 'Seller Listings' : 'Our Properties'}
+                </h1>
                 <Button
                     type="primary"
                     onClick={() => navigate("/admin/properties/add")}

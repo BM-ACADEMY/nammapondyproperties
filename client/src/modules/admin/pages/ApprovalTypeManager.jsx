@@ -172,7 +172,7 @@ const ApprovalTypeManager = () => {
             label="Name"
             rules={[{ required: true, message: "Please enter name" }]}
           >
-            <Input placeholder="e.g. DTCP, RERA" />
+            <Input placeholder="e.g. DTCP, RERA" disabled={!!editingType} />
           </Form.Item>
 
           <Form.Item name="status" label="Status" initialValue="active">
@@ -185,7 +185,6 @@ const ApprovalTypeManager = () => {
           <Form.Item
             name="visible_to_seller"
             label="Visible to Seller"
-            valuePropName="checked"
             initialValue={true}
           >
             <Select>

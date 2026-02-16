@@ -172,7 +172,10 @@ const PropertyTypeManager = () => {
             label="Name"
             rules={[{ required: true, message: "Please enter name" }]}
           >
-            <Input placeholder="e.g. Apartment, Villa" />
+            <Input
+              placeholder="e.g. Apartment, Villa"
+              disabled={!!editingType}
+            />
           </Form.Item>
 
           <Form.Item name="status" label="Status" initialValue="active">
@@ -185,7 +188,6 @@ const PropertyTypeManager = () => {
           <Form.Item
             name="visible_to_seller"
             label="Visible to Seller"
-            valuePropName="checked"
             initialValue={true}
           >
             <Select>

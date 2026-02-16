@@ -40,10 +40,8 @@ const AppRoutes = () => {
         <Route path="/favorites" element={<FavoritesPage />} />
       </Route>
 
-      {/* Protected Routes */}
-      <Route
-        element={<PrivateRoute allowedRoles={["ADMIN", "SELLER", "USER"]} />}
-      >
+      {/* User Routes */}
+      <Route element={<PrivateRoute allowedRoles={["USER"]} />}>
         <Route
           path="/user/*"
           element={
@@ -53,6 +51,18 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/become-seller"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <BecomeSeller />
+            </Suspense>
+          }
+        />
+      </Route>
+
+      {/* Seller Routes */}
+      <Route element={<PrivateRoute allowedRoles={["SELLER"]} />}>
+        <Route
           path="/seller/*"
           element={
             <Suspense fallback={<PageLoader />}>
@@ -60,19 +70,15 @@ const AppRoutes = () => {
             </Suspense>
           }
         />
+      </Route>
+
+      {/* Admin Routes */}
+      <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
         <Route
           path="/admin/*"
           element={
             <Suspense fallback={<PageLoader />}>
               <AdminRoute />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/become-seller"
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <BecomeSeller />
             </Suspense>
           }
         />
