@@ -28,6 +28,7 @@ import { toast } from "react-hot-toast";
 import LoginModal from "../../../components/Auth/LoginModal";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
+import { recordPropertyView } from "../../../utils/propertyViewTracker";
 // Ensure AntD is installed, or use custom modal. The user has AntD.
 
 const PropertyDetails = () => {
@@ -66,6 +67,9 @@ const PropertyDetails = () => {
             relatedRes.data.properties.filter((p) => p._id !== id),
           );
         }
+
+        // Record property view (with daily uniqueness check)
+        recordPropertyView(id);
       } catch (error) {
         console.error("Error fetching property details", error);
       } finally {

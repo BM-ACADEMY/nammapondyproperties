@@ -39,4 +39,7 @@ router.get("/filters", propertyController.getFilters);
 // Get Seller Stats (Protected)
 router.get("/seller-stats", protect, propertyController.getSellerStats);
 
+// Get Admin Stats (Protected)
+router.get("/admin-stats", protect, propertyController.getAdminStats);
+
 module.exports = router;

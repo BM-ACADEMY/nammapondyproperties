@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Layout, Menu, Drawer } from "antd";
-import { LayoutDashboard, Building, PlusCircle, User, MessageSquare } from "lucide-react";
+import { LayoutDashboard, Building, PlusCircle, User, MessageSquare, Settings } from "lucide-react";
 
 const { Sider } = Layout;
 
@@ -16,21 +16,26 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => navigate("/seller/dashboard"),
     },
     {
-      key: "/seller/my-properties",
+      key: "properties",
       icon: <Building size={20} />,
-      label: "My Properties",
-      onClick: () => navigate("/seller/my-properties"),
-    },
-    {
-      key: "/seller/add-property",
-      icon: <PlusCircle size={20} />,
-      label: "Add Property",
-      onClick: () => navigate("/seller/add-property"),
+      label: "Properties",
+      children: [
+        {
+          key: "/seller/my-properties",
+          label: "My Properties",
+          onClick: () => navigate("/seller/my-properties"),
+        },
+        {
+          key: "/seller/add-property",
+          label: "Add Property",
+          onClick: () => navigate("/seller/add-property"),
+        },
+      ],
     },
     {
       key: "/seller/enquiries",
       icon: <MessageSquare size={20} />,
-      label: "Enquiries",
+      label: "Enquiry Property",
       onClick: () => navigate("/seller/enquiries"),
     },
     {

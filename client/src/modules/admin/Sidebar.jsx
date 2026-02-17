@@ -8,6 +8,7 @@ import {
   Settings,
   MessageSquare,
   LibraryBig,
+  Megaphone,
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -79,6 +80,12 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <LibraryBig size={20} />,
       label: "Enquiries Properties",
       onClick: () => navigate("/admin/enquiries"),
+    },
+    {
+      key: "/admin/advertisements",
+      icon: <Megaphone size={20} />,
+      label: "Advertisements",
+      onClick: () => navigate("/admin/advertisements"),
     },
     {
       key: "/admin/testimonials",

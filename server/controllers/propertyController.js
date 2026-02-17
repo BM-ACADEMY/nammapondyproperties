@@ -485,3 +485,79 @@ exports.getSellerStats = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getAdminStats = async (req, res) => {
+  try {
+    const User = require("../models/User");
+    const Enquiry = require("../models/WhatsappLead");
+
+    // 1. Total Users
+    const totalUsers = await User.countDocuments();
+
+    // 2. Total Properties
+    const totalProperties = await Property.countDocuments();
+
+    // 3. Pending Approvals (properties pending admin approval)
+    const pendingApprovals = await Property.countDocuments({
+      is_verified: false,
+    });
+
+    // 4. Total Views (All Properties)
+    const viewsAggregation = await Property.aggregate([
+      { $group: { _id: null, totalViews: { $sum: "$view_count" } } },
+    ]);
+    const siteVisits = viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
+
+    // 5. Total Enquiries
+    const totalEnquiries = await Enquiry.countDocuments();
+
+    // 6. Property Distribution by Type
+    const propertyDistribution = await Property.aggregate([
+      { $group: { _id: "$type", count: { $sum: 1 } } },
+    ]);
+    const propertyData = propertyDistribution.map(item => ({
+      name: item._id || "Other",
+      value: item.count
+    }));
+
+    // 7. Pending Properties (for table)
+    const pendingProperties = await Property.find({ is_verified: false })
+      .populate("seller_id", "name")
+      .limit(5)
+      .select("title seller_id is_verified createdAt")
+      .sort({ createdAt: -1 });
+
+    // 8. Recent Activity
+    const recentProperties = await Property.find()
+      .populate("seller_id", "name")
+      .limit(5)
+      .select("title seller_id createdAt")
+      .sort({ createdAt: -1 });
+
+    const recentActivity = recentProperties.map(prop => ({
+      title: `New Property "${prop.title}" added`,
+      seller: prop.seller_id?.name || "Unknown",
+      time: prop.createdAt,
+    }));
+
+    res.json({
+      totalUsers,
+      totalProperties,
+      pendingApprovals,
+      siteVisits,
+      totalEnquiries,
+      propertyData,
+      pendingProperties: pendingProperties.map(p => ({
+        key: p._id,
+        property: p.title,
+        seller: p.seller_id?.name || "Unknown",
+        status: "Pending",
+        id: p._id
+      })),
+      recentActivity,
+    });
+  } catch (error) {
+    console.error("Error fetching admin stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

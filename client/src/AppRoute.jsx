@@ -37,8 +37,9 @@ const AppRoutes = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/seller-register" element={<SellerRegister />} />
-          <Route path="/about" element={<About />} />
         </Route>
+        {/* Public pages accessible to everyone */}
+        <Route path="/about" element={<About />} />
         <Route path="/favorites" element={<FavoritesPage />} />
       </Route>
 

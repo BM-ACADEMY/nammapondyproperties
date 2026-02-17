@@ -74,6 +74,7 @@ const PropertyForm = ({
         pincode: initialData?.location?.pincode || "",
       },
       key_attributes: initialData?.key_attributes || [{ key: "", value: "" }],
+      advertiseOnSocialMedia: initialData?.advertiseOnSocialMedia || false,
     },
   });
 
@@ -100,6 +101,7 @@ const PropertyForm = ({
           longitude: initialData.location?.longitude || "",
         },
         key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
+        advertiseOnSocialMedia: initialData.advertiseOnSocialMedia || false,
       };
       // We also need to update existing images state
       setExistingImages(initialData.images || []);
@@ -252,6 +254,9 @@ const PropertyForm = ({
     if (isEdit && imagesToDelete.length > 0) {
       formData.append("images_to_delete", JSON.stringify(imagesToDelete));
     }
+
+    // Advertisement flag
+    formData.append("advertiseOnSocialMedia", data.advertiseOnSocialMedia);
 
     onSubmit(formData);
   };
@@ -679,6 +684,31 @@ const PropertyForm = ({
           ))}
         </div>
       </div>
+
+      {/* Advertisement Opt-in */}
+      {isSeller && (
+        <div className="border-t pt-6">
+          <div className="flex items-start space-x-3">
+            <input
+              type="checkbox"
+              {...register("advertiseOnSocialMedia")}
+              id="advertiseOnSocialMedia"
+              className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            <div className="flex-1">
+              <label
+                htmlFor="advertiseOnSocialMedia"
+                className="block text-sm font-medium text-gray-700 cursor-pointer"
+              >
+                Advertise this property on social media
+              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Enable this to allow admins to promote your property and contact details on social media platforms.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex justify-end pt-4">
         <button
