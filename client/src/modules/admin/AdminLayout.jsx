@@ -12,12 +12,14 @@ import {
 } from "antd";
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "./Sidebar";
+import api from "@/services/api";
 
 const { Header, Content } = Layout;
 
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
@@ -26,6 +28,24 @@ const AdminLayout = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
+
+  // Fetch pending approvals count
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const response = await api.get("/properties/admin-stats");
+        setPendingCount(response.data.pendingApprovals || 0);
+      } catch (error) {
+        console.error("Error fetching pending approvals count:", error);
+        setPendingCount(0);
+      }
+    };
+
+    fetchPendingCount();
+    // Refresh count every minute
+    const interval = setInterval(fetchPendingCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle mobile responsiveness
   useEffect(() => {
@@ -159,17 +179,16 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center bg-gray-50 rounded-full px-4 py-1.5 border border-gray-200 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-              <Search size={16} className="text-gray-400 mr-2" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent border-none outline-none text-sm w-32 focus:w-48 transition-all"
-              />
-            </div>
+            
 
-            <Badge count={5} size="small" offset={[-2, 2]}>
-              <Button type="text" shape="circle" icon={<Bell size={20} />} />
+            <Badge count={pendingCount} size="small" offset={[-2, 2]}>
+              <Button
+                type="text"
+                shape="circle"
+                icon={<Bell size={20} />}
+                onClick={() => navigate("/admin/properties")}
+                title="Pending approvals"
+              />
             </Badge>
 
             <Dropdown
