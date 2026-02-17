@@ -7,11 +7,16 @@ import UserRoutes from "./modules/user/routes/UserRoutes";
 import SellerRoute from "./modules/seller/Routes/SellerRoute";
 import AdminRoute from "./modules/admin/AdminRoute";
 import HomePageRoute from "./modules/home/routes/HomePageRoute";
+import HomeLayout from "./modules/home/layout/HomeLayout";
 import Login from "./components/Auth/Login"; // Import Login
 import Signup from "./components/Auth/Signup";
 import OtpVerify from "./components/Auth/OtpVerify";
 import ForgotPassword from "./components/Auth/ForgotPassword";
 import ResetPassword from "./components/Auth/ResetPassword";
+import SellerRegister from "./modules/auth/SellerRegister";
+import BecomeSeller from "./modules/user/BecomeSeller";
+
+const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen text-sm text-gray-500">
@@ -22,27 +27,21 @@ const PageLoader = () => (
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public Routes (Accessible only if NOT logged in) */}
-      <Route element={<PublicRoute />}>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/otp-verify" element={<OtpVerify />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+      <Route element={<HomeLayout />}>
+        {/* Public Routes (Accessible only if NOT logged in) */}
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/otp-verify" element={<OtpVerify />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/seller-register" element={<SellerRegister />} />
+        </Route>
+        <Route path="/favorites" element={<FavoritesPage />} />
       </Route>
 
-      {/* Protected Routes */}
-      <Route
-        element={
-          <PrivateRoute
-            allowedRoles={[
-              "ADMIN",
-              "SELLER",
-              "USER",
-            ]}
-          />
-        }
-      >
+      {/* User Routes */}
+      <Route element={<PrivateRoute allowedRoles={["USER"]} />}>
         <Route
           path="/user/*"
           element={
@@ -52,6 +51,18 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/become-seller"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <BecomeSeller />
+            </Suspense>
+          }
+        />
+      </Route>
+
+      {/* Seller Routes */}
+      <Route element={<PrivateRoute allowedRoles={["SELLER"]} />}>
+        <Route
           path="/seller/*"
           element={
             <Suspense fallback={<PageLoader />}>
@@ -59,6 +70,10 @@ const AppRoutes = () => {
             </Suspense>
           }
         />
+      </Route>
+
+      {/* Admin Routes */}
+      <Route element={<PrivateRoute allowedRoles={["ADMIN"]} />}>
         <Route
           path="/admin/*"
           element={
@@ -79,7 +94,6 @@ const AppRoutes = () => {
 
       {/* Home Page Route (Catch-all for public/home) */}
       <Route path="/*" element={<HomePageRoute />} />
-
     </Routes>
   );
 };

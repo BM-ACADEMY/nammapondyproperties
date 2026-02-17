@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion
 import {
   Menu,
@@ -11,6 +11,7 @@ import {
   Heart,
   ChevronDown,
   Star,
+  Briefcase,
 } from "lucide-react";
 
 const Header = () => {
@@ -18,6 +19,7 @@ const Header = () => {
   const [isPropertiesMobileOpen, setIsPropertiesMobileOpen] = useState(false); // Renamed for clarity
   const [isPropertiesDesktopOpen, setIsPropertiesDesktopOpen] = useState(false); // New state for desktop hover
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false); // For Login Dropdown
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated } = useAuth();
@@ -201,6 +203,9 @@ const Header = () => {
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {user?.name || user?.user?.name || "User"}
                         </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          ID: {user?.customId || user?.user?.customId || "N/A"}
+                        </p>
                       </div>
 
                       {/* Role-based Menu Items */}
@@ -226,14 +231,6 @@ const Header = () => {
                         } else if (role === "SELLER") {
                           return (
                             <>
-                              <Link
-                                to="/user/profile"
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <User className="h-4 w-4 mr-2 text-gray-500" />{" "}
-                                Profile
-                              </Link>
                               <Link
                                 to="/seller/dashboard"
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
@@ -264,6 +261,14 @@ const Header = () => {
                                 <Star className="h-4 w-4 mr-2 text-gray-500" />{" "}
                                 Reviews
                               </Link>
+                              <Link
+                                to="/become-seller"
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
+                                onClick={() => setIsUserMenuOpen(false)}
+                              >
+                                <Briefcase className="h-4 w-4 mr-2 text-gray-500" />{" "}
+                                Become a Seller
+                              </Link>
                             </>
                           );
                         }
@@ -281,12 +286,42 @@ const Header = () => {
                 </AnimatePresence>
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="bg-blue-600 text-white px-5 py-2.5 rounded-full hover:bg-blue-700 transition duration-300 font-medium shadow-md hover:shadow-lg flex items-center"
+              <div
+                className="relative"
+                onMouseEnter={() => setIsLoginMenuOpen(true)}
+                onMouseLeave={() => setIsLoginMenuOpen(false)}
               >
-                <User className="h-4 w-4 mr-2" /> Login
-              </Link>
+                <button className="bg-blue-600 text-white px-5 py-2.5 rounded-full hover:bg-blue-700 transition duration-300 font-medium shadow-md hover:shadow-lg flex items-center focus:outline-none">
+                  <User className="h-4 w-4 mr-2" /> Login
+                  <ChevronDown
+                    className={`ml-1 h-4 w-4 transition-transform duration-200 ${isLoginMenuOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                <AnimatePresence>
+                  {isLoginMenuOpen && (
+                    <motion.div
+                      variants={dropdownVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl py-2 z-50 border border-gray-100"
+                    >
+                      <Link
+                        to="/login"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/seller-register"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      >
+                        Become a Seller
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
           </div>
 

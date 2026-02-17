@@ -46,7 +46,7 @@ const Profile = () => {
     setIsSaving(true);
     setMessage(null);
     try {
-      const token = sessionStorage.getItem("token");
+      const token = localStorage.getItem("token");
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/users/update-user-by-id/${user._id}`,
         formData,
@@ -54,7 +54,7 @@ const Profile = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data) {
@@ -104,7 +104,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50/50 p-4 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto space-y-6">
-        
         {/* Toast Notification */}
         <AnimatePresence>
           {message && (
@@ -118,7 +117,11 @@ const Profile = () => {
                   : "bg-red-500/90 text-white border-red-400"
               }`}
             >
-              {message.type === "success" ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
+              {message.type === "success" ? (
+                <CheckCircle size={18} />
+              ) : (
+                <AlertCircle size={18} />
+              )}
               <span className="font-medium">{message.text}</span>
             </motion.div>
           )}
@@ -127,27 +130,29 @@ const Profile = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-200">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Account Settings</h1>
-            <p className="text-gray-500 mt-1">Manage your profile information and account security.</p>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+              Account Settings
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Manage your profile information and account security.
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
           {/* LEFT COLUMN: Identity Card */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="lg:col-span-1"
           >
             <div className="bg-white rounded-2xl shadow-2xl shadow-indigo-100/50 border border-gray-300 overflow-hidden relative">
-              
               {/* --- IMAGE COVER AREA --- */}
               <div className="h-32 relative">
-                <img 
-                    src="/banner1.png" 
-                    alt="Profile Cover" 
-                    className="w-full h-full object-cover"
+                <img
+                  src="/banner1.png"
+                  alt="Profile Cover"
+                  className="w-full h-full object-cover"
                 />
                 {/* Optional overlay to make text readable if you add text over image later */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -158,14 +163,19 @@ const Profile = () => {
                 <div className="relative inline-block -mt-16 mb-4">
                   <div className="w-24 h-24 rounded-full border-4 border-white bg-indigo-50 shadow-lg flex items-center justify-center text-4xl font-bold text-indigo-600 uppercase overflow-hidden">
                     {/* You can add a user avatar image here if available, or keep initials */}
-                     <div className="w-full h-full flex items-center justify-center bg-yellow-100">
-                        {user.name ? user.name.charAt(0) : " "}
-                     </div>
+                    <div className="w-full h-full flex items-center justify-center bg-yellow-100">
+                      {user.name ? user.name.charAt(0) : " "}
+                    </div>
                   </div>
                 </div>
-                
+
                 <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                <p className="text-sm text-gray-500 mb-4">{user.email}</p>
+                <div className="flex justify-center items-center gap-2 mb-2">
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+                    ID: {user.customId || "N/A"}
+                  </span>
+                </div>
 
                 <div className="flex justify-center gap-2 mb-6">
                   {user.isVerified ? (
@@ -189,7 +199,7 @@ const Profile = () => {
           </motion.div>
 
           {/* RIGHT COLUMN: Edit Form */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -198,8 +208,12 @@ const Profile = () => {
             <div className="bg-white rounded-2xl shadow-xl shadow-indigo-100/50 border border-gray-300 p-6 md:p-8">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-900">Personal Information</h3>
-                    <p className="text-sm text-gray-500">Update your personal details here.</p>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Personal Information
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Update your personal details here.
+                  </p>
                 </div>
                 {!isEditing ? (
                   <button
@@ -272,7 +286,9 @@ const Profile = () => {
                     </div>
                     <div className="block w-full pl-10 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed">
                       {user.email}
-                      <span className="float-right text-xs text-gray-400 mt-1 italic">Cannot be changed</span>
+                      <span className="float-right text-xs text-gray-400 mt-1 italic">
+                        Cannot be changed
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -296,7 +312,9 @@ const Profile = () => {
                         className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
                       />
                     ) : (
-                      <div className={`block w-full pl-10 pr-3 py-2.5 border border-transparent border-b-gray-100 ${!user.phone ? "text-gray-400 italic" : "text-gray-700"}`}>
+                      <div
+                        className={`block w-full pl-10 pr-3 py-2.5 border border-transparent border-b-gray-100 ${!user.phone ? "text-gray-400 italic" : "text-gray-700"}`}
+                      >
                         {user.phone || "No phone number added"}
                       </div>
                     )}

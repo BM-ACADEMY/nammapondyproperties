@@ -1,48 +1,47 @@
-
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
 const protect = async (req, res, next) => {
-    let token;
+  let token;
 
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
-    ) {
-        try {
-            // Get token from header
-            token = req.headers.authorization.split(' ')[1];
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      // Get token from header
+      token = req.headers.authorization.split(" ")[1];
 
-            // Verify token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // Get user from the token
-            req.user = await User.findById(decoded.id).select('-password');
+      // Get user from the token
+      req.user = await User.findById(decoded.id)
+        .select("-password")
+        .populate("role_id");
 
-            next();
-        } catch (error) {
-            console.error(error);
-            res.status(401).json({ error: 'Not authorized, token failed' });
-        }
+      next();
+    } catch (error) {
+      console.error(error);
+      res.status(401).json({ error: "Not authorized, token failed" });
     }
+  }
 
-    if (!token) {
-        res.status(401).json({ error: 'Not authorized, no token' });
-    }
+  if (!token) {
+    res.status(401).json({ error: "Not authorized, no token" });
+  }
 };
 
-const authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!roles.includes(req.user.role_id.role_name)) { // Assuming role_id populated and has role_name
-            // Wait, req.user from protect might not populate role_id deeply if not specified.
-            // protect calls User.findById(decoded.id).select('-password');
-            // Mongoose findById doesn't auto-populate if not chained.
-            // So I need to update protect to populate role_id.
-            return res.status(403).json({ error: `User role ${req.user.role} is not authorized to access this route` });
-        }
-        next();
-    }
-}
+const admin = (req, res, next) => {
+  if (
+    req.user &&
+    req.user.role_id &&
+    req.user.role_id.role_name.toLowerCase() === "admin"
+  ) {
+    next();
+  } else {
+    res.status(403).json({ error: "Not authorized as an admin" });
+  }
+};
 
-
-module.exports = { protect };
+module.exports = { protect, admin };

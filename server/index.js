@@ -5,6 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const connectDB = require("./config/db");
+const path = require("path");
 
 // Import all routes
 const roleRoutes = require("./routes/roleRoute");
@@ -16,7 +17,11 @@ const whatsappLeadRoutes = require("./routes/whatsappLeadRoute");
 const websiteSettingRoutes = require("./routes/websiteSettingRoute");
 const socialMediaRoutes = require("./routes/socialMediaRoute");
 const testimonialRoutes = require("./routes/testimonialRoute");
-
+const enquiryRoutes = require("./routes/enquiryRoute");
+const businessTypeRoutes = require("./routes/businessTypeRoute");
+const propertyTypeRoutes = require("./routes/propertyTypeRoute");
+const approvalTypeRoutes = require("./routes/approvalTypeRoute");
+const sellerRequestRoutes = require("./routes/sellerRequestRoute");
 
 const app = express();
 
@@ -31,6 +36,9 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve Static Files (ensure this is before routes or handled correctly)
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // Cookies
 app.use(cookieParser());
 
@@ -39,7 +47,7 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:3000", // better default than *
     credentials: true,
-  })
+  }),
 );
 
 /* ===============================
@@ -72,7 +80,11 @@ app.use("/api/whatsapp-leads", whatsappLeadRoutes);
 app.use("/api/website-settings", websiteSettingRoutes);
 app.use("/api/social-media", socialMediaRoutes);
 app.use("/api/testimonials", testimonialRoutes);
-
+app.use("/api/enquiries", enquiryRoutes);
+app.use("/api/business-types", businessTypeRoutes);
+app.use("/api/property-types", propertyTypeRoutes);
+app.use("/api/approval-types", approvalTypeRoutes);
+app.use("/api/seller-requests", sellerRequestRoutes);
 
 /* ===============================
    404 Handler (must be last route)

@@ -6,6 +6,8 @@ import {
   Building,
   FileCheck,
   Settings,
+  MessageSquare,
+  LibraryBig,
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -29,8 +31,18 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       children: [
         {
           key: "/admin/properties",
-          label: "All Properties",
-          onClick: () => navigate("/admin/properties"),
+          label: "Our Properties",
+          onClick: () => navigate("/admin/properties"), // Will need to handle mode via state or query param logic in component
+        },
+        {
+          key: "/admin/seller-listings", // New route for Seller Listings
+          label: "Seller Listings",
+          onClick: () => navigate("/admin/seller-listings"),
+        },
+        {
+          key: "/admin/seller-requests",
+          label: "Seller Requests",
+          onClick: () => navigate("/admin/seller-requests"),
         },
         {
           key: "/admin/properties/add",
@@ -46,23 +58,60 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       children: [
         {
           key: "/admin/users",
-          label: "All Users",
+          label: "User List",
           onClick: () => navigate("/admin/users"),
         },
-        // Add more user sub-items if needed
+        {
+          key: "/admin/sellers",
+          label: "Seller List",
+          onClick: () => navigate("/admin/sellers"),
+        },
       ],
     },
+    // {
+    //   key: "/admin/approvals",
+    //   icon: <FileCheck size={20} />,
+    //   label: "Approvals",
+    //   onClick: () => navigate("/admin/approvals"),
+    // },
     {
-      key: "/admin/approvals",
-      icon: <FileCheck size={20} />,
-      label: "Approvals",
-      onClick: () => navigate("/admin/approvals"),
+      key: "/admin/enquiries",
+      icon: <LibraryBig size={20} />,
+      label: "Enquiries Properties",
+      onClick: () => navigate("/admin/enquiries"),
     },
     {
-      key: "/admin/settings",
+      key: "/admin/testimonials",
+      icon: <MessageSquare size={20} />, // Reusing icon or using a new one like Star if available
+      label: "Testimonials",
+      onClick: () => navigate("/admin/testimonials"),
+    },
+    {
+      key: "settings-sub",
       icon: <Settings size={20} />,
       label: "Settings",
-      onClick: () => navigate("/admin/settings"),
+      children: [
+        {
+          key: "/admin/profile",
+          label: "My Profile",
+          onClick: () => navigate("/admin/profile"),
+        },
+        {
+          key: "/admin/business-types",
+          label: "Business Types",
+          onClick: () => navigate("/admin/business-types"),
+        },
+        {
+          key: "/admin/property-types",
+          label: "Property Types",
+          onClick: () => navigate("/admin/property-types"),
+        },
+        {
+          key: "/admin/approval-types",
+          label: "Approval Types",
+          onClick: () => navigate("/admin/approval-types"),
+        },
+      ],
     },
   ];
 
@@ -99,7 +148,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         closable={false}
         onClose={() => setCollapsed(true)}
         open={!collapsed}
-        bodyStyle={{ padding: 0, background: "#001529" }}
+        styles={{ body: { padding: 0, background: "#001529" } }}
         width={250}
       >
         {SidebarContent}

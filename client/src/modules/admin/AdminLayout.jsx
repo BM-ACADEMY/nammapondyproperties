@@ -76,7 +76,7 @@ const AdminLayout = () => {
       key: "2",
       label: "Profile Settings",
       icon: <User size={16} />,
-      onClick: () => navigate("/admin/settings"),
+      onClick: () => navigate("/admin/profile"),
     },
     {
       key: "3",
