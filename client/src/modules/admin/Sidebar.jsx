@@ -40,6 +40,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           onClick: () => navigate("/admin/seller-listings"),
         },
         {
+          key: "/admin/seller-requests",
+          label: "Seller Requests",
+          onClick: () => navigate("/admin/seller-requests"),
+        },
+        {
           key: "/admin/properties/add",
           label: "Add Property",
           onClick: () => navigate("/admin/properties/add"), // Assuming this route exists or will exist

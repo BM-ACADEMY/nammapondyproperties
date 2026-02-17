@@ -232,14 +232,6 @@ const Header = () => {
                           return (
                             <>
                               <Link
-                                to="/user/profile"
-                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
-                                onClick={() => setIsUserMenuOpen(false)}
-                              >
-                                <User className="h-4 w-4 mr-2 text-gray-500" />{" "}
-                                Profile
-                              </Link>
-                              <Link
                                 to="/seller/dashboard"
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center transition-colors"
                                 onClick={() => setIsUserMenuOpen(false)}

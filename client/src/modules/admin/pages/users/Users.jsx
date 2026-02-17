@@ -8,22 +8,18 @@ import {
   Modal,
   message,
   Tooltip,
+  Form,
+  Select,
 } from "antd";
-import {
-  Search,
-  Edit2,
-  Trash2,
-  Mail,
-  Phone,
-} from "lucide-react";
+import { Search, Edit2, Trash2, Mail, Phone } from "lucide-react";
 import api from "@/services/api";
-import { useAuth } from "@/context/AuthContext";
+// import { useAuth } from "@/context/AuthContext";
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const { user } = useAuth(); // Current logged in admin
+  // const { user } = useAuth(); // Current logged in admin (Unused)
 
   useEffect(() => {
     fetchUsers();
@@ -117,6 +113,17 @@ const Users = () => {
         record.role_id?.role_name?.toLowerCase() === value,
     },
     {
+      title: "Business Type",
+      dataIndex: "businessType",
+      key: "businessType",
+      render: (businessType) =>
+        businessType ? (
+          <Tag color="cyan">{businessType.name}</Tag>
+        ) : (
+          <span className="text-gray-400">-</span>
+        ),
+    },
+    {
       title: "Status",
       dataIndex: "isVerified",
       key: "status",
@@ -151,6 +158,75 @@ const Users = () => {
     },
   ];
 
+  /* ============================================================
+     NEW: Edit User Logic
+  ============================================================ */
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [roles, setRoles] = useState([]);
+  const [businessTypes, setBusinessTypes] = useState([]);
+  const [form] = Form.useForm();
+  // Role ID for "Seller" (to conditionally show Business Type)
+  const [sellerRoleId, setSellerRoleId] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
+
+  useEffect(() => {
+    fetchRolesAndTypes();
+  }, []);
+
+  const fetchRolesAndTypes = async () => {
+    try {
+      const [rolesRes, typesRes] = await Promise.all([
+        api.get("/roles/fetch-all-role"),
+        api.get("/business-types"),
+      ]);
+      setRoles(rolesRes.data);
+      setBusinessTypes(typesRes.data);
+
+      // Find seller role ID for logic
+      const sRole = rolesRes.data.find(
+        (r) => r.role_name.toLowerCase() === "seller",
+      );
+      if (sRole) setSellerRoleId(sRole._id);
+    } catch (error) {
+      console.error("Error fetching roles/types:", error);
+    }
+  };
+
+  const handleEdit = (record) => {
+    setEditingUser(record);
+    setSelectedRole(record.role_id?._id);
+    form.setFieldsValue({
+      name: record.name,
+      email: record.email,
+      phone: record.phone,
+      role_id: record.role_id?._id,
+      businessType: record.businessType?._id,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleUpdate = async (values) => {
+    try {
+      await api.put(`/users/update-user/${editingUser._id}`, values);
+      message.success("User updated successfully");
+      setIsModalOpen(false);
+      setEditingUser(null);
+      fetchUsers(); // Refresh table
+    } catch (error) {
+      console.error("Update failed:", error);
+      message.error("Failed to update user");
+    }
+  };
+
+  const handleRoleChange = (roleId) => {
+    setSelectedRole(roleId);
+    // If switching away from seller, maybe clear businessType?
+    // Not strictly necessary but good UX if we wanted to enforce it.
+  };
+
+  /* ============================================================ */
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
@@ -171,13 +247,114 @@ const Users = () => {
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <Table
-          columns={columns}
+          columns={columns.map((col) => {
+            if (col.key === "actions") {
+              return {
+                ...col,
+                render: (_, record) => (
+                  <Space size="middle">
+                    <Tooltip title="Edit User">
+                      <Button
+                        icon={<Edit2 size={16} />}
+                        type="text"
+                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => handleEdit(record)}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Delete User">
+                      <Button
+                        icon={<Trash2 size={16} />}
+                        type="text"
+                        danger
+                        onClick={() => handleDelete(record._id)}
+                      />
+                    </Tooltip>
+                  </Space>
+                ),
+              };
+            }
+            return col;
+          })}
           dataSource={users}
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10 }}
         />
       </div>
+
+      {/* Edit User Modal */}
+      <Modal
+        title="Edit User"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+      >
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
+          <Form.Item
+            name="name"
+            label="Name"
+            rules={[{ required: true, message: "Please enter name" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: "Please enter email" },
+              { type: "email", message: "Invalid email" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            label="Phone"
+            rules={[{ required: true, message: "Please enter phone" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="role_id"
+            label="Role"
+            rules={[{ required: true, message: "Please select a role" }]}
+          >
+            <Select onChange={handleRoleChange}>
+              {roles.map((role) => (
+                <Select.Option key={role._id} value={role._id}>
+                  {role.role_name}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          {/* Show Business Type if Seller Role is selected */}
+          {selectedRole === sellerRoleId && (
+            <Form.Item
+              name="businessType"
+              label="Business Type"
+              rules={[
+                { required: true, message: "Please select business type" },
+              ]}
+            >
+              <Select>
+                {businessTypes.map((bt) => (
+                  <Select.Option key={bt._id} value={bt._id}>
+                    {bt.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          )}
+
+          <div className="flex justify-end gap-2 mt-4">
+            <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button type="primary" htmlType="submit">
+              Update
+            </Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 };

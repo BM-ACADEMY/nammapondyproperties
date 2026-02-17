@@ -2,6 +2,8 @@
 const mongoose = require("mongoose");
 const Property = require("../models/Property");
 const WhatsappLead = require("../models/WhatsappLead");
+const fs = require("fs");
+const path = require("path");
 
 const parseJSON = (data) => {
   if (typeof data === "string") {
@@ -18,6 +20,34 @@ exports.createProperty = async (req, res) => {
   try {
     console.log("Create Property Request Body:", req.body);
     console.log("Create Property Files:", req.files);
+
+    // Check property limit for sellers
+    if (
+      req.user &&
+      req.user.role_id &&
+      req.user.role_id.role_name === "seller"
+    ) {
+      const propertyCount = await Property.countDocuments({
+        seller_id: req.user._id,
+      });
+      if (propertyCount >= 2) {
+        // Delete uploaded files if any, to avoid accumulating garbage
+        if (req.files && req.files.length > 0) {
+          req.files.forEach((file) => {
+            try {
+              fs.unlinkSync(
+                path.join(__dirname, "../uploads/properties", file.filename),
+              );
+            } catch (err) {
+              console.error("Error deleting file:", err);
+            }
+          });
+        }
+        return res
+          .status(403)
+          .json({ error: "You can only upload 2 properties." });
+      }
+    }
 
     // Handle Images
     let images = [];
@@ -64,19 +94,23 @@ exports.getProperties = async (req, res) => {
     const query = {};
 
     // Handle role based filtering
-    if (req.query.role === 'seller') {
-      const Role = require('../models/Role'); // Ensure Role model exists
+    if (req.query.role === "seller") {
+      const Role = require("../models/Role"); // Ensure Role model exists
       // If Role model is simple { name: String }
-      const sellerRoleDoc = await Role.findOne({ name: { $regex: /^seller$/i } });
+      const sellerRoleDoc = await Role.findOne({
+        name: { $regex: /^seller$/i },
+      });
       if (sellerRoleDoc) {
-        const User = require('../models/User');
-        const sellers = await User.find({ role_id: sellerRoleDoc._id }).distinct('_id');
+        const User = require("../models/User");
+        const sellers = await User.find({
+          role_id: sellerRoleDoc._id,
+        }).distinct("_id");
         query.seller_id = { $in: sellers };
       }
     }
     // Filter by seller_id if provided
     if (seller_id) {
-      if (seller_id === 'me') {
+      if (seller_id === "me") {
         // Explicitly check for 'me' string.
         // req.user might be available if route is protected or optional auth middleware is used.
         // AdminProperties uses this, so it should be protected or context provided.
@@ -292,6 +326,29 @@ exports.updateProperty = async (req, res) => {
     // Handle Image Deletion
     const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
     if (imagesToDelete.length > 0) {
+      // Find images to delete
+      const invalidImages = property.images.filter((img) =>
+        imagesToDelete.includes(img._id.toString()),
+      );
+
+      // Delete files from filesystem
+      invalidImages.forEach((img) => {
+        try {
+          // Construct full path. img.image_url is like "/uploads/properties/filename.jpg"
+          // We need path from valid root.
+          // Assuming app runs from 'server' dir or we used path.join before.
+          // In createProperty: path.join(__dirname, '../uploads/properties', file.filename)
+          // img.image_url includes /uploads/properties/
+          const filePath = path.join(__dirname, "..", img.image_url);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (err) {
+          console.error(`Failed to delete image file: ${img.image_url}`, err);
+        }
+      });
+
+      // Filter out deleted images from property
       property.images = property.images.filter(
         (img) => !imagesToDelete.includes(img._id.toString()),
       );

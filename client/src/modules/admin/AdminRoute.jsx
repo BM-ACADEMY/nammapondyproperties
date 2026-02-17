@@ -14,6 +14,7 @@ import PropertyTypeManager from "./pages/PropertyTypeManager";
 import ApprovalTypeManager from "./pages/ApprovalTypeManager";
 import TestimonialManager from "./pages/TestimonialManager";
 import GeneralSettings from "./pages/settings/GeneralSettings";
+import SellerRequests from "./pages/SellerRequests";
 
 const AdminRoute = () => {
   return (
@@ -27,7 +28,11 @@ const AdminRoute = () => {
         {/* Added sellers route */}
         <Route path="profile" element={<AdminProfile />} />
         <Route path="properties" element={<AdminProperties mode="admin" />} />
-        <Route path="seller-listings" element={<AdminProperties mode="seller" />} />
+        <Route
+          path="seller-listings"
+          element={<AdminProperties mode="seller" />}
+        />
+        <Route path="seller-requests" element={<SellerRequests />} />
         <Route path="approvals" element={<AdminApprovals />} />
         <Route path="properties/add" element={<AddProperty />} />
         <Route path="enquiries" element={<AdminEnquiries />} />

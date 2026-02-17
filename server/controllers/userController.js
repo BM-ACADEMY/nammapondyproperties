@@ -131,7 +131,9 @@ exports.getUsers = async (req, res) => {
       }
     }
 
-    const users = await User.find(query).populate("role_id");
+    const users = await User.find(query)
+      .populate("role_id")
+      .populate("businessType");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -140,7 +142,9 @@ exports.getUsers = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate("role_id");
+    const user = await User.findById(req.params.id)
+      .populate("role_id")
+      .populate("businessType");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -152,11 +156,6 @@ exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     let updateData = req.body;
-
-    console.log("Update User Request:");
-    console.log("Content-Type:", req.headers["content-type"]);
-    console.log("req.file:", req.file);
-    console.log("req.body:", JSON.stringify(req.body, null, 2));
 
     // Check if image was uploaded
     if (req.file) {
@@ -197,7 +196,9 @@ exports.updateUser = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
-    }).populate("role_id");
+    })
+      .populate("role_id")
+      .populate("businessType");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -276,7 +277,8 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email })
       .select("+password")
-      .populate("role_id");
+      .populate("role_id")
+      .populate("businessType");
     if (!user) return res.status(401).json({ error: "User not found" });
     if (!user.isVerified)
       return res.status(403).json({ error: "Account not verified" });
@@ -338,7 +340,9 @@ exports.resetPassword = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id)
+      .populate("role_id")
+      .populate("businessType");
     res.status(200).json({
       success: true,
       user,
@@ -500,7 +504,9 @@ exports.upgradeToSeller = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id)
+      .populate("role_id")
+      .populate("businessType");
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json({

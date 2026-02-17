@@ -3,6 +3,7 @@ import PropertyForm from "../../../../components/Property/PropertyForm";
 import axios from "axios";
 import { message } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
@@ -12,22 +13,47 @@ const AddProperty = () => {
   const editId = searchParams.get("edit");
   const [initialData, setInitialData] = useState({});
 
-  useEffect(() => {
-    if (editId) {
-      fetchProperty();
-    }
-  }, [editId]);
+  const { user } = useAuth(); // Assuming useAuth provides user info
+  // We need to fetch property count or properties to check limit
+  // Better to fetch count/properties on mount if not editing
 
-  const fetchProperty = async () => {
+  const checkLimit = React.useCallback(async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-property-by-id/${editId}`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?seller_id=${user._id}`,
+      );
+      // This endpoint returns { properties: [...] } or array?
+      // Based on MyProperties.jsx it returns properties array in data.properties
+      if (res.data.properties && res.data.properties.length >= 2) {
+        navigate("/seller/request-limit");
+      }
+    } catch (error) {
+      console.error("Error checking limit:", error);
+    }
+  }, [user, navigate]);
+
+  const fetchProperty = React.useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-id/${editId}`,
+      );
       setInitialData(res.data);
     } catch (error) {
       console.error("Error fetching property:", error);
       // If 403 or 404, might be permissions or not found
       message.error("Failed to load property details");
     }
-  };
+  }, [editId]);
+
+  useEffect(() => {
+    if (editId) {
+      fetchProperty();
+    } else {
+      if (user) {
+        checkLimit();
+      }
+    }
+  }, [editId, checkLimit, fetchProperty, user]);
 
   const onSubmit = async (formData) => {
     setLoading(true);
@@ -41,7 +67,7 @@ const AddProperty = () => {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         message.success("Property updated successfully!");
       } else {

@@ -22,21 +22,21 @@ const PropertyForm = ({
     formState: { errors },
   } = useForm({
     defaultValues: {
-      title: initialData.title || "",
-      description: initialData.description || "",
-      price: initialData.price || "",
-      area_size: initialData.area_size || "",
-      property_type: initialData.property_type || "",
-      approval: initialData.approval || "",
+      title: initialData?.title || "",
+      description: initialData?.description || "",
+      price: initialData?.price || "",
+      area_size: initialData?.area_size || "",
+      property_type: initialData?.property_type || "",
+      approval: initialData?.approval || "",
       location: {
-        address_line_1: initialData.location?.address_line_1 || "",
-        address_line_2: initialData.location?.address_line_2 || "",
-        country: initialData.location?.country || "IN", // Default to India
-        state: initialData.location?.state || "",
-        city: initialData.location?.city || "",
-        pincode: initialData.location?.pincode || "",
+        address_line_1: initialData?.location?.address_line_1 || "",
+        address_line_2: initialData?.location?.address_line_2 || "",
+        country: initialData?.location?.country || "IN", // Default to India
+        state: initialData?.location?.state || "",
+        city: initialData?.location?.city || "",
+        pincode: initialData?.location?.pincode || "",
       },
-      key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
+      key_attributes: initialData?.key_attributes || [{ key: "", value: "" }],
     },
   });
 
@@ -67,7 +67,7 @@ const PropertyForm = ({
       // Use the reset function from react-hook-form (need to destructure it)
       reset(resetValues);
     }
-  }, [initialData, isEdit]);
+  }, [initialData, isEdit, reset]);
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -80,7 +80,7 @@ const PropertyForm = ({
   // Image State
   const [images, setImages] = useState([]); // New files
   const [existingImages, setExistingImages] = useState(
-    initialData.images || [],
+    initialData?.images || [],
   ); // URLs
   const [imagePreviews, setImagePreviews] = useState([]); // Previews for new files
 
@@ -146,8 +146,8 @@ const PropertyForm = ({
     const imageToRemove = existingImages[index];
     setImagesToDelete([
       ...imagesToDelete,
-      imageToRemove.image_url || imageToRemove,
-    ]); // Store URL to delete
+      imageToRemove._id || imageToRemove, // Use ID if available (standard), else whatever it is
+    ]); // Store ID to delete
 
     const newExisting = [...existingImages];
     newExisting.splice(index, 1);

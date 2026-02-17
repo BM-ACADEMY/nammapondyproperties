@@ -21,6 +21,7 @@ const enquiryRoutes = require("./routes/enquiryRoute");
 const businessTypeRoutes = require("./routes/businessTypeRoute");
 const propertyTypeRoutes = require("./routes/propertyTypeRoute");
 const approvalTypeRoutes = require("./routes/approvalTypeRoute");
+const sellerRequestRoutes = require("./routes/sellerRequestRoute");
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use("/api/enquiries", enquiryRoutes);
 app.use("/api/business-types", businessTypeRoutes);
 app.use("/api/property-types", propertyTypeRoutes);
 app.use("/api/approval-types", approvalTypeRoutes);
+app.use("/api/seller-requests", sellerRequestRoutes);
 
 /* ===============================
    404 Handler (must be last route)
