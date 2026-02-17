@@ -3,12 +3,14 @@ import { Heart } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import LoginModal from "../Auth/LoginModal";
+import { useNavigate, useLocation } from "react-router-dom"; // Import useNavigate and useLocation
+import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion
 
 const WishlistButton = ({ propertyId, className = "" }) => {
-  const { user, refreshUser } = useAuth();
+  const { user, token, refreshUser, logout } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const isWishlisted = user?.wishlist?.some(
     (item) => (typeof item === "string" ? item : item._id) === propertyId,
@@ -19,7 +21,8 @@ const WishlistButton = ({ propertyId, className = "" }) => {
     e.preventDefault();
 
     if (!user) {
-      setIsLoginModalOpen(true);
+      toast.error("Please login to add to wishlist");
+      navigate("/login", { state: { from: location.pathname } }); // Redirect to login
       return;
     }
 
@@ -69,29 +72,30 @@ const WishlistButton = ({ propertyId, className = "" }) => {
   };
 
   return (
-    <>
-      <button
+    <AnimatePresence>
+      <motion.button
         onClick={handleToggleWishlist}
         disabled={loading}
-        className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
-          isWishlisted
-            ? "bg-red-50 text-red-500 hover:bg-red-100"
-            : "bg-black/20 text-white hover:bg-black/40 hover:scale-110"
-        } ${className}`}
+        whileTap={{ scale: 0.8 }}
+        className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${isWishlisted
+          ? "bg-red-50 text-red-500 hover:bg-red-100"
+          : "bg-black/20 text-white hover:bg-black/40 hover:scale-110"
+          } ${className}`}
         title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
       >
-        <Heart
-          className={`w-5 h-5 transition-colors ${
-            isWishlisted ? "fill-current" : ""
-          }`}
-        />
-      </button>
-
-      <LoginModal
-        open={isLoginModalOpen}
-        onCancel={() => setIsLoginModalOpen(false)}
-      />
-    </>
+        <motion.div
+          key={isWishlisted ? "liked" : "unliked"}
+          initial={{ scale: 1 }}
+          animate={{ scale: isWishlisted ? [1, 1.4, 1] : 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Heart
+            className={`w-5 h-5 transition-colors ${isWishlisted ? "fill-current" : ""
+              }`}
+          />
+        </motion.div>
+      </motion.button>
+    </AnimatePresence>
   );
 };
 

@@ -3,7 +3,44 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { X, Upload, Plus, Trash2 } from "lucide-react";
+import { X, Upload, Plus, Trash2, MapPin } from "lucide-react";
+import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+function LocationMarker({ position, setPosition, setValue }) {
+  const map = useMapEvents({
+    click(e) {
+      setPosition(e.latlng);
+      setValue("location.latitude", e.latlng.lat);
+      setValue("location.longitude", e.latlng.lng);
+      map.flyTo(e.latlng, map.getZoom());
+    },
+  });
+
+  return position === null ? null : (
+    <Marker position={position}></Marker>
+  );
+}
+
+// Component to recenter map programmatically
+function RecenterMap({ lat, lng }) {
+  const map = useMap();
+  useEffect(() => {
+    if (lat && lng) {
+      map.setView([lat, lng], map.getZoom());
+    }
+  }, [lat, lng]);
+  return null;
+}
 
 const PropertyForm = ({
   initialData = {},
@@ -57,7 +94,10 @@ const PropertyForm = ({
           country: initialData.location?.country || "IN",
           state: initialData.location?.state || "",
           city: initialData.location?.city || "",
+
           pincode: initialData.location?.pincode || "",
+          latitude: initialData.location?.latitude || "",
+          longitude: initialData.location?.longitude || "",
         },
         key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
       };
@@ -89,6 +129,36 @@ const PropertyForm = ({
   // Location State
   const selectedCountry = watch("location.country");
   const selectedState = watch("location.state");
+  const selectedCity = watch("location.city");
+  const [mapPosition, setMapPosition] = useState(null);
+
+  // Auto-center map when city changes
+  useEffect(() => {
+    if (selectedCity && selectedState && selectedCountry) {
+      const cities = City.getCitiesOfState(selectedCountry, selectedState);
+      const cityData = cities.find(c => c.name === selectedCity);
+      if (cityData && cityData.latitude && cityData.longitude) {
+        const lat = parseFloat(cityData.latitude);
+        const lng = parseFloat(cityData.longitude);
+        setMapPosition({ lat, lng });
+        setValue("location.latitude", lat);
+        setValue("location.longitude", lng);
+      }
+    }
+  }, [selectedCity, selectedState, selectedCountry, setValue]);
+
+
+  useEffect(() => {
+    if (initialData?.location?.latitude && initialData?.location?.longitude) {
+      setMapPosition({
+        lat: initialData.location.latitude,
+        lng: initialData.location.longitude,
+      });
+    } else {
+      // Default to Pondicherry if no location
+      setMapPosition({ lat: 11.9416, lng: 79.8083 });
+    }
+  }, [initialData]);
 
   useEffect(() => {
     const fetchTypes = async () => {
@@ -440,6 +510,64 @@ const PropertyForm = ({
             )}
           </div>
         </div>
+
+        {/* Map Section */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Pin Location on Map
+          </label>
+          <div className="h-[300px] w-full rounded-lg overflow-hidden border border-gray-300 z-0">
+            {mapPosition && (
+              <MapContainer
+                center={mapPosition}
+                zoom={13}
+                scrollWheelZoom={false}
+                style={{ height: "100%", width: "100%" }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationMarker position={mapPosition} setPosition={setMapPosition} setValue={setValue} />
+                <RecenterMap lat={mapPosition.lat} lng={mapPosition.lng} />
+              </MapContainer>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-2">
+            <div>
+              <label className="block text-xs text-gray-500">Latitude</label>
+              <input
+                {...register("location.latitude")}
+                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                placeholder="Ex: 11.9416"
+                onChange={(e) => {
+                  setValue("location.latitude", e.target.value);
+                  const lat = parseFloat(e.target.value);
+                  const lng = parseFloat(getValues("location.longitude"));
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    setMapPosition({ lat, lng });
+                  }
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-500">Longitude</label>
+              <input
+                {...register("location.longitude")}
+                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                placeholder="Ex: 79.8083"
+                onChange={(e) => {
+                  setValue("location.longitude", e.target.value);
+                  const lng = parseFloat(e.target.value);
+                  const lat = parseFloat(getValues("location.latitude"));
+                  if (!isNaN(lat) && !isNaN(lng)) {
+                    setMapPosition({ lat, lng });
+                  }
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Key Attributes */}
@@ -561,7 +689,7 @@ const PropertyForm = ({
           {loading ? "Saving..." : isEdit ? "Update Property" : "Add Property"}
         </button>
       </div>
-    </form>
+    </form >
   );
 };
 
