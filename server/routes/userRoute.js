@@ -14,6 +14,10 @@ router.post("/verify-otp", userController.verifyOtp);
 router.post("/reset-password", userController.resetPassword);
 router.get("/refresh-token", protect, userController.refreshToken);
 
+// Public Routes
+router.get("/public-users", userController.getPublicUsers);
+router.get("/public-user/:id", userController.getPublicUserById);
+
 // User Management Routes (Protected)
 router.get("/fetch-all-user", protect, userController.getUsers); // Legacy support
 router.get("/get-all-users", protect, userController.getUsers);

@@ -131,10 +131,62 @@ exports.getUsers = async (req, res) => {
       }
     }
 
+    if (req.query.businessType) {
+      query.businessType = req.query.businessType;
+    }
+
     const users = await User.find(query)
       .populate("role_id")
       .populate("businessType");
     res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPublicUsers = async (req, res) => {
+  try {
+    const { businessType, limit } = req.query;
+    let query = { isVerified: true }; // Only show verified users publicly
+
+    if (businessType) {
+      query.businessType = businessType;
+    } else {
+      // If no business type, maybe filtering by role?
+      // For now, require businessType or return all verified professionals logic if needed
+      // but the UI sends businessType.
+    }
+
+    // Optional: filter by role 'seller' if we want to be strict
+    const sellerRole = await Role.findOne({ role_name: "seller" });
+    if (sellerRole) {
+      // We might want to include 'agent', 'builder' roles if they exist separately
+      // But based on previous logic, they map to 'seller' role with different businessType
+      query.role_id = sellerRole._id;
+    }
+
+    const users = await User.find(query)
+      .select("name email phone profile_image businessType role_id isVerified") // Select only public fields
+      .populate("businessType")
+      .populate("role_id")
+      .limit(parseInt(limit) || 20);
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPublicUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("name email phone profile_image businessType role_id isVerified") // Select only public fields
+      .populate("businessType")
+      .populate("role_id");
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

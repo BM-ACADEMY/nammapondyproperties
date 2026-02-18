@@ -18,6 +18,7 @@ import {
   MapPin,
   ArrowRight
 } from "lucide-react";
+import axios from "axios";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,6 +26,7 @@ const Header = () => {
   const [isPropertiesDesktopOpen, setIsPropertiesDesktopOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
+  const [businessTypes, setBusinessTypes] = useState([]);
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated } = useAuth();
@@ -52,6 +54,21 @@ const Header = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, []);
+
+  // Fetch Business Types
+  useEffect(() => {
+    const fetchBusinessTypes = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/business-types?status=active`
+        );
+        setBusinessTypes(response.data);
+      } catch (error) {
+        console.error("Error fetching business types:", error);
+      }
+    };
+    fetchBusinessTypes();
   }, []);
 
   const handleLogout = () => {
@@ -164,19 +181,20 @@ const Header = () => {
                         <div className="flex p-2">
                           {/* Left Column: Navigation Links */}
                           <div className="w-5/12 py-4 pl-4 pr-2 flex flex-col justify-top space-y-1">
-                            {[
-
-                              { label: "Find Agents", to: "/properties/agent" },
-                              { label: "Find Builders", to: "/properties/builders" },
-                            ].map((item, index) => (
-                              <Link
-                                key={index}
-                                to={item.to}
-                                className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                              >
-                                {item.label}
-                              </Link>
-                            ))}
+                            {businessTypes.length > 0 ? (
+                              businessTypes.map((type) => (
+                                <Link
+                                  key={type._id}
+                                  to={`/properties/business-type/${type._id}`}
+                                  className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                  onClick={() => setIsPropertiesDesktopOpen(false)}
+                                >
+                                  Find {type.name}s
+                                </Link>
+                              ))
+                            ) : (
+                              <p className="px-4 py-2 text-sm text-gray-400">Loading types...</p>
+                            )}
                           </div>
 
                           {/* Right Column: Promotional Card WITH IMAGE OVERLAY */}
@@ -619,6 +637,39 @@ const Header = () => {
                     </AnimatePresence>
                   </div>
 
+
+
+                  {/* Mobile Business Types Accordion (Optional or separate) */}
+                  {/* For now, adding static links or we can reuse businessTypes state here too if needed */}
+                  <div className="rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setIsPropertiesMobileOpen(!isPropertiesMobileOpen)} // Reusing same state for simplicity or create new one
+                      className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all text-left"
+                    >
+                      <div className="flex items-center">
+                        <Briefcase className="h-5 w-5 mr-3 text-gray-400" />{" "}
+                        Professionals
+                      </div>
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${isPropertiesMobileOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {isPropertiesMobileOpen && (
+                      <div className="bg-gray-50 pl-12 pr-4 py-2 space-y-1">
+                        {businessTypes.map((type) => (
+                          <Link
+                            key={type._id}
+                            to={`/properties/business-type/${type._id}`}
+                            onClick={() => setIsMenuOpen(false)}
+                            className="block py-2 text-sm text-gray-600 hover:text-blue-600"
+                          >
+                            Find {type.name}s
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <Link
                     to="/about"
                     onClick={() => setIsMenuOpen(false)}
@@ -669,10 +720,10 @@ const Header = () => {
                   </p>
                 )}
               </div>
-            </motion.div>
+            </motion.div >
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence >
     </>
   );
 };
