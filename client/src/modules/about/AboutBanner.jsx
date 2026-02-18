@@ -1,80 +1,94 @@
 import React from 'react';
-import { Row, Col } from 'antd';
+import { Row, Col, ConfigProvider } from 'antd';
+import { ArrowRightOutlined } from '@ant-design/icons';
 
-export default function AboutBanner() {
+export default function AboutHero() {
+
+  const goldColor = '#D4AF37';
+
   return (
-    <section className="bg-white py-16 md:py-24 overflow-hidden font-sans">
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 relative">
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: goldColor,
+          fontFamily: 'inherit',
+        },
+      }}
+    >
+      {/* --- HERO SECTION --- */}
+      <section className="relative font-sans min-h-[700px] flex items-center overflow-hidden">
         
-        {/* Background Decorative Element */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D4AF37]/10 rounded-full blur-3xl -z-10"></div>
+        {/* 1. Background Image */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat bg-fixed"
+          style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop')" 
+          }}
+        ></div>
+        
+        {/* 2. Dark Overlay */}
+        <div className="absolute inset-0 z-0 bg-[#050B14]/85"></div>
 
-        <Row gutter={[48, 48]} align="middle" className="relative">
-          
-          {/* LEFT SIDE: CONTENT */}
-          <Col xs={24} lg={12} className="pr-0 lg:pr-12">
+        {/* 3. Main Content Container */}
+        <div className="container mx-auto px-6 lg:px-12 relative z-10 py-20">
+          <Row gutter={[64, 48]} align="middle">
             
-            {/* Tag/Badge */}
-            <div className="inline-block mb-6">
-              <span className="bg-[#D4AF37] text-white text-[10px] uppercase font-black tracking-[0.2em] px-4 py-1.5 rounded-sm shadow-sm">
-                About Us
-              </span>
-            </div>
+            {/* --- LEFT SIDE: HEADINGS & INTRO --- */}
+            <Col xs={24} lg={12}>
+              <div className="text-white">
+                
+                {/* Badge */}
+                <div className="inline-block px-3 py-1 border border-[#D4AF37]/50 rounded-full mb-6">
+                  <span className="text-[#D4AF37] text-xs font-bold tracking-[0.2em] uppercase">
+                    About Us
+                  </span>
+                </div>
 
-            {/* Main Heading */}
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-light text-[#050B14] mb-8 leading-[1.1]">
-              Welcome to <br/>
-              <span className="text-[#D4AF37] font-normal">
-                Namma Pondy Properties
-              </span>
-            </h1>
+                {/* Main Heading */}
+                <h1 className="text-5xl md:text-6xl leading-[1.15] mb-8">
+                  <span className="font-light block text-white">Welcome to</span>
+                  <span className="text-[#D4AF37] font-normal block">Namma Pondy Properties</span>
+                </h1>
+                
+                {/* Introduction Paragraph */}
+                <p className="text-gray-300 text-lg font-light leading-relaxed max-w-lg mb-8">
+                  Namma Pondy Properties is a trusted real estate service dedicated to helping individuals and families buy, sell, and invest in properties across Pondicherry.
+                </p>
 
-            {/* Introduction Paragraph */}
-            <p className="text-gray-600 text-lg leading-relaxed mb-10 max-w-xl">
-              Namma Pondy Properties is a trusted real estate service dedicated to helping individuals and families buy, sell, and invest in properties across Pondicherry.
-            </p>
+                {/* Decorative Button */}
+                <div className="flex items-center gap-4 text-[#D4AF37] group cursor-pointer hover:text-white transition-colors">
+                  <span className="uppercase tracking-widest text-sm font-medium">Read Our Story</span>
+                  <ArrowRightOutlined className="group-hover:translate-x-2 transition-transform"/>
+                </div>
 
-            {/* Stylized Quote Box */}
-            <div className="relative pl-8 mb-10">
-              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-gradient-to-b from-[#D4AF37] to-transparent"></div>
-              <p className="text-[#050B14] text-xl font-light italic leading-relaxed">
-                "We believe real estate is more than transactions — it’s about <span className="text-[#D4AF37] font-semibold not-italic">building dreams and securing futures.</span>"
-              </p>
-            </div>
-
-            {/* Secondary Paragraph */}
-            <p className="text-gray-500 text-sm leading-relaxed max-w-lg">
-              With strong local expertise, we guide our clients with clarity and honesty. Whether you are searching for residential plots or commercial properties, we are here to help.
-            </p>
-          </Col>
-
-          {/* RIGHT SIDE: IMAGE */}
-          {/* ADDED: flex and justification to align image nicely */}
-          <Col xs={24} lg={12} className="flex justify-center lg:justify-end">
-            
-            {/* ADDED: max-w-lg to stop it from getting too huge */}
-            <div className="relative group w-full max-w-lg">
-              
-              {/* Image Container */}
-              {/* UPDATED: Changed aspect ratio to square/4:3 for a more professional 'compact' look */}
-              <div className="relative aspect-[4/3] lg:aspect-square rounded-2xl overflow-hidden border border-gray-100 shadow-2xl">
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                  style={{ 
-                    backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000&auto=format&fit=crop')" 
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               </div>
+            </Col>
 
-              {/* Decorative Accent */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 border-b-2 border-r-2 border-[#D4AF37] -z-10 rounded-br-2xl"></div>
-            </div>
-          </Col>
+            {/* --- RIGHT SIDE: QUOTE (NO CARD) --- */}
+            <Col xs={24} lg={12}>
+              <div className="relative pl-8 md:pl-12 py-4">
+                
+                {/* Gold Vertical Line */}
+                <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#D4AF37] to-transparent/10"></div>
+                
+                
 
-        </Row>
-      </div>
-    </section>
+                {/* The Quote Content */}
+                <h3 className="text-white font-light text-2xl md:text-3xl italic leading-relaxed mb-6">
+                  "We believe real estate is more than transactions — it’s about <span className="text-[#D4AF37] font-normal not-italic">building dreams and securing futures.</span>"
+                </h3>
+
+                {/* Secondary Paragraph */}
+                <p className="text-gray-400 font-light text-sm leading-relaxed max-w-md">
+                  With strong local expertise, we guide our clients with clarity and honesty. Whether you are searching for residential plots or commercial properties, we are here to help.
+                </p>
+                
+              </div>
+            </Col>
+
+          </Row>
+        </div>
+      </section>
+    </ConfigProvider>
   );
 }

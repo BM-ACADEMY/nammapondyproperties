@@ -16,6 +16,7 @@ import ResetPassword from "./components/Auth/ResetPassword";
 import SellerRegister from "./modules/auth/SellerRegister";
 import BecomeSeller from "./modules/user/BecomeSeller";
 import About from "./modules/about/About";
+import Contact from "./modules/contact/Contact";
 
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
 
@@ -40,6 +41,7 @@ const AppRoutes = () => {
         </Route>
         {/* Public pages accessible to everyone */}
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/favorites" element={<FavoritesPage />} />
       </Route>
 
