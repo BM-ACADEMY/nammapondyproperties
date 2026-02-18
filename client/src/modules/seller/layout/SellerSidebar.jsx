@@ -16,12 +16,19 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const { pathname } = useLocation();
   const { logout } = useAuth(); // Get logout function
 
+  const handleMenuClick = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
+
   const menuItems = [
     {
       key: "/seller/dashboard",
       icon: <LayoutDashboard size={20} />,
       label: "Dashboard",
-      onClick: () => navigate("/seller/dashboard"),
+      onClick: () => handleMenuClick("/seller/dashboard"),
     },
     {
       key: "properties",
@@ -31,12 +38,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         {
           key: "/seller/my-properties",
           label: "My Properties",
-          onClick: () => navigate("/seller/my-properties"),
+          onClick: () => handleMenuClick("/seller/my-properties"),
         },
         {
           key: "/seller/add-property",
           label: "Add Property",
-          onClick: () => navigate("/seller/add-property"),
+          onClick: () => handleMenuClick("/seller/add-property"),
         },
       ],
     },
@@ -44,13 +51,13 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "/seller/enquiries",
       icon: <MessageSquare size={20} />,
       label: "Enquiry Property",
-      onClick: () => navigate("/seller/enquiries"),
+      onClick: () => handleMenuClick("/seller/enquiries"),
     },
     {
       key: "/seller/profile",
       icon: <User size={20} />,
       label: "Profile",
-      onClick: () => navigate("/seller/profile"),
+      onClick: () => handleMenuClick("/seller/profile"),
     },
   ];
 

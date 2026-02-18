@@ -11,6 +11,7 @@ import {
   X,
   ShieldCheck,
   Calendar,
+  Briefcase
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -21,7 +22,9 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
+    businessType: "",
   });
+  const [businessTypes, setBusinessTypes] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -30,7 +33,24 @@ const Profile = () => {
       setFormData({
         name: user.name || "",
         phone: user.phone || "",
+        businessType: user.businessType?._id || user.businessType || "",
       });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchBusinessTypes = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/business-types?status=active`
+        );
+        setBusinessTypes(response.data);
+      } catch (error) {
+        console.error("Error fetching business types:", error);
+      }
+    };
+    if (user && (user.role?.name === "SELLER" || user.role?.name === "AGENT" || user.role?.name === "BUILDER")) {
+      fetchBusinessTypes();
     }
   }, [user]);
 
@@ -111,11 +131,10 @@ const Profile = () => {
               initial={{ opacity: 0, y: -20, x: "50%" }}
               animate={{ opacity: 1, y: 0, x: "50%" }}
               exit={{ opacity: 0, y: -20, x: "50%" }}
-              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${
-                message.type === "success"
-                  ? "bg-green-500/90 text-white border-green-400"
-                  : "bg-red-500/90 text-white border-red-400"
-              }`}
+              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${message.type === "success"
+                ? "bg-green-500/90 text-white border-green-400"
+                : "bg-red-500/90 text-white border-red-400"
+                }`}
             >
               {message.type === "success" ? (
                 <CheckCircle size={18} />
@@ -307,9 +326,13 @@ const Profile = () => {
                         type="tel"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+1 (555) 000-0000"
-                        className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setFormData((prev) => ({ ...prev, phone: value }));
+                        }}
+                        placeholder="Phone Number (10 digits)"
+                        maxLength={10}
+                        className="block w-full pl-6 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
                       />
                     ) : (
                       <div
@@ -320,6 +343,39 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Business Type Selection */}
+                {(user.role?.name === "SELLER" || user.role?.name === "AGENT" || user.role?.name === "BUILDER") && (
+                  <div className="group">
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Business Type
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <Briefcase size={18} />
+                      </div>
+                      {isEditing ? (
+                        <select
+                          name="businessType"
+                          value={formData.businessType}
+                          onChange={handleInputChange}
+                          className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 appearance-none"
+                        >
+                          <option value="">Select Business Type</option>
+                          {businessTypes.map((type) => (
+                            <option key={type._id} value={type._id}>
+                              {type.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="block w-full pl-10 pr-3 py-2.5 text-gray-700 bg-white border border-transparent border-b-gray-100">
+                          {user.businessType?.name || "Not Selected"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

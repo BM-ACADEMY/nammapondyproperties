@@ -215,9 +215,22 @@ const AdminProfile = () => {
                             <Form.Item
                                 name="phone"
                                 label="Phone Number"
-                                rules={[{ required: true, message: "Please enter phone number" }]}
+                                rules={[
+                                    { required: true, message: "Please enter phone number" },
+                                    { pattern: /^\d{10}$/, message: "Phone number must be exactly 10 digits" }
+                                ]}
                             >
-                                <Input prefix={<Phone size={18} className="text-gray-400" />} placeholder="Phone Number" size="large" />
+                                <Input
+                                    prefix={<Phone size={18} className="text-gray-400" />}
+                                    placeholder="Phone Number"
+                                    size="large"
+                                    maxLength={10}
+                                    onKeyPress={(event) => {
+                                        if (!/[0-9]/.test(event.key)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
+                                />
                             </Form.Item>
 
                             <div className="flex justify-end pt-4">
