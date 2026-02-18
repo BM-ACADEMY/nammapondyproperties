@@ -53,7 +53,8 @@ export default function WhyChooseUs() {
           <span className="text-[#D4AF37] font-bold tracking-[0.2em] uppercase text-xs mb-4 block">
             The Namma Pondy Difference
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-[#050B14] mb-6">
+          {/* UPDATED: Changed font-bold to font-light */}
+          <h2 className="text-4xl md:text-5xl font-light text-[#050B14] mb-6">
             Why Choose Us?
           </h2>
           <div className="w-16 h-1.5 bg-[#D4AF37] mx-auto rounded-full"></div>
