@@ -13,22 +13,19 @@ const PropertyTypeList = () => {
 
     if (lowerType.includes("plot") || lowerType.includes("land")) {
       return {
-        image:
-          "/properties/plot.png",
+        image: "/properties/plot.png",
         description: "Curated landscapes to build your bespoke dream home.",
         ctaText: "Explore Plots",
       };
     } else if (lowerType.includes("villa") || lowerType.includes("house")) {
       return {
-        image:
-          "/properties/villa.png",
+        image: "/properties/villa.png",
         description: "Experience unparalleled elegance and premium living.",
         ctaText: "Explore Villas",
       };
     } else if (lowerType.includes("apartment") || lowerType.includes("flat")) {
       return {
-        image:
-          "/properties/apartment.png",
+        image: "/properties/apartment.png",
         description:
           "Elevated urban living spaces tailored for your lifestyle.",
         ctaText: "Explore Apartments",
@@ -39,8 +36,7 @@ const PropertyTypeList = () => {
       lowerType.includes("office")
     ) {
       return {
-        image:
-          "/properties/commercial.png",
+        image: "/properties/commercial.png",
         description:
           "Distinguished locations to establish and grow your business.",
         ctaText: "Explore Commercial",
@@ -57,7 +53,6 @@ const PropertyTypeList = () => {
 
   // Fetch property types from API
   useEffect(() => {
-    setLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/properties/filters`)
       .then((res) => res.json())
       .then((data) => {
@@ -112,7 +107,9 @@ const PropertyTypeList = () => {
               <div
                 key={index}
                 onClick={() =>
-                  navigate(`/properties?type=${item.originalType}`)
+                  navigate(
+                    `/properties?type=${encodeURIComponent(item.originalType)}`,
+                  )
                 }
                 // Mobile: 85% width, Tablet: 45% width, Desktop: auto
                 className="min-w-[85%] sm:min-w-[45%] lg:min-w-0 snap-center group relative h-[320px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500"

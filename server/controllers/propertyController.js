@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 const Property = require("../models/Property");
 const WhatsappLead = require("../models/WhatsappLead");
+const PropertyView = require("../models/PropertyView");
 const fs = require("fs");
 const path = require("path");
 
@@ -137,6 +138,10 @@ exports.getProperties = async (req, res) => {
         query.seller_id = seller_id;
       }
     }
+
+    // Fix: Handle 'type' filter
+    if (type) query.property_type = type;
+
     if (approval) query.approval = approval;
     if (location) query["location.city"] = location;
     if (is_verified) query.is_verified = is_verified === "true";
@@ -393,14 +398,47 @@ exports.deleteProperty = async (req, res) => {
 
 exports.incrementViewCount = async (req, res) => {
   try {
+    const propertyId = req.params.id;
+    // Get IP address (handle proxies)
+    const ip =
+      (req.headers["x-forwarded-for"] || req.connection.remoteAddress)
+        ?.split(",")[0]
+        .trim() || "unknown";
+
+    // Check for recent view (last 24 hours)
+    const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const existingView = await PropertyView.findOne({
+      property_id: propertyId,
+      ip_address: ip,
+      viewed_at: { $gte: last24Hours },
+    });
+
+    if (existingView) {
+      // View exists roughly within 24h, do not increment.
+      // Return current count.
+      const property = await Property.findById(propertyId).select("view_count");
+      if (!property)
+        return res.status(404).json({ error: "Property not found" });
+      return res.json({ view_count: property.view_count });
+    }
+
+    // Create new view record
+    await PropertyView.create({
+      property_id: propertyId,
+      ip_address: ip,
+    });
+
+    // Increment view count
     const property = await Property.findByIdAndUpdate(
-      req.params.id,
+      propertyId,
       { $inc: { view_count: 1 } },
       { new: true },
     );
     if (!property) return res.status(404).json({ error: "Property not found" });
     res.json({ view_count: property.view_count });
   } catch (error) {
+    console.error("Error incrementing view count:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -506,7 +544,8 @@ exports.getAdminStats = async (req, res) => {
     const viewsAggregation = await Property.aggregate([
       { $group: { _id: null, totalViews: { $sum: "$view_count" } } },
     ]);
-    const siteVisits = viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
+    const siteVisits =
+      viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
 
     // 5. Total Enquiries
     const totalEnquiries = await Enquiry.countDocuments();
@@ -515,9 +554,9 @@ exports.getAdminStats = async (req, res) => {
     const propertyDistribution = await Property.aggregate([
       { $group: { _id: "$type", count: { $sum: 1 } } },
     ]);
-    const propertyData = propertyDistribution.map(item => ({
+    const propertyData = propertyDistribution.map((item) => ({
       name: item._id || "Other",
-      value: item.count
+      value: item.count,
     }));
 
     // 7. Pending Properties (for table)
@@ -534,7 +573,7 @@ exports.getAdminStats = async (req, res) => {
       .select("title seller_id createdAt")
       .sort({ createdAt: -1 });
 
-    const recentActivity = recentProperties.map(prop => ({
+    const recentActivity = recentProperties.map((prop) => ({
       title: `New Property "${prop.title}" added`,
       seller: prop.seller_id?.name || "Unknown",
       time: prop.createdAt,
@@ -547,12 +586,12 @@ exports.getAdminStats = async (req, res) => {
       siteVisits,
       totalEnquiries,
       propertyData,
-      pendingProperties: pendingProperties.map(p => ({
+      pendingProperties: pendingProperties.map((p) => ({
         key: p._id,
         property: p.title,
         seller: p.seller_id?.name || "Unknown",
         status: "Pending",
-        id: p._id
+        id: p._id,
       })),
       recentActivity,
     });

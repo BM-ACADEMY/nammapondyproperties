@@ -48,9 +48,9 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
   const SidebarContent = (
     <>
-      <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg">
+      <div className="flex items-center justify-center h-16 m-2 rounded-lg">
         {collapsed && !isMobile ? (
-          <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
+          <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold">
             SP
           </div>
         ) : (
