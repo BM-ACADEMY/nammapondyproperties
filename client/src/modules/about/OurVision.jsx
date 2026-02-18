@@ -15,10 +15,10 @@ export default function OurVision() {
       <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10">
         <Row gutter={[80, 48]} align="middle">
           
-          {/* LEFT SIDE: ARCHITECTURAL ILLUSTRATION (Layout from Reference) */}
+          {/* LEFT SIDE: ARCHITECTURAL ILLUSTRATION */}
           <Col xs={24} lg={12}>
             <div className="relative group">
-              {/* Image Container with visible edges as requested in previous sections */}
+              {/* Image Container with visible edges */}
               <div className="relative z-10 rounded-2xl overflow-hidden shadow-md border border-gray-200 bg-white p-2">
                 <img 
                   src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop" 
@@ -36,25 +36,26 @@ export default function OurVision() {
           <Col xs={24} lg={12}>
             <div className="max-w-xl">
               
-              {/* Heading: Font style matches What We Do and Why Choose Us */}
+              {/* Heading */}
               <div className="mb-6">
                 <span className="text-[#D4AF37] font-bold tracking-[0.2em] uppercase text-xs border border-[#D4AF37]/30 px-4 py-2 rounded-full bg-white">
                   Our Future
                 </span>
               </div>
 
-              <h2 className="text-4xl md:text-5xl font-bold text-[#050B14] mb-8">
+              {/* UPDATED: Changed font-bold to font-light */}
+              <h2 className="text-4xl md:text-5xl font-light text-[#050B14] mb-8">
                 Our Vision
               </h2>
 
-              {/* Provided Content: Strictly using your text */}
+              {/* Provided Content */}
               <div className="space-y-6 text-gray-500 text-lg leading-relaxed mb-10">
                 <p>
                   To become one of the most trusted and reliable real estate brands in Pondicherry by delivering honest services and helping clients make confident property decisions.
                 </p>
               </div>
 
-              {/* Action Button: Matches the Contact Us style from What We Do */}
+              {/* Action Button */}
               <button className="flex items-center gap-3 bg-[#D4AF37] text-[#050B14] font-bold py-4 px-8 rounded-lg hover:bg-[#050B14] hover:text-white transition-all duration-300 shadow-lg group">
                 <span>Contact Us</span>
                 <ArrowRightOutlined className="group-hover:translate-x-1 transition-transform"/>
