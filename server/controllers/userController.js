@@ -402,22 +402,32 @@ exports.addToWishlist = async (req, res) => {
   const { propertyId } = req.body;
   const userId = req.user.id;
 
+  console.log(`[Wishlist] Adding ${propertyId} for user ${userId}`);
+
   try {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (user.wishlist.includes(propertyId)) {
+    // Check if checks string vs ObjectId correctly
+    const isAlreadyInWishlist = user.wishlist.some(
+      (id) => id.toString() === propertyId,
+    );
+
+    if (isAlreadyInWishlist) {
+      console.log(`[Wishlist] Property ${propertyId} already in wishlist`);
       return res.status(400).json({ message: "Property already in wishlist" });
     }
 
     user.wishlist.push(propertyId);
     await user.save();
 
+    console.log(`[Wishlist] Added. New count: ${user.wishlist.length}`);
+
     res
       .status(200)
       .json({ message: "Property added to wishlist", wishlist: user.wishlist });
   } catch (error) {
-    console.error(error);
+    console.error(`[Wishlist Error] Add:`, error);
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -426,6 +436,8 @@ exports.removeFromWishlist = async (req, res) => {
   const { propertyId } = req.body;
   const userId = req.user.id;
 
+  console.log(`[Wishlist] Removing ${propertyId} for user ${userId}`);
+
   try {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -433,12 +445,14 @@ exports.removeFromWishlist = async (req, res) => {
     user.wishlist = user.wishlist.filter((id) => id.toString() !== propertyId);
     await user.save();
 
+    console.log(`[Wishlist] Removed. New count: ${user.wishlist.length}`);
+
     res.status(200).json({
       message: "Property removed from wishlist",
       wishlist: user.wishlist,
     });
   } catch (error) {
-    console.error(error);
+    console.error(`[Wishlist Error] Remove:`, error);
     res.status(500).json({ error: "Server error" });
   }
 };
