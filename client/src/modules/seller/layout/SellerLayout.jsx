@@ -117,7 +117,7 @@ const SellerLayout = () => {
       >
         <Header
           style={{
-            padding: "0 24px",
+            padding: isMobile ? "0 16px" : "0 24px",
             background: colorBgContainer,
             position: "sticky",
             top: 0,
@@ -173,7 +173,7 @@ const SellerLayout = () => {
         <Content
           style={{
             margin: "24px 16px",
-            padding: 24,
+            padding: isMobile ? 16 : 24,
             minHeight: 280,
             background: "#f5f7fa",
             borderRadius: borderRadiusLG,

@@ -11,7 +11,7 @@ import {
   Calendar,
   Home,
   X,
-  Eye
+  Eye,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -56,11 +56,13 @@ const PropertyDetails = () => {
         }
 
         const relatedRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?limit=4`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?limit=10`,
         );
         if (Array.isArray(relatedRes.data.properties)) {
           setMoreProperties(
-            relatedRes.data.properties.filter((p) => p._id !== id),
+            relatedRes.data.properties
+              .filter((p) => String(p._id) !== String(id))
+              .slice(0, 3),
           );
         }
 
@@ -311,7 +313,7 @@ const PropertyDetails = () => {
                   {property.key_attributes.map((attr, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:border-black transition-colors bg-white"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:border-black transition-colors bg-white"
                     >
                       <span className="text-xs text-gray-500 uppercase font-bold">
                         {attr.key}:
