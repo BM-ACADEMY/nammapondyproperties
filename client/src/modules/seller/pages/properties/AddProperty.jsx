@@ -13,17 +13,13 @@ const AddProperty = () => {
   const editId = searchParams.get("edit");
   const [initialData, setInitialData] = useState({});
 
-  const { user } = useAuth(); // Assuming useAuth provides user info
-  // We need to fetch property count or properties to check limit
-  // Better to fetch count/properties on mount if not editing
+  const { user } = useAuth();
 
   const checkLimit = React.useCallback(async () => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?seller_id=${user._id}`,
       );
-      // This endpoint returns { properties: [...] } or array?
-      // Based on MyProperties.jsx it returns properties array in data.properties
       if (res.data.properties && res.data.properties.length >= 2) {
         navigate("/seller/request-limit");
       }
@@ -40,7 +36,6 @@ const AddProperty = () => {
       setInitialData(res.data);
     } catch (error) {
       console.error("Error fetching property:", error);
-      // If 403 or 404, might be permissions or not found
       message.error("Failed to load property details");
     }
   }, [editId]);
@@ -98,17 +93,27 @@ const AddProperty = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">
-        {editId ? "Edit Property" : "Add New Property"}
-      </h1>
-      <PropertyForm
-        onSubmit={onSubmit}
-        loading={loading}
-        isSeller={true}
-        initialData={initialData}
-        isEdit={!!editId}
-      />
+    <div className="p-4 md:p-8 bg-gray-50/50 min-h-screen">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {editId ? "Edit Property" : "Add New Property"}
+          </h1>
+          <p className="text-gray-500">
+            {editId
+              ? "Update your property details and information."
+              : "Fill in the details below to list a new property."}
+          </p>
+        </div>
+
+        <PropertyForm
+          onSubmit={onSubmit}
+          loading={loading}
+          isSeller={true}
+          initialData={initialData}
+          isEdit={!!editId}
+        />
+      </div>
     </div>
   );
 };

@@ -1,12 +1,20 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Layout, Menu, Drawer } from "antd";
-import { LayoutDashboard, Building, PlusCircle, User, MessageSquare, Settings } from "lucide-react";
+import { Layout, Menu, Drawer, Button } from "antd";
+import {
+  LayoutDashboard,
+  Building,
+  User,
+  MessageSquare,
+  LogOut,
+} from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
 
 const { Sider } = Layout;
 
 const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { logout } = useAuth(); // Get logout function
 
   const menuItems = [
     {
@@ -47,10 +55,10 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   ];
 
   const SidebarContent = (
-    <>
-      <div className="flex items-center justify-center h-16 m-2 rounded-lg">
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-center h-16 m-2 rounded-lg shrink-0">
         {collapsed && !isMobile ? (
-          <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold">
+          <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold bg-blue-600">
             SP
           </div>
         ) : (
@@ -60,15 +68,31 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         )}
       </div>
 
-      <Menu
-        theme="dark"
-        mode="inline"
-        selectedKeys={[pathname]}
-        items={menuItems}
-        className="px-2 border-none"
-        style={{ background: "transparent" }}
-      />
-    </>
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[pathname]}
+          items={menuItems}
+          className="px-2 border-none"
+          style={{ background: "transparent" }}
+        />
+      </div>
+
+      <div className="p-4 border-t border-gray-700 shrink-0">
+        <Button
+          type="primary"
+          danger
+          block={!collapsed}
+          icon={<LogOut size={18} />}
+          onClick={logout}
+          className="flex items-center justify-center gap-2"
+          style={collapsed && !isMobile ? { padding: "0 8px" } : {}}
+        >
+          {(!collapsed || isMobile) && "Logout"}
+        </Button>
+      </div>
+    </div>
   );
 
   if (isMobile) {
