@@ -1,33 +1,33 @@
 import { useState, useEffect } from "react";
-import { Home, Building2, LandPlot, Store, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 const PropertyTypeList = () => {
   const navigate = useNavigate();
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Helper function to get icon and color based on type name
-  const getIconAndColorForType = (typeName) => {
+  // Helper function to get details and images based on type name
+  const getCardDetails = (typeName) => {
     const lowerType = typeName.toLowerCase();
 
-    if (lowerType.includes("plot")) {
+    if (lowerType.includes("plot") || lowerType.includes("land")) {
       return {
-        icon: <LandPlot className="w-8 h-8 text-white" />,
-        gradient: "from-blue-500 to-blue-600",
-        bgColor: "bg-blue-50",
+        image: "https://static.360realtors.com/properties/photos/6837/mini/1704283852_0propertyimage.webp",
+        description: "Curated landscapes to build your bespoke dream home.",
+        ctaText: "Explore Plots",
       };
     } else if (lowerType.includes("villa") || lowerType.includes("house")) {
       return {
-        icon: <Home className="w-8 h-8 text-white" />,
-        gradient: "from-green-500 to-green-600",
-        bgColor: "bg-green-50",
+        image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        description: "Experience unparalleled elegance and premium living.",
+        ctaText: "Explore Villas",
       };
     } else if (lowerType.includes("apartment") || lowerType.includes("flat")) {
       return {
-        icon: <Building2 className="w-8 h-8 text-white" />,
-        gradient: "from-purple-500 to-purple-600",
-        bgColor: "bg-purple-50",
+        image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        description: "Elevated urban living spaces tailored for your lifestyle.",
+        ctaText: "Explore Apartments",
       };
     } else if (
       lowerType.includes("commercial") ||
@@ -35,15 +35,15 @@ const PropertyTypeList = () => {
       lowerType.includes("office")
     ) {
       return {
-        icon: <Store className="w-8 h-8 text-white" />,
-        gradient: "from-orange-500 to-orange-600",
-        bgColor: "bg-orange-50",
+        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        description: "Distinguished locations to establish and grow your business.",
+        ctaText: "Explore Commercial",
       };
     } else {
       return {
-        icon: <Home className="w-8 h-8 text-white" />,
-        gradient: "from-gray-500 to-gray-600",
-        bgColor: "bg-gray-50",
+        image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        description: "Discover exceptional properties that match your vision.",
+        ctaText: `Explore ${typeName}`,
       };
     }
   };
@@ -55,12 +55,13 @@ const PropertyTypeList = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.types) {
-          // Map each type to an icon and color
-          const mappedTypes = data.types.map((type) => ({
-            name: type,
-            ...getIconAndColorForType(type),
-            type: type,
-          }));
+          const mappedTypes = data.types
+            .filter((type) => type !== "realestate_with_kamar")
+            .map((type) => ({
+              originalType: type,
+              title: type,
+              ...getCardDetails(type),
+            }));
           setTypes(mappedTypes);
         }
       })
@@ -69,54 +70,80 @@ const PropertyTypeList = () => {
   }, []);
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
-          Explore Property Types
-        </h2>
+    <section className="py-24 bg-[#FAFAFA] font-sans">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+        
+        {/* Premium Header */}
+        <div className="text-center mb-10 flex flex-col items-center">
+          <h2 className="text-4xl md:text-5xl font-light font-serif text-gray-900 tracking-tight">
+            Explore Properties
+          </h2>
+          <div className="w-16 h-[1px] bg-amber-700 mt-6 opacity-60"></div>
+        </div>
 
         {/* Loading State */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          // Adjusted to 4 columns on large screens
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                className="bg-white p-6 rounded-xl shadow-md animate-pulse"
-              >
-                <div className="bg-gray-200 w-16 h-16 rounded-full mx-auto mb-4"></div>
-                <div className="bg-gray-200 h-6 rounded mx-auto w-3/4"></div>
-              </div>
+                // Reduced skeleton height
+                className="bg-gray-200 rounded-xl flex h-[320px] animate-pulse overflow-hidden"
+              ></div>
             ))}
           </div>
         ) : types.length === 0 ? (
-          /* Empty State */
-          <div className="text-center py-12">
-            <div className="bg-white rounded-xl shadow-md p-8 max-w-md mx-auto">
-              <Home className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                No Property Types Available
-              </h3>
-              <p className="text-gray-500">
-                Property types will appear here once they are added to the
-                system.
-              </p>
-            </div>
+          <div className="text-center py-20">
+            <p className="text-gray-500 text-lg font-light">No property types found at this moment.</p>
           </div>
         ) : (
-          /* Property Types Grid */
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {types.map((item) => (
+          
+          /* Property Types Grid - Now 4 columns on desktop for smaller cards */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {types.map((item, index) => (
               <div
-                key={item.name}
-                onClick={() => navigate(`/properties?type=${item.type}`)}
-                className={`${item.bgColor} p-6 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col items-center text-center transform hover:-translate-y-2 hover:scale-105 border border-gray-100 hover:border-gray-200`}
+                key={index}
+                onClick={() => navigate(`/properties?type=${item.originalType}`)}
+                // Reduced height to 320px
+                className="group relative h-[320px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500"
               >
-                <div
-                  className={`bg-gradient-to-br ${item.gradient} p-4 rounded-full mb-4 shadow-lg transform transition-transform duration-300 hover:rotate-6`}
-                >
-                  {item.icon}
+                {/* Background Image */}
+                <div className="absolute inset-0 w-full h-full">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out"
+                  />
                 </div>
-                <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                {/* Content Box - Reduced padding (p-6) */}
+                <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
+                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out">
+                    
+                    {/* Slightly smaller title (text-2xl) */}
+                    <h3 className="font-serif text-2xl text-white mb-2 font-medium tracking-wide">
+                      {item.title}
+                    </h3>
+                    
+                    {/* Adjusted description spacing */}
+                    <p className="text-gray-300 text-sm leading-relaxed mb-5 transition-opacity duration-500 delay-100">
+                      {item.description}
+                    </p>
+
+                    {/* Premium CTA */}
+                    <div className="flex items-center text-amber-400 font-medium text-xs tracking-wider uppercase mt-auto w-max group-hover:text-amber-300 transition-colors">
+                      <span className="relative overflow-hidden pb-1">
+                        {item.ctaText}
+                        <span className="absolute bottom-0 left-0 w-full h-[1px] bg-amber-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></span>
+                      </span>
+                      <ArrowRight className="ml-2 w-4 h-4 transform group-hover:translate-x-1.5 transition-all duration-500 ease-out" />
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

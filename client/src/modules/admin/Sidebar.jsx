@@ -104,6 +104,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           onClick: () => navigate("/admin/profile"),
         },
         {
+          key: "/admin/social-media",
+          label: "Social Media",
+          onClick: () => navigate("/admin/social-media"),
+        },
+        {
           key: "/admin/business-types",
           label: "Business Types",
           onClick: () => navigate("/admin/business-types"),
