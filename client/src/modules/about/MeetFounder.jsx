@@ -35,7 +35,7 @@ export default function MeetFounder() {
           {/* LEFT SIDE: IMAGE WITH DECOR */}
           <Col xs={24} lg={10} className="relative">
             
-            {/* Decorative Squares & Vectors (Updated for Light Mode visibility) */}
+            {/* Decorative Squares & Vectors */}
             
             {/* 1. Gold Frame Outline */}
             <div className="absolute -top-6 -left-6 w-full h-full border border-[#D4AF37]/40 rounded-xl -z-10"></div>
@@ -46,7 +46,7 @@ export default function MeetFounder() {
             {/* 3. Small Geometric Floater */}
             <div className="absolute top-1/2 -left-12 w-6 h-6 border border-[#D4AF37] rotate-45 animate-pulse"></div>
 
-            {/* Main Image Container (Clean edges as requested) */}
+            {/* Main Image Container */}
             <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl border border-gray-200 group bg-white p-2">
               <img 
                 src="/kamar.jpeg" 
@@ -72,16 +72,18 @@ export default function MeetFounder() {
                   The Founder
                 </span>
               </div>
-              {/* Text changed to Dark (#050B14) */}
-              <h2 className="text-4xl md:text-5xl font-bold text-[#050B14] font-serif leading-tight">
+              
+              {/* UPDATED: Removed font-serif, Changed font-bold to font-light */}
+              <h2 className="text-4xl md:text-5xl font-light text-[#050B14] leading-tight">
                 Meet <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#B8860B]">Kamar</span>
               </h2>
+              
               <p className="text-gray-500 text-sm mt-2 uppercase tracking-widest font-semibold">
                 The Heart Behind Namma Pondy Properties
               </p>
             </div>
 
-            {/* Main Story Content (Updated text colors) */}
+            {/* Main Story Content */}
             <div className="space-y-6 text-gray-600 text-lg leading-relaxed font-light">
               <p>
                 Every successful journey begins with a strong purpose. For Kamar, that purpose has always been simple — to help people find not just properties, but places they can truly call home.
@@ -91,7 +93,7 @@ export default function MeetFounder() {
                 With deep roots in Pondicherry and years of real estate experience, Kamar understands that buying land or a house is one of the most important financial decisions in a person’s life.
               </p>
 
-              {/* Highlight Quote Block (Updated for visibility on Light BG) */}
+              {/* Highlight Quote Block */}
               <div className="relative border-l-4 border-[#D4AF37] pl-8 py-6 my-8 bg-white border border-gray-100 rounded-r-lg shadow-sm overflow-hidden">
                 {/* Giant Quote Icon Background */}
                 <div className="absolute -right-4 -bottom-8 text-9xl text-gray-50 font-serif pointer-events-none">”</div>
@@ -106,35 +108,7 @@ export default function MeetFounder() {
               </p>
             </div>
 
-            {/* Contact & Socials */}
-            <div className="mt-12 pt-8 border-t border-gray-200 relative">
-              <div className="flex flex-col md:flex-row md:items-center gap-8">
-                
-                {/* Email */}
-                <div>
-                  <p className="text-gray-400 text-sm mb-1 uppercase tracking-wider">Get in touch</p>
-                  <a href="mailto:contact@nammapondy.com" className="text-[#050B14] font-bold text-lg hover:text-[#D4AF37] transition-colors flex items-center gap-3 group">
-                    <span className="w-10 h-10 rounded-full bg-[#050B14] text-white flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors shadow-md">
-                        <MailOutlined />
-                    </span>
-                    contact@nammapondy.com
-                  </a>
-                </div>
-
-                {/* Social Links */}
-                <div>
-                  <p className="text-gray-400 text-sm mb-2 uppercase tracking-wider">Follow us</p>
-                  <div className="flex gap-4">
-                    {[<InstagramOutlined />, <TwitterOutlined />, <LinkedinFilled />].map((icon, i) => (
-                      <button key={i} className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[#050B14] hover:bg-[#D4AF37] hover:border-[#D4AF37] hover:text-white transition-all duration-300 shadow-sm">
-                        {icon}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </div>
+            
 
           </Col>
 

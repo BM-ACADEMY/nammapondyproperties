@@ -20,7 +20,8 @@ export default function PropertyCTA() {
                 </span>
               </div>
 
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              {/* UPDATED: Changed font-bold to font-light */}
+              <h2 className="text-4xl md:text-6xl font-light text-white mb-6 leading-tight">
                 Let’s Find Your <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] to-[#F2D06B]">
                   Perfect Property
@@ -40,13 +41,13 @@ export default function PropertyCTA() {
 
             <Col xs={24} lg={8} className="flex flex-col gap-10">
               
-              {/* Main Contact Button - CHANGED: Added 'justify-center' and 'gap-3' */}
+              {/* Main Contact Button */}
               <button className="w-full flex items-center justify-center gap-3 bg-[#D4AF37] text-[#050B14] font-extrabold py-4 px-8 rounded-xl hover:bg-white transition-all duration-300 shadow-[0_10px_30px_rgba(212,175,55,0.2)] group">
                 <span className="uppercase tracking-widest text-sm">Contact Us Today</span>
                 <ArrowRightOutlined className="text-xl group-hover:translate-x-2 transition-transform" />
               </button>
 
-              {/* WhatsApp Secondary Option - Matches the centered style */}
+              {/* WhatsApp Secondary Option */}
               <button className="w-full mt-2 flex items-center justify-center gap-3 bg-white/10 text-white border border-white/10 font-extrabold py-4 px-8 rounded-xl hover:bg-white/20 transition-all duration-300">
                 <WhatsAppOutlined className="text-[#25D366] text-xl" />
                 <span className="uppercase tracking-widest text-sm">WhatsApp Chat</span>
