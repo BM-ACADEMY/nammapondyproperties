@@ -8,6 +8,7 @@ import {
   Settings,
   MessageSquare,
   LibraryBig,
+  Megaphone,
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -81,6 +82,12 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => navigate("/admin/enquiries"),
     },
     {
+      key: "/admin/advertisements",
+      icon: <Megaphone size={20} />,
+      label: "Advertisements",
+      onClick: () => navigate("/admin/advertisements"),
+    },
+    {
       key: "/admin/testimonials",
       icon: <MessageSquare size={20} />, // Reusing icon or using a new one like Star if available
       label: "Testimonials",
@@ -95,6 +102,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           key: "/admin/profile",
           label: "My Profile",
           onClick: () => navigate("/admin/profile"),
+        },
+        {
+          key: "/admin/social-media",
+          label: "Social Media",
+          onClick: () => navigate("/admin/social-media"),
         },
         {
           key: "/admin/business-types",

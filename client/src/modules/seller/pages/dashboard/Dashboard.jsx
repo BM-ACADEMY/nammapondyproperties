@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Building, Eye, MessageSquare, TrendingUp, AlertCircle, Edit } from 'lucide-react';
+import { Building, Eye, MessageSquare, TrendingUp, AlertCircle, Edit, BarChart3, ArrowUp, ArrowDown } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
-import { Spin, message, Alert } from 'antd';
+import { Spin, message, Alert, Card, Row, Col, Statistic, Typography } from 'antd';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const { Title } = Typography;
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -10,7 +13,8 @@ const Dashboard = () => {
     activeProperties: 0,
     totalViews: 0,
     totalLeads: 0,
-    topProperties: []
+    topProperties: [],
+    enquiries: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,8 +23,21 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get('/properties/seller-stats');
-        setStats(response.data);
+        const statsResponse = await api.get('/properties/seller-stats');
+
+        // Try to fetch enquiries, but don't fail if endpoint doesn't exist
+        let enquiriesData = [];
+        try {
+          const enquiriesResponse = await api.get('/enquiries/seller-enquiries');
+          enquiriesData = enquiriesResponse.data || [];
+        } catch (enquiryError) {
+          console.log("Enquiries endpoint not available yet");
+        }
+
+        setStats({
+          ...statsResponse.data,
+          enquiries: enquiriesData
+        });
       } catch (err) {
         console.error("Failed to fetch dashboard stats", err);
         setError("Failed to load dashboard data.");
@@ -45,7 +62,7 @@ const Dashboard = () => {
     return (
       <div className="p-6">
         <Alert
-          message="Error"
+          title="Error"
           description={error}
           type="error"
           showIcon
@@ -59,80 +76,152 @@ const Dashboard = () => {
     );
   }
 
-  const statCards = [
-    { title: 'Total Properties', value: stats.totalProperties, icon: <Building className="w-8 h-8 text-blue-600" /> },
-    { title: 'Active Properties', value: stats.activeProperties, icon: <AlertCircle className="w-8 h-8 text-green-600" /> }, // Changed icon/color
-    { title: 'Total Views', value: stats.totalViews.toLocaleString(), icon: <Eye className="w-8 h-8 text-purple-600" /> },
-    { title: 'Total Leads', value: stats.totalLeads, icon: <MessageSquare className="w-8 h-8 text-orange-600" /> },
+  const statCardsData = [
+    {
+      title: 'Total Properties',
+      value: stats.totalProperties,
+      icon: <Building size={24} className="text-blue-500" />,
+      trend: 12,
+      color: '#e6f7ff'
+    },
+    {
+      title: 'Active Properties',
+      value: stats.activeProperties,
+      icon: <AlertCircle size={24} className="text-green-500" />,
+      trend: 5,
+      color: '#f6ffed'
+    },
+    {
+      title: 'Total Views',
+      value: stats.totalViews,
+      icon: <Eye size={24} className="text-purple-500" />,
+      trend: 18,
+      color: '#f9f0ff'
+    },
+    {
+      title: 'Total Enquiries',
+      value: stats.enquiries.length || 0,
+      icon: <MessageSquare size={24} className="text-orange-500" />,
+      trend: 8,
+      color: '#fff7e6'
+    },
   ];
 
+  // Prepare chart data
+  const propertyStatusData = [
+    { name: 'Available', value: stats.activeProperties, color: '#10b981' },
+    { name: 'Sold/Rented', value: stats.totalProperties - stats.activeProperties, color: '#ef4444' },
+  ];
+
+  const viewsData = stats.topProperties.slice(0, 5).map(prop => ({
+    name: prop.title.substring(0, 20) + '...',
+    views: prop.view_count
+  }));
+
+  const enquiriesOverTime = stats.enquiries
+    .reduce((acc, curr) => {
+      const date = new Date(curr.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const existing = acc.find(item => item.date === date);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        acc.push({ date, count: 1 });
+      }
+      return acc;
+    }, [])
+    .slice(-7);
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Seller Dashboard</h1>
-        <Link to="/seller/add-property" className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-md transition">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <Title level={2} style={{ margin: 0 }}>
+            Seller Dashboard
+          </Title>
+          <div className="text-gray-500 mt-1">Welcome back! Here's your property overview</div>
+        </div>
+        {/* <Link
+          to="/seller/add-property"
+          className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-md transition font-semibold"
+        >
           + Add New Property
-        </Link>
+        </Link> */}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {statCards.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex items-center justify-between hover:shadow-md transition">
-            <div>
-              <p className="text-sm text-gray-500 font-medium">{stat.title}</p>
-              <h3 className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</h3>
-            </div>
-            <div className="p-3 bg-blue-50 rounded-full">
-              {stat.icon}
-            </div>
-          </div>
+      {/* Stats Cards */}
+      <Row gutter={[24, 24]}>
+        {statCardsData.map((stat, index) => (
+          <Col xs={24} sm={12} lg={6} key={index}>
+            <Card
+              bordered={false}
+              className="shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-start">
+                <Statistic
+                  title={
+                    <span className="text-gray-500 font-medium">
+                      {stat.title}
+                    </span>
+                  }
+                  value={stat.value}
+                  valueStyle={{ fontWeight: "bold" }}
+                />
+                <div
+                  style={{ background: stat.color }}
+                  className="p-3 rounded-full"
+                >
+                  {stat.icon}
+                </div>
+              </div>
+              <div
+                className={`mt-4 flex items-center text-sm ${stat.trend > 0 ? "text-green-500" : "text-red-500"}`}
+              >
+                {stat.trend > 0 ? (
+                  <ArrowUp size={16} className="mr-1" />
+                ) : (
+                  <ArrowDown size={16} className="mr-1" />
+                )}
+                <span className="font-medium">{Math.abs(stat.trend)}%</span>
+                <span className="text-gray-400 ml-2">vs last month</span>
+              </div>
+            </Card>
+          </Col>
         ))}
-      </div>
+      </Row>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-4">Top Performing Properties</h3>
-        {stats.topProperties.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="p-3 font-semibold text-gray-600">Property Title</th>
-                  <th className="p-3 font-semibold text-gray-600">Views</th>
-                  <th className="p-3 font-semibold text-gray-600">Status</th>
-                  <th className="p-3 font-semibold text-gray-600">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {stats.topProperties.map((property) => (
-                  <tr key={property._id} className="hover:bg-gray-50 transition">
-                    <td className="p-3 font-medium text-gray-800">
-                      {/* Could add image thumbnail here if available in projection */}
-                      {property.title}
-                    </td>
-                    <td className="p-3 text-gray-600">{property.view_count}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded text-xs ${property.status === 'available' ? 'bg-green-100 text-green-700' :
-                          property.status === 'sold' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
-                        }`}>
-                        {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      <Link to={`/seller/properties/edit/${property._id}`} className="text-blue-600 hover:text-blue-800 flex items-center">
-                        <Edit size={16} className="mr-1" /> Edit
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            No properties found. Start by adding one!
-          </div>
-        )}
-      </div>
+      {/* Comprehensive Statistics Chart */}
+      <Row gutter={[24, 24]} className="mb-8">
+        <Col xs={24}>
+          <Card className="shadow-md rounded-xl" title={<span className="text-lg font-semibold">Dashboard Statistics Overview</span>}>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={[
+                  { name: 'Total Properties', value: stats.totalProperties, fill: '#3b82f6' },
+                  { name: 'Active Properties', value: stats.activeProperties, fill: '#10b981' },
+                  { name: 'Total Views', value: stats.totalViews, fill: '#8b5cf6' },
+                  { name: 'Total Enquiries', value: stats.enquiries.length || 0, fill: '#f97316' },
+                ]}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" angle={-15} textAnchor="end" height={80} fontSize={12} />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                  {[
+                    { fill: '#3b82f6' },
+                    { fill: '#10b981' },
+                    { fill: '#8b5cf6' },
+                    { fill: '#f97316' },
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+        </Col>
+      </Row>
     </div>
   );
 };

@@ -10,12 +10,25 @@ import {
   User,
   Calendar,
   Home,
+
   X,
 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix for default marker icon
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 import { toast } from "react-hot-toast";
 import LoginModal from "../../../components/Auth/LoginModal";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
+import { recordPropertyView } from "../../../utils/propertyViewTracker";
 // Ensure AntD is installed, or use custom modal. The user has AntD.
 
 const PropertyDetails = () => {
@@ -54,6 +67,9 @@ const PropertyDetails = () => {
             relatedRes.data.properties.filter((p) => p._id !== id),
           );
         }
+
+        // Record property view (with daily uniqueness check)
+        recordPropertyView(id);
       } catch (error) {
         console.error("Error fetching property details", error);
       } finally {
@@ -141,9 +157,9 @@ const PropertyDetails = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left Column: Images & Details */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="md:col-span-2 space-y-8">
             {/* Image Gallery */}
             <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
               <div className="h-[400px] md:h-[500px] relative bg-gray-200">
@@ -271,6 +287,45 @@ const PropertyDetails = () => {
                 </div>
               </div>
             )}
+
+
+            {/* Map Section */}
+            {property?.location?.latitude && property?.location?.longitude && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                  Location
+                </h3>
+                <div className="h-[300px] w-full rounded-xl overflow-hidden border border-gray-100 mb-2">
+                  <MapContainer
+                    center={[property.location.latitude, property.location.longitude]}
+                    zoom={14}
+                    scrollWheelZoom={false}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker
+                      position={[property.location.latitude, property.location.longitude]}
+                    >
+                      <Popup>
+                        {property.title} <br /> {property.location.city}
+                      </Popup>
+                    </Marker>
+                  </MapContainer>
+                </div>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${property.location.latitude},${property.location.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center text-blue-600 font-medium text-sm hover:underline"
+                >
+                  View on Google Maps
+                </a>
+              </div>
+            )}
+
           </div>
 
           {/* Right Column: Sidebar */}
@@ -333,6 +388,9 @@ const PropertyDetails = () => {
                 Response time: Usually within 1 hour
               </div>
             </div>
+
+
+
           </div>
         </div>
 

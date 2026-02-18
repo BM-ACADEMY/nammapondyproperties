@@ -15,6 +15,8 @@ import ApprovalTypeManager from "./pages/ApprovalTypeManager";
 import TestimonialManager from "./pages/TestimonialManager";
 import GeneralSettings from "./pages/settings/GeneralSettings";
 import SellerRequests from "./pages/SellerRequests";
+import Advertisements from "./pages/Advertisements";
+import SocialMediaManager from "./pages/SocialMediaManager";
 
 const AdminRoute = () => {
   return (
@@ -40,6 +42,8 @@ const AdminRoute = () => {
         <Route path="property-types" element={<PropertyTypeManager />} />
         <Route path="approval-types" element={<ApprovalTypeManager />} />
         <Route path="testimonials" element={<TestimonialManager />} />
+        <Route path="advertisements" element={<Advertisements />} />
+        <Route path="social-media" element={<SocialMediaManager />} />
         {/* Settings route can be placeholder too if needed */}
       </Route>
     </Routes>

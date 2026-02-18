@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Space, Button, message, Popconfirm, Input } from "antd";
-import { Search } from "lucide-react";
+import { Table, Tag, Space, Button, message, Popconfirm, Input, Modal, Descriptions, Carousel } from "antd";
+import { Search, Eye } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -9,8 +9,24 @@ const AdminProperties = ({ mode }) => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
+    const [viewModalVisible, setViewModalVisible] = useState(false);
+    const [selectedProperty, setSelectedProperty] = useState(null);
     const navigate = useNavigate();
     const { user } = useAuth();
+
+    const handleViewDetail = (property) => {
+        setSelectedProperty(property);
+        setViewModalVisible(true);
+    };
+
+    const handleCloseModal = () => {
+        setViewModalVisible(false);
+        setSelectedProperty(null);
+    };
+
+    const getImageUrl = (path) => {
+        return `${import.meta.env.VITE_API_URL.replace("/api", "")}${path}`;
+    };
 
     useEffect(() => {
         fetchProperties();
@@ -110,6 +126,7 @@ const AdminProperties = ({ mode }) => {
             title: "Location",
             dataIndex: "location",
             key: "location",
+            render: (loc) => loc?.city || "N/A",
         },
         {
             title: "Status",
@@ -151,6 +168,14 @@ const AdminProperties = ({ mode }) => {
             key: "action",
             render: (_, record) => (
                 <Space size="middle">
+                    <Button
+                        size="small"
+                        icon={<Eye size={14} />}
+                        onClick={() => handleViewDetail(record)}
+                        type="default"
+                    >
+                        View Detail
+                    </Button>
                     <Button
                         size="small"
                         onClick={() => navigate(`/admin/properties/add?edit=${record._id}`)}
@@ -206,6 +231,201 @@ const AdminProperties = ({ mode }) => {
                     pagination={{ pageSize: 10 }}
                 />
             </div>
+
+            {/* Property Detail Modal */}
+            <Modal
+                title={
+                    <div className="flex items-center gap-2">
+                        <Eye size={20} />
+                        <span className="text-lg font-semibold">Property Details</span>
+                    </div>
+                }
+                open={viewModalVisible}
+                onCancel={handleCloseModal}
+                footer={[
+                    <Button key="close" onClick={handleCloseModal}>
+                        Close
+                    </Button>,
+                    <Button
+                        key="edit"
+                        type="primary"
+                        onClick={() => {
+                            navigate(`/admin/properties/add?edit=${selectedProperty?._id}`);
+                            handleCloseModal();
+                        }}
+                        disabled={mode === 'seller'}
+                    >
+                        Edit Property
+                    </Button>,
+                ]}
+                width="95%"
+                style={{
+                    maxWidth: '1000px',
+                    top: 20
+                }}
+                bodyStyle={{
+                    maxHeight: 'calc(100vh - 200px)',
+                    overflowY: 'auto',
+                    padding: '24px'
+                }}
+                className="property-detail-modal"
+            >
+                {selectedProperty && (
+                    <div className="space-y-6">
+                        {/* Image Gallery */}
+                        {selectedProperty.images && selectedProperty.images.length > 0 && (
+                            <div className="mb-6">
+                                <h3 className="text-lg font-semibold mb-3">Images</h3>
+                                <Carousel autoplay>
+                                    {selectedProperty.images.map((img, index) => (
+                                        <div key={index}>
+                                            <img
+                                                src={getImageUrl(img.image_url)}
+                                                alt={`Property ${index + 1}`}
+                                                className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover rounded-lg"
+                                            />
+                                        </div>
+                                    ))}
+                                </Carousel>
+                            </div>
+                        )}
+
+                        {/* Basic Information */}
+                        <div>
+                            <h3 className="text-lg font-semibold mb-3">Basic Information</h3>
+                            <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
+                                <Descriptions.Item label="Title" span={2}>
+                                    {selectedProperty.title}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Description" span={2}>
+                                    {selectedProperty.description}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Property Type">
+                                    {selectedProperty.property_type}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Price">
+                                    ₹{selectedProperty.price?.toLocaleString()}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Status">
+                                    <Tag color={selectedProperty.status === "available" ? "green" : "red"}>
+                                        {selectedProperty.status?.toUpperCase()}
+                                    </Tag>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Verification">
+                                    <Tag color={selectedProperty.is_verified ? "green" : "orange"}>
+                                        {selectedProperty.is_verified ? "Verified" : "Pending"}
+                                    </Tag>
+                                </Descriptions.Item>
+                            </Descriptions>
+                        </div>
+
+                        {/* Location Information */}
+                        {selectedProperty.location && (
+                            selectedProperty.location.street ||
+                            selectedProperty.location.city ||
+                            selectedProperty.location.state ||
+                            selectedProperty.location.pincode ||
+                            selectedProperty.location.country
+                        ) && (
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Location</h3>
+                                    <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
+                                        {selectedProperty.location?.country && (
+                                            <Descriptions.Item label="Country" span={2}>
+                                                {selectedProperty.location.country}
+                                            </Descriptions.Item>
+                                        )}
+                                        {selectedProperty.location?.city && (
+                                            <Descriptions.Item label="City">
+                                                {selectedProperty.location.city}
+                                            </Descriptions.Item>
+                                        )}
+                                        {selectedProperty.location?.state && (
+                                            <Descriptions.Item label="State">
+                                                {selectedProperty.location.state}
+                                            </Descriptions.Item>
+                                        )}
+                                        {selectedProperty.location?.pincode && (
+                                            <Descriptions.Item label="Pincode">
+                                                {selectedProperty.location.pincode}
+                                            </Descriptions.Item>
+                                        )}
+                                    </Descriptions>
+                                </div>
+                            )}
+
+                        {/* PropertyAttributes */}
+                        {selectedProperty.key_attributes && selectedProperty.key_attributes.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">Property Attributes</h3>
+                                <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
+                                    {selectedProperty.key_attributes.map((attr, index) => (
+                                        attr.key && attr.value && (
+                                            <Descriptions.Item key={index} label={attr.key}>
+                                                {attr.value}
+                                            </Descriptions.Item>
+                                        )
+                                    ))}
+                                </Descriptions>
+                            </div>
+                        )}
+
+                        {/* Amenities */}
+                        {selectedProperty.amenities && selectedProperty.amenities.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">Amenities</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedProperty.amenities.map((amenity, index) => (
+                                        <Tag key={index} color="blue">
+                                            {amenity}
+                                        </Tag>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Features */}
+                        {selectedProperty.features && selectedProperty.features.length > 0 && (
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">Features</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedProperty.features.map((feature, index) => (
+                                        <Tag key={index} color="green">
+                                            {feature}
+                                        </Tag>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Additional Information */}
+                        {(selectedProperty.createdAt ||
+                            selectedProperty.updatedAt ||
+                            selectedProperty.views !== undefined) && (
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-3">Additional Information</h3>
+                                    <Descriptions bordered column={{ xs: 1, sm: 1, md: 2 }}>
+                                        {selectedProperty.createdAt && (
+                                            <Descriptions.Item label="Posted Date">
+                                                {new Date(selectedProperty.createdAt).toLocaleDateString()}
+                                            </Descriptions.Item>
+                                        )}
+                                        {selectedProperty.updatedAt && (
+                                            <Descriptions.Item label="Last Updated">
+                                                {new Date(selectedProperty.updatedAt).toLocaleDateString()}
+                                            </Descriptions.Item>
+                                        )}
+                                        {selectedProperty.views !== undefined && (
+                                            <Descriptions.Item label="Total Views" span={2}>
+                                                {selectedProperty.views}
+                                            </Descriptions.Item>
+                                        )}
+                                    </Descriptions>
+                                </div>
+                            )}
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };

@@ -28,6 +28,7 @@ const propertySchema = new mongoose.Schema(
     view_count: { type: Number, default: 0 },
     approval: { type: String }, // Dynamic now
     key_attributes: [{ key: String, value: String }], // Array of key-value pairs
+    advertiseOnSocialMedia: { type: Boolean, default: false }, // Advertisement opt-in
   },
   { timestamps: true },
 );

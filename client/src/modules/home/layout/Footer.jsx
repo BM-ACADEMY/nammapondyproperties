@@ -8,6 +8,9 @@ import {
   Mail,
   Phone,
   MapPin,
+  Youtube,
+  Github,
+  Globe,
 } from "lucide-react";
 
 const Footer = () => {
@@ -31,19 +34,25 @@ const Footer = () => {
     fetchSocialLinks();
   }, []);
 
-  const getIcon = (platform) => {
-    switch (platform.toLowerCase()) {
-      case "facebook":
-        return <Facebook className="w-5 h-5" />;
-      case "twitter":
-        return <Twitter className="w-5 h-5" />;
-      case "instagram":
-        return <Instagram className="w-5 h-5" />;
-      case "linkedin":
-        return <Linkedin className="w-5 h-5" />;
-      default:
-        return null;
-    }
+  const getIcon = (iconName) => {
+    // Check if iconName is one of our known keys, otherwise default to Globe
+    // The admin panel saves explicit icon names: "Facebook", "Twitter", etc.
+    const name = iconName || "";
+    if (name === "Facebook") return <Facebook className="w-5 h-5" />;
+    if (name === "Twitter") return <Twitter className="w-5 h-5" />;
+    if (name === "Instagram") return <Instagram className="w-5 h-5" />;
+    if (name === "Linkedin") return <Linkedin className="w-5 h-5" />;
+    if (name === "Youtube") return <Youtube className="w-5 h-5" />;
+    if (name === "Github") return <Github className="w-5 h-5" />;
+
+    // Fallback for legacy or unknown
+    const lower = name.toLowerCase();
+    if (lower.includes("facebook")) return <Facebook className="w-5 h-5" />;
+    if (lower.includes("twitter")) return <Twitter className="w-5 h-5" />;
+    if (lower.includes("instagram")) return <Instagram className="w-5 h-5" />;
+    if (lower.includes("linkedin")) return <Linkedin className="w-5 h-5" />;
+
+    return <Globe className="w-5 h-5" />;
   };
 
   return (
@@ -110,17 +119,18 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
             <div className="flex space-x-4">
-              {/* {socialLinks?.map((link) => (
+              {socialLinks?.map((link) => (
                 <a
                   key={link._id}
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-gray-800 p-2 rounded-full hover:bg-blue-600 transition duration-300"
+                  title={link.platform}
                 >
-                  {getIcon(link.platform) || <span className="text-xs">{link.platform}</span>}
+                  {getIcon(link.icon || link.platform)}
                 </a>
-              ))} */}
+              ))}
             </div>
           </div>
         </div>

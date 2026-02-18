@@ -8,7 +8,7 @@ import WishlistButton from "../../../components/Common/WishlistButton";
 const FavoritesPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, token } = useAuth();
 
   useEffect(() => {
     if (user && user.wishlist) {
@@ -40,7 +40,6 @@ const FavoritesPage = () => {
 
     setLoading(true);
     try {
-      const token = sessionStorage.getItem("token");
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/users/wishlist`,
         { headers: { Authorization: `Bearer ${token}` } },
@@ -156,7 +155,7 @@ const FavoritesPage = () => {
               Start exploring properties and save them here!
             </p>
             <Link
-              to="/properties"
+              to="/"
               className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition"
             >
               Browse Properties

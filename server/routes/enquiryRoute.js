@@ -25,6 +25,9 @@ router.post('/create', enquiryController.createEnquiry); // Public
 // Get enquiries (Protected)
 router.get('/fetch-all', protect, enquiryController.getEnquiries);
 
+// Seller specific - get their own enquiries
+router.get('/seller-enquiries', protect, enquiryController.getEnquiries);
+
 // Admin specific
 router.get('/admin/fetch-all', protect, enquiryController.getAllEnquiriesAdmin);
 

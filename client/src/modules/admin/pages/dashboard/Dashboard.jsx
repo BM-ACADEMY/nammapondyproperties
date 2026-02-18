@@ -8,6 +8,8 @@ import {
   Tag,
   Button,
   Typography,
+  Spin,
+  message,
 } from "antd";
 import {
   Users,
@@ -16,6 +18,7 @@ import {
   Eye,
   ArrowUp,
   ArrowDown,
+  MessageSquare,
 } from "lucide-react";
 import {
   PieChart,
@@ -25,15 +28,56 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "@/services/api";
+import { formatDistanceToNow } from "date-fns";
 
 const { Title } = Typography;
 
 const Dashboard = () => {
-  // Mock data for statistics
-  const stats = [
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchAdminStats = async () => {
+      try {
+        const response = await api.get("/properties/admin-stats");
+        setStats(response.data);
+      } catch (error) {
+        console.error("Error fetching admin stats:", error);
+        message.error("Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdminStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-gray-500">
+          Failed to load dashboard data
+        </div>
+      </div>
+    );
+  }
+
+  const statCards = [
     {
       title: "Total Users",
-      value: 1234,
+      value: stats.totalUsers,
       icon: <Users size={24} className="text-blue-500" />,
       prefix: "",
       suffix: "",
@@ -42,7 +86,7 @@ const Dashboard = () => {
     },
     {
       title: "Total Properties",
-      value: 567,
+      value: stats.totalProperties,
       icon: <Building size={24} className="text-green-500" />,
       prefix: "",
       suffix: "",
@@ -51,7 +95,7 @@ const Dashboard = () => {
     },
     {
       title: "Pending Approvals",
-      value: 23,
+      value: stats.pendingApprovals,
       icon: <FileCheck size={24} className="text-orange-500" />,
       prefix: "",
       suffix: "",
@@ -60,7 +104,7 @@ const Dashboard = () => {
     },
     {
       title: "Site Visits",
-      value: 45200,
+      value: stats.siteVisits,
       icon: <Eye size={24} className="text-purple-500" />,
       prefix: "",
       suffix: "",
@@ -69,25 +113,15 @@ const Dashboard = () => {
     },
   ];
 
-  // Mock data for charts
-  const PropertyData = [
-    { name: "Residential", value: 400 },
-    { name: "Commercial", value: 300 },
-    { name: "Land", value: 300 },
-    { name: "Industrial", value: 200 },
-  ];
-  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
   // Mock data for recent activity
-  const recentActivity = [
-    { title: "John Doe registered as Seller", time: "2 hours ago" },
-    { title: 'New Property "Sunset Villa" added', time: "4 hours ago" },
-    { title: "Review reported by System", time: "5 hours ago" },
-    { title: "Sarah Smith updated profile", time: "1 day ago" },
-    { title: "Payment received for #INV-2024", time: "1 day ago" },
-  ];
+  const recentActivity = stats.recentActivity.map((activity) => ({
+    title: activity.title,
+    time: formatDistanceToNow(new Date(activity.time), { addSuffix: true }),
+  }));
 
-  // Mock data for pending table
+  // Pending table columns
   const pendingColumns = [
     { title: "Property", dataIndex: "property", key: "property" },
     { title: "Seller", dataIndex: "seller", key: "seller" },
@@ -100,32 +134,15 @@ const Dashboard = () => {
     {
       title: "Action",
       key: "action",
-      render: () => (
-        <Button type="link" size="small">
+      render: (_, record) => (
+        <Button
+          type="link"
+          size="small"
+          onClick={() => navigate(`/admin/properties`)}
+        >
           Review
         </Button>
       ),
-    },
-  ];
-
-  const pendingData = [
-    {
-      key: "1",
-      property: "Luxury Villa in Auroville",
-      seller: "Rajesh Kumar",
-      status: "Pending",
-    },
-    {
-      key: "2",
-      property: "Beachfront Land",
-      seller: "Priya S",
-      status: "Pending",
-    },
-    {
-      key: "3",
-      property: "City Center Apartment",
-      seller: "Amit Klein",
-      status: "Pending",
     },
   ];
 
@@ -135,12 +152,14 @@ const Dashboard = () => {
         <Title level={2} style={{ margin: 0 }}>
           Dashboard Overview
         </Title>
-        <div className="text-gray-500">Last updated: Today, 12:00 PM</div>
+        <div className="text-gray-500">
+          Last updated: {new Date().toLocaleString()}
+        </div>
       </div>
 
       {/* Stats Grid */}
       <Row gutter={[24, 24]}>
-        {stats.map((stat, index) => (
+        {statCards.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card
               bordered={false}
@@ -222,7 +241,7 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={PropertyData}
+                    data={stats.propertyData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -231,7 +250,7 @@ const Dashboard = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {PropertyData.map((entry, index) => (
+                    {stats.propertyData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
@@ -251,7 +270,7 @@ const Dashboard = () => {
       <Card title="Pending Approvals" bordered={false} className="shadow-sm">
         <Table
           columns={pendingColumns}
-          dataSource={pendingData}
+          dataSource={stats.pendingProperties}
           pagination={false}
           size="small"
         />
