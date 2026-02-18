@@ -147,9 +147,8 @@ const Header = () => {
                   <button className="flex items-center text-gray-600 group-hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide focus:outline-none">
                     Properties
                     <ChevronDown
-                      className={`ml-1 h-4 w-4 transition-transform duration-200 ${
-                        isPropertiesDesktopOpen ? "rotate-180" : ""
-                      }`}
+                      className={`ml-1 h-4 w-4 transition-transform duration-200 ${isPropertiesDesktopOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
@@ -166,7 +165,7 @@ const Header = () => {
                           {/* Left Column: Navigation Links */}
                           <div className="w-5/12 py-4 pl-4 pr-2 flex flex-col justify-top space-y-1">
                             {[
-                             
+
                               { label: "Find Agents", to: "/properties/agent" },
                               { label: "Find Builders", to: "/properties/builders" },
                             ].map((item, index) => (
@@ -183,11 +182,11 @@ const Header = () => {
                           {/* Right Column: Promotional Card WITH IMAGE OVERLAY */}
                           <div className="w-7/12 p-2">
                             <div className="relative h-full rounded-xl overflow-hidden group cursor-pointer">
-                              
+
                               {/* 1. Background Image */}
                               <div className="absolute inset-0">
-                                <img 
-                                  src="/banner.png" 
+                                <img
+                                  src="/banner.png"
                                   // ^ Replace this URL with your local image: src="/images/menu-promo.jpg"
                                   alt="Property Promo"
                                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -224,7 +223,7 @@ const Header = () => {
                               </div>
                             </div>
                           </div>
-                          
+
                         </div>
                       </motion.div>
                     )}
@@ -264,12 +263,39 @@ const Header = () => {
                   onMouseEnter={() => setIsUserMenuOpen(true)}
                   onMouseLeave={() => setIsUserMenuOpen(false)}
                 >
-                  <button className="flex items-center space-x-2 focus:outline-none py-2">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-[2px] rounded-full">
-                      <div className="bg-white p-1.5 rounded-full">
-                        <User className="h-5 w-5 text-blue-600" />
+                  <button className="flex items-center space-x-2 focus:outline-none py-1 group">
+                    <div className="relative">
+                      <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-all duration-300 shadow-sm ring-2 ring-gray-100 group-hover:ring-blue-100">
+                        {user?.profile_image ? (
+                          <img
+                            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.style.display = "none";
+                              e.target.nextSibling.style.display = "flex";
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-sm ${user?.profile_image ? "hidden" : "flex"
+                            }`}
+                        >
+                          {user?.name?.charAt(0).toUpperCase() || "U"}
+                        </div>
                       </div>
+                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 border-2 border-white rounded-full"></div>
                     </div>
+                    {/* <div className="hidden lg:block text-left">
+                      <p className="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">
+                        Hello, {user?.name?.split(" ")[0]}
+                      </p>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">
+                        {user?.role?.name || "Member"}
+                      </p>
+                    </div> */}
+                    <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-blue-500 transition-colors hidden lg:block" />
                   </button>
 
                   {/* User Dropdown */}
@@ -280,18 +306,21 @@ const Header = () => {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-2xl py-2 z-50 border border-gray-100"
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-gray-100 py-2 z-50 overflow-hidden"
                       >
-                        <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/50">
-                          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">
+                        <div className="px-5 py-3 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 mb-1">
+                          <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-0.5">
                             Signed in as
                           </p>
-                          <p className="text-sm font-bold text-gray-900 truncate mt-0.5">
+                          <p className="text-sm font-bold text-gray-900 truncate">
                             {user?.name || user?.user?.name || "User"}
+                          </p>
+                          <p className="text-[11px] text-gray-500 truncate">
+                            {user?.email}
                           </p>
                         </div>
 
-                        <div className="py-2">
+                        <div className="px-1 space-y-0.5">
                           {(() => {
                             const role = (
                               user?.role?.name ||
@@ -303,9 +332,11 @@ const Header = () => {
                               return (
                                 <Link
                                   to="/admin/dashboard"
-                                  className="flex items-center px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all group"
                                 >
-                                  <LayoutDashboard className="h-4 w-4 mr-3" />{" "}
+                                  <div className="p-1.5 bg-gray-100 group-hover:bg-blue-100 rounded-md mr-2 transition-colors">
+                                    <LayoutDashboard className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-600" />
+                                  </div>
                                   Dashboard
                                 </Link>
                               );
@@ -313,9 +344,11 @@ const Header = () => {
                               return (
                                 <Link
                                   to="/seller/dashboard"
-                                  className="flex items-center px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all group"
                                 >
-                                  <LayoutDashboard className="h-4 w-4 mr-3" />{" "}
+                                  <div className="p-1.5 bg-gray-100 group-hover:bg-blue-100 rounded-md mr-2 transition-colors">
+                                    <LayoutDashboard className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-600" />
+                                  </div>
                                   Dashboard
                                 </Link>
                               );
@@ -324,15 +357,20 @@ const Header = () => {
                                 <>
                                   <Link
                                     to="/user/profile"
-                                    className="flex items-center px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all group"
                                   >
-                                    <User className="h-4 w-4 mr-3" /> Profile
+                                    <div className="p-1.5 bg-gray-100 group-hover:bg-blue-100 rounded-md mr-2 transition-colors">
+                                      <User className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-600" />
+                                    </div>
+                                    Profile Settings
                                   </Link>
                                   <Link
                                     to="/become-seller"
-                                    className="flex items-center px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-colors"
+                                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all group"
                                   >
-                                    <Briefcase className="h-4 w-4 mr-3" />{" "}
+                                    <div className="p-1.5 bg-gray-100 group-hover:bg-blue-100 rounded-md mr-2 transition-colors">
+                                      <Briefcase className="h-3.5 w-3.5 text-gray-500 group-hover:text-blue-600" />
+                                    </div>
                                     Become a Seller
                                   </Link>
                                 </>
@@ -341,12 +379,15 @@ const Header = () => {
                           })()}
                         </div>
 
-                        <div className="border-t border-gray-100 mt-1 pt-2 pb-1 px-2">
+                        <div className="border-t border-gray-100 mt-1 pt-1 px-1">
                           <button
                             onClick={handleLogout}
-                            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg flex items-center transition-colors font-medium"
+                            className="w-full text-left px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg flex items-center transition-all group"
                           >
-                            <LogOut className="h-4 w-4 mr-2" /> Logout
+                            <div className="p-1.5 bg-red-50 group-hover:bg-red-100 rounded-md mr-2 transition-colors">
+                              <LogOut className="h-3.5 w-3.5 text-red-500 group-hover:text-red-600" />
+                            </div>
+                            Sign Out
                           </button>
                         </div>
                       </motion.div>
@@ -362,9 +403,8 @@ const Header = () => {
                   <button className="bg-blue-600 text-white px-6 py-2.5 rounded-full hover:bg-blue-700 transition-all duration-300 font-medium shadow-md hover:shadow-lg flex items-center transform hover:-translate-y-0.5">
                     Login
                     <ChevronDown
-                      className={`ml-2 h-4 w-4 transition-transform duration-200 ${
-                        isLoginMenuOpen ? "rotate-180" : ""
-                      }`}
+                      className={`ml-2 h-4 w-4 transition-transform duration-200 ${isLoginMenuOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
                   <AnimatePresence>
@@ -534,9 +574,8 @@ const Header = () => {
                         Properties
                       </div>
                       <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
-                          isPropertiesMobileOpen ? "rotate-180" : ""
-                        }`}
+                        className={`h-4 w-4 transition-transform ${isPropertiesMobileOpen ? "rotate-180" : ""
+                          }`}
                       />
                     </button>
                     <AnimatePresence>

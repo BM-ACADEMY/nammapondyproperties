@@ -111,11 +111,10 @@ const Profile = () => {
               initial={{ opacity: 0, y: -20, x: "50%" }}
               animate={{ opacity: 1, y: 0, x: "50%" }}
               exit={{ opacity: 0, y: -20, x: "50%" }}
-              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${
-                message.type === "success"
+              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${message.type === "success"
                   ? "bg-green-500/90 text-white border-green-400"
                   : "bg-red-500/90 text-white border-red-400"
-              }`}
+                }`}
             >
               {message.type === "success" ? (
                 <CheckCircle size={18} />
@@ -307,9 +306,13 @@ const Profile = () => {
                         type="tel"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+1 (555) 000-0000"
-                        className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          setFormData((prev) => ({ ...prev, phone: value }));
+                        }}
+                        placeholder="Phone Number (10 digits)"
+                        maxLength={10}
+                        className="block w-full pl-6 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
                       />
                     ) : (
                       <div

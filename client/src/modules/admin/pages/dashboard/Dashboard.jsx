@@ -273,6 +273,7 @@ const Dashboard = () => {
           dataSource={stats.pendingProperties}
           pagination={false}
           size="small"
+          scroll={{ x: true }}
         />
       </Card>
     </div>

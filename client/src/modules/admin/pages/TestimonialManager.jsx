@@ -163,6 +163,7 @@ const TestimonialManager = () => {
                     rowKey="_id"
                     loading={loading}
                     pagination={{ pageSize: 10 }}
+                    scroll={{ x: true }}
                 />
             </div>
         </div>

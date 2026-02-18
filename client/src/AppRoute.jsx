@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import PrivateRoute from "./guard/PrivateRoute";
 import PublicRoute from "./guard/PublicRoute"; // Import PublicRoute
 import Unauthorized from "./modules/common-pages/Unauthorized";
+import NotFound from "./modules/common-pages/NotFound";
 import UserRoutes from "./modules/user/routes/UserRoutes";
 import SellerRoute from "./modules/seller/Routes/SellerRoute";
 import AdminRoute from "./modules/admin/AdminRoute";
@@ -99,6 +100,9 @@ const AppRoutes = () => {
 
       {/* Home Page Route (Catch-all for public/home) */}
       <Route path="/*" element={<HomePageRoute />} />
+
+      {/* Global Fallback for strict unmatched routes */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

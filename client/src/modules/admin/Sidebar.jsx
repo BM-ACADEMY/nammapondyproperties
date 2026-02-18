@@ -17,13 +17,21 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
+  // Handle menu click for mobile responsive closing
+  const handleMenuClick = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  };
+
   // Menu items configuration
   const menuItems = [
     {
       key: "/admin/dashboard",
       icon: <LayoutDashboard size={20} />,
       label: "Dashboard",
-      onClick: () => navigate("/admin/dashboard"),
+      onClick: () => handleMenuClick("/admin/dashboard"),
     },
     {
       key: "properties-sub", // Unique key for submenu
@@ -33,22 +41,22 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         {
           key: "/admin/properties",
           label: "Our Properties",
-          onClick: () => navigate("/admin/properties"), // Will need to handle mode via state or query param logic in component
+          onClick: () => handleMenuClick("/admin/properties"),
         },
         {
           key: "/admin/seller-listings", // New route for Seller Listings
           label: "Seller Listings",
-          onClick: () => navigate("/admin/seller-listings"),
+          onClick: () => handleMenuClick("/admin/seller-listings"),
         },
         {
           key: "/admin/seller-requests",
           label: "Seller Requests",
-          onClick: () => navigate("/admin/seller-requests"),
+          onClick: () => handleMenuClick("/admin/seller-requests"),
         },
         {
           key: "/admin/properties/add",
           label: "Add Property",
-          onClick: () => navigate("/admin/properties/add"), // Assuming this route exists or will exist
+          onClick: () => handleMenuClick("/admin/properties/add"),
         },
       ],
     },
@@ -60,38 +68,32 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         {
           key: "/admin/users",
           label: "User List",
-          onClick: () => navigate("/admin/users"),
+          onClick: () => handleMenuClick("/admin/users"),
         },
         {
           key: "/admin/sellers",
           label: "Seller List",
-          onClick: () => navigate("/admin/sellers"),
+          onClick: () => handleMenuClick("/admin/sellers"),
         },
       ],
     },
-    // {
-    //   key: "/admin/approvals",
-    //   icon: <FileCheck size={20} />,
-    //   label: "Approvals",
-    //   onClick: () => navigate("/admin/approvals"),
-    // },
     {
       key: "/admin/enquiries",
       icon: <LibraryBig size={20} />,
       label: "Enquiries Properties",
-      onClick: () => navigate("/admin/enquiries"),
+      onClick: () => handleMenuClick("/admin/enquiries"),
     },
     {
       key: "/admin/advertisements",
       icon: <Megaphone size={20} />,
       label: "Advertisements",
-      onClick: () => navigate("/admin/advertisements"),
+      onClick: () => handleMenuClick("/admin/advertisements"),
     },
     {
       key: "/admin/testimonials",
-      icon: <MessageSquare size={20} />, // Reusing icon or using a new one like Star if available
+      icon: <MessageSquare size={20} />,
       label: "Testimonials",
-      onClick: () => navigate("/admin/testimonials"),
+      onClick: () => handleMenuClick("/admin/testimonials"),
     },
     {
       key: "settings-sub",
@@ -101,27 +103,27 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         {
           key: "/admin/profile",
           label: "My Profile",
-          onClick: () => navigate("/admin/profile"),
+          onClick: () => handleMenuClick("/admin/profile"),
         },
         {
           key: "/admin/social-media",
           label: "Social Media",
-          onClick: () => navigate("/admin/social-media"),
+          onClick: () => handleMenuClick("/admin/social-media"),
         },
         {
           key: "/admin/business-types",
           label: "Business Types",
-          onClick: () => navigate("/admin/business-types"),
+          onClick: () => handleMenuClick("/admin/business-types"),
         },
         {
           key: "/admin/property-types",
           label: "Property Types",
-          onClick: () => navigate("/admin/property-types"),
+          onClick: () => handleMenuClick("/admin/property-types"),
         },
         {
           key: "/admin/approval-types",
           label: "Approval Types",
-          onClick: () => navigate("/admin/approval-types"),
+          onClick: () => handleMenuClick("/admin/approval-types"),
         },
       ],
     },

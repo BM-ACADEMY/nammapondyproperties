@@ -5,6 +5,9 @@ const WhatsappLead = require("../models/WhatsappLead");
 const PropertyView = require("../models/PropertyView");
 const fs = require("fs");
 const path = require("path");
+const PropertyType = require("../models/PropertyType");
+const ApprovalType = require("../models/ApprovalType");
+const User = require("../models/User");
 
 const parseJSON = (data) => {
   if (typeof data === "string") {
@@ -199,9 +202,6 @@ exports.verifyProperty = async (req, res) => {
 
 exports.getFilters = async (req, res) => {
   try {
-    const PropertyType = require("../models/PropertyType");
-    const ApprovalType = require("../models/ApprovalType");
-
     const types = await PropertyType.distinct("name", { status: "active" });
     const approvals = await ApprovalType.distinct("name", { status: "active" });
     // Fetch distinct cities instead of full location objects to prevent frontend crashes
@@ -445,7 +445,6 @@ exports.incrementViewCount = async (req, res) => {
 
 exports.getPropertyTypes = async (req, res) => {
   try {
-    const PropertyType = require("../models/PropertyType");
     const { role } = req.query;
 
     const query = { status: "active" };
@@ -462,7 +461,6 @@ exports.getPropertyTypes = async (req, res) => {
 
 exports.getPropertyApprovals = async (req, res) => {
   try {
-    const ApprovalType = require("../models/ApprovalType");
     const { role } = req.query;
 
     const query = { status: "active" };
@@ -526,7 +524,6 @@ exports.getSellerStats = async (req, res) => {
 
 exports.getAdminStats = async (req, res) => {
   try {
-    const User = require("../models/User");
     const Enquiry = require("../models/WhatsappLead");
 
     // 1. Total Users

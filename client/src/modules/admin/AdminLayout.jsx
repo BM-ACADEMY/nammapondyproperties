@@ -134,7 +134,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <Layout className="min-h-screen">
+    <Layout style={{ minHeight: "100vh" }}>
       <Sidebar
         collapsed={collapsed}
         setCollapsed={setCollapsed}
@@ -145,19 +145,20 @@ const AdminLayout = () => {
         style={{
           marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
           transition: "all 0.2s",
+          height: "100vh", // Fix layout height to viewport
+          overflow: "hidden", // Prevent outer scroll
         }}
       >
         <Header
           style={{
             padding: "0 24px",
             background: colorBgContainer,
-            position: "sticky",
-            top: 0,
-            zIndex: 10,
+            // Remove sticky, straightforward block header
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            zIndex: 10,
           }}
         >
           <div className="flex items-center gap-4">
@@ -179,8 +180,6 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            
-
             <Badge count={pendingCount} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
@@ -221,6 +220,9 @@ const AdminLayout = () => {
             minHeight: 280,
             background: "#f5f7fa",
             borderRadius: borderRadiusLG,
+            overflowY: "auto", // Make content scrollable
+            height: "calc(100vh - 112px)", // Calculate height (100vh - header - margins approx)
+            // Or better: flex-grow if using flex column
           }}
         >
           <Outlet />
