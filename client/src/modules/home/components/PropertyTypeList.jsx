@@ -13,20 +13,24 @@ const PropertyTypeList = () => {
 
     if (lowerType.includes("plot") || lowerType.includes("land")) {
       return {
-        image: "https://static.360realtors.com/properties/photos/6837/mini/1704283852_0propertyimage.webp",
+        image:
+          "/properties/plot.png",
         description: "Curated landscapes to build your bespoke dream home.",
         ctaText: "Explore Plots",
       };
     } else if (lowerType.includes("villa") || lowerType.includes("house")) {
       return {
-        image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        image:
+          "/properties/villa.png",
         description: "Experience unparalleled elegance and premium living.",
         ctaText: "Explore Villas",
       };
     } else if (lowerType.includes("apartment") || lowerType.includes("flat")) {
       return {
-        image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-        description: "Elevated urban living spaces tailored for your lifestyle.",
+        image:
+          "/properties/apartment.png",
+        description:
+          "Elevated urban living spaces tailored for your lifestyle.",
         ctaText: "Explore Apartments",
       };
     } else if (
@@ -35,13 +39,16 @@ const PropertyTypeList = () => {
       lowerType.includes("office")
     ) {
       return {
-        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-        description: "Distinguished locations to establish and grow your business.",
+        image:
+          "/properties/commercial.png",
+        description:
+          "Distinguished locations to establish and grow your business.",
         ctaText: "Explore Commercial",
       };
     } else {
       return {
-        image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+        image:
+          "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
         description: "Discover exceptional properties that match your vision.",
         ctaText: `Explore ${typeName}`,
       };
@@ -70,15 +77,14 @@ const PropertyTypeList = () => {
   }, []);
 
   return (
-    <section className="py-24 bg-[#FAFAFA] font-sans">
+    <section className="py-18 bg-[#FAFAFA] font-sans">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-        
         {/* Premium Header */}
         <div className="text-center mb-10 flex flex-col items-center">
           <h2 className="text-4xl md:text-5xl font-light font-serif text-gray-900 tracking-tight">
             Explore Properties
           </h2>
-          <div className="w-16 h-[1px] bg-amber-700 mt-6 opacity-60"></div>
+          <div className="w-16 h-[3px] bg-amber-700 mt-6 opacity-60"></div>
         </div>
 
         {/* Loading State */}
@@ -95,18 +101,21 @@ const PropertyTypeList = () => {
           </div>
         ) : types.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-500 text-lg font-light">No property types found at this moment.</p>
+            <p className="text-gray-500 text-lg font-light">
+              No property types found at this moment.
+            </p>
           </div>
         ) : (
-          
-          /* Property Types Grid - Now 4 columns on desktop for smaller cards */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          /* Property Types Grid - Mobile/Tablet Slider, Desktop Grid */
+          <div className="flex lg:grid lg:grid-cols-4 gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 lg:pb-0 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             {types.map((item, index) => (
               <div
                 key={index}
-                onClick={() => navigate(`/properties?type=${item.originalType}`)}
-                // Reduced height to 320px
-                className="group relative h-[320px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500"
+                onClick={() =>
+                  navigate(`/properties?type=${item.originalType}`)
+                }
+                // Mobile: 85% width, Tablet: 45% width, Desktop: auto
+                className="min-w-[85%] sm:min-w-[45%] lg:min-w-0 snap-center group relative h-[320px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500"
               >
                 {/* Background Image */}
                 <div className="absolute inset-0 w-full h-full">
@@ -123,14 +132,13 @@ const PropertyTypeList = () => {
                 {/* Content Box - Reduced padding (p-6) */}
                 <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
                   <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                    
                     {/* Slightly smaller title (text-2xl) */}
                     <h3 className="font-serif text-2xl text-white mb-2 font-medium tracking-wide">
                       {item.title}
                     </h3>
-                    
+
                     {/* Adjusted description spacing */}
-                    <p className="text-gray-300 text-sm leading-relaxed mb-5 transition-opacity duration-500 delay-100">
+                    <p className="text-gray-300 text-sm leading-relaxed mb-5 transition-opacity duration-500 delay-100 line-clamp-2 lg:line-clamp-none">
                       {item.description}
                     </p>
 
