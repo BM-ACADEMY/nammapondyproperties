@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { User, MapPin, Phone, Mail, CheckCircle, Store, Building2 } from "lucide-react";
+import { User, MapPin, Phone, Mail, ShieldCheck, Store, Building2 } from "lucide-react";
 import PropertyCard from "@/modules/home/components/PropertyCard";
 import { toast } from "react-hot-toast";
 
@@ -49,7 +49,6 @@ const UserPropertiesPage = () => {
 
     const handleWhatsAppClick = (e, property) => {
         e.stopPropagation();
-        // If user is logged in logic can be added here, but for public profile interactions:
         const sellerPhone = user?.phone || "919000000000";
         const locationStr =
             typeof property.location === "string"
@@ -70,103 +69,81 @@ const UserPropertiesPage = () => {
         }
     }
 
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-900"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b5998]"></div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans pb-20">
-            {/* --- HERO BANNER --- */}
-            <div className="relative h-64 md:h-80 bg-slate-900 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-900 to-slate-800 opacity-90"></div>
-                {/* Abstract shapes or pattern */}
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-white/5 skew-x-12 transform origin-bottom-left"></div>
-                {/* You could add a real background image here if available */}
-                {/* <img src="..." className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" /> */}
-            </div>
+        <div className="min-h-screen bg-gray-50 font-sans pb-20 pt-10 relative overflow-hidden">
+            
+            {/* Background sparkle effect */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-40 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative -mt-32 z-10">
-                {/* --- PROFILE CARD --- */}
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100 flex flex-col md:flex-row">
-
-                    {/* Left: Image & Quick Actions */}
-                    <div className="md:w-1/3 lg:w-1/4 bg-slate-50 p-8 flex flex-col items-center justify-center border-r border-gray-100 relative">
-                        <div className="relative h-40 w-40 rounded-full p-1 bg-white shadow-lg mb-4">
-                            <div className="h-full w-full rounded-full overflow-hidden relative">
-                                {user?.profile_image ? (
-                                    <img
-                                        src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
-                                        alt={user.name}
-                                        className="h-full w-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="h-full w-full flex items-center justify-center bg-slate-200 text-slate-500 font-bold text-5xl">
-                                        {user?.name?.charAt(0).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
-                            {user?.isVerified && (
-                                <div className="absolute bottom-2 right-2 bg-blue-500 text-white p-1.5 rounded-full border-4 border-white shadow-sm" title="Verified Professional">
-                                    <CheckCircle className="w-5 h-5" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                
+                {/* --- PROFILE HERO CARD --- */}
+                {/* Replaced the dark banner with a clean, unified white card matching the new style */}
+                <div className="bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center md:items-start gap-10 border border-gray-100/50">
+                    
+                    {/* Left: Image Container */}
+                    <div className="shrink-0">
+                        <div className="h-[140px] w-[140px] md:h-[160px] md:w-[160px] rounded-full overflow-hidden bg-gray-50 border-[4px] border-white shadow-md relative">
+                            {user?.profile_image ? (
+                                <img
+                                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
+                                    alt={user.name}
+                                    className="h-full w-full object-cover"
+                                />
+                            ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 text-[#3b5998] font-light text-5xl">
+                                    {user?.name?.charAt(0).toUpperCase()}
                                 </div>
                             )}
                         </div>
-
-                        <div className="text-center w-full">
-                            <button
-                                onClick={handleProfileContact}
-                                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg shadow-slate-200 active:scale-[0.98] flex items-center justify-center gap-2"
-                            >
-                                <Phone className="w-4 h-4" /> Contact
-                            </button>
-                        </div>
                     </div>
 
-                    {/* Right: Info */}
-                    <div className="md:w-2/3 lg:w-3/4 p-8 md:p-10 flex flex-col justify-center">
-                        <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                            <div>
-                                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 font-serif tracking-tight">
-                                    {user?.name}
-                                </h1>
-                                <div className="flex items-center gap-3 text-gray-500 text-sm md:text-base mb-4">
-                                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-medium border border-blue-100">
-                                        {user?.businessType?.name ? <Store className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                                        {user?.businessType?.name || user?.role_id?.name || "Seller"}
-                                    </span>
-                                    {user?.email && (
-                                        <span className="flex items-center gap-1.5">
-                                            <Mail className="w-4 h-4 text-gray-400" /> {user.email}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Stats (Optional placeholder) */}
-                            <div className="flex gap-6 text-center">
-                                <div>
-                                    <p className="text-2xl font-bold text-gray-900">{properties.length}</p>
-                                    <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Properties</p>
-                                </div>
-                                {/* <div>
-                          <p className="text-2xl font-bold text-gray-900">4.9</p>
-                          <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Rating</p>
-                      </div> */}
-                            </div>
+                    {/* Right: Info & Actions */}
+                    <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full">
+                        
+                        {/* Gold Expertise Badge */}
+                        <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 bg-white/40 backdrop-blur-sm">
+                            {user?.businessType?.name || user?.role_id?.name || "Verified Professional"}
                         </div>
 
-                        <div className="h-px w-full bg-gray-100 mb-6"></div>
+                        {/* Thin Typography Heading */}
+                        <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight flex items-center gap-3">
+                            {user?.name}
+                            {user?.isVerified && (
+                                <ShieldCheck className="w-8 h-8 text-[#3b5998]" fill="currentColor" strokeWidth={1.5} title="Verified Professional" />
+                            )}
+                        </h1>
 
-                        <div className="prose prose-sm text-gray-600 max-w-none">
-                            <p>
-                                Welcome to my verified property portfolio. Browse through the exclusive listings below and feel free to contact me directly for any inquiries or to schedule a site visit.
-                            </p>
+                        <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-500 font-medium text-sm mb-6">
+                            {user?.email && (
+                                <span className="flex items-center gap-1.5">
+                                    <Mail className="w-4 h-4 text-slate-400" /> {user.email}
+                                </span>
+                            )}
+                            <span className="flex items-center gap-1.5">
+                                <Building2 className="w-4 h-4 text-slate-400" /> {properties.length} Active Listings
+                            </span>
                         </div>
+
+                        {/* Bold Italic Emphasis in description */}
+                        <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-2xl">
+                            Welcome to my verified property portfolio. Browse through the exclusive listings below and feel free to <span className="font-bold italic text-slate-900">contact me directly</span> for any inquiries or to schedule a site visit.
+                        </p>
+
+                        <button
+                            onClick={handleProfileContact}
+                            className="flex items-center gap-2 py-3 px-8 bg-[#3b5998] text-white rounded-xl hover:bg-[#2d4373] transition-colors font-semibold shadow-sm w-full sm:w-auto justify-center"
+                        >
+                            <Phone className="w-5 h-5" /> Contact {user?.name?.split(' ')[0] || "Agent"}
+                        </button>
                     </div>
                 </div>
 
