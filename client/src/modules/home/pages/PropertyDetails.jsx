@@ -172,12 +172,25 @@ const PropertyDetails = () => {
               </div>
 
               <div className="pt-2">
-                <span className="text-xl text-gray-500 font-medium mr-2">
-                  Launch Price
-                </span>
-                <span className="text-3xl font-bold text-[#3a307f]">
-                  ₹ {property.price.toLocaleString()}
-                </span>
+                {property.isSold && property.soldPrice ? (
+                  <>
+                    <span className="text-xl text-gray-500 font-medium mr-2">
+                      Sold Price
+                    </span>
+                    <span className="text-3xl font-bold text-red-600">
+                      ₹ {property.soldPrice.toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xl text-gray-500 font-medium mr-2">
+                      {property.isSold ? "Price" : "Launch Price"}
+                    </span>
+                    <span className="text-3xl font-bold text-[#3a307f]">
+                      ₹ {property.price.toLocaleString()}
+                    </span>
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-3 mb-2 pt-5">
                 <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider">
@@ -192,10 +205,17 @@ const PropertyDetails = () => {
             {/* 2. Image Gallery - Clean & Sharp */}
             <div className="space-y-4">
               <div className="relative h-[450px] md:h-[550px] bg-gray-100 rounded-xl overflow-hidden group">
+                {property.isSold && (
+                  <div className="absolute top-6 left-6 z-20">
+                    <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20">
+                      Sold Out
+                    </span>
+                  </div>
+                )}
                 <img
                   src={getImageUrl(mainImage)}
                   alt={property.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${property.isSold ? "grayscale-[0.8]" : ""}`}
                 />
                 <div className="absolute top-4 right-4 z-10">
                   <WishlistButton propertyId={property._id} />
@@ -430,10 +450,16 @@ const PropertyDetails = () => {
 
                 <button
                   onClick={handleWhatsAppClick}
-                  disabled={enquiryLoading}
-                  className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg shadow-green-100"
+                  disabled={enquiryLoading || property.isSold}
+                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${
+                    property.isSold
+                      ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
+                      : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"
+                  }`}
                 >
-                  {enquiryLoading ? (
+                  {property.isSold ? (
+                    "Property Sold Out"
+                  ) : enquiryLoading ? (
                     "Processing..."
                   ) : (
                     <>

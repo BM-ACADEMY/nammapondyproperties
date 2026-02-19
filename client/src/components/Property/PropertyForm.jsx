@@ -109,6 +109,8 @@ const PropertyForm = ({
         },
         key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
         advertiseOnSocialMedia: initialData.advertiseOnSocialMedia || false,
+        isSold: initialData.isSold || false,
+        soldPrice: initialData.soldPrice || "",
       };
       // We also need to update existing images state
       setExistingImages(initialData.images || []);

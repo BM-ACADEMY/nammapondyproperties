@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Layout, Menu, Drawer } from "antd";
 import {
   LayoutDashboard,
@@ -131,10 +131,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
   const SidebarContent = (
     <>
+      <Link to="/">
       <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg">
         {collapsed && !isMobile ? (
           <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
-            NP
+            AP
           </div>
         ) : (
           <span className="text-white text-lg font-bold tracking-wide">
@@ -142,6 +143,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           </span>
         )}
       </div>
+      </Link>
 
       <Menu
         theme="dark"
