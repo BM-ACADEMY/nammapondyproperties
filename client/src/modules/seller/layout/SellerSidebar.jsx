@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Layout, Menu, Drawer, Button } from "antd";
 import {
   LayoutDashboard,
@@ -8,6 +8,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+
 
 const { Sider } = Layout;
 
@@ -63,6 +64,7 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
   const SidebarContent = (
     <div className="flex flex-col h-full">
+      <Link to="/">
       <div className="flex items-center justify-center h-16 m-2 rounded-lg shrink-0">
         {collapsed && !isMobile ? (
           <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold bg-blue-600">
@@ -74,6 +76,7 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
           </span>
         )}
       </div>
+      </Link>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <Menu

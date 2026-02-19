@@ -29,6 +29,8 @@ const propertySchema = new mongoose.Schema(
     approval: { type: String }, // Dynamic now
     key_attributes: [{ key: String, value: String }], // Array of key-value pairs
     advertiseOnSocialMedia: { type: Boolean, default: false }, // Advertisement opt-in
+    isSold: { type: Boolean, default: false },
+    soldPrice: { type: Number }, // Optional sold price
   },
   { timestamps: true },
 );

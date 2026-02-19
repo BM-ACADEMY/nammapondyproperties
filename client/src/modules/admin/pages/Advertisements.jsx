@@ -13,6 +13,7 @@ import {
     Eye,
     CheckCircle,
     Clock,
+    IndianRupee,
 } from "lucide-react";
 import axios from "axios";
 
@@ -160,8 +161,8 @@ const Advertisements = () => {
                                     {/* Price & Size */}
                                     <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
                                         <div className="flex items-center text-green-600 font-bold">
-                                            <DollarSign className="w-4 h-4" />
-                                            <span>₹{Number(property.price).toLocaleString("en-IN")}</span>
+                                            <IndianRupee className="w-4 h-4" />
+                                            <span>{Number(property.price).toLocaleString("en-IN")}</span>
                                         </div>
                                         <div className="flex items-center text-gray-600 text-sm">
                                             <Building2 className="w-4 h-4 mr-1" />

@@ -188,6 +188,14 @@ const MyProperties = () => {
                   >
                     {property.status?.toUpperCase()}
                   </Tag>
+                  {property.isSold && (
+                    <Tag
+                      color="red"
+                      className="m-0 backdrop-blur-md bg-red-600/90 text-white font-medium border-none shadow-sm"
+                    >
+                      SOLD OUT
+                    </Tag>
+                  )}
                 </div>
                 {property.is_verified && (
                   <div className="absolute top-3 left-3">
