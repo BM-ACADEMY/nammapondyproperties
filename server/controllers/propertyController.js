@@ -93,14 +93,16 @@ exports.getProperties = async (req, res) => {
       maxPrice,
       approval,
       is_verified,
-      seller_id, // Add seller_id to destructuring
+      seller_id,
+      excludeId, // New: Exclude a specific property ID
+      isSold, // New: Filter by sold status
+      random, // New: Randomize results
     } = req.query;
     const query = {};
 
     // Handle role based filtering
     if (req.query.role === "seller") {
-      const Role = require("../models/Role"); // Ensure Role model exists
-      // If Role model is simple { name: String }
+      const Role = require("../models/Role");
       const sellerRoleDoc = await Role.findOne({
         name: { $regex: /^seller$/i },
       });
@@ -112,28 +114,9 @@ exports.getProperties = async (req, res) => {
         query.seller_id = { $in: sellers };
       }
     }
-    // Filter by seller_id if provided
+
     if (seller_id) {
       if (seller_id === "me") {
-        // Explicitly check for 'me' string.
-        // req.user might be available if route is protected or optional auth middleware is used.
-        // AdminProperties uses this, so it should be protected or context provided.
-        // If req.user is undefined, this fails.
-        // The route /fetch-all-property is NOT protected in propertyRoute.js (line 16).
-        // I need to use `protect` middleware or manually decode token if I want 'me' to work,
-        // OR passing the ID explicitly from frontend.
-        // passing ID from frontend is easier for now: frontend sends `seller_id=<actual_id>`.
-        // But `AdminProperties` sends `seller_id=me`.
-        // I should make `fetch-all-property` user aware.
-        // But I can't easily change route protection without breaking public access.
-        // FIX: Client side should send actual User ID for "Our Properties" if public endpoint is used.
-        // backend: If 'me' is sent and no user, ignore or return empty?
-        // Actually, `req.user` is only populated if `protect` middleware is present.
-        // I will modify `propertyRoute.js` to use `optionalProtect` or similar, OR just rely on frontend sending the ID.
-        // Sending ID from frontend is safer for public route.
-
-        // However, for the reported error: "Failed to load properties".
-        // If req.user is undefined, `req.user._id` crashes.
         if (req.user) {
           query.seller_id = req.user._id;
         }
@@ -142,9 +125,20 @@ exports.getProperties = async (req, res) => {
       }
     }
 
-    // Fix: Handle 'type' filter
-    if (type) query.property_type = type;
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
 
+    if (isSold !== undefined) {
+      // If isSold is 'false', we want properties where isSold is strictly false or doesn't exist
+      if (isSold === "false") {
+        query.isSold = { $in: [false, undefined, null] };
+      } else if (isSold === "true") {
+        query.isSold = true;
+      }
+    }
+
+    if (type) query.property_type = type;
     if (approval) query.approval = approval;
     if (location) query["location.city"] = location;
     if (is_verified) query.is_verified = is_verified === "true";
@@ -164,13 +158,32 @@ exports.getProperties = async (req, res) => {
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    const properties = await Property.find(query)
-      .populate("seller_id")
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
+    let properties;
+    let count;
 
-    const count = await Property.countDocuments(query);
+    if (random === "true") {
+      // Use aggregation for random sampling
+      const pipeline = [
+        { $match: query },
+        { $sample: { size: Number(limit) } },
+      ];
+
+      // Since we need to populate seller_id, we can look it up or use a separate populate step
+      // Aggregate returns plain objects, not Mongoose documents, but Property.populate works on them.
+      const randomDocs = await Property.aggregate(pipeline);
+      properties = await Property.populate(randomDocs, { path: "seller_id" });
+
+      // For random, total pages/count might be less relevant or just use total count matches
+      count = await Property.countDocuments(query);
+    } else {
+      properties = await Property.find(query)
+        .populate("seller_id")
+        .limit(limit * 1)
+        .skip((page - 1) * limit)
+        .sort({ createdAt: -1 });
+
+      count = await Property.countDocuments(query);
+    }
 
     res.json({
       properties,

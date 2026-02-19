@@ -56,14 +56,10 @@ const PropertyDetails = () => {
         }
 
         const relatedRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?limit=10`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?limit=3&random=true&isSold=false&excludeId=${id}`,
         );
         if (Array.isArray(relatedRes.data.properties)) {
-          setMoreProperties(
-            relatedRes.data.properties
-              .filter((p) => String(p._id) !== String(id))
-              .slice(0, 3),
-          );
+          setMoreProperties(relatedRes.data.properties);
         }
 
         recordPropertyView(id);
