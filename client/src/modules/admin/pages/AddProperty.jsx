@@ -19,7 +19,7 @@ const AddProperty = () => {
         setLoading(true);
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-id/${editId}`
+            `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-id/${editId}`,
           );
           setInitialData(response.data);
         } catch (error) {
@@ -47,7 +47,7 @@ const AddProperty = () => {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         toast.success("Property updated successfully!");
       } else {
@@ -64,7 +64,7 @@ const AddProperty = () => {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         toast.success("Property added successfully!");
       }
@@ -92,6 +92,7 @@ const AddProperty = () => {
         loading={loading}
         initialData={initialData}
         isEdit={!!editId}
+        isAdmin={true}
       />
     </div>
   );
