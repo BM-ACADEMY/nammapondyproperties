@@ -56,13 +56,18 @@ const BusinessUserList = () => {
                 {/* --- HERO SECTION (Wrapped in a single white card) --- */}
                 <div className="bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8">
                     <div className="md:w-1/2">
-                        <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4 tracking-tight">
+                        {/* 1. Changed to font-light to match "What We Do" */}
+                        <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">
                             Find Your {businessType?.name || "Agent"}
                         </h1>
+                        
+                        {/* 2. Added font-bold and italic to the emphasized text */}
                         <p className="text-lg text-slate-500 mb-8 leading-relaxed max-w-xl">
-                            Connect with the most responsive professionals with <strong>up-to-date expertise</strong> and top accuracy on the properties you are looking for.
+                            Connect with the most responsive professionals with <span className="font-bold italic text-slate-900">up-to-date expertise</span> and top accuracy on the properties you are looking for.
                         </p>
-                        <div className="inline-block bg-[#3b5998] text-white px-6 py-3 rounded-lg font-semibold shadow-sm cursor-default text-sm">
+                        
+                        {/* 3. Styled exactly like the "OUR EXPERTISE" golden badge */}
+                        <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest cursor-default">
                             Showing {users.length} Verified Professionals
                         </div>
                     </div>
