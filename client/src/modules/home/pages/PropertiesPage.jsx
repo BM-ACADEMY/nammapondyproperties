@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "@/modules/home/components/PropertyCard";
+import MapComponent from "../components/MapComponent";
 
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -478,6 +479,16 @@ const PropertiesPage = () => {
             </button>
           </div>
         )}
+
+        {/* --- MAP SECTION --- */}
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Explore Properties on Map
+          </h2>
+          <div className="h-[600px] w-full relative z-0">
+            <MapComponent properties={properties} />
+          </div>
+        </div>
       </div>
     </div>
   );
