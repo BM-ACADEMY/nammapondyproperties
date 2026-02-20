@@ -76,11 +76,11 @@ export default function ContactHeroLayout() {
                 </div>
 
                 <h1 className="text-5xl md:text-6xl leading-[1.15] mb-6">
-                  <span className="font-light block text-white">Find your perfect</span>
-                  <span className="text-[#D4AF37] font-normal block">property today.</span>
+                  <span className="font-medium block text-white">Find your perfect</span>
+                  <span className="text-[#D4AF37] font-medium block">property today.</span>
                 </h1>
                 
-                <p className="text-gray-300 text-lg font-light leading-relaxed max-w-lg mb-10">
+                <p className="text-gray-300 text-lg font-medium leading-relaxed max-w-lg mb-10">
                   We verify every document to ensure 100% safe and secure land transactions in Pondicherry.
                 </p>
 
@@ -91,8 +91,8 @@ export default function ContactHeroLayout() {
                         <span className="font-bold">1</span>
                       </div>
                       <div>
-                        <h4 className="text-white font-normal text-lg">Verified Lands</h4>
-                        <p className="text-sm text-gray-400 font-light mt-1">100% Clear Titles</p>
+                        <h4 className="text-white font-medium text-lg">Verified Lands</h4>
+                        <p className="text-sm text-gray-400 font-medium mt-1">100% Clear Titles</p>
                       </div>
                    </div>
                    
@@ -101,8 +101,8 @@ export default function ContactHeroLayout() {
                         <span className="font-bold">2</span>
                       </div>
                       <div>
-                        <h4 className="text-white font-normal text-lg">Quick Support</h4>
-                        <p className="text-sm text-gray-400 font-light mt-1">Registration Assistance</p>
+                        <h4 className="text-white font-medium text-lg">Quick Support</h4>
+                        <p className="text-sm text-gray-400 font-medium mt-1">Registration Assistance</p>
                       </div>
                    </div>
                 </div>
@@ -119,10 +119,10 @@ export default function ContactHeroLayout() {
                 
                 <div className="p-8 md:p-10">
                   <div className="mb-8">
-                    <h3 className="text-[#050B14] font-normal text-2xl mb-2">
+                    <h3 className="text-[#050B14] font-medium text-2xl mb-2">
                       Get a Free Quote
                     </h3>
-                    <p className="text-gray-500 font-light text-sm">
+                    <p className="text-gray-500 font-medium text-sm">
                       Fill out the form and our team will get back to you within 24 hours.
                     </p>
                   </div>
@@ -135,26 +135,26 @@ export default function ContactHeroLayout() {
                     requiredMark={false}
                   >
                     <Form.Item name="name" rules={[{ required: true, message: 'Required' }]} className="mb-4">
-                      <Input placeholder="Full Name" className="font-light py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
+                      <Input placeholder="Full Name" className="font-medium py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
                     </Form.Item>
 
                     <Form.Item name="phone" rules={[{ required: true, message: 'Required' }]} className="mb-4">
-                      <Input placeholder="Phone Number" className="font-light py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
+                      <Input placeholder="Phone Number" className="font-medium py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
                     </Form.Item>
 
                     <Form.Item name="email" rules={[{ required: true, type: 'email', message: 'Invalid Email' }]} className="mb-4">
-                      <Input placeholder="Email Address" className="font-light py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
+                      <Input placeholder="Email Address" className="font-medium py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
                     </Form.Item>
 
                     <Form.Item name="message" className="mb-4">
-                      <TextArea rows={3} placeholder="Tell us about your requirements..." className="font-light py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
+                      <TextArea rows={3} placeholder="Tell us about your requirements..." className="font-medium py-3 border-transparent hover:bg-white focus:bg-white transition-all" />
                     </Form.Item>
 
                     {/* --- ADDED CHECKBOX --- */}
                     <Form.Item name="sellProperty" valuePropName="checked" className="mb-6">
                        <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100 hover:border-[#D4AF37]/30 transition-colors cursor-pointer">
                           <Checkbox className="flex items-center">
-                            <span className="font-normal text-gray-700 ml-2 text-sm">I want to sell my property</span>
+                            <span className="font-medium text-gray-700 ml-2 text-sm">I want to sell my property</span>
                           </Checkbox>
                           <span className="text-[10px] font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-1 rounded uppercase tracking-wider">
                             Promotion
@@ -187,8 +187,8 @@ export default function ContactHeroLayout() {
               <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-white transition-all duration-300 shadow-sm">
                 <HomeOutlined className="text-3xl" />
               </div>
-              <h4 className="font-normal text-[#050B14] text-sm uppercase mb-2 tracking-wider">Real Estate Appraisal</h4>
-              <p className="text-gray-500 text-xs font-light leading-relaxed max-w-[200px] mx-auto">
+              <h4 className="font-medium text-[#050B14] text-sm uppercase mb-2 tracking-wider">Real Estate Appraisal</h4>
+              <p className="text-gray-500 text-xs font-medium leading-relaxed max-w-[200px] mx-auto">
                 Accurate market valuation for your lands and properties.
               </p>
             </Col>
@@ -196,8 +196,8 @@ export default function ContactHeroLayout() {
               <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-white transition-all duration-300 shadow-sm">
                 <BulbOutlined className="text-3xl" />
               </div>
-              <h4 className="font-normal text-[#050B14] text-sm uppercase mb-2 tracking-wider">Property Guidance</h4>
-              <p className="text-gray-500 text-xs font-light leading-relaxed max-w-[200px] mx-auto">
+              <h4 className="font-medium text-[#050B14] text-sm uppercase mb-2 tracking-wider">Property Guidance</h4>
+              <p className="text-gray-500 text-xs font-medium leading-relaxed max-w-[200px] mx-auto">
                 Expert advice on buying the right plot for your needs.
               </p>
             </Col>
@@ -205,8 +205,8 @@ export default function ContactHeroLayout() {
               <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-white transition-all duration-300 shadow-sm">
                 <LikeOutlined className="text-3xl" />
               </div>
-              <h4 className="font-normal text-[#050B14] text-sm uppercase mb-2 tracking-wider">Friendly Support</h4>
-              <p className="text-gray-500 text-xs font-light leading-relaxed max-w-[200px] mx-auto">
+              <h4 className="font-medium text-[#050B14] text-sm uppercase mb-2 tracking-wider">Friendly Support</h4>
+              <p className="text-gray-500 text-xs font-medium leading-relaxed max-w-[200px] mx-auto">
                 We are with you at every step of the registration process.
               </p>
             </Col>
@@ -214,8 +214,8 @@ export default function ContactHeroLayout() {
               <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 text-[#D4AF37] group-hover:bg-[#D4AF37] group-hover:text-white transition-all duration-300 shadow-sm">
                 <ClockCircleOutlined className="text-3xl" />
               </div>
-              <h4 className="font-normal text-[#050B14] text-sm uppercase mb-2 tracking-wider">We Save Your Time</h4>
-              <p className="text-gray-500 text-xs font-light leading-relaxed max-w-[200px] mx-auto">
+              <h4 className="font-medium text-[#050B14] text-sm uppercase mb-2 tracking-wider">We Save Your Time</h4>
+              <p className="text-gray-500 text-xs font-medium leading-relaxed max-w-[200px] mx-auto">
                 Quick verification and hassle-free documentation.
               </p>
             </Col>

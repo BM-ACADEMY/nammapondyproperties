@@ -15,6 +15,7 @@ import { User, Mail, Phone, Lock, Save, Camera } from "lucide-react";
 import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import Loader from "../../../../components/Common/Loader";
 
 const { Title, Text } = Typography;
 
@@ -30,38 +31,37 @@ const Profile = () => {
   const [hasInitialImage, setHasInitialImage] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get("/users/me");
-      if (response.data.success) {
-        form.setFieldsValue(response.data.user);
-        // Set initial image if exists
-        if (response.data.user.profile_image) {
-          setHasInitialImage(true);
-          const baseUrl = import.meta.env.VITE_API_URL.replace("/api", "");
-          setFileList([
-            {
-              uid: "-1",
-              name: "profile.png",
-              status: "done",
-              url: `${baseUrl}${response.data.user.profile_image}`,
-            },
-          ]);
-        } else {
-          setHasInitialImage(false);
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get("/users/me");
+        if (response.data.success) {
+          form.setFieldsValue(response.data.user);
+          // Set initial image if exists
+          if (response.data.user.profile_image) {
+            setHasInitialImage(true);
+            const baseUrl = import.meta.env.VITE_API_URL.replace("/api", "");
+            setFileList([
+              {
+                uid: "-1",
+                name: "profile.png",
+                status: "done",
+                url: `${baseUrl}${response.data.user.profile_image}`,
+              },
+            ]);
+          } else {
+            setHasInitialImage(false);
+          }
         }
+      } catch (error) {
+        console.error("Failed to load profile", error);
+        message.error("Failed to load profile data");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to load profile", error);
-      message.error("Failed to load profile data");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    fetchProfile();
+  }, [form]);
 
   const handleUpdateProfile = async (values) => {
     setSaving(true);
@@ -151,11 +151,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
-      </div>
-    );
+    return <Loader />;
   }
 
   return (

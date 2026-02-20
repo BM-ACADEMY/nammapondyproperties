@@ -13,9 +13,9 @@ const HomePage = () => {
   useEffect(() => {
     const fetchMapProperties = async () => {
       try {
-        // Fetch properties for the map (verified, limit 20 to show a good spread)
+        // Fetch properties for the map (verified, all properties)
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?is_verified=true&limit=20`
+          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?is_verified=true`,
         );
         if (Array.isArray(res.data.properties)) {
           setMapProperties(res.data.properties);
