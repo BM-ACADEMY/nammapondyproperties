@@ -1,7 +1,7 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const enquiryController = require('../controllers/enquiryController');
-const { protect } = require('../middleware/authMiddleware'); // auth optional for create?
+const enquiryController = require("../controllers/enquiryController");
+const { protect, optionalProtect } = require("../middleware/authMiddleware"); // auth optional for create?
 
 // Create enquiry (public or protected - if public, we don't have req.user)
 // The user said "that user information... move the that create perosn"
@@ -20,15 +20,15 @@ const { protect } = require('../middleware/authMiddleware'); // auth optional fo
 // No, better to decode token.
 // lets add a simple "extractUser" middleware inline or just skip user_id if not protected.
 
-router.post('/create', enquiryController.createEnquiry); // Public
+router.post("/create", optionalProtect, enquiryController.createEnquiry); // Public but aware of user
 
 // Get enquiries (Protected)
-router.get('/fetch-all', protect, enquiryController.getEnquiries);
+router.get("/fetch-all", protect, enquiryController.getEnquiries);
 
 // Seller specific - get their own enquiries
-router.get('/seller-enquiries', protect, enquiryController.getEnquiries);
+router.get("/seller-enquiries", protect, enquiryController.getEnquiries);
 
 // Admin specific
-router.get('/admin/fetch-all', protect, enquiryController.getAllEnquiriesAdmin);
+router.get("/admin/fetch-all", protect, enquiryController.getAllEnquiriesAdmin);
 
 module.exports = router;
