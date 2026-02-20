@@ -144,16 +144,39 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
               if (onWhatsAppClick) {
                 onWhatsAppClick(e, property);
               } else {
-                // Default handling if no prop provided
+                // Default handling: Track lead then open WhatsApp
                 const phoneNumber =
                   property.mobile ||
                   property.seller_id?.phoneNumber ||
                   property.seller_id?.phone ||
-                  "919876543210"; // Fallback
+                  "919876543210";
+
                 const message = `Hi, I'm interested in your property: ${property.title}`;
-                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-                  message,
-                )}`;
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+                // Fire and forget API call to record the lead
+                // We use the Enquiry API now, which supports optional fields
+                import("@/services/api").then((module) => {
+                  const api = module.default;
+                  api
+                    .post("/enquiries/create", {
+                      property_id: property._id,
+                      seller_id: property.seller_id._id || property.seller_id,
+                      message: "WhatsApp Click (Quick Lead)",
+                      enquirer_name: "Guest User", // Placeholder for click leads
+                      enquirer_email: "",
+                      enquirer_phone: "",
+                      // user_id will be handled by backend if token is present?
+                      // actually PropertyCard might not have user context easily access without hook.
+                      // If we are deep in component tree, we might not want to couple with AuthContext if not needed.
+                      // But for better data, we should.
+                      // For now, let's just record the click.
+                    })
+                    .catch((err) =>
+                      console.error("Failed to record lead", err),
+                    );
+                });
+
                 window.open(whatsappUrl, "_blank");
               }
             }}

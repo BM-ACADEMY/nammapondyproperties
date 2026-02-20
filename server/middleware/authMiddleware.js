@@ -44,4 +44,24 @@ const admin = (req, res, next) => {
   }
 };
 
-module.exports = { protect, admin };
+const optionalProtect = async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      token = req.headers.authorization.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id)
+        .select("-password")
+        .populate("role_id");
+    } catch (error) {
+      console.error("Optional Auth Error:", error);
+      // Do nothing, just continue as guest
+    }
+  }
+  next();
+};
+
+module.exports = { protect, admin, optionalProtect };

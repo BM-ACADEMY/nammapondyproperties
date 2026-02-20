@@ -1,7 +1,7 @@
 // controllers/propertyController.js
 const mongoose = require("mongoose");
 const Property = require("../models/Property");
-const WhatsappLead = require("../models/WhatsappLead");
+const Enquiry = require("../models/Enquiry");
 const PropertyView = require("../models/PropertyView");
 const fs = require("fs");
 const path = require("path");
@@ -534,8 +534,8 @@ exports.getSellerStats = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    // 3. Enquiries Over Time (Aggregation from WhatsappLead)
-    const enquiriesOverTime = await WhatsappLead.aggregate([
+    // 3. Enquiries Over Time (Aggregation from Enquiry)
+    const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
           seller_id: new mongoose.Types.ObjectId(sellerId),
@@ -581,7 +581,7 @@ exports.getSellerStats = async (req, res) => {
     }
 
     // 5. Recent Activity (Enquiries)
-    const recentEnquiries = await WhatsappLead.find({
+    const recentEnquiries = await Enquiry.find({
       seller_id: sellerId,
     })
       .sort({ createdAt: -1 })
@@ -600,7 +600,7 @@ exports.getSellerStats = async (req, res) => {
       (sum, p) => sum + (p.view_count || 0),
       0,
     );
-    const totalLeadsAllTime = await WhatsappLead.countDocuments({
+    const totalLeadsAllTime = await Enquiry.countDocuments({
       seller_id: sellerId,
     });
 
@@ -625,7 +625,7 @@ exports.getSellerStats = async (req, res) => {
 
 exports.getAdminStats = async (req, res) => {
   try {
-    const Enquiry = require("../models/WhatsappLead");
+    const Enquiry = require("../models/Enquiry");
     const Role = require("../models/Role"); // Ensure Role model is required
     const { range = "30d" } = req.query;
 
