@@ -109,6 +109,21 @@ const PropertyTypeManager = () => {
       ),
     },
     {
+      title: "Key Attributes",
+      dataIndex: "key_attributes",
+      key: "key_attributes",
+      render: (attributes) => (
+        <>
+          {attributes &&
+            attributes.map((attr) => (
+              <Tag color="purple" key={attr}>
+                {attr}
+              </Tag>
+            ))}
+        </>
+      ),
+    },
+    {
       title: "Seller Visible",
       dataIndex: "visible_to_seller",
       key: "visible_to_seller",
@@ -195,6 +210,18 @@ const PropertyTypeManager = () => {
               <Select.Option value={true}>Yes</Select.Option>
               <Select.Option value={false}>No</Select.Option>
             </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="key_attributes"
+            label="Key Attributes (Press Enter to add)"
+          >
+            <Select
+              mode="tags"
+              style={{ width: "100%" }}
+              placeholder="e.g. Bedrooms, Bathrooms"
+              tokenSeparators={[","]}
+            />
           </Form.Item>
 
           <div className="flex justify-end space-x-2">

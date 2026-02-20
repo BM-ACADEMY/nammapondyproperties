@@ -13,6 +13,7 @@ import {
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "@/modules/home/components/PropertyCard";
 import MapComponent from "../components/MapComponent";
+import Loader from "../../../components/Common/Loader";
 
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -172,16 +173,6 @@ const PropertiesPage = () => {
       console.error("Error fetching properties", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleIncrementView = async (id) => {
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/properties/increment-view-count/${id}`,
-      );
-    } catch (error) {
-      console.error("Error incrementing view", error);
     }
   };
 
@@ -439,10 +430,9 @@ const PropertiesPage = () => {
           </div>
         </div>
         {/* --- NEW SEARCH BAR STYLE (End) --- */}
-
         {/* Properties Grid */}
         {loading ? (
-          <div className="text-center py-12">Loading...</div>
+          <Loader />
         ) : (
           <div className="grid grid-cols-1 mx-auto max-w-7xl md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-0">
             {properties.length > 0 ? (
@@ -456,7 +446,6 @@ const PropertiesPage = () => {
             )}
           </div>
         )}
-
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex justify-center mt-12 space-x-2">
@@ -479,7 +468,6 @@ const PropertiesPage = () => {
             </button>
           </div>
         )}
-
         {/* --- MAP SECTION --- */}
         <div className="mt-16">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">

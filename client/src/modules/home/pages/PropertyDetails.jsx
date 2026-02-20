@@ -21,6 +21,7 @@ import LoginModal from "../../../components/Auth/LoginModal";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
+import Loader from "../../../components/Common/Loader";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -113,12 +114,7 @@ const PropertyDetails = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen bg-white">
-        Loading...
-      </div>
-    );
+  if (loading) return <Loader />;
   if (!property)
     return (
       <div className="flex justify-center items-center h-screen bg-white">
@@ -369,7 +365,7 @@ const PropertyDetails = () => {
                         property.location.longitude,
                       ]}
                       zoom={14}
-                      scrollWheelZoom={false}
+                      scrollWheelZoom={true}
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer

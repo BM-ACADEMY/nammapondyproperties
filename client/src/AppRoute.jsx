@@ -21,11 +21,9 @@ import Contact from "./modules/contact/Contact";
 
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
 
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen text-sm text-gray-500">
-    Loading...
-  </div>
-);
+import Loader from "./components/Common/Loader";
+
+const PageLoader = () => <Loader />;
 
 const AppRoutes = () => {
   return (

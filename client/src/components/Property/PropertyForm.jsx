@@ -45,7 +45,7 @@ function RecenterMap({ lat, lng }) {
     if (lat && lng) {
       map.setView([lat, lng], map.getZoom());
     }
-  }, [lat, lng]);
+  }, [lat, lng, map]);
   return null;
 }
 
@@ -62,6 +62,7 @@ const PropertyForm = ({
     handleSubmit,
     watch,
     setValue,
+    getValues,
     reset,
     formState: { errors },
   } = useForm({
@@ -358,13 +359,47 @@ const PropertyForm = ({
             <select
               {...register("property_type", {
                 required: "Property Type is required",
+                onChange: (e) => {
+                  const selectedTypeName = e.target.value;
+                  const selectedType = propertyTypes.find(
+                    (t) => t.name === selectedTypeName,
+                  );
+
+                  if (selectedType && selectedType.key_attributes) {
+                    // Use getValues to avoid React Compiler warning about watch in event handler
+                    const currentAttributes = getValues("key_attributes") || [];
+                    const existingKeys = currentAttributes.map((a) => a.key);
+
+                    const newAttributes = selectedType.key_attributes
+                      .filter((attr) => !existingKeys.includes(attr))
+                      .map((attr) => ({ key: attr, value: "" }));
+
+                    if (newAttributes.length > 0) {
+                      // Append new attributes
+                      // using setValue instead of append to avoid field array issues with async state
+                      const updatedAttributes = [
+                        ...currentAttributes,
+                        ...newAttributes,
+                      ];
+                      // If the first item is empty/default, remove it if we added new ones
+                      if (
+                        updatedAttributes.length > 1 &&
+                        updatedAttributes[0].key === "" &&
+                        updatedAttributes[0].value === ""
+                      ) {
+                        updatedAttributes.shift();
+                      }
+                      setValue("key_attributes", updatedAttributes);
+                    }
+                  }
+                },
               })}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
             >
               <option value="">Select Type</option>
               {propertyTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
+                <option key={type._id || type.name} value={type.name}>
+                  {type.name}
                 </option>
               ))}
             </select>
@@ -550,7 +585,7 @@ const PropertyForm = ({
               <MapContainer
                 center={mapPosition}
                 zoom={13}
-                scrollWheelZoom={false}
+                scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
               >
                 <TileLayer
@@ -615,9 +650,11 @@ const PropertyForm = ({
               <div className="hidden sm:block text-gray-400">:</div>
               <div className="flex-1 w-full">
                 <input
-                  {...register(`key_attributes.${index}.value`)}
+                  {...register(`key_attributes.${index}.value`, {
+                    required: "Value is required",
+                  })}
                   placeholder="Value (e.g. 3)"
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white"
+                  className={`w-full px-4 py-2 border ${errors.key_attributes?.[index]?.value ? "border-red-500" : "border-gray-200"} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white`}
                 />
               </div>
               <button

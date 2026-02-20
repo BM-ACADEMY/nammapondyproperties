@@ -3,15 +3,13 @@ import { useContext } from "react";
 import { Outlet, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
+import Loader from "../components/Common/Loader";
+
 const PrivateRoute = ({ allowedRoles }) => {
   const { user, isLoading } = useContext(AuthContext);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-sm text-gray-500">
-        Loading...
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!user) {

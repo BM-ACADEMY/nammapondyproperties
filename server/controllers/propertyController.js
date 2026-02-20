@@ -465,8 +465,10 @@ exports.getPropertyTypes = async (req, res) => {
       query.visible_to_seller = true;
     }
 
-    const types = await PropertyType.find(query).select("name -_id");
-    res.json(types.map((t) => t.name));
+    const types = await PropertyType.find(query).select(
+      "name key_attributes -_id",
+    );
+    res.json(types);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -490,43 +492,129 @@ exports.getPropertyApprovals = async (req, res) => {
 
 exports.getSellerStats = async (req, res) => {
   try {
-    const sellerId = req.user.id; // Assumes auth middleware populates req.user
+    const sellerId = req.user.id;
+    const { range = "30d" } = req.query; // Default to last 30 days
 
-    // 1. Total Properties
-    const totalProperties = await Property.countDocuments({
-      seller_id: sellerId,
-    });
+    // Calculate Date Range
+    let dateFrom = new Date();
+    if (range === "7d") dateFrom.setDate(dateFrom.getDate() - 7);
+    else if (range === "30d") dateFrom.setDate(dateFrom.getDate() - 30);
+    else if (range === "90d") dateFrom.setDate(dateFrom.getDate() - 90);
+    else if (range === "all") dateFrom = new Date(0); // All time
 
-    // 2. Active Properties
-    const activeProperties = await Property.countDocuments({
-      seller_id: sellerId,
-      status: "available",
-    });
+    // 1. Property Status Breakdown
+    const properties = await Property.find({ seller_id: sellerId }).select(
+      "status is_verified isSold view_count title start_date",
+    );
 
-    // 3. Total Views (Aggregation)
-    const viewsAggregation = await Property.aggregate([
-      { $match: { seller_id: new mongoose.Types.ObjectId(sellerId) } },
-      { $group: { _id: null, totalViews: { $sum: "$view_count" } } },
+    const totalProperties = properties.length;
+    const activeProperties = properties.filter(
+      (p) => p.status === "available" && !p.isSold,
+    ).length;
+    const soldProperties = properties.filter((p) => p.isSold).length;
+    const pendingProperties = properties.filter((p) => !p.is_verified).length;
+
+    // 2. Views Over Time (Aggegration from PropertyView)
+    // We need to match views for properties owned by this seller
+    const sellerPropertyIds = properties.map((p) => p._id);
+
+    const viewsOverTime = await PropertyView.aggregate([
+      {
+        $match: {
+          property_id: { $in: sellerPropertyIds },
+          viewed_at: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$viewed_at" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
     ]);
-    const totalViews =
-      viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
 
-    // 4. Total Leads
-    const totalLeads = await WhatsappLead.countDocuments({
+    // 3. Enquiries Over Time (Aggregation from WhatsappLead)
+    const enquiriesOverTime = await WhatsappLead.aggregate([
+      {
+        $match: {
+          seller_id: new mongoose.Types.ObjectId(sellerId),
+          createdAt: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 4. Merge Data for Chart
+    // Create a map of all dates in range to ensure continuous line
+    const chartData = [];
+    const today = new Date();
+    let currentDate = new Date(dateFrom);
+
+    // If "all" time, we might need a dynamic start, but for now let's use the actual data start or just fallback to 30d if no data
+    if (range === "all") {
+      // Find earliest date from data or default to 30 days ago
+      // For chart cleanliness, let's limit "all" to last 6 months if no specific requirement
+      dateFrom = new Date();
+      dateFrom.setMonth(dateFrom.getMonth() - 6);
+      currentDate = new Date(dateFrom);
+    }
+
+    while (currentDate <= today) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+
+      const viewData = viewsOverTime.find((v) => v._id === dateStr);
+      const enquiryData = enquiriesOverTime.find((e) => e._id === dateStr);
+
+      chartData.push({
+        date: dateStr,
+        views: viewData ? viewData.count : 0,
+        enquiries: enquiryData ? enquiryData.count : 0,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // 5. Recent Activity (Enquiries)
+    const recentEnquiries = await WhatsappLead.find({
+      seller_id: sellerId,
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("property_id", "title")
+      .populate("user_id", "name email phoneNumber");
+
+    // 6. Top Properties
+    const topProperties = properties
+      .sort((a, b) => b.view_count - a.view_count)
+      .slice(0, 5);
+
+    // Total Views (Sum of all time or range? Usually dashboard header shows all time, chart shows range)
+    // Let's keep total stats as ALL TIME for the cards, and chart as RANGE
+    const totalViewsAllTime = properties.reduce(
+      (sum, p) => sum + (p.view_count || 0),
+      0,
+    );
+    const totalLeadsAllTime = await WhatsappLead.countDocuments({
       seller_id: sellerId,
     });
-
-    // 5. Top Performing Properties
-    const topProperties = await Property.find({ seller_id: sellerId })
-      .sort({ view_count: -1 })
-      .limit(5)
-      .select("title view_count status images");
 
     res.json({
-      totalProperties,
-      activeProperties,
-      totalViews,
-      totalLeads,
+      summary: {
+        totalProperties,
+        activeProperties,
+        soldProperties,
+        pendingProperties,
+        totalViews: totalViewsAllTime,
+        totalLeads: totalLeadsAllTime,
+      },
+      chartData,
+      recentEnquiries,
       topProperties,
     });
   } catch (error) {
@@ -538,72 +626,156 @@ exports.getSellerStats = async (req, res) => {
 exports.getAdminStats = async (req, res) => {
   try {
     const Enquiry = require("../models/WhatsappLead");
+    const Role = require("../models/Role"); // Ensure Role model is required
+    const { range = "30d" } = req.query;
 
-    // 1. Total Users
+    // Calculate Date Range
+    let dateFrom = new Date();
+    if (range === "7d") dateFrom.setDate(dateFrom.getDate() - 7);
+    else if (range === "30d") dateFrom.setDate(dateFrom.getDate() - 30);
+    else if (range === "90d") dateFrom.setDate(dateFrom.getDate() - 90);
+    else if (range === "all") dateFrom = new Date(0);
+
+    // 1. User Stats (Total, Sellers, Buyers)
     const totalUsers = await User.countDocuments();
 
-    // 2. Total Properties
-    const totalProperties = await Property.countDocuments();
+    // Find Role IDs
+    const sellerRole = await Role.findOne({ role_name: { $regex: /seller/i } });
+    const userRole = await Role.findOne({ role_name: { $regex: /user/i } }); // Or buyer
+    const adminRole = await Role.findOne({ role_name: { $regex: /admin/i } });
 
-    // 3. Pending Approvals (properties pending admin approval)
+    const totalSellers = sellerRole
+      ? await User.countDocuments({ role_id: sellerRole._id })
+      : 0;
+    const totalBuyers = userRole
+      ? await User.countDocuments({ role_id: userRole._id })
+      : 0; // Assuming 'user' role is buyer
+
+    // 2. Property Stats
+    const totalProperties = await Property.countDocuments();
+    const activeProperties = await Property.countDocuments({
+      status: "available",
+    });
+    const soldProperties = await Property.countDocuments({ isSold: true });
     const pendingApprovals = await Property.countDocuments({
       is_verified: false,
     });
 
-    // 4. Total Views (All Properties)
-    const viewsAggregation = await Property.aggregate([
-      { $group: { _id: null, totalViews: { $sum: "$view_count" } } },
+    // 3. Views Aggregation (Global, Time-Series)
+    const viewsOverTime = await PropertyView.aggregate([
+      {
+        $match: {
+          viewed_at: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$viewed_at" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
     ]);
-    const siteVisits =
-      viewsAggregation.length > 0 ? viewsAggregation[0].totalViews : 0;
 
-    // 5. Total Enquiries
+    const totalViewsAllTime = await PropertyView.estimatedDocumentCount(); // Faster than countDocuments or aggregation if huge
+
+    // 4. Enquiries Aggregation (Global, Time-Series)
+    const enquiriesOverTime = await Enquiry.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
     const totalEnquiries = await Enquiry.countDocuments();
 
-    // 6. Property Distribution by Type
-    const propertyDistribution = await Property.aggregate([
-      { $group: { _id: "$type", count: { $sum: 1 } } },
-    ]);
-    const propertyData = propertyDistribution.map((item) => ({
-      name: item._id || "Other",
-      value: item.count,
-    }));
+    // 5. Merge Chart Data
+    const chartData = [];
+    const today = new Date();
+    let currentDate = new Date(dateFrom);
 
-    // 7. Pending Properties (for table)
-    const pendingProperties = await Property.find({ is_verified: false })
-      .populate("seller_id", "name")
+    if (range === "all") {
+      dateFrom = new Date();
+      dateFrom.setMonth(dateFrom.getMonth() - 6);
+      currentDate = new Date(dateFrom);
+    }
+
+    while (currentDate <= today) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      const viewData = viewsOverTime.find((v) => v._id === dateStr);
+      const enquiryData = enquiriesOverTime.find((e) => e._id === dateStr);
+
+      chartData.push({
+        date: dateStr,
+        views: viewData ? viewData.count : 0,
+        enquiries: enquiryData ? enquiryData.count : 0,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // 6. Recent Activity
+    // New Users
+    const recentUsers = await User.find()
+      .sort({ createdAt: -1 })
       .limit(5)
-      .select("title seller_id is_verified createdAt")
-      .sort({ createdAt: -1 });
+      .select("name email role_id createdAt")
+      .populate("role_id", "role_name");
 
-    // 8. Recent Activity
+    // Recent Properties
     const recentProperties = await Property.find()
       .populate("seller_id", "name")
       .limit(5)
-      .select("title seller_id createdAt")
+      .select("title seller_id is_verified createdAt status")
       .sort({ createdAt: -1 });
 
-    const recentActivity = recentProperties.map((prop) => ({
-      title: `New Property "${prop.title}" added`,
-      seller: prop.seller_id?.name || "Unknown",
-      time: prop.createdAt,
-    }));
+    // Recent Enquiries
+    const recentEnquiries = await Enquiry.find()
+      .populate("property_id", "title")
+      .populate("user_id", "name email")
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     res.json({
-      totalUsers,
-      totalProperties,
-      pendingApprovals,
-      siteVisits,
-      totalEnquiries,
-      propertyData,
-      pendingProperties: pendingProperties.map((p) => ({
-        key: p._id,
-        property: p.title,
-        seller: p.seller_id?.name || "Unknown",
-        status: "Pending",
-        id: p._id,
+      summary: {
+        totalUsers,
+        totalSellers,
+        totalBuyers,
+        totalProperties,
+        activeProperties,
+        soldProperties,
+        pendingApprovals,
+        totalViews: totalViewsAllTime,
+        totalEnquiries,
+      },
+      chartData,
+      recentUsers: recentUsers.map((u) => ({
+        _id: u._id,
+        name: u.name,
+        email: u.email,
+        role: u.role_id?.role_name || "Unknown",
+        joinedAt: u.createdAt,
       })),
-      recentActivity,
+      recentProperties: recentProperties.map((p) => ({
+        _id: p._id,
+        title: p.title,
+        seller: p.seller_id?.name || "Unknown",
+        status: p.is_verified ? p.status : "Pending Approval",
+        createdAt: p.createdAt,
+      })),
+      recentEnquiries: recentEnquiries.map((e) => ({
+        _id: e._id,
+        user: e.user_id?.name || "Guest",
+        property: e.property_id?.title || "Unknown Property",
+        createdAt: e.createdAt,
+      })),
     });
   } catch (error) {
     console.error("Error fetching admin stats:", error);

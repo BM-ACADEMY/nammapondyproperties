@@ -11,10 +11,11 @@ import {
   X,
   ShieldCheck,
   Calendar,
-  Briefcase
+  Briefcase,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import axios from "axios";
+import Loader from "@/components/Common/Loader";
 
 const Profile = () => {
   const { user, isLoading, refreshUser } = useAuth();
@@ -42,14 +43,19 @@ const Profile = () => {
     const fetchBusinessTypes = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/business-types?status=active`
+          `${import.meta.env.VITE_API_URL}/business-types?status=active`,
         );
         setBusinessTypes(response.data);
       } catch (error) {
         console.error("Error fetching business types:", error);
       }
     };
-    if (user && (user.role?.name === "SELLER" || user.role?.name === "AGENT" || user.role?.name === "BUILDER")) {
+    if (
+      user &&
+      (user.role?.name === "SELLER" ||
+        user.role?.name === "AGENT" ||
+        user.role?.name === "BUILDER")
+    ) {
       fetchBusinessTypes();
     }
   }, [user]);
@@ -104,11 +110,7 @@ const Profile = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-100 border-t-indigo-600"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!user) {
@@ -131,10 +133,11 @@ const Profile = () => {
               initial={{ opacity: 0, y: -20, x: "50%" }}
               animate={{ opacity: 1, y: 0, x: "50%" }}
               exit={{ opacity: 0, y: -20, x: "50%" }}
-              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${message.type === "success"
-                ? "bg-green-500/90 text-white border-green-400"
-                : "bg-red-500/90 text-white border-red-400"
-                }`}
+              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${
+                message.type === "success"
+                  ? "bg-green-500/90 text-white border-green-400"
+                  : "bg-red-500/90 text-white border-red-400"
+              }`}
             >
               {message.type === "success" ? (
                 <CheckCircle size={18} />
@@ -327,7 +330,9 @@ const Profile = () => {
                         name="phone"
                         value={formData.phone}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          const value = e.target.value
+                            .replace(/\D/g, "")
+                            .slice(0, 10);
                           setFormData((prev) => ({ ...prev, phone: value }));
                         }}
                         placeholder="Phone Number (10 digits)"
@@ -345,7 +350,9 @@ const Profile = () => {
                 </div>
 
                 {/* Business Type Selection */}
-                {(user.role?.name === "SELLER" || user.role?.name === "AGENT" || user.role?.name === "BUILDER") && (
+                {(user.role?.name === "SELLER" ||
+                  user.role?.name === "AGENT" ||
+                  user.role?.name === "BUILDER") && (
                   <div className="group">
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                       Business Type

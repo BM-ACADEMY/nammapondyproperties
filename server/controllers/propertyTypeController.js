@@ -2,8 +2,13 @@ const PropertyType = require("../models/PropertyType");
 
 exports.createPropertyType = async (req, res) => {
   try {
-    const { name, status, visible_to_seller } = req.body;
-    const propertyType = new PropertyType({ name, status, visible_to_seller });
+    const { name, status, visible_to_seller, key_attributes } = req.body;
+    const propertyType = new PropertyType({
+      name,
+      status,
+      visible_to_seller,
+      key_attributes,
+    });
     await propertyType.save();
     res.status(201).json(propertyType);
   } catch (error) {
