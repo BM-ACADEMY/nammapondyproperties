@@ -53,7 +53,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-indigo-950 text-indigo-100 pt-20 pb-10  relative font-sans">
+    <footer className="bg-indigo-950 text-indigo-100 pt-20 pb-10 relative font-sans">
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -61,7 +61,8 @@ const Footer = () => {
           
           {/* Brand & About */}
           <div className="space-y-6">
-            <Link to="/" className="inline-block bg-white p-3 rounded-xl shadow-md">
+            {/* Removed the background and shadow from the Link wrapper */}
+            <Link to="/" className="inline-block">
               <img
                 src="/Logo/logo.png"
                 alt="NammaPondy Logo"
@@ -79,9 +80,12 @@ const Footer = () => {
 
           {/* Explore Links */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Explore</h4>
+            {/* Added an expanding underline animation on hover */}
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-indigo-400 hover:after:w-full after:transition-all after:duration-300 cursor-default">
+              Explore
+            </h4>
             <ul className="space-y-3 text-sm">
-              {['Home', 'Properties', 'About Us', 'Contact Us'].map((item) => (
+              {['Home', 'Properties', 'About', 'Contact'].map((item) => (
                 <li key={item}>
                   <Link 
                     to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
@@ -96,7 +100,10 @@ const Footer = () => {
 
           {/* Contact Details */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Contact</h4>
+            {/* Added an expanding underline animation on hover */}
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-indigo-400 hover:after:w-full after:transition-all after:duration-300 cursor-default">
+              Contact
+            </h4>
             <ul className="space-y-4 text-sm text-indigo-200/80">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
@@ -115,7 +122,10 @@ const Footer = () => {
 
           {/* Social Links */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Connect</h4>
+            {/* Added an expanding underline animation on hover */}
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-indigo-400 hover:after:w-full after:transition-all after:duration-300 cursor-default">
+              Connect
+            </h4>
             <p className="text-sm text-indigo-200/80 mb-6">
               Follow us to get the latest updates on new properties and market trends.
             </p>
@@ -143,12 +153,23 @@ const Footer = () => {
 
         {/* Footer Bottom */}
         <div className="pt-8 border-t border-indigo-800/50 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-indigo-300/70">
-          <p>&copy; {new Date().getFullYear()} NammaPondy Properties. All rights reserved.</p>
-          <div className="flex gap-6">
+          {/* Automatically updates the year and points to bmtechx.in in a new tab */}
+          <p>
+            &copy; {new Date().getFullYear()} NammaPondy Properties. All rights reserved. | Designed by{" "}
+            <a 
+              href="https://bmtechx.in" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-white transition-colors font-medium"
+            >
+              BM TechX
+            </a>
+          </p>
+          {/* <div className="flex gap-6">
             <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link to="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

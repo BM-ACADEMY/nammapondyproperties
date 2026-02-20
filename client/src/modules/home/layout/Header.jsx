@@ -162,7 +162,7 @@ const Header = () => {
                   onMouseLeave={() => setIsPropertiesDesktopOpen(false)}
                 >
                   <button className="flex items-center text-gray-600 group-hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide focus:outline-none">
-                    Properties
+                    Business
                     <ChevronDown
                       className={`ml-1 h-4 w-4 transition-transform duration-200 ${isPropertiesDesktopOpen ? "rotate-180" : ""
                         }`}
