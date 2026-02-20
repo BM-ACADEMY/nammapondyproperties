@@ -344,10 +344,10 @@ const Dashboard = () => {
               renderItem={(item) => (
                 <List.Item
                   actions={[
-                    item.user_id?.phoneNumber ? (
+                    item.user_id?.phoneNumber || item.enquirer_phone ? (
                       <a
                         key="call"
-                        href={`tel:${item.user_id.phoneNumber}`}
+                        href={`tel:${item.user_id?.phoneNumber || item.enquirer_phone}`}
                         className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"
                       >
                         <Phone size={16} />
@@ -365,13 +365,17 @@ const Dashboard = () => {
                       >
                         {item.user_id?.name
                           ? item.user_id.name[0].toUpperCase()
-                          : "U"}
+                          : item.enquirer_name
+                            ? item.enquirer_name[0].toUpperCase()
+                            : "U"}
                       </Avatar>
                     }
                     title={
                       <div className="flex justify-between">
                         <span className="font-medium">
-                          {item.user_id?.name || "Unknown User"}
+                          {item.user_id?.name ||
+                            item.enquirer_name ||
+                            "Guest User"}
                         </span>
                         <span className="text-xs text-gray-400 font-normal">
                           {new Date(item.createdAt).toLocaleDateString()}
@@ -384,7 +388,9 @@ const Dashboard = () => {
                           For: {item.property_id?.title || "Unknown Property"}
                         </div>
                         <div className="text-sm text-gray-500 line-clamp-1">
-                          {item.user_id?.email || "Interested in this property"}
+                          {item.user_id?.email ||
+                            item.enquirer_email ||
+                            "Interested in this property"}
                         </div>
                       </div>
                     }
