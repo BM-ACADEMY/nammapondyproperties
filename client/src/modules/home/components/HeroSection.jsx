@@ -126,13 +126,24 @@ const HeroSection = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-7xl px-4 flex flex-col items-center">
-        {/* Headlines with Blur Animation */}
+        {/* Gold Badge - Adapted for dark backgrounds using backdrop blur */}
+        <motion.div
+          variants={blurFadeIn}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
+          <div className="inline-block border border-[#d4af37]/80 text-[#d4af37] px-5 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 bg-black/40 backdrop-blur-md shadow-sm cursor-default">
+            Start Your Search
+          </div>
+        </motion.div>
+        {/* Headlines with Light/Bold-Italic Typography (White for contrast) */}
         <motion.h1
           variants={blurFadeIn}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="text-3xl md:text-5xl font-bold text-white mb-4 text-center drop-shadow-lg"
+          className="text-4xl md:text-6xl font-light text-white mb-6 text-center tracking-tight drop-shadow-lg"
         >
           Find Your Dream Property
         </motion.h1>
@@ -143,9 +154,9 @@ const HeroSection = () => {
           whileInView="visible"
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="text-lg md:text-xl text-gray-100 mb-8 text-center drop-shadow-md"
+          className="text-lg md:text-xl text-gray-200 mb-12 text-center leading-relaxed max-w-2xl drop-shadow-md"
         >
-          Search for plots, villas, and apartments in Pondicherry.
+          Search for verified plots, villas, and apartments in Pondicherry effortlessly.
         </motion.p>
 
         {/* --- SEARCH BAR --- */}
