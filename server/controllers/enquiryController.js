@@ -62,7 +62,17 @@ exports.getEnquiries = async (req, res) => {
     const isAdmin =
       req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
 
-    if (!isAdmin) {
+    console.log("Debug getEnquiries:", {
+      userId: req.user._id,
+      role: req.user.role_id?.role_name,
+      isAdmin,
+      viewQuery: req.query.view,
+      userRoleObj: req.user.role_id,
+    });
+
+    // If NOT admin OR (is admin AND specific view requested as 'my')
+    // then filter by their own seller_id
+    if (!isAdmin || (isAdmin && req.query.view === "my")) {
       filter.seller_id = req.user._id;
     }
 
@@ -78,13 +88,40 @@ exports.getEnquiries = async (req, res) => {
     // I'll fetch all if admin, else filtered.
     // I need to verify role handling.
 
+    const WhatsappLead = require("../models/WhatsappLead");
+
+    // 1. Fetch Enquiries
     const enquiries = await Enquiry.find(filter)
       .populate("property_id", "title location images")
       .populate("user_id", "name email phone")
-      .populate("seller_id", "name email") // To know who is the seller
-      .sort({ createdAt: -1 });
+      .populate("seller_id", "name email")
+      .lean(); // Use lean for easier merging
 
-    res.json(enquiries);
+    // 2. Fetch WhatsappLeads (Legacy)
+    const whatsappLeads = await WhatsappLead.find(filter)
+      .populate("property_id", "title location images")
+      .populate("user_id", "name email phone")
+      // WhatsappLead schema has seller_id? Yes.
+      .populate("seller_id", "name email")
+      .lean();
+
+    // 3. Normalize WhatsappLeads to match Enquiry structure
+    const normalizedLeads = whatsappLeads.map((lead) => ({
+      ...lead,
+      enquirer_name: lead.user_id?.name || "WhatsApp User",
+      enquirer_email: lead.user_id?.email || "",
+      enquirer_phone: lead.user_id?.phone || "",
+      message: lead.message || "WhatsApp Inquiry",
+      status: lead.status || "new", // Assuming status exists or default
+      type: "whatsapp_lead", // Marker for debugging
+    }));
+
+    // 4. Merge and Sort
+    const allEnquiries = [...enquiries, ...normalizedLeads].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    );
+
+    res.json(allEnquiries);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

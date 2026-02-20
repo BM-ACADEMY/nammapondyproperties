@@ -8,14 +8,17 @@ const AdminEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [viewMode] = useState("my"); // Default and only view: 'my'
 
   useEffect(() => {
     fetchEnquiries();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]);
 
   const fetchEnquiries = async () => {
     try {
-      const res = await api.get("/enquiries/fetch-all");
+      setLoading(true);
+      const res = await api.get(`/enquiries/fetch-all?view=${viewMode}`);
       setEnquiries(res.data);
     } catch (error) {
       console.error("Error fetching enquiries", error);
@@ -151,21 +154,27 @@ const AdminEnquiries = () => {
       </h1>
 
       <div className="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <Input
-          prefix={<Search size={18} className="text-gray-400" />}
-          placeholder="Search by property or seller..."
-          onChange={(e) => setSearchText(e.target.value)}
-          className="max-w-md w-full"
-          size="large"
-        />
-        <Button
-          type="primary"
-          icon={<Download size={18} />}
-          onClick={downloadCSV}
-          className="bg-green-600 hover:bg-green-700 w-full md:w-auto flex items-center justify-center gap-2"
-        >
-          Export CSV
-        </Button>
+        <div className="flex gap-2 w-full md:w-auto">
+          {/* View toggle removed per user request - Defaulting to My Enquiries */}
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          <Input
+            prefix={<Search size={18} className="text-gray-400" />}
+            placeholder="Search by property or seller..."
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md w-full"
+            size="large"
+          />
+          <Button
+            type="primary"
+            icon={<Download size={18} />}
+            onClick={downloadCSV}
+            className="bg-green-600 hover:bg-green-700 w-full md:w-auto flex items-center justify-center gap-2"
+          >
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
