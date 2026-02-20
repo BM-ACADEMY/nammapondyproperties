@@ -607,7 +607,7 @@ const Header = () => {
                             onClick={() => setIsMenuOpen(false)}
                             className="block py-2 text-sm text-gray-600 hover:text-blue-600"
                           >
-                            Find {type.name}s
+                            {type.name}
                           </Link>
                         ))}
                       </div>
