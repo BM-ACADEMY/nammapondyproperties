@@ -606,7 +606,7 @@ exports.getSellerStats = async (req, res) => {
       (await Enquiry.countDocuments({
         seller_id: sellerId,
       })) +
-      (await WhatsappLead.countDocuments({
+      (await require("../models/WhatsappLead").countDocuments({
         seller_id: sellerId,
       }));
 
