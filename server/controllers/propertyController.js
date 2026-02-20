@@ -126,7 +126,9 @@ exports.getProperties = async (req, res) => {
     }
 
     if (excludeId) {
-      query._id = { $ne: excludeId };
+      query._id = mongoose.isValidObjectId(excludeId)
+        ? { $ne: new mongoose.Types.ObjectId(excludeId) }
+        : { $ne: excludeId };
     }
 
     if (isSold !== undefined) {
