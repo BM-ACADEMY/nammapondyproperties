@@ -600,9 +600,13 @@ exports.getSellerStats = async (req, res) => {
       (sum, p) => sum + (p.view_count || 0),
       0,
     );
-    const totalLeadsAllTime = await Enquiry.countDocuments({
-      seller_id: sellerId,
-    });
+    const totalLeadsAllTime =
+      (await Enquiry.countDocuments({
+        seller_id: sellerId,
+      })) +
+      (await WhatsappLead.countDocuments({
+        seller_id: sellerId,
+      }));
 
     res.json({
       summary: {
@@ -683,6 +687,7 @@ exports.getAdminStats = async (req, res) => {
     const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
+          seller_id: req.user._id,
           createdAt: { $gte: dateFrom },
         },
       },
@@ -695,7 +700,11 @@ exports.getAdminStats = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    const totalEnquiries = await Enquiry.countDocuments();
+    const totalEnquiries =
+      (await Enquiry.countDocuments({ seller_id: req.user._id })) +
+      (await require("../models/WhatsappLead").countDocuments({
+        seller_id: req.user._id,
+      }));
 
     // 5. Merge Chart Data
     const chartData = [];
@@ -736,8 +745,8 @@ exports.getAdminStats = async (req, res) => {
       .select("title seller_id is_verified createdAt status")
       .sort({ createdAt: -1 });
 
-    // Recent Enquiries
-    const recentEnquiries = await Enquiry.find()
+    // Recent Enquiries (Only for this admin/seller to avoid leaking others' leads)
+    const recentEnquiries = await Enquiry.find({ seller_id: req.user._id })
       .populate("property_id", "title")
       .populate("user_id", "name email")
       .sort({ createdAt: -1 })

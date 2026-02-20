@@ -376,7 +376,7 @@ const Dashboard = () => {
                         <MessageSquare size={16} />
                       </Avatar>
                     }
-                    title={<span className="font-medium">{item.user}</span>}
+                    // title={<span className="font-medium">{item.user}</span>}
                     description={
                       <div className="text-xs text-gray-500">
                         <div>On: {item.property}</div>
