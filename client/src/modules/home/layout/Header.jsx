@@ -579,63 +579,7 @@ const Header = () => {
                     <Home className="h-5 w-5 mr-3 text-gray-400" /> Home
                   </Link>
 
-                  {/* Mobile Properties Accordion */}
-                  <div className="rounded-xl overflow-hidden">
-                    <button
-                      onClick={() =>
-                        setIsPropertiesMobileOpen(!isPropertiesMobileOpen)
-                      }
-                      className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-all text-left"
-                    >
-                      <div className="flex items-center">
-                        <Store className="h-5 w-5 mr-3 text-gray-400" />{" "}
-                        Properties
-                      </div>
-                      <ChevronDown
-                        className={`h-4 w-4 transition-transform ${isPropertiesMobileOpen ? "rotate-180" : ""
-                          }`}
-                      />
-                    </button>
-                    <AnimatePresence>
-                      {isPropertiesMobileOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="bg-gray-50"
-                        >
-                          <Link
-                            to="/investing-insights"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="block pl-12 pr-4 py-3 text-sm text-gray-600 hover:text-blue-600 border-l-4 border-transparent hover:border-blue-600"
-                          >
-                            Investing Insights
-                          </Link>
-                          <Link
-                            to="/investor-guide"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="block pl-12 pr-4 py-3 text-sm text-gray-600 hover:text-blue-600 border-l-4 border-transparent hover:border-blue-600"
-                          >
-                            Investor's Guide
-                          </Link>
-                          <Link
-                            to="/properties/agent"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="block pl-12 pr-4 py-3 text-sm text-gray-600 hover:text-blue-600 border-l-4 border-transparent hover:border-blue-600"
-                          >
-                            Find Agents
-                          </Link>
-                          <Link
-                            to="/properties/builders"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="block pl-12 pr-4 py-3 text-sm text-gray-600 hover:text-blue-600 border-l-4 border-transparent hover:border-blue-600"
-                          >
-                            Find Builders
-                          </Link>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
+               
 
 
 
@@ -648,7 +592,7 @@ const Header = () => {
                     >
                       <div className="flex items-center">
                         <Briefcase className="h-5 w-5 mr-3 text-gray-400" />{" "}
-                        Professionals
+                        Business
                       </div>
                       <ChevronDown
                         className={`h-4 w-4 transition-transform ${isPropertiesMobileOpen ? "rotate-180" : ""}`}
