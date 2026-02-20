@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { User, ArrowRight, Building2, Phone, ShieldCheck } from "lucide-react";
+import { User, ArrowRight, Building2, Phone, ShieldCheck, Star } from "lucide-react";
 import { motion } from "framer-motion";
 
 const BusinessUserList = () => {
@@ -45,29 +45,31 @@ const BusinessUserList = () => {
         );
     }
 
+    // CHANGED: Background is now #f9fafb (Tailwind's bg-gray-50)
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#f0f5ff] via-[#e5efff] to-[#f0f5ff] font-sans pb-20 pt-10 relative overflow-hidden">
+        <div className="min-h-screen bg-gray-50 font-sans pb-20 pt-10 relative overflow-hidden">
             
-            {/* Optional subtle background glow for that "sparkle" effect */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-40 rounded-full blur-3xl pointer-events-none"></div>
+            {/* Subtle background glow */}
+            <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-60 rounded-full blur-3xl pointer-events-none"></div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 
                 {/* --- HERO SECTION (Wrapped in a single white card) --- */}
-                <div className="bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 border border-gray-100">
                     <div className="md:w-1/2">
-                        <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4 tracking-tight">
+                        <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">
                             Find Your {businessType?.name || "Agent"}
                         </h1>
+                        
                         <p className="text-lg text-slate-500 mb-8 leading-relaxed max-w-xl">
-                            Connect with the most responsive professionals with <strong>up-to-date expertise</strong> and top accuracy on the properties you are looking for.
+                            Connect with the most responsive professionals with <span className="font-bold italic text-slate-900">up-to-date expertise</span> and top accuracy on the properties you are looking for.
                         </p>
-                        <div className="inline-block bg-[#3b5998] text-white px-6 py-3 rounded-lg font-semibold shadow-sm cursor-default text-sm">
+                        
+                        <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest cursor-default">
                             Showing {users.length} Verified Professionals
                         </div>
                     </div>
                     
-                    {/* Hero Illustration - Attached seamlessly without card effects */}
                     <div className="md:w-1/2 flex justify-end">
                         <img 
                             src="/agent.png" 
@@ -79,7 +81,7 @@ const BusinessUserList = () => {
 
                 {/* --- CONTENT SECTION --- */}
                 {users.length === 0 ? (
-                    <div className="bg-white rounded-3xl shadow-lg p-12 text-center border border-white/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
                         <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
                             <User className="w-8 h-8 text-[#3b5998]" />
                         </div>
@@ -96,71 +98,85 @@ const BusinessUserList = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
-                                className="h-full"
                             >
-                                {/* Horizontal Card Layout */}
-                                <div className="bg-white rounded-[24px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] p-8 flex flex-col sm:flex-row gap-8 hover:shadow-[0_12px_32px_rgba(0,0,0,0.1)] transition-all duration-300 relative h-full">
+                                {/* --- ENTIRE CARD IS NOW CLICKABLE --- */}
+                                <Link 
+                                    to={`/properties/user/${user._id}`}
+                                    className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300 flex h-[180px] sm:h-[200px] overflow-hidden border border-gray-100 cursor-pointer block group"
+                                >
                                     
-                                    {/* Left: Profile Image */}
-                                    <div className="shrink-0 flex justify-center sm:justify-start">
-                                        <div className="h-[120px] w-[120px] rounded-full overflow-hidden bg-gray-50 border-4 border-white shadow-md relative">
-                                            {user.profile_image ? (
-                                                <img
-                                                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
-                                                    alt={user.name}
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 text-[#3b5998] font-bold text-4xl">
-                                                    {user.name.charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                        </div>
+                                    {/* Left Panel: Deep Blue Background + Image */}
+                                    <div className="w-[120px] sm:w-[150px] shrink-0 relative bg-[#0a2342] flex justify-center items-end overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-5 rounded-bl-[100px] pointer-events-none"></div>
+                                        <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#d4af37] rounded-full blur-2xl opacity-30 pointer-events-none"></div>
+
+                                        {user.profile_image ? (
+                                            <img
+                                                src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
+                                                alt={user.name}
+                                                className="relative z-10 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            <div className="relative z-10 h-full w-full flex items-center justify-center bg-gradient-to-t from-[#0a2342] to-[#174685] text-white/40 font-light text-5xl">
+                                                {user.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    {/* Right: User Details & Actions */}
-                                    <div className="flex-1 flex flex-col text-center sm:text-left h-full">
+                                    {/* Right Panel: Agent Details */}
+                                    <div className="flex-1 p-4 sm:p-5 flex flex-col bg-white relative">
                                         
-                                        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start mb-1">
-                                            <h3 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                                                {user.name}
-                                                <ShieldCheck className="w-6 h-6 text-[#3b5998]" fill="currentColor" />
-                                            </h3>
+                                        {/* Top Right Verified Shield */}
+                                        <div className="absolute top-4 right-4 text-[#d4af37] bg-yellow-50/50 p-1.5 rounded-lg border border-yellow-100/50 hidden sm:block">
+                                            <ShieldCheck className="w-5 h-5" strokeWidth={2} />
                                         </div>
-                                        
-                                        <p className="text-slate-500 mb-6 flex items-center justify-center sm:justify-start gap-1">
-                                            <Building2 className="w-4 h-4" />
-                                            {user.businessType?.name || businessType?.name || "Professional"}
-                                        </p>
 
-                                        {/* Actions */}
-                                        <div className="mt-auto flex flex-wrap justify-center sm:justify-start gap-3">
+                                        {/* Name & Role */}
+                                        <div className="mb-3">
+                                            <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-0.5 truncate pr-8 group-hover:text-[black] transition-colors">
+                                                {user.name}
+                                            </h3>
+                                            <p className="text-xs sm:text-sm text-slate-500 underline decoration-slate-200 underline-offset-4 font-medium truncate">
+                                                {user.businessType?.name || businessType?.name || "Professional"}
+                                            </p>
+                                        </div>
+
+                                        {/* "VERIFIED" & Rating Badges */}
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            <div className="bg-[#174685] text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded flex items-center gap-1.5 uppercase tracking-wide">
+                                                <Star className="w-3 h-3 text-[#d4af37] fill-current" /> VERIFIED
+                                            </div>
+                                            <div className="bg-slate-50 border border-slate-100 text-slate-700 text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded flex items-center gap-1.5">
+                                                <Star className="w-3 h-3 text-[#d4af37] fill-current" /> 5.0
+                                            </div>
+                                        </div>
+
+                                        {/* Actions Row (Pills) */}
+                                        <div className="mt-auto flex flex-wrap gap-2">
                                             {user.phone ? (
                                                 <button
                                                     onClick={(e) => {
                                                         e.preventDefault();
+                                                        e.stopPropagation(); // Prevents clicking the card link
                                                         window.open(`https://wa.me/${user.phone}`, '_blank');
                                                     }}
-                                                    className="flex items-center gap-2 py-2 px-4 bg-[#3b5998] text-white rounded-lg hover:bg-[#2d4373] transition-colors text-sm font-bold shadow-sm"
+                                                    className="bg-[#f0f5ff] text-[#174685] text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#e5efff] transition-colors border border-blue-100/50 relative z-20"
                                                 >
-                                                    <Phone className="w-4 h-4" /> WhatsApp
+                                                    <Phone className="w-3 h-3" /> WhatsApp
                                                 </button>
                                             ) : (
-                                                <button disabled className="flex items-center gap-2 py-2 px-4 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed text-sm font-bold">
-                                                    <Phone className="w-4 h-4" /> No Phone
+                                                <button disabled className="bg-slate-50 text-slate-400 text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-slate-100 cursor-not-allowed relative z-20">
+                                                    <Phone className="w-3 h-3" /> No Phone
                                                 </button>
                                             )}
 
-                                            <Link
-                                                to={`/properties/user/${user._id}`}
-                                                className="flex items-center gap-2 py-2 px-4 bg-[#f0f2f5] text-slate-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-bold"
-                                            >
-                                                View Profile <ArrowRight className="w-4 h-4" />
-                                            </Link>
+                                            <div className="bg-[#f0f5ff] text-[#174685] text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-blue-100/50 group-hover:bg-[#174685] group-hover:text-white transition-colors">
+                                                Profile <ArrowRight className="w-3 h-3" />
+                                            </div>
                                         </div>
 
                                     </div>
-                                </div>
+                                </Link>
                             </motion.div>
                         ))}
                     </div>
