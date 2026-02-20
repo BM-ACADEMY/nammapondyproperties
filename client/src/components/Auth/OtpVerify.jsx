@@ -41,6 +41,9 @@ export default function OtpVerify() {
 
       if (purpose === 'reset') {
         navigate('/reset-password', { state: { email } });
+      } else if (purpose === 'seller-signup') {
+        message.success('Seller account verified! Please login to access your dashboard.');
+        navigate('/login');
       } else {
         message.success('Account verified! Please login.');
         navigate('/login');
@@ -71,7 +74,7 @@ export default function OtpVerify() {
 
   return (
     <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-      
+
       {/* SHARED ANIMATION STYLES */}
       <style>
         {`
@@ -102,14 +105,14 @@ export default function OtpVerify() {
 
       {/* Main Card */}
       <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[500px] animate-pop-in">
-        
+
         {/* LEFT SIDE: Visual (Updated with new image) */}
         <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
-            style={{ 
+            style={{
               // Replace the URL below with your desired real estate image URL
-              backgroundImage: "url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1000&auto=format&fit=crop')" 
+              backgroundImage: "url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1000&auto=format&fit=crop')"
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-10">
@@ -123,8 +126,8 @@ export default function OtpVerify() {
 
         {/* RIGHT SIDE: OTP Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-6 text-sm font-medium w-fit"
           >
             <ArrowLeftOutlined /> Back
@@ -135,7 +138,7 @@ export default function OtpVerify() {
               Verify OTP
             </h2>
             <p className="text-gray-500 mt-3 text-sm leading-relaxed">
-              We've sent a 6-digit code to <br/>
+              We've sent a 6-digit code to <br />
               <span className="font-semibold text-gray-800">{email}</span>
             </p>
           </div>
@@ -150,9 +153,9 @@ export default function OtpVerify() {
               ]}
             >
               {/* Modern Individual Digit Input */}
-              <Input.OTP 
-                length={6} 
-                formatter={(str) => str.toUpperCase()} 
+              <Input.OTP
+                length={6}
+                formatter={(str) => str.toUpperCase()}
                 disabled={loading}
                 className="otp-input-custom"
               />

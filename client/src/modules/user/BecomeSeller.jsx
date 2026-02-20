@@ -50,10 +50,12 @@ export default function BecomeSeller() {
 
       message.success(res.data.message || "Successfully upgraded to Seller!");
 
-      // Refresh user context
+      // Refresh user context with the new seller role + token
       await refetchUser();
 
-      navigate("/seller/dashboard"); // Redirect to seller dashboard
+      // Hard redirect so the app re-initialises with the fresh seller token/role
+      // (avoids PrivateRoute seeing the stale USER role before React state propagates)
+      window.location.href = "/seller/dashboard";
     } catch (err) {
       const errorMsg =
         err.response?.data?.error || "Failed to upgrade to seller";
