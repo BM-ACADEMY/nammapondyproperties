@@ -137,10 +137,24 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
           {/* Action Button */}
           <button
             onClick={(e) => {
-              if (onWhatsAppClick && !property.isSold) {
-                e.preventDefault(); // Prevent Link navigation
-                e.stopPropagation();
+              if (property.isSold) return;
+              e.preventDefault();
+              e.stopPropagation();
+
+              if (onWhatsAppClick) {
                 onWhatsAppClick(e, property);
+              } else {
+                // Default handling if no prop provided
+                const phoneNumber =
+                  property.mobile ||
+                  property.seller_id?.phoneNumber ||
+                  property.seller_id?.phone ||
+                  "919876543210"; // Fallback
+                const message = `Hi, I'm interested in your property: ${property.title}`;
+                const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+                  message,
+                )}`;
+                window.open(whatsappUrl, "_blank");
               }
             }}
             disabled={property.isSold}
