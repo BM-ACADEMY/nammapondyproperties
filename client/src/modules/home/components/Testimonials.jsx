@@ -42,7 +42,7 @@ const Testimonials = () => {
         name: user?.user?.name || user?.name || "User",
         role: "User",
       });
-      message.success("Review submitted for approval!");
+      message.success("Review submitted");
       setIsModalOpen(false);
     } catch (error) {
       console.error("Submission error:", error);
