@@ -129,12 +129,12 @@ const PropertyForm = ({
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
 
-  // Image State
   const [images, setImages] = useState([]); // New files
   const [existingImages, setExistingImages] = useState(
     initialData?.images || [],
   ); // URLs
   const [imagePreviews, setImagePreviews] = useState([]); // Previews for new files
+  const [fileSizes, setFileSizes] = useState([]); // Sizes for new files
 
   const [imagesToDelete, setImagesToDelete] = useState([]);
 
@@ -196,18 +196,44 @@ const PropertyForm = ({
   // Handle Image Selection
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
+    const validTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/svg+xml",
+      "image/jpg",
+    ];
+    const validFiles = [];
+    const newPreviews = [];
+    const newFileSizes = [];
+
+    files.forEach((file) => {
+      if (!validTypes.includes(file.type)) {
+        toast.error(
+          `${file.name} is not a supported format. Use JPG, PNG, or SVG.`,
+        );
+        return;
+      }
+      validFiles.push(file);
+      newPreviews.push(URL.createObjectURL(file));
+      // Convert to MB or KB
+      const size = file.size / 1024 / 1024; // in MB
+      if (size < 1) {
+        newFileSizes.push(`${(file.size / 1024).toFixed(2)} KB`);
+      } else {
+        newFileSizes.push(`${size.toFixed(2)} MB`);
+      }
+    });
+
     const totalCurrentImages = images.length + existingImages.length;
 
-    if (totalCurrentImages + files.length > 10) {
+    if (totalCurrentImages + validFiles.length > 10) {
       toast.error("Maximum 10 images allowed");
       return;
     }
 
-    const newImages = [...images, ...files];
-    setImages(newImages);
-
-    const newPreviews = files.map((file) => URL.createObjectURL(file));
+    setImages([...images, ...validFiles]);
     setImagePreviews([...imagePreviews, ...newPreviews]);
+    setFileSizes([...fileSizes, ...newFileSizes]); // Accessing new state
   };
 
   // Remove New Image
@@ -220,6 +246,10 @@ const PropertyForm = ({
     URL.revokeObjectURL(newPreviews[index]); // Cleanup memory
     newPreviews.splice(index, 1);
     setImagePreviews(newPreviews);
+
+    const newSizes = [...fileSizes];
+    newSizes.splice(index, 1);
+    setFileSizes(newSizes);
   };
 
   // Remove Existing Image
@@ -738,13 +768,16 @@ const PropertyForm = ({
               {imagePreviews.map((src, index) => (
                 <div
                   key={`new-${index}`}
-                  className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md aspect-square border border-gray-100"
+                  className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md aspect-square border border-gray-100 flex flex-col"
                 >
                   <img
                     src={src}
                     alt={`Preview ${index}`}
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] text-center py-1 truncate px-1">
+                    {fileSizes[index]}
+                  </div>
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                       type="button"

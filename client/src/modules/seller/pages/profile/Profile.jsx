@@ -29,6 +29,7 @@ const Profile = () => {
   const [fileList, setFileList] = useState([]);
 
   const [hasInitialImage, setHasInitialImage] = useState(false);
+  const [imageSize, setImageSize] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -133,6 +134,17 @@ const Profile = () => {
 
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
+    if (newFileList.length > 0 && newFileList[0].originFileObj) {
+      const file = newFileList[0].originFileObj;
+      const size = file.size / 1024 / 1024; // in MB
+      if (size < 1) {
+        setImageSize(`${(file.size / 1024).toFixed(2)} KB`);
+      } else {
+        setImageSize(`${size.toFixed(2)} MB`);
+      }
+    } else {
+      setImageSize(null);
+    }
   };
 
   const onPreview = async (file) => {
@@ -175,7 +187,17 @@ const Profile = () => {
                   fileList={fileList}
                   onChange={onChange}
                   onPreview={onPreview}
-                  beforeUpload={() => false} // Prevent auto upload
+                  beforeUpload={(file) => {
+                    const isJpgOrPngOrSvg =
+                      file.type === "image/jpeg" ||
+                      file.type === "image/png" ||
+                      file.type === "image/svg+xml";
+                    if (!isJpgOrPngOrSvg) {
+                      message.error("You can only upload JPG/PNG/SVG file!");
+                      return Upload.LIST_IGNORE;
+                    }
+                    return false; // Prevent auto upload
+                  }}
                   maxCount={1}
                 >
                   {fileList.length < 1 && (
@@ -186,6 +208,9 @@ const Profile = () => {
                   )}
                 </Upload>
               </ImgCrop>
+              {imageSize && (
+                <div className="text-xs text-gray-500 mt-2">{imageSize}</div>
+              )}
             </div>
             {fileList.length > 0 && (
               <div className="flex justify-center -mt-4 mb-6">
