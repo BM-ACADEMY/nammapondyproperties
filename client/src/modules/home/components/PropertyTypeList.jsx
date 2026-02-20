@@ -75,7 +75,7 @@ const PropertyTypeList = () => {
     <section className="py-18 bg-[#FAFAFA] font-sans">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
         {/* Premium Header */}
-        <div className="text-center mb-10 flex flex-col items-center">``
+        <div className="text-center mb-10 flex flex-col items-center">
           <h2 className="text-4xl md:text-5xl font-light font-serif text-gray-900 tracking-tight">
             Explore Properties
           </h2>
