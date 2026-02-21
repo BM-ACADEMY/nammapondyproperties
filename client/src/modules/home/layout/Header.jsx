@@ -177,7 +177,7 @@ const Header = () => {
                                 className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                 onClick={() => setIsPropertiesDesktopOpen(false)}
                               >
-                                Find {type.name}s
+                                {type.name}
                               </Link>
                             ))}
                           </div>
