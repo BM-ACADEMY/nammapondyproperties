@@ -47,7 +47,7 @@ export default function SellerRegister() {
       );
 
       navigate("/otp-verify", {
-        state: { email: values.email, from: "signup" },
+        state: { email: values.email, purpose: "seller-signup" },
       });
     } catch (err) {
       const errorMsg = err.response?.data?.error || "Failed to create account";
