@@ -21,4 +21,20 @@ api.interceptors.request.use(
   },
 );
 
+// Add response interceptor for auto-logout
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 404)) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // Only clear if we actually had a session
+        localStorage.clear();
+        window.location.href = "/login?message=session_expired";
+      }
+    }
+    return Promise.reject(error);
+  },
+);
+
 export default api;

@@ -4,6 +4,7 @@ import './App.css'
 import AppRoutes from './AppRoute';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { NavProvider } from './context/NavContext';
 
 
 function App() {
@@ -11,9 +12,11 @@ function App() {
     <>
       <div>
         <AuthProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
+          <NavProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </NavProvider>
         </AuthProvider>
       </div>
     </>

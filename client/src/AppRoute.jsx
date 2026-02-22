@@ -22,6 +22,7 @@ import Contact from "./modules/contact/Contact";
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
 
 import Loader from "./components/Common/Loader";
+import AddProperty from "./modules/seller/pages/properties/AddProperty";
 
 const PageLoader = () => <Loader />;
 
@@ -64,8 +65,21 @@ const AppRoutes = () => {
         />
       </Route>
 
-      {/* Seller Routes */}
-      <Route element={<PrivateRoute allowedRoles={["SELLER"]} />}>
+      <Route element={<PrivateRoute allowedRoles={["USER", "SELLER"]} />}>
+        <Route element={<HomeLayout />}>
+          <Route
+            path="/add-property"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <AddProperty />
+              </Suspense>
+            }
+          />
+        </Route>
+      </Route>
+
+      {/* Seller Routes - Strictly for Sellers and Admins */}
+      <Route element={<PrivateRoute allowedRoles={["SELLER", "ADMIN"]} />}>
         <Route
           path="/seller/*"
           element={

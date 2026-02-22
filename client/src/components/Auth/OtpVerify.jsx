@@ -3,6 +3,7 @@ import { Form, Input, Button, message } from 'antd';
 import { SafetyCertificateOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 export default function OtpVerify() {
   const [loading, setLoading] = useState(false);
@@ -12,7 +13,8 @@ export default function OtpVerify() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { email, purpose } = location.state || {};
+  const { email, password, purpose, from } = location.state || {};
+  const { login } = useAuth();
 
   // Security redirect if no email is present
   useEffect(() => {
@@ -38,6 +40,27 @@ export default function OtpVerify() {
       });
 
       message.success('OTP verified successfully!');
+
+      if (from === 'signup' && password) {
+        // Auto login for new users
+        try {
+          const loginRes = await api.post('/users/login', {
+            email,
+            password,
+          });
+          if (loginRes.data.success) {
+            login(loginRes.data.user, loginRes.data.token);
+            message.success('Logged in successfully!');
+            navigate('/');
+            return;
+          }
+        } catch (loginErr) {
+          console.error('Auto-login failed:', loginErr);
+          message.info('Verification successful. Please login manually.');
+          navigate('/login');
+          return;
+        }
+      }
 
       if (purpose === 'reset') {
         navigate('/reset-password', { state: { email } });

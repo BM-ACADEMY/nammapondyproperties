@@ -3,6 +3,16 @@ const ApprovalType = require("../models/ApprovalType");
 exports.createApprovalType = async (req, res) => {
   try {
     const { name, status, visible_to_seller } = req.body;
+
+    // Case-insensitive uniqueness check
+    const existingType = await ApprovalType.findOne({
+      name: { $regex: new RegExp(`^${name}$`, "i") },
+    });
+
+    if (existingType) {
+      return res.status(400).json({ error: "Approval Type with this name already exists" });
+    }
+
     const approvalType = new ApprovalType({ name, status, visible_to_seller });
     await approvalType.save();
     res.status(201).json(approvalType);
@@ -39,13 +49,25 @@ exports.getApprovalTypeById = async (req, res) => {
 
 exports.updateApprovalType = async (req, res) => {
   try {
-    const approvalType = await ApprovalType.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true },
-    );
+    const approvalType = await ApprovalType.findById(req.params.id);
     if (!approvalType)
       return res.status(404).json({ error: "Approval Type not found" });
+
+    const { name } = req.body;
+    if (name && name !== approvalType.name) {
+      // Case-insensitive uniqueness check
+      const existingType = await ApprovalType.findOne({
+        name: { $regex: new RegExp(`^${name}$`, "i") },
+        _id: { $ne: req.params.id },
+      });
+
+      if (existingType) {
+        return res.status(400).json({ error: "Approval Type with this name already exists" });
+      }
+    }
+
+    Object.assign(approvalType, req.body);
+    await approvalType.save();
     res.json(approvalType);
   } catch (error) {
     res.status(400).json({ error: error.message });

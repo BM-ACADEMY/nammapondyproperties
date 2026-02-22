@@ -3,7 +3,16 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { X, Upload, Plus, Trash2, MapPin } from "lucide-react";
+import {
+  X,
+  Upload as UploadIcon,
+  Plus,
+  Trash2,
+  MapPin,
+  Briefcase
+} from "lucide-react";
+import { Upload, Modal as AntModal } from "antd";
+import ImgCrop from "antd-img-crop";
 import {
   MapContainer,
   TileLayer,
@@ -73,6 +82,7 @@ const PropertyForm = ({
       area_size: initialData?.area_size || "",
       property_type: initialData?.property_type || "",
       approval: initialData?.approval || "",
+      businessType: initialData?.businessType || "", // Added businessType
       location: {
         address_line_1: initialData?.location?.address_line_1 || "",
         address_line_2: initialData?.location?.address_line_2 || "",
@@ -81,7 +91,6 @@ const PropertyForm = ({
         city: initialData?.location?.city || "",
         pincode: initialData?.location?.pincode || "",
       },
-      key_attributes: initialData?.key_attributes || [{ key: "", value: "" }],
       advertiseOnSocialMedia: initialData?.advertiseOnSocialMedia || false,
     },
   });
@@ -97,6 +106,7 @@ const PropertyForm = ({
         area_size: initialData.area_size || "",
         property_type: initialData.property_type || "",
         approval: initialData.approval || "",
+        businessType: initialData.businessType || "", // Added businessType
         location: {
           address_line_1: initialData.location?.address_line_1 || "",
           address_line_2: initialData.location?.address_line_2 || "",
@@ -108,7 +118,6 @@ const PropertyForm = ({
           latitude: initialData.location?.latitude || "",
           longitude: initialData.location?.longitude || "",
         },
-        key_attributes: initialData.key_attributes || [{ key: "", value: "" }],
         advertiseOnSocialMedia: initialData.advertiseOnSocialMedia || false,
         isSold: initialData.isSold || false,
         soldPrice: initialData.soldPrice || "",
@@ -121,20 +130,18 @@ const PropertyForm = ({
     }
   }, [initialData, isEdit, reset]);
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "key_attributes",
-  });
+
 
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
+  const [businessTypes, setBusinessTypes] = useState([]);
 
   const [images, setImages] = useState([]); // New files
   const [existingImages, setExistingImages] = useState(
     initialData?.images || [],
   ); // URLs
   const [imagePreviews, setImagePreviews] = useState([]); // Previews for new files
-  const [fileSizes, setFileSizes] = useState([]); // Sizes for new files
+
 
   const [imagesToDelete, setImagesToDelete] = useState([]);
 
@@ -175,16 +182,20 @@ const PropertyForm = ({
     const fetchTypes = async () => {
       try {
         const queryParam = isSeller ? "?role=seller" : "";
-        const [pTypes, aTypes] = await Promise.all([
+        const [pTypes, aTypes, bTypes] = await Promise.all([
           axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`,
+            `${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`
           ),
           axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`,
+            `${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`
+          ),
+          axios.get(
+            `${import.meta.env.VITE_API_URL}/business-types?status=active`
           ),
         ]);
         setPropertyTypes(pTypes.data);
         setApprovalTypes(aTypes.data);
+        setBusinessTypes(bTypes.data);
       } catch (error) {
         console.error("Error fetching types", error);
         // Fallback or Toast
@@ -193,63 +204,42 @@ const PropertyForm = ({
     fetchTypes();
   }, [isSeller]);
 
-  // Handle Image Selection
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    const validTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/svg+xml",
-      "image/jpg",
-    ];
-    const validFiles = [];
-    const newPreviews = [];
-    const newFileSizes = [];
+  // Handle Image Selection with Ant Design Upload
+  const handleImageChange = ({ fileList: newFileList }) => {
+    // We only care about the actual files for the 'images' state
+    const validFiles = newFileList
+      .filter(file => file.status !== 'removed')
+      .map(file => file.originFileObj || file);
 
-    files.forEach((file) => {
-      if (!validTypes.includes(file.type)) {
-        toast.error(
-          `${file.name} is not a supported format. Use JPG, PNG, or SVG.`,
-        );
-        return;
-      }
-      validFiles.push(file);
-      newPreviews.push(URL.createObjectURL(file));
-      // Convert to MB or KB
-      const size = file.size / 1024 / 1024; // in MB
-      if (size < 1) {
-        newFileSizes.push(`${(file.size / 1024).toFixed(2)} KB`);
-      } else {
-        newFileSizes.push(`${size.toFixed(2)} MB`);
-      }
-    });
-
-    const totalCurrentImages = images.length + existingImages.length;
-
-    if (totalCurrentImages + validFiles.length > 10) {
+    if (validFiles.length + existingImages.length > 10) {
       toast.error("Maximum 10 images allowed");
       return;
     }
 
-    setImages([...images, ...validFiles]);
-    setImagePreviews([...imagePreviews, ...newPreviews]);
-    setFileSizes([...fileSizes, ...newFileSizes]); // Accessing new state
+    setImages(validFiles);
+
+    // Generate previews for the UI if needed, but Ant Design Upload handles it
+    const newPreviews = newFileList.map(file => {
+      if (file.url) return file.url;
+      if (file.originFileObj) return URL.createObjectURL(file.originFileObj);
+      return '';
+    });
+    setImagePreviews(newPreviews);
   };
 
-  // Remove New Image
-  const removeNewImage = (index) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setImages(newImages);
-
-    const newPreviews = [...imagePreviews];
-    URL.revokeObjectURL(newPreviews[index]); // Cleanup memory
-    newPreviews.splice(index, 1);
-    setImagePreviews(newPreviews);
-
-    const newSizes = [...fileSizes];
-    newSizes.splice(index, 1);
-    setFileSizes(newSizes);
+  const onPreview = async (file) => {
+    let src = file.url;
+    if (!src) {
+      src = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file.originFileObj);
+        reader.onload = () => resolve(reader.result);
+      });
+    }
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow?.document.write(image.outerHTML);
   };
 
   // Remove Existing Image
@@ -257,8 +247,8 @@ const PropertyForm = ({
     const imageToRemove = existingImages[index];
     setImagesToDelete([
       ...imagesToDelete,
-      imageToRemove._id || imageToRemove, // Use ID if available (standard), else whatever it is
-    ]); // Store ID to delete
+      imageToRemove._id || imageToRemove,
+    ]);
 
     const newExisting = [...existingImages];
     newExisting.splice(index, 1);
@@ -277,12 +267,10 @@ const PropertyForm = ({
     formData.append("area_size", data.area_size);
     formData.append("property_type", data.property_type);
     formData.append("approval", data.approval);
+    formData.append("businessType", data.businessType); // Added businessType
 
     // Structured Location - Stringify for FormData
     formData.append("location", JSON.stringify(data.location));
-
-    // Key Attributes
-    formData.append("key_attributes", JSON.stringify(data.key_attributes));
 
     // New Images
     images.forEach((image) => {
@@ -389,40 +377,6 @@ const PropertyForm = ({
             <select
               {...register("property_type", {
                 required: "Property Type is required",
-                onChange: (e) => {
-                  const selectedTypeName = e.target.value;
-                  const selectedType = propertyTypes.find(
-                    (t) => t.name === selectedTypeName,
-                  );
-
-                  if (selectedType && selectedType.key_attributes) {
-                    // Use getValues to avoid React Compiler warning about watch in event handler
-                    const currentAttributes = getValues("key_attributes") || [];
-                    const existingKeys = currentAttributes.map((a) => a.key);
-
-                    const newAttributes = selectedType.key_attributes
-                      .filter((attr) => !existingKeys.includes(attr))
-                      .map((attr) => ({ key: attr, value: "" }));
-
-                    if (newAttributes.length > 0) {
-                      // Append new attributes
-                      // using setValue instead of append to avoid field array issues with async state
-                      const updatedAttributes = [
-                        ...currentAttributes,
-                        ...newAttributes,
-                      ];
-                      // If the first item is empty/default, remove it if we added new ones
-                      if (
-                        updatedAttributes.length > 1 &&
-                        updatedAttributes[0].key === "" &&
-                        updatedAttributes[0].value === ""
-                      ) {
-                        updatedAttributes.shift();
-                      }
-                      setValue("key_attributes", updatedAttributes);
-                    }
-                  }
-                },
               })}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
             >
@@ -463,6 +417,29 @@ const PropertyForm = ({
               </p>
             )}
           </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Business Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              {...register("businessType", { required: "Business type is required" })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
+            >
+              <option value="">Select Business Type</option>
+              {businessTypes.map((type) => (
+                <option key={type._id} value={type._id}>
+                  {type.name}
+                </option>
+              ))}
+            </select>
+            {errors.businessType && (
+              <p className="text-red-500 text-xs mt-1 font-medium">
+                {errors.businessType.message}
+              </p>
+            )}
+          </div>
+
+          {/* Property Types - existing logic */}
         </div>
       </div>
 
@@ -658,54 +635,7 @@ const PropertyForm = ({
         </div>
       </div>
 
-      {/* Key Attributes Card */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
-          Key Attributes
-        </h3>
-        <div className="space-y-4">
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col sm:flex-row gap-4 items-start sm:items-center bg-gray-50 p-4 rounded-xl border border-dashed border-gray-300"
-            >
-              <div className="flex-1 w-full">
-                <input
-                  {...register(`key_attributes.${index}.key`)}
-                  placeholder="Attribute Name (e.g. Bedrooms)"
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white font-medium"
-                />
-              </div>
-              <div className="hidden sm:block text-gray-400">:</div>
-              <div className="flex-1 w-full">
-                <input
-                  {...register(`key_attributes.${index}.value`, {
-                    required: "Value is required",
-                  })}
-                  placeholder="Value (e.g. 3)"
-                  className={`w-full px-4 py-2 border ${errors.key_attributes?.[index]?.value ? "border-red-500" : "border-gray-200"} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none bg-white`}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                className="text-gray-400 hover:text-red-500 p-2 transition-colors self-end sm:self-auto"
-                title="Remove Attribute"
-              >
-                <Trash2 size={20} />
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => append({ key: "", value: "" })}
-            className="flex items-center justify-center w-full py-3 text-sm text-blue-600 hover:text-blue-700 font-semibold border border-dashed border-blue-300 rounded-xl hover:bg-blue-50 transition-all"
-          >
-            <Plus size={18} className="mr-2" /> Add New Attribute
-          </button>
-        </div>
-      </div>
+
 
       {/* Image Upload Card */}
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
@@ -715,80 +645,65 @@ const PropertyForm = ({
         </h3>
 
         <div className="grid grid-cols-1 gap-6">
-          <div className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-blue-200 rounded-2xl cursor-pointer bg-blue-50/50 hover:bg-blue-50 hover:border-blue-400 transition-all group">
-            <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                <Upload className="w-6 h-6" />
-              </div>
-              <p className="text-gray-900 font-medium mb-1">
-                Click to upload images
-              </p>
-              <p className="text-sm text-gray-500">
-                SVG, PNG, JPG (Max 10 images)
-              </p>
-              <input
-                type="file"
+          <div className="w-full">
+            <ImgCrop rotationSlider aspect={4 / 3}>
+              <Upload
+                listType="picture-card"
+                fileList={images.map((file, index) => ({
+                  uid: `new-${index}`,
+                  name: file.name,
+                  status: 'done',
+                  url: imagePreviews[index],
+                  originFileObj: file,
+                }))}
+                onChange={handleImageChange}
+                onPreview={onPreview}
                 multiple
                 accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
-            </label>
+                beforeUpload={() => false} // Prevent automatic upload
+              >
+                {(images.length + existingImages.length) < 10 && (
+                  <div className="flex flex-col items-center justify-center">
+                    <Plus size={24} className="text-gray-400 mb-2" />
+                    <div className="text-sm font-medium text-gray-600">Upload</div>
+                  </div>
+                )}
+              </Upload>
+            </ImgCrop>
           </div>
 
-          {/* Previews */}
-          {(existingImages.length > 0 || imagePreviews.length > 0) && (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {existingImages.map((img, index) => (
-                <div
-                  key={`existing-${index}`}
-                  className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md aspect-square border border-gray-100"
-                >
-                  <img
-                    src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${img.image_url || img}`}
-                    alt={`Existing ${index}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src =
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='12' fill='%239ca3af' dominant-baseline='middle' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => removeExistingImage(index)}
-                      className="bg-white text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors shadow-lg"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+          {/* Existing Images Previews */}
+          {existingImages.length > 0 && (
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-gray-600">Existing Images</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {existingImages.map((img, index) => (
+                  <div
+                    key={`existing-${index}`}
+                    className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md aspect-square border border-gray-100"
+                  >
+                    <img
+                      src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${img.image_url || img}`}
+                      alt={`Existing ${index}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' viewBox='0 0 150 150'%3E%3Crect width='150' height='150' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='12' fill='%239ca3af' dominant-baseline='middle' text-anchor='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(index)}
+                        className="bg-white text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors shadow-lg"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {imagePreviews.map((src, index) => (
-                <div
-                  key={`new-${index}`}
-                  className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md aspect-square border border-gray-100 flex flex-col"
-                >
-                  <img
-                    src={src}
-                    alt={`Preview ${index}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] text-center py-1 truncate px-1">
-                    {fileSizes[index]}
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => removeNewImage(index)}
-                      className="bg-white text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors shadow-lg"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>

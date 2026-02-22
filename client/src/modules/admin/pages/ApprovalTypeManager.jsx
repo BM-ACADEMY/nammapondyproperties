@@ -87,8 +87,9 @@ const ApprovalTypeManager = () => {
       }
       setIsModalOpen(false);
       fetchApprovalTypes();
-    } catch {
-      message.error("Operation failed");
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || "Operation failed";
+      message.error(errorMessage);
     }
   };
 

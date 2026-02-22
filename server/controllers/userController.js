@@ -8,6 +8,9 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT
 const generateToken = (id) => {
@@ -324,10 +327,13 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password, verifiedViaOtp } = req.body;
+  const { email, phone, password, verifiedViaOtp } = req.body;
+  const loginIdentifier = email || phone;
 
   try {
-    const user = await User.findOne({ email })
+    const user = await User.findOne({
+      $or: [{ email: loginIdentifier }, { phone: loginIdentifier }],
+    })
       .select("+password")
       .populate("role_id")
       .populate("businessType");
@@ -357,6 +363,52 @@ exports.login = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+exports.googleLogin = async (req, res) => {
+  const { credential } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await User.findOne({ email }).populate("role_id").populate("businessType");
+
+    if (!user) {
+      // Get default "user" role
+      const userRole = await Role.findOne({ role_name: "user" });
+      if (!userRole) {
+        return res.status(500).json({ error: "Default user role not found" });
+      }
+
+      // Create new user if not exists
+      user = new User({
+        name,
+        email,
+        isVerified: true,
+        role_id: userRole._id,
+        googleId,
+        profile_image: picture
+      });
+      await user.save();
+      user = await User.findById(user._id).populate("role_id");
+    }
+
+    res.json({
+      success: true,
+      message: "Google login successful",
+      user: { ...user.toObject(), password: undefined },
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    res.status(400).json({ error: "Google authentication failed" });
   }
 };
 

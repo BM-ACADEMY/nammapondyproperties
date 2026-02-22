@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Form, Input, Button, message } from "antd";
-import { 
-  UserOutlined, 
-  MailOutlined, 
-  PhoneOutlined, 
-  LockOutlined, 
-  UserAddOutlined 
+import {
+  UserOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  LockOutlined,
+  UserAddOutlined
 } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
@@ -30,7 +30,7 @@ export default function Signup() {
       message.success(res.data.message || "Account created! Check your email for OTP.");
 
       navigate("/otp-verify", {
-        state: { email: values.email, from: "signup" },
+        state: { email: values.email, password: values.password, from: "signup" },
       });
     } catch (err) {
       const errorMsg = err.response?.data?.error || "Failed to create account";
@@ -42,7 +42,7 @@ export default function Signup() {
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gray-100 p-2 sm:p-4 relative overflow-hidden">
-      
+
       <style>
         {`
           @keyframes popIn {
@@ -60,7 +60,7 @@ export default function Signup() {
           .animate-bg-zoom {
             animation: slowZoom 20s infinite alternate ease-in-out;
           }
-          
+
           /* FIX: Prevents layout jumping. Errors appear in a reserved space */
           .ant-form-item-explain {
             position: absolute;
@@ -76,13 +76,13 @@ export default function Signup() {
 
       {/* Main Responsive Card */}
       <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[500px] md:min-h-[600px] animate-pop-in">
-        
+
         {/* LEFT SIDE: Hidden on mobile (max-sm), visible on medium+ */}
         <div className="hidden md:block md:w-5/12 relative overflow-hidden bg-gray-900">
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-80"
-            style={{ 
-              backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop')" 
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop')"
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-8">
@@ -96,7 +96,7 @@ export default function Signup() {
 
         {/* RIGHT SIDE: The Form */}
         <div className="w-full md:w-7/12 p-6 sm:p-8 lg:p-12 flex flex-col justify-center overflow-y-auto max-h-[90vh] md:max-h-none">
-          
+
           <div className="mb-6 text-center md:text-left">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 flex items-center justify-center md:justify-start gap-2">
               Create Account
@@ -118,9 +118,9 @@ export default function Signup() {
                 name="name"
                 rules={[{ required: true, message: "Required" }]}
               >
-                <Input 
-                  prefix={<UserOutlined className="text-gray-400 mr-2" />} 
-                  placeholder="Enter your name" 
+                <Input
+                  prefix={<UserOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Enter your name"
                   className="rounded-lg bg-gray-50 border-gray-200"
                 />
               </Form.Item>
@@ -133,9 +133,9 @@ export default function Signup() {
                   { pattern: /^[0-9]{10}$/, message: "Invalid number" }
                 ]}
               >
-                <Input 
-                  prefix={<PhoneOutlined className="text-gray-400 mr-2" />} 
-                  placeholder="Enter Whatsapp number" 
+                <Input
+                  prefix={<PhoneOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Enter Whatsapp number"
                   maxLength={10}
                   inputMode="numeric"
                   className="rounded-lg bg-gray-50 border-gray-200"
@@ -152,9 +152,9 @@ export default function Signup() {
                 { type: "email", message: "Invalid email" },
               ]}
             >
-              <Input 
-                prefix={<MailOutlined className="text-gray-400 mr-2" />} 
-                placeholder="Enter your email" 
+              <Input
+                prefix={<MailOutlined className="text-gray-400 mr-2" />}
+                placeholder="Enter your email"
                 className="rounded-lg bg-gray-50 border-gray-200"
               />
             </Form.Item>
@@ -173,9 +173,9 @@ export default function Signup() {
                   },
                 ]}
               >
-                <Input.Password 
-                  prefix={<LockOutlined className="text-gray-400 mr-2" />} 
-                  placeholder="Password" 
+                <Input.Password
+                  prefix={<LockOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Password"
                   className="rounded-lg bg-gray-50 border-gray-200"
                 />
               </Form.Item>
@@ -194,9 +194,9 @@ export default function Signup() {
                   }),
                 ]}
               >
-                <Input.Password 
-                  prefix={<LockOutlined className="text-gray-400 mr-2" />} 
-                  placeholder="Confirm" 
+                <Input.Password
+                  prefix={<LockOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Confirm"
                   className="rounded-lg bg-gray-50 border-gray-200"
                 />
               </Form.Item>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useNav } from "@/context/NavContext";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -16,7 +17,8 @@ import {
   Phone,
   Info,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  PlusCircle
 } from "lucide-react";
 import axios from "axios";
 
@@ -28,8 +30,8 @@ const Header = () => {
   const [isPropertyTypeDesktopOpen, setIsPropertyTypeDesktopOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
-  const [businessTypes, setBusinessTypes] = useState([]);
-  const [propertyTypes, setPropertyTypes] = useState([]);
+
+  const { businessTypes, propertyTypes } = useNav();
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated } = useAuth();
@@ -59,24 +61,7 @@ const Header = () => {
     };
   }, []);
 
-  // Fetch Business Types & Property Types
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [businessRes, filtersRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/business-types?status=active`),
-          axios.get(`${import.meta.env.VITE_API_URL}/properties/filters`)
-        ]);
-        setBusinessTypes(businessRes.data);
-        if (filtersRes.data && filtersRes.data.types) {
-          setPropertyTypes(filtersRes.data.types.filter(type => type !== "realestate_with_kamar"));
-        }
-      } catch (error) {
-        console.error("Error fetching header data:", error);
-      }
-    };
-    fetchData();
-  }, []);
+  // Data fetching moved to NavContext
 
   const handleLogout = () => {
     logout();
@@ -144,155 +129,35 @@ const Header = () => {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
               <nav className="flex items-center space-x-6">
-                <Link to="/" className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide">
-                  Home
-                </Link>
+                {/* Removed Home Link */}
 
-                {/* BUSINESS MEGA MENU */}
-                <div
-                  className="relative group h-20 flex items-center"
-                  onMouseEnter={() => setIsPropertiesDesktopOpen(true)}
-                  onMouseLeave={() => setIsPropertiesDesktopOpen(false)}
-                >
-                  <button className="flex items-center text-gray-600 group-hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide focus:outline-none">
-                    Business
-                    <ChevronDown className={`ml-1 h-4 w-4 transition-transform duration-200 ${isPropertiesDesktopOpen ? "rotate-180" : ""}`} />
-                  </button>
-
-                  <AnimatePresence>
-                    {isPropertiesDesktopOpen && (
-                      <motion.div
-                        variants={dropdownVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        className="absolute top-full mt-1 left-0 w-[600px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-                      >
-                        <div className="flex p-2">
-                          <div className="w-5/12 py-4 pl-4 pr-2 flex flex-col justify-top space-y-1">
-                            {businessTypes.map((type) => (
-                              <Link
-                                key={type._id}
-                                to={`/properties/business-type/${type._id}`}
-                                className="block px-4 py-3 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                onClick={() => setIsPropertiesDesktopOpen(false)}
-                              >
-                                {type.name}
-                              </Link>
-                            ))}
-                          </div>
-                          <div className="w-7/12 p-2">
-                            <div className="relative h-full rounded-xl overflow-hidden group cursor-pointer">
-                              <div className="absolute inset-0">
-                                <img src="/banner.png" alt="Promo" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                              </div>
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
-                              <div className="relative z-10 p-6 flex flex-col h-full justify-between">
-                                <div>
-                                  <div className="mb-4 inline-flex items-center justify-center h-12 w-12 rounded-full bg-white/20 backdrop-blur-md border border-white/20 shadow-inner">
-                                    <MapPin className="h-6 w-6 text-white" />
-                                  </div>
-                                  <h3 className="text-xl font-bold text-white mb-1 leading-tight drop-shadow-md">Discover New Projects</h3>
-                                  <p className="text-gray-200 text-xs font-medium">New Off-Plan Projects in Pondy</p>
-                                </div>
-                                <div className="mt-4">
-                                  <Link to="/properties" className="inline-flex items-center justify-center w-full bg-white/95 backdrop-blur-sm text-[#1e1b4b] px-4 py-2.5 rounded-lg text-sm font-bold shadow-lg hover:bg-white transition-all group-hover:translate-x-1 duration-300">
-                                    All Properties <ArrowRight className="ml-2 h-4 w-4" />
-                                  </Link>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-               {/* PROPERTY TYPE MEGA MENU (Split into 4 Main + Remaining) */}
-<div
-  className="relative group h-20 flex items-center"
-  onMouseEnter={() => setIsPropertyTypeDesktopOpen(true)}
-  onMouseLeave={() => setIsPropertyTypeDesktopOpen(false)}
->
-  <button className="flex items-center text-gray-600 group-hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide focus:outline-none">
-    Property Type
-    <ChevronDown className={`ml-1 h-4 w-4 transition-transform duration-200 ${isPropertyTypeDesktopOpen ? "rotate-180" : ""}`} />
-  </button>
-
-  <AnimatePresence>
-    {isPropertyTypeDesktopOpen && (
-      <motion.div
-        variants={dropdownVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-        className="absolute top-full mt-1 left-0 w-[750px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
-      >
-        <div className="flex p-3">
-          {/* Left Side: Split Links (Main 4 + Others) */}
-          <div className="w-7/12 flex border-r border-gray-50">
-            {/* Column 1: Top 4 */}
-            <div className="w-1/2 py-4 px-4 space-y-1">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-4">Featured</p>
-              {propertyTypes.slice(0, 4).map((type) => (
-                <Link
-                  key={type}
-                  to={`/properties?type=${encodeURIComponent(type)}`}
-                  className="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                  onClick={() => setIsPropertyTypeDesktopOpen(false)}
-                >
-                  {type}
-                </Link>
-              ))}
-            </div>
-
-            {/* Column 2: Remaining */}
-            <div className="w-1/2 py-4 px-4 space-y-1 bg-gray-50/50">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-4">More Types</p>
-              {propertyTypes.length > 4 ? (
-                propertyTypes.slice(4).map((type) => (
+                {/* BUSINESS TYPES (Direct Links) */}
+                {businessTypes.map((type) => (
                   <Link
-                    key={type}
-                    to={`/properties?type=${encodeURIComponent(type)}`}
-                  className="block px-4 py-2.5 text-sm font-semibold text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                    onClick={() => setIsPropertyTypeDesktopOpen(false)}
+                    key={type._id}
+                    to={`/properties/business-type/${type._id}`}
+                    className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
                   >
-                    {type}
+                    {type.name}
                   </Link>
-                ))
-              ) : (
-                <p className="px-4 py-2 text-xs text-gray-400 italic">No more types</p>
-              )}
-            </div>
-          </div>
+                ))}
 
-          {/* Right Side: Promotional Card */}
-          <div className="w-5/12 p-2">
-            <div className="relative h-full min-h-[250px] rounded-xl overflow-hidden group cursor-pointer">
-              <div className="absolute inset-0">
-                <img src="/banner.png" alt="Property Type" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20"></div>
-              <div className="relative z-10 p-6 flex flex-col h-full justify-between">
-                <div>
-                  <div className="mb-4 inline-flex items-center justify-center h-10 w-10 rounded-full bg-white/20 backdrop-blur-md border border-white/20">
-                    <Home className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1 leading-tight">Find Your Perfect Space</h3>
-                  <p className="text-gray-300 text-[11px]">Browse by specific categories</p>
-                </div>
-                <Link to="/properties" className="mt-4 inline-flex items-center justify-center w-full bg-white text-[#1e1b4b] py-2 rounded-lg text-xs font-bold shadow-lg hover:bg-blue-50 transition-all group-hover:translate-x-1">
-                  Browse All <ArrowRight className="ml-2 h-3 w-3" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</div>
+                {/* PROPERTY TYPE (Buy & Rent only) */}
+                {propertyTypes.filter(type => {
+                  const name = typeof type === 'string' ? type : type?.name;
+                  return name && ["buy", "rent"].includes(name.toLowerCase());
+                }).map((type) => {
+                  const name = typeof type === 'string' ? type : type.name;
+                  return (
+                    <Link
+                      key={name}
+                      to={`/properties?type=${encodeURIComponent(name)}`}
+                      className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
+                    >
+                      {name}
+                    </Link>
+                  );
+                })}
 
                 <Link to="/about" className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide">About</Link>
                 <Link to="/contact" className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide">Contact</Link>
@@ -305,13 +170,31 @@ const Header = () => {
                 <Heart className="h-5 w-5" />
               </Link>
 
+              <button
+                onClick={() => {
+                  if (isAuthenticated) {
+                    navigate("/add-property");
+                  } else {
+                    navigate("/login", { state: { from: "/add-property" } });
+                  }
+                }}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all text-sm font-bold shadow-sm"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>Post Properties</span>
+              </button>
+
               {isAuthenticated ? (
                 <div className="relative" ref={userMenuRef} onMouseEnter={() => setIsUserMenuOpen(true)} onMouseLeave={() => setIsUserMenuOpen(false)}>
                   <button className="flex items-center space-x-2 focus:outline-none py-1 group">
                     <div className="relative">
                       <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-transparent group-hover:border-blue-500 transition-all duration-300 shadow-sm ring-2 ring-gray-100 group-hover:ring-blue-100">
                         {user?.profile_image ? (
-                          <img src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`} alt={user.name} className="h-full w-full object-cover" />
+                          <img
+                            src={user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold text-sm">
                             {user?.name?.charAt(0).toUpperCase() || "U"}
@@ -332,23 +215,28 @@ const Header = () => {
                           <p className="text-[11px] text-gray-500 truncate">{user?.email}</p>
                         </div>
                         <div className="px-1 space-y-0.5">
-                          {user?.role?.name?.toUpperCase() === "ADMIN" ? (
-                            <Link to="/admin/dashboard" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
-                              <LayoutDashboard className="h-3.5 w-3.5 mr-2" /> Dashboard
-                            </Link>
-                          ) : user?.role?.name?.toUpperCase() === "SELLER" ? (
-                            <Link to="/seller/dashboard" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
-                              <LayoutDashboard className="h-3.5 w-3.5 mr-2" /> Dashboard
-                            </Link>
-                          ) : (
+                          {user?.role_id?.role_name?.toUpperCase() === "ADMIN" || user?.role?.name?.toUpperCase() === "ADMIN" ? (
                             <>
-                              <Link to="/user/profile" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
-                                <User className="h-3.5 w-3.5 mr-2" /> Profile Settings
+                              <Link to="/admin/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
+                                <LayoutDashboard className="h-3.5 w-3.5 mr-2" /> Admin Dashboard
                               </Link>
-                              <Link to="/become-seller" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
-                                <Briefcase className="h-3.5 w-3.5 mr-2" /> Become a Seller
+                              <Link to="/user/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
+                                <User className="h-3.5 w-3.5 mr-2" /> My Profile
                               </Link>
                             </>
+                          ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" || user?.role?.name?.toUpperCase() === "SELLER" ? (
+                            <>
+                              <Link to="/seller/dashboard" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
+                                <LayoutDashboard className="h-3.5 w-3.5 mr-2" /> Seller Dashboard
+                              </Link>
+                              <Link to="/user/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
+                                <User className="h-3.5 w-3.5 mr-2" /> My Profile
+                              </Link>
+                            </>
+                          ) : (
+                            <Link to="/user/profile" onClick={() => setIsUserMenuOpen(false)} className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all">
+                              <User className="h-3.5 w-3.5 mr-2" /> My Profile
+                            </Link>
                           )}
                         </div>
                         <div className="border-t border-gray-100 mt-1 pt-1 px-1">
@@ -369,7 +257,6 @@ const Header = () => {
                     {isLoginMenuOpen && (
                       <motion.div variants={dropdownVariants} initial="hidden" animate="visible" exit="exit" className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-100 overflow-hidden">
                         <Link to="/login" className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"><User className="h-4 w-4 mr-3" /> Login</Link>
-                        <Link to="/seller-register" className="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors border-t border-gray-50"><Store className="h-4 w-4 mr-3" /> Become a Seller</Link>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -400,52 +287,83 @@ const Header = () => {
                 {isAuthenticated ? (
                   <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="bg-blue-600 h-10 w-10 rounded-full flex items-center justify-center text-white font-bold">{user?.name?.[0]?.toUpperCase()}</div>
-                      <div className="overflow-hidden"><p className="font-bold text-gray-900 truncate">{user?.name || "User"}</p></div>
+                      <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-white shadow-sm ring-2 ring-blue-100">
+                        {user?.profile_image ? (
+                          <img
+                            src={user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-blue-600 text-white font-bold text-lg">
+                            {user?.name?.[0]?.toUpperCase() || "U"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="font-bold text-gray-900 truncate">{user?.name || "User"}</p>
+                        <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
+                      {(user?.role_id?.role_name?.toUpperCase() === "ADMIN" || user?.role?.name?.toUpperCase() === "ADMIN") && (
+                        <Link to="/admin/dashboard" onClick={() => setIsMenuOpen(false)} className="flex justify-center py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-blue-600">Dashboard</Link>
+                      )}
+                      {(user?.role_id?.role_name?.toUpperCase() === "SELLER" || user?.role?.name?.toUpperCase() === "SELLER") && (
+                        <Link to="/seller/dashboard" onClick={() => setIsMenuOpen(false)} className="flex justify-center py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-blue-600">Dashboard</Link>
+                      )}
                       <Link to="/user/profile" onClick={() => setIsMenuOpen(false)} className="flex justify-center py-2 bg-white border border-gray-200 rounded-lg text-sm">Profile</Link>
                       <button onClick={handleLogout} className="flex justify-center py-2 bg-white border border-red-100 rounded-lg text-sm text-red-500">Logout</button>
                     </div>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
-                    <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex justify-center px-4 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold">Login</Link>
-                    <Link to="/seller-register" onClick={() => setIsMenuOpen(false)} className="flex justify-center px-4 py-3 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold">Seller</Link>
+                  <div className="grid grid-cols-1 gap-3">
+                    <Link to="/login" onClick={() => setIsMenuOpen(false)} className="flex justify-center px-4 py-3 bg-blue-600 text-white rounded-xl text-sm font-semibold">Login / Register</Link>
                   </div>
                 )}
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
-                  <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"><Home className="h-5 w-5 mr-3" /> Home</Link>
 
-                  {/* Accordions */}
-                  <div className="rounded-xl overflow-hidden">
-                    <button onClick={() => setIsPropertiesMobileOpen(!isPropertiesMobileOpen)} className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-blue-50">
-                      <div className="flex items-center"><Briefcase className="h-5 w-5 mr-3" /> Business</div>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isPropertiesMobileOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {isPropertiesMobileOpen && (
-                      <div className="bg-gray-50 pl-12 pr-4 py-2 space-y-1">
-                        {businessTypes.map((type) => (
-                          <Link key={type._id} to={`/properties/business-type/${type._id}`} onClick={() => setIsMenuOpen(false)} className="block py-2 text-sm text-gray-600">{type.name}</Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      if (isAuthenticated) navigate("/add-property");
+                      else navigate("/login", { state: { from: "/add-property" } });
+                    }}
+                    className="flex items-center w-full px-4 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold"
+                  >
+                    <PlusCircle className="h-5 w-5 mr-3" /> Post Properties
+                  </button>
 
-                  <div className="rounded-xl overflow-hidden">
-                    <button onClick={() => setIsPropertyTypeMobileOpen(!isPropertyTypeMobileOpen)} className="flex items-center justify-between w-full px-4 py-3 text-gray-700 hover:bg-blue-50">
-                      <div className="flex items-center"><Home className="h-5 w-5 mr-3" /> Property Type</div>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${isPropertyTypeMobileOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {isPropertyTypeMobileOpen && (
-                      <div className="bg-gray-50 pl-12 pr-4 py-2 space-y-1">
-                        {propertyTypes.map((type) => (
-                          <Link key={type} to={`/properties?type=${encodeURIComponent(type)}`} onClick={() => setIsMenuOpen(false)} className="block py-2 text-sm text-gray-600">{type}</Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {/* BUSINESS LINK DIRECT */}
+                  {businessTypes.map((type) => (
+                    <Link
+                      key={type._id}
+                      to={`/properties/business-type/${type._id}`}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"
+                    >
+                      <Briefcase className="h-5 w-5 mr-3" /> {type.name}
+                    </Link>
+                  ))}
+
+                  {/* BUY & RENT DIRECT */}
+                  {propertyTypes.filter(type => {
+                    const name = typeof type === 'string' ? type : type?.name;
+                    return name && ["buy", "rent"].includes(name.toLowerCase());
+                  }).map((type) => {
+                    const name = typeof type === 'string' ? type : type.name;
+                    return (
+                      <Link
+                        key={name}
+                        to={`/properties?type=${encodeURIComponent(name)}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"
+                      >
+                        <Home className="h-5 w-5 mr-3" /> {name}
+                      </Link>
+                    );
+                  })}
 
                   <Link to="/about" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"><Info className="h-5 w-5 mr-3" /> About Us</Link>
                   <Link to="/contact" onClick={() => setIsMenuOpen(false)} className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"><Phone className="h-5 w-5 mr-3" /> Contact</Link>

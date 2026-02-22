@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Form, Input, Button, message } from "antd";
-import { UserOutlined, LockOutlined, HomeOutlined } from "@ant-design/icons";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Form, Input, Button, message, Checkbox } from "antd";
+import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
+import { motion } from "framer-motion";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -17,7 +19,7 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await axios.post(`${API}/users/login`, {
-        email: values.email,
+        email: values.loginIdentifier, // Backend now accepts this as email or phone
         password: values.password,
       });
 
@@ -46,9 +48,38 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (response) => {
+    try {
+      const res = await axios.post(`${API}/users/google-login`, {
+        credential: response.credential,
+      });
+
+      if (res.data.success) {
+        message.success("Login successful!");
+        localStorage.setItem("token", res.data.token);
+        login(res.data.user, res.data.token);
+
+        const role =
+          res.data.user?.role?.name?.toUpperCase() ||
+          res.data.user?.role_id?.role_name?.toUpperCase();
+
+        if (location.state?.from) {
+          navigate(location.state.from);
+        } else if (role === "ADMIN") navigate("/admin/dashboard");
+        else if (role === "SELLER") navigate("/seller/dashboard");
+        else navigate("/");
+      } else {
+        message.error(res.data.message || "Google Login failed");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error(err.response?.data?.error || "Google authentication failed");
+    }
+  };
+
   return (
     <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-      
+
       {/* INLINE STYLES FOR ANIMATIONS */}
       <style>
         {`
@@ -69,7 +100,7 @@ export default function Login() {
           .animate-bg-zoom {
             animation: slowZoom 25s infinite alternate ease-in-out;
           }
-          
+
           /* 3. Text Fade Up */
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -84,33 +115,33 @@ export default function Login() {
 
       {/* The Main Card - Added 'animate-pop-in' class here */}
       <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[550px] animate-pop-in">
-        
+
         {/* LEFT SIDE: Animated Real Estate Image */}
         <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
-          
-          <div 
+
+          <div
             className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
-            style={{ 
-              backgroundImage: "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop')" 
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop')"
             }}
           ></div>
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-10">
             <div className="animate-fade-up">
-                <h3 className="text-white text-3xl font-bold tracking-wide leading-tight">
-                  Discover Premium <br/> Apartment Living
-                </h3>
-                <p className="text-gray-300 mt-4 text-base font-medium">
-                  Log in to explore exclusive properties in Pondicherry.
-                </p>
-                <div className="h-1 w-20 bg-blue-500 mt-6 rounded-full"></div>
+              <h3 className="text-white text-3xl font-bold tracking-wide leading-tight">
+                Discover Premium <br /> Apartment Living
+              </h3>
+              <p className="text-gray-300 mt-4 text-base font-medium">
+                Log in to explore exclusive properties in Pondicherry.
+              </p>
+              <div className="h-1 w-20 bg-blue-500 mt-6 rounded-full"></div>
             </div>
           </div>
         </div>
 
         {/* RIGHT SIDE: The Form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-          
+
           <div className="mb-8">
             <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
               Welcome Back
@@ -126,16 +157,15 @@ export default function Login() {
             className="w-full"
           >
             <Form.Item
-              label={<span className="font-semibold text-gray-700">Email Address</span>}
-              name="email"
+              label={<span className="font-semibold text-gray-700">Email or Phone Number</span>}
+              name="loginIdentifier"
               rules={[
-                { required: true, message: "Please enter your email" },
-                { type: "email", message: "Invalid email format" },
+                { required: true, message: "Please enter your email or phone number" },
               ]}
             >
-              <Input 
-                prefix={<UserOutlined className="text-gray-400 mr-2" />} 
-                placeholder="john@example.com" 
+              <Input
+                prefix={<UserOutlined className="text-gray-400 mr-2" />}
+                placeholder="Email or Phone"
                 className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
               />
             </Form.Item>
@@ -148,9 +178,9 @@ export default function Login() {
                 { min: 6, message: "Password must be at least 6 characters" },
               ]}
             >
-              <Input.Password 
-                prefix={<LockOutlined className="text-gray-400 mr-2" />} 
-                placeholder="••••••••" 
+              <Input.Password
+                prefix={<LockOutlined className="text-gray-400 mr-2" />}
+                placeholder="••••••••"
                 className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
               />
             </Form.Item>
@@ -175,6 +205,26 @@ export default function Login() {
                 Sign In
               </Button>
             </Form.Item>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => message.error("Google Login Failed")}
+                useOneTap
+                theme="outline"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
           </Form>
 
           <div className="text-center mt-6 text-sm">
