@@ -7,6 +7,7 @@ import Profile from "../pages/profile/Profile";
 import SellerEnquiries from "../pages/enquiries/SellerEnquiries";
 import RequestLimit from "../pages/properties/RequestLimit";
 import AddAttributes from "../pages/properties/AddAttributes";
+import Advertisements from "../pages/Advertisements";
 
 const SellerRoute = () => {
   return (
@@ -20,6 +21,7 @@ const SellerRoute = () => {
         <Route path="request-limit" element={<RequestLimit />} />
         <Route path="profile" element={<Profile />} />
         <Route path="enquiries" element={<SellerEnquiries />} />
+        <Route path="advertisements" element={<Advertisements />} />
       </Route>
     </Routes>
   );

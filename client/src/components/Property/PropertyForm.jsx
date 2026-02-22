@@ -206,10 +206,37 @@ const PropertyForm = ({
 
   // Handle Image Selection with Ant Design Upload
   const handleImageChange = ({ fileList: newFileList }) => {
-    // We only care about the actual files for the 'images' state
-    const validFiles = newFileList
-      .filter(file => file.status !== 'removed')
-      .map(file => file.originFileObj || file);
+    // Filter out removed files and validate sizes
+    const validFiles = [];
+    const newPreviews = [];
+    let oversizedCount = 0;
+
+    newFileList.forEach((file, index) => {
+      if (file.status === 'removed') return;
+
+      const actualFile = file.originFileObj || file;
+      const sizeInMB = actualFile.size / (1024 * 1024);
+
+      if (sizeInMB > 5) {
+        oversizedCount++;
+        return;
+      }
+
+      validFiles.push(actualFile);
+
+      // Generate preview
+      if (file.url) {
+        newPreviews.push(file.url);
+      } else if (file.originFileObj) {
+        newPreviews.push(URL.createObjectURL(file.originFileObj));
+      } else {
+        newPreviews.push('');
+      }
+    });
+
+    if (oversizedCount > 0) {
+      toast.error(`${oversizedCount} image(s) exceeded the 5MB limit and were skipped.`);
+    }
 
     if (validFiles.length + existingImages.length > 10) {
       toast.error("Maximum 10 images allowed");
@@ -217,13 +244,6 @@ const PropertyForm = ({
     }
 
     setImages(validFiles);
-
-    // Generate previews for the UI if needed, but Ant Design Upload handles it
-    const newPreviews = newFileList.map(file => {
-      if (file.url) return file.url;
-      if (file.originFileObj) return URL.createObjectURL(file.originFileObj);
-      return '';
-    });
     setImagePreviews(newPreviews);
   };
 
@@ -651,7 +671,7 @@ const PropertyForm = ({
                 listType="picture-card"
                 fileList={images.map((file, index) => ({
                   uid: `new-${index}`,
-                  name: file.name,
+                  name: `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`,
                   status: 'done',
                   url: imagePreviews[index],
                   originFileObj: file,
@@ -709,31 +729,6 @@ const PropertyForm = ({
         </div>
       </div>
 
-      {/* Advertisement Opt-in */}
-      {isSeller && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
-          <div className="flex items-start space-x-3">
-            <input
-              type="checkbox"
-              {...register("advertiseOnSocialMedia")}
-              id="advertiseOnSocialMedia"
-              className="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <div className="flex-1">
-              <label
-                htmlFor="advertiseOnSocialMedia"
-                className="block text-base font-semibold text-gray-800 cursor-pointer"
-              >
-                Advertise this property on social media
-              </label>
-              <p className="text-sm text-gray-600 mt-1">
-                Enable this to allow admins to promote your property and contact
-                details on social media platforms for better reach.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex justify-end pt-4 pb-8 sticky bottom-4 z-[999]">
         <div className="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border border-gray-200 flex gap-4">

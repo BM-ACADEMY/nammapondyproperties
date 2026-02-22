@@ -1,0 +1,136 @@
+const MarketingPlan = require("../models/MarketingPlan");
+const MarketingRequest = require("../models/MarketingRequest");
+const Property = require("../models/Property");
+
+// --- Marketing Plans (Admin) ---
+
+exports.createPlan = async (req, res) => {
+    try {
+        const plan = await MarketingPlan.create(req.body);
+        res.status(201).json({ success: true, data: plan });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+exports.getPlans = async (req, res) => {
+    try {
+        const plans = await MarketingPlan.find({ status: "active" });
+        res.status(200).json({ success: true, data: plans });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+exports.getAllPlansAdmin = async (req, res) => {
+    try {
+        const plans = await MarketingPlan.find().sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: plans });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+exports.updatePlan = async (req, res) => {
+    try {
+        const plan = await MarketingPlan.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true,
+        });
+        if (!plan) return res.status(404).json({ success: false, error: "Plan not found" });
+        res.status(200).json({ success: true, data: plan });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+exports.deletePlan = async (req, res) => {
+    try {
+        const plan = await MarketingPlan.findByIdAndDelete(req.params.id);
+        if (!plan) return res.status(404).json({ success: false, error: "Plan not found" });
+        res.status(200).json({ success: true, message: "Plan deleted" });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+// --- Marketing Requests (Sellers) ---
+
+exports.createRequest = async (req, res) => {
+    try {
+        const { property_id, plan_id, notes } = req.body;
+
+        // Check if property belongs to seller
+        const property = await Property.findById(property_id);
+        if (!property) return res.status(404).json({ success: false, error: "Property not found" });
+
+        if (property.seller_id.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+            return res.status(403).json({ success: false, error: "Unauthorized" });
+        }
+
+        // Check if duplicate request exists for same property and plan
+        const existingRequest = await MarketingRequest.findOne({
+            property_id,
+            plan_id,
+            seller_id: req.user._id,
+            status: "pending"
+        });
+
+        if (existingRequest) {
+            return res.status(400).json({ success: false, error: "A pending request already exists for this property and plan" });
+        }
+
+        const request = await MarketingRequest.create({
+            seller_id: req.user._id,
+            property_id,
+            plan_id,
+            notes
+        });
+
+        res.status(201).json({ success: true, data: request });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+exports.getSellerRequests = async (req, res) => {
+    try {
+        const requests = await MarketingRequest.find({ seller_id: req.user._id })
+            .populate("property_id", "title images price")
+            .populate("plan_id", "name price")
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: requests });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+// --- Marketing Requests (Admin) ---
+
+exports.getAdminRequests = async (req, res) => {
+    try {
+        const requests = await MarketingRequest.find()
+            .populate("seller_id", "name email phone customId")
+            .populate("property_id", "title images price location")
+            .populate("plan_id", "name price")
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: requests });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+    try {
+        const { status, notes } = req.body;
+        const request = await MarketingRequest.findByIdAndUpdate(
+            req.params.id,
+            { status, notes },
+            { new: true }
+        );
+        if (!request) return res.status(404).json({ success: false, error: "Request not found" });
+        res.status(200).json({ success: true, data: request });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};

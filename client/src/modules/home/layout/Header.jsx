@@ -173,7 +173,14 @@ const Header = () => {
               <button
                 onClick={() => {
                   if (isAuthenticated) {
-                    navigate("/add-property");
+                    const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+                    if (role === "ADMIN") {
+                      navigate("/admin/properties/add");
+                    } else if (role === "SELLER") {
+                      navigate("/seller/add-property");
+                    } else {
+                      navigate("/add-property");
+                    }
                   } else {
                     navigate("/login", { state: { from: "/add-property" } });
                   }
@@ -327,8 +334,18 @@ const Header = () => {
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      if (isAuthenticated) navigate("/add-property");
-                      else navigate("/login", { state: { from: "/add-property" } });
+                      if (isAuthenticated) {
+                        const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+                        if (role === "ADMIN") {
+                          navigate("/admin/properties/add");
+                        } else if (role === "SELLER") {
+                          navigate("/seller/add-property");
+                        } else {
+                          navigate("/add-property");
+                        }
+                      } else {
+                        navigate("/login", { state: { from: "/add-property" } });
+                      }
                     }}
                     className="flex items-center w-full px-4 py-3 bg-blue-50 text-blue-600 rounded-xl font-bold"
                   >

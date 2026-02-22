@@ -5,6 +5,7 @@ import {
   Building,
   User,
   MessageSquare,
+  Megaphone,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
@@ -49,6 +50,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       ],
     },
     {
+      key: "/seller/advertisements",
+      icon: <Megaphone size={20} />,
+      label: "Promotion",
+      onClick: () => handleMenuClick("/seller/advertisements"),
+    },
+    {
       key: "/seller/enquiries",
       icon: <MessageSquare size={20} />,
       label: "Enquiry Property",
@@ -65,17 +72,17 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const SidebarContent = (
     <div className="flex flex-col h-full">
       <Link to="/">
-      <div className="flex items-center justify-center h-16 m-2 rounded-lg shrink-0">
-        {collapsed && !isMobile ? (
-          <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold bg-blue-600">
-            SP
-          </div>
-        ) : (
-          <span className="text-white text-lg font-bold tracking-wide">
-            SELLER PANEL
-          </span>
-        )}
-      </div>
+        <div className="flex items-center justify-center h-16 m-2 rounded-lg shrink-0">
+          {collapsed && !isMobile ? (
+            <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold bg-blue-600">
+              SP
+            </div>
+          ) : (
+            <span className="text-white text-lg font-bold tracking-wide">
+              SELLER PANEL
+            </span>
+          )}
+        </div>
       </Link>
 
       <div className="flex-1 overflow-y-auto custom-scrollbar">

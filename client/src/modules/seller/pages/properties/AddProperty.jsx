@@ -83,7 +83,7 @@ const AddProperty = () => {
       }
 
       // Redirect to My Properties in the dashboard
-      navigate("/seller/my-properties");
+      navigate(`/seller/my-properties?success=true${!editId ? `&property_id=${response.data._id}` : ""}`);
     } catch (error) {
       console.error("Error saving property:", error);
       const errorMessage = error.response?.data?.error;
