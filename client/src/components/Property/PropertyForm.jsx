@@ -9,7 +9,7 @@ import {
   Plus,
   Trash2,
   MapPin,
-  Briefcase
+  Briefcase,
 } from "lucide-react";
 import { Upload, Modal as AntModal } from "antd";
 import ImgCrop from "antd-img-crop";
@@ -130,8 +130,6 @@ const PropertyForm = ({
     }
   }, [initialData, isEdit, reset]);
 
-
-
   const [propertyTypes, setPropertyTypes] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [businessTypes, setBusinessTypes] = useState([]);
@@ -141,7 +139,6 @@ const PropertyForm = ({
     initialData?.images || [],
   ); // URLs
   const [imagePreviews, setImagePreviews] = useState([]); // Previews for new files
-
 
   const [imagesToDelete, setImagesToDelete] = useState([]);
 
@@ -184,13 +181,13 @@ const PropertyForm = ({
         const queryParam = isSeller ? "?role=seller" : "";
         const [pTypes, aTypes, bTypes] = await Promise.all([
           axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`
+            `${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`,
           ),
           axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`
+            `${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`,
           ),
           axios.get(
-            `${import.meta.env.VITE_API_URL}/business-types?status=active`
+            `${import.meta.env.VITE_API_URL}/business-types?status=active`,
           ),
         ]);
         setPropertyTypes(pTypes.data);
@@ -212,7 +209,7 @@ const PropertyForm = ({
     let oversizedCount = 0;
 
     newFileList.forEach((file, index) => {
-      if (file.status === 'removed') return;
+      if (file.status === "removed") return;
 
       const actualFile = file.originFileObj || file;
       const sizeInMB = actualFile.size / (1024 * 1024);
@@ -230,12 +227,14 @@ const PropertyForm = ({
       } else if (file.originFileObj) {
         newPreviews.push(URL.createObjectURL(file.originFileObj));
       } else {
-        newPreviews.push('');
+        newPreviews.push("");
       }
     });
 
     if (oversizedCount > 0) {
-      toast.error(`${oversizedCount} image(s) exceeded the 5MB limit and were skipped.`);
+      toast.error(
+        `${oversizedCount} image(s) exceeded the 5MB limit and were skipped.`,
+      );
     }
 
     if (validFiles.length + existingImages.length > 10) {
@@ -265,10 +264,7 @@ const PropertyForm = ({
   // Remove Existing Image
   const removeExistingImage = (index) => {
     const imageToRemove = existingImages[index];
-    setImagesToDelete([
-      ...imagesToDelete,
-      imageToRemove._id || imageToRemove,
-    ]);
+    setImagesToDelete([...imagesToDelete, imageToRemove._id || imageToRemove]);
 
     const newExisting = [...existingImages];
     newExisting.splice(index, 1);
@@ -401,11 +397,16 @@ const PropertyForm = ({
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
             >
               <option value="">Select Type</option>
-              {propertyTypes.map((type) => (
-                <option key={type._id || type.name} value={type.name}>
-                  {type.name}
-                </option>
-              ))}
+              {propertyTypes.map((type) => {
+                const name =
+                  typeof type === "string" ? type : type?.name || "Unknown";
+                const key = typeof type === "object" ? type._id || name : type;
+                return (
+                  <option key={key} value={name}>
+                    {name}
+                  </option>
+                );
+              })}
             </select>
             {errors.property_type && (
               <p className="text-red-500 text-xs mt-1 font-medium">
@@ -425,11 +426,16 @@ const PropertyForm = ({
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
             >
               <option value="">Select Approval</option>
-              {approvalTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
+              {approvalTypes.map((type) => {
+                const name =
+                  typeof type === "string" ? type : type?.name || "Unknown";
+                const key = typeof type === "object" ? type._id || name : type;
+                return (
+                  <option key={key} value={name}>
+                    {name}
+                  </option>
+                );
+              })}
             </select>
             {errors.approval && (
               <p className="text-red-500 text-xs mt-1 font-medium">
@@ -442,15 +448,24 @@ const PropertyForm = ({
               Business Type <span className="text-red-500">*</span>
             </label>
             <select
-              {...register("businessType", { required: "Business type is required" })}
+              {...register("businessType", {
+                required: "Business type is required",
+              })}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all bg-white"
             >
               <option value="">Select Business Type</option>
-              {businessTypes.map((type) => (
-                <option key={type._id} value={type._id}>
-                  {type.name}
-                </option>
-              ))}
+              {businessTypes.map((type) => {
+                const id = type._id?.toString() || type.name;
+                const name =
+                  typeof type.name === "string"
+                    ? type.name
+                    : type.name?.name || "Unknown";
+                return (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                );
+              })}
             </select>
             {errors.businessType && (
               <p className="text-red-500 text-xs mt-1 font-medium">
@@ -655,8 +670,6 @@ const PropertyForm = ({
         </div>
       </div>
 
-
-
       {/* Image Upload Card */}
       <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
         <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -672,7 +685,7 @@ const PropertyForm = ({
                 fileList={images.map((file, index) => ({
                   uid: `new-${index}`,
                   name: `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`,
-                  status: 'done',
+                  status: "done",
                   url: imagePreviews[index],
                   originFileObj: file,
                 }))}
@@ -682,10 +695,12 @@ const PropertyForm = ({
                 accept="image/*"
                 beforeUpload={() => false} // Prevent automatic upload
               >
-                {(images.length + existingImages.length) < 10 && (
+                {images.length + existingImages.length < 10 && (
                   <div className="flex flex-col items-center justify-center">
                     <Plus size={24} className="text-gray-400 mb-2" />
-                    <div className="text-sm font-medium text-gray-600">Upload</div>
+                    <div className="text-sm font-medium text-gray-600">
+                      Upload
+                    </div>
                   </div>
                 )}
               </Upload>
@@ -695,7 +710,9 @@ const PropertyForm = ({
           {/* Existing Images Previews */}
           {existingImages.length > 0 && (
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-gray-600">Existing Images</h4>
+              <h4 className="text-sm font-semibold text-gray-600">
+                Existing Images
+              </h4>
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {existingImages.map((img, index) => (
                   <div
@@ -728,7 +745,6 @@ const PropertyForm = ({
           )}
         </div>
       </div>
-
 
       <div className="flex justify-end pt-4 pb-8 sticky bottom-4 z-[999]">
         <div className="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border border-gray-200 flex gap-4">

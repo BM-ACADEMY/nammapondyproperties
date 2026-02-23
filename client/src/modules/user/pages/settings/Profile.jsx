@@ -13,7 +13,7 @@ import {
   Calendar,
   Briefcase,
 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import Loader from "@/components/Common/Loader";
 
@@ -195,7 +195,7 @@ const Profile = () => {
                 <div className="flex justify-center items-center gap-2 mb-2">
                   <p className="text-sm text-gray-500">{user.email}</p>
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
-                    ID: {user.customId || "N/A"}
+                    ID: {user.userId || "N/A"}
                   </span>
                 </div>
 
@@ -369,11 +369,18 @@ const Profile = () => {
                           className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 appearance-none"
                         >
                           <option value="">Select Business Type</option>
-                          {businessTypes.map((type) => (
-                            <option key={type._id} value={type._id}>
-                              {type.name}
-                            </option>
-                          ))}
+                          {businessTypes.map((type) => {
+                            const id = type._id?.toString() || type.name;
+                            const name =
+                              typeof type.name === "string"
+                                ? type.name
+                                : type.name?.name || "Unknown";
+                            return (
+                              <option key={id} value={id}>
+                                {name}
+                              </option>
+                            );
+                          })}
                         </select>
                       ) : (
                         <div className="block w-full pl-10 pr-3 py-2.5 text-gray-700 bg-white border border-transparent border-b-gray-100">
