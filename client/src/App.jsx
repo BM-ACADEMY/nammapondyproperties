@@ -1,16 +1,15 @@
-
-
-import './App.css'
-import AppRoutes from './AppRoute';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { NavProvider } from './context/NavContext';
-
+import "./App.css";
+import AppRoutes from "./AppRoute";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { NavProvider } from "./context/NavContext";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <>
       <div>
+        <Toaster position="top-center" reverseOrder={false} />
         <AuthProvider>
           <NavProvider>
             <BrowserRouter>
@@ -20,7 +19,7 @@ function App() {
         </AuthProvider>
       </div>
     </>
-  )
+  );
 }
 
 export default App;

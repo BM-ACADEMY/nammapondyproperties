@@ -228,7 +228,7 @@ const FavoritesPage = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          const sellerPhone = property.seller_id?.phone || "919000000000";
+                          const sellerPhone = property.seller_id?.phone;
                           const locationStr = typeof property.location === "string"
                             ? property.location
                             : `${property.location?.city || ""}, ${property.location?.state || ""}`;

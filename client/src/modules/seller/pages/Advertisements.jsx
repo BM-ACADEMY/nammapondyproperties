@@ -27,13 +27,11 @@ const SellerAdvertisements = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  const fetchData = React.useCallback(async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
       const [propsRes, reqsRes] = await Promise.all([
-        api.get(
-          `/properties/fetch-all-property?limit=100&seller_id=${user._id}`,
-        ),
+        api.get(`/properties/fetch-all-property?seller_id=${user._id}`),
         api.get("/marketing/requests/seller"),
       ]);
       setProperties(propsRes.data.properties || []);
@@ -44,11 +42,11 @@ const SellerAdvertisements = () => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
 
   useEffect(() => {
     if (user) fetchData();
-  }, [user, fetchData]);
+  }, [user]);
 
   const columns = [
     {
@@ -73,7 +71,7 @@ const SellerAdvertisements = () => {
       key: "status",
       render: (_, record) => {
         const request = marketingRequests.find(
-          (r) => r.property_id?._id === record._id,
+          (r) => r.property_id._id === record._id,
         );
         if (!request) return <Tag>No Request</Tag>;
 
@@ -102,7 +100,7 @@ const SellerAdvertisements = () => {
       render: (_, record) => {
         const hasActiveRequest = marketingRequests.some(
           (r) =>
-            r.property_id?._id === record._id &&
+            r.property_id._id === record._id &&
             ["pending", "contacted"].includes(r.status),
         );
 
@@ -121,7 +119,7 @@ const SellerAdvertisements = () => {
               // We'll use the same modal logic or redirect to MyProperties with a trigger
               // For simplicity, let's keep it here too if needed, or redirect.
               // Redirecting to MyProperties with the modal trigger is cleaner to avoid code duplication.
-              window.location.href = `/seller/my-properties?success=true&property_id=${record._id}`;
+              window.location.href = `/seller/my-properties?advertise=${record._id}`;
             }}
           >
             {hasActiveRequest ? "Request Sent" : "Promote"}

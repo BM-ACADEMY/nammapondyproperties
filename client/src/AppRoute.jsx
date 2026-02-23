@@ -79,7 +79,7 @@ const AppRoutes = () => {
       </Route>
 
       {/* Seller Routes - Strictly for Sellers and Admins */}
-      <Route element={<PrivateRoute allowedRoles={["SELLER", "ADMIN"]} />}>
+      <Route element={<PrivateRoute allowedRoles={["SELLER"]} />}>
         <Route
           path="/seller/*"
           element={

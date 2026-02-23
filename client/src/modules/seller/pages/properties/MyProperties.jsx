@@ -100,15 +100,14 @@ const MyProperties = () => {
     const success = params.get("success");
     const property_id = params.get("property_id");
 
-    if (properties.length > 0) {
-      if (success) {
-        message.success({
-          content: "🚀 Promote your property for 10x faster visibility!",
-          duration: 5,
-          style: { marginTop: "10vh" },
-          icon: <Plus className="text-blue-500" />,
-        });
-      }
+    if (success && properties.length > 0) {
+      message.success({
+        content: "🚀 Promote your property for 10x faster visibility!",
+        duration: 5,
+        // Make it appear at the top
+        style: { marginTop: "10vh" },
+        icon: <Plus className="text-blue-500" />,
+      });
 
       if (property_id) {
         const prop = properties.find((p) => p._id === property_id);
@@ -118,14 +117,8 @@ const MyProperties = () => {
         }
       }
 
-      if (success || property_id) {
-        // Clear the query param without refreshing
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname,
-        );
-      }
+      // Clear the query param without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [properties]);
 
