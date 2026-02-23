@@ -1,75 +1,68 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useNav } from "@/context/NavContext";
 
 const PropertyTypeList = () => {
   const navigate = useNavigate();
   const [types, setTypes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { propertyTypes, isLoading: loading } = useNav();
 
   // Helper function to get details and images based on type name
-  const getCardDetails = (typeName) => {
+  const getCardDetails = (type) => {
+    const typeName = typeof type === "string" ? type : type.name || "";
     const lowerType = typeName.toLowerCase();
 
+    const details = {
+      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      description: "Discover exceptional properties that match your vision.",
+      ctaText: `Explore ${typeName}`,
+    };
+
     if (lowerType.includes("plot") || lowerType.includes("land")) {
-      return {
-        image: "/properties/plot.png",
-        description: "Curated landscapes to build your bespoke dream home.",
-        ctaText: "Explore Plots",
-      };
+      details.image = "/properties/plot.png";
+      details.description = "Curated landscapes to build your bespoke dream home.";
+      details.ctaText = "Explore Plots";
     } else if (lowerType.includes("villa") || lowerType.includes("house")) {
-      return {
-        image: "/properties/villa.png",
-        description: "Experience unparalleled elegance and premium living.",
-        ctaText: "Explore Villas",
-      };
+      details.image = "/properties/villa.png";
+      details.description = "Experience unparalleled elegance and premium living.";
+      details.ctaText = "Explore Villas";
     } else if (lowerType.includes("apartment") || lowerType.includes("flat")) {
-      return {
-        image: "/properties/apartment.png",
-        description:
-          "Elevated urban living spaces tailored for your lifestyle.",
-        ctaText: "Explore Apartments",
-      };
+      details.image = "/properties/apartment.png";
+      details.description = "Elevated urban living spaces tailored for your lifestyle.";
+      details.ctaText = "Explore Apartments";
     } else if (
       lowerType.includes("commercial") ||
       lowerType.includes("shop") ||
       lowerType.includes("office")
     ) {
-      return {
-        image: "/properties/commercial.png",
-        description:
-          "Distinguished locations to establish and grow your business.",
-        ctaText: "Explore Commercial",
-      };
-    } else {
-      return {
-        image:
-          "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-        description: "Discover exceptional properties that match your vision.",
-        ctaText: `Explore ${typeName}`,
-      };
+      details.image = "/properties/commercial.png";
+      details.description = "Distinguished locations to establish and grow your business.";
+      details.ctaText = "Explore Commercial";
     }
+
+    // If dynamic image exists in the object, use it
+    if (typeof type === "object" && type.image_url) {
+      details.image = `${import.meta.env.VITE_API_URL.replace("/api", "")}${type.image_url}`;
+    }
+
+    return details;
   };
 
-  // Fetch property types from API
+  // Map property types from NavContext
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/properties/filters`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.types) {
-          const mappedTypes = data.types
-            .filter((type) => type !== "realestate_with_kamar")
-            .map((type) => ({
-              originalType: type,
-              title: type,
-              ...getCardDetails(type),
-            }));
-          setTypes(mappedTypes);
-        }
-      })
-      .catch((err) => console.error("Failed to fetch property types", err))
-      .finally(() => setLoading(false));
-  }, []);
+    if (propertyTypes && propertyTypes.length > 0) {
+      const mappedTypes = propertyTypes.map((type) => {
+        const name = typeof type === "string" ? type : type.name || "";
+        return {
+          originalType: name,
+          title: name,
+          ...getCardDetails(type),
+        };
+      });
+      setTypes(mappedTypes);
+    }
+  }, [propertyTypes]);
 
   return (
     <section className="py-18 bg-[#FAFAFA] font-sans">

@@ -13,7 +13,7 @@ import {
   Calendar,
   Briefcase,
 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import Loader from "@/components/Common/Loader";
 
@@ -130,10 +130,10 @@ const Profile = () => {
         <AnimatePresence>
           {message && (
             <motion.div
-              initial={{ opacity: 0, y: -20, x: "50%" }}
-              animate={{ opacity: 1, y: 0, x: "50%" }}
-              exit={{ opacity: 0, y: -20, x: "50%" }}
-              className={`fixed top-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-8 px-6 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 backdrop-blur-md border ${
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className={`fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 px-6 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 backdrop-blur-md border ${
                 message.type === "success"
                   ? "bg-green-500/90 text-white border-green-400"
                   : "bg-red-500/90 text-white border-red-400"
@@ -195,7 +195,7 @@ const Profile = () => {
                 <div className="flex justify-center items-center gap-2 mb-2">
                   <p className="text-sm text-gray-500">{user.email}</p>
                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
-                    ID: {user.customId || "N/A"}
+                    ID: {user.userId || "N/A"}
                   </span>
                 </div>
 
@@ -369,11 +369,18 @@ const Profile = () => {
                           className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 appearance-none"
                         >
                           <option value="">Select Business Type</option>
-                          {businessTypes.map((type) => (
-                            <option key={type._id} value={type._id}>
-                              {type.name}
-                            </option>
-                          ))}
+                          {businessTypes.map((type) => {
+                            const id = type._id?.toString() || type.name;
+                            const name =
+                              typeof type.name === "string"
+                                ? type.name
+                                : type.name?.name || "Unknown";
+                            return (
+                              <option key={id} value={id}>
+                                {name}
+                              </option>
+                            );
+                          })}
                         </select>
                       ) : (
                         <div className="block w-full pl-10 pr-3 py-2.5 text-gray-700 bg-white border border-transparent border-b-gray-100">

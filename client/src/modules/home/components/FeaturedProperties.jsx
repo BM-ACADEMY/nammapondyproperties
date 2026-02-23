@@ -46,7 +46,11 @@ const FeaturedProperties = () => {
     }
 
     if (user) {
-      submitEnquiry(property, user.name, user.email, user.phone);
+      if (!user.phone) {
+        toast.error("Please update your mobile number in profile section");
+      } else {
+        submitEnquiry(property, user.name, user.email, user.phone);
+      }
     } else {
       toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
@@ -55,7 +59,7 @@ const FeaturedProperties = () => {
 
   const submitEnquiry = async (property, name, email, phone) => {
     setEnquiryLoading(true);
-    const sellerPhone = property.seller_id.phone || "919000000000";
+    const sellerPhone = property.seller_id.phone;
     const locationStr =
       typeof property.location === "string"
         ? property.location
@@ -98,7 +102,7 @@ const FeaturedProperties = () => {
             <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 bg-white/40 shadow-sm cursor-default">
               Handpicked
             </div>
-            
+
             {/* Elegant Typography Heading */}
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
               Featured Properties

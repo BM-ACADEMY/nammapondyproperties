@@ -251,19 +251,25 @@ const PropertiesPage = () => {
                       >
                         All Types {type === "" && <Check className="w-4 h-4" />}
                       </button>
-                      {types.map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => {
-                            setType(t);
-                            setCurrentPage(1);
-                            setIsTypeDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${type === t ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                        >
-                          {t} {type === t && <Check className="w-4 h-4" />}
-                        </button>
-                      ))}
+                      {types.map((t) => {
+                        const name =
+                          typeof t === "string" ? t : t?.name || "Unknown";
+                        const key = typeof t === "object" ? t._id || name : t;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              setType(name);
+                              setCurrentPage(1);
+                              setIsTypeDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${type === name ? "text-blue-600 font-medium" : "text-gray-700"}`}
+                          >
+                            {name}{" "}
+                            {type === name && <Check className="w-4 h-4" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -299,20 +305,28 @@ const PropertiesPage = () => {
                         All Locations{" "}
                         {location === "" && <Check className="w-4 h-4" />}
                       </button>
-                      {locations.map((loc) => (
-                        <button
-                          key={loc}
-                          onClick={() => {
-                            setLocation(loc);
-                            setCurrentPage(1);
-                            setIsLocationDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${location === loc ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                        >
-                          {loc}{" "}
-                          {location === loc && <Check className="w-4 h-4" />}
-                        </button>
-                      ))}
+                      {locations.map((loc) => {
+                        const name =
+                          typeof loc === "string"
+                            ? loc
+                            : loc?.name || "Unknown";
+                        const key =
+                          typeof loc === "object" ? loc._id || name : loc;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              setLocation(name);
+                              setCurrentPage(1);
+                              setIsLocationDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${location === name ? "text-blue-600 font-medium" : "text-gray-700"}`}
+                          >
+                            {name}{" "}
+                            {location === name && <Check className="w-4 h-4" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -347,20 +361,28 @@ const PropertiesPage = () => {
                       >
                         Any {approval === "" && <Check className="w-4 h-4" />}
                       </button>
-                      {approvalTypes.map((app) => (
-                        <button
-                          key={app}
-                          onClick={() => {
-                            setApproval(app);
-                            setCurrentPage(1);
-                            setIsApprovalDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${approval === app ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                        >
-                          {app}{" "}
-                          {approval === app && <Check className="w-4 h-4" />}
-                        </button>
-                      ))}
+                      {approvalTypes.map((app) => {
+                        const name =
+                          typeof app === "string"
+                            ? app
+                            : app?.name || "Unknown";
+                        const key =
+                          typeof app === "object" ? app._id || name : app;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => {
+                              setApproval(name);
+                              setCurrentPage(1);
+                              setIsApprovalDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${approval === name ? "text-blue-600 font-medium" : "text-gray-700"}`}
+                          >
+                            {name}{" "}
+                            {approval === name && <Check className="w-4 h-4" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

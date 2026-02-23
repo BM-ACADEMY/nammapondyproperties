@@ -33,6 +33,7 @@ import {
   FileCheck,
   Calendar,
   X,
+  CheckCircle,
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +47,13 @@ const MyProperties = () => {
   const [searchText, setSearchText] = useState("");
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [isMarketingModalOpen, setIsMarketingModalOpen] = useState(false);
+  const [marketingPlans, setMarketingPlans] = useState([]);
+  const [marketingRequests, setMarketingRequests] = useState([]);
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [soldModalVisible, setSoldModalVisible] = useState(false);
+  const [soldPrice, setSoldPrice] = useState("");
+  const [propertyToSell, setPropertyToSell] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -86,6 +94,106 @@ const MyProperties = () => {
       fetchProperties();
     }
   }, [user, fetchProperties]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const property_id = params.get("property_id");
+
+    if (success && properties.length > 0) {
+      message.success({
+        content: "🚀 Promote your property for 10x faster visibility!",
+        duration: 5,
+        // Make it appear at the top
+        style: { marginTop: "10vh" },
+        icon: <Plus className="text-blue-500" />,
+      });
+
+      if (property_id) {
+        const prop = properties.find((p) => p._id === property_id);
+        if (prop) {
+          setSelectedProperty(prop);
+          setIsMarketingModalOpen(true);
+        }
+      }
+
+      // Clear the query param without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [properties]);
+
+  const fetchMarketingRequests = async () => {
+    try {
+      const response = await api.get("/marketing/requests/seller");
+      setMarketingRequests(response.data.data);
+    } catch (error) {
+      console.error("Failed to fetch marketing requests:", error);
+    }
+  };
+
+  const fetchMarketingPlans = async () => {
+    try {
+      const response = await api.get("/marketing/plans");
+      setMarketingPlans(response.data.data);
+    } catch (error) {
+      console.error("Failed to fetch marketing plans:", error);
+    }
+  };
+
+  const handleMarkAsSoldClick = (property) => {
+    setPropertyToSell(property);
+    setSoldPrice(property.soldPrice || "");
+    setSoldModalVisible(true);
+  };
+
+  const handleConfirmSold = async () => {
+    try {
+      const isSold = !propertyToSell.isSold;
+      const payload = {
+        isSold: isSold,
+      };
+
+      if (isSold && soldPrice) {
+        payload.soldPrice = soldPrice;
+      }
+
+      await api.put(
+        `/properties/update-property-by-id/${propertyToSell._id}`,
+        payload,
+      );
+
+      message.success(
+        `Property marked as ${isSold ? "Sold Out" : "Available"}`,
+      );
+      setSoldModalVisible(false);
+      fetchProperties();
+    } catch (error) {
+      console.error("Error updating sold status:", error);
+      message.error("Failed to update status");
+    }
+  };
+
+  const handleRequestMarketing = async (planId) => {
+    setRequestLoading(true);
+    try {
+      await api.post("/marketing/requests", {
+        property_id: selectedProperty._id,
+        plan_id: planId,
+      });
+      message.success("Request sent! Our team will contact you shortly.");
+      setIsMarketingModalOpen(false);
+    } catch (error) {
+      message.error(error.response?.data?.error || "Failed to send request");
+    } finally {
+      setRequestLoading(false);
+      fetchMarketingRequests(); // Refresh requests after submitting
+    }
+  };
+
+  useEffect(() => {
+    fetchMarketingPlans();
+    if (user) fetchMarketingRequests();
+  }, [user]);
 
   const handleDelete = async (id) => {
     try {
@@ -228,7 +336,7 @@ const MyProperties = () => {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <Button
                       type="default"
                       size="small"
@@ -249,6 +357,47 @@ const MyProperties = () => {
                     >
                       Edit
                     </Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    {(() => {
+                      const request = marketingRequests.find(
+                        (r) => r.property_id?._id === property._id,
+                      );
+                      const hasActiveRequest =
+                        request &&
+                        ["pending", "contacted"].includes(request.status);
+
+                      return (
+                        <Button
+                          type={hasActiveRequest ? "default" : "primary"}
+                          size="small"
+                          disabled={hasActiveRequest}
+                          icon={
+                            hasActiveRequest ? (
+                              <CheckCircle size={14} />
+                            ) : (
+                              <Plus size={14} />
+                            )
+                          }
+                          onClick={() => {
+                            setSelectedProperty(property);
+                            setIsMarketingModalOpen(true);
+                          }}
+                          className={`flex items-center justify-center ${hasActiveRequest ? "" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                        >
+                          {hasActiveRequest ? "Promoted" : "Advertise"}
+                        </Button>
+                      );
+                    })()}
+                    <Button
+                      size="small"
+                      onClick={() => handleMarkAsSoldClick(property)}
+                      className={`flex items-center justify-center ${property.isSold ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800" : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"}`}
+                    >
+                      {property.isSold ? "Mark Available" : "Sold Out"}
+                    </Button>
+                  </div>
+                  <div className="w-full">
                     <Popconfirm
                       title="Delete Property"
                       description="Are you sure you want to delete this property?"
@@ -260,8 +409,10 @@ const MyProperties = () => {
                         type="default"
                         size="small"
                         icon={<Trash2 size={14} />}
-                        className="flex items-center justify-center text-gray-600 hover:text-red-500 hover:border-red-500 hover:bg-red-50"
-                      />
+                        className="w-full flex items-center justify-center text-gray-600 hover:text-red-500 hover:border-red-500 hover:bg-red-50"
+                      >
+                        Delete Property
+                      </Button>
                     </Popconfirm>
                   </div>
                 </div>
@@ -294,6 +445,106 @@ const MyProperties = () => {
           )}
         </div>
       )}
+
+      {/* Marketing Promotion Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-indigo-600">
+            <Plus className="h-5 w-5" />
+            <span className="text-xl font-bold">Promote Your Property</span>
+          </div>
+        }
+        open={isMarketingModalOpen}
+        onCancel={() => setIsMarketingModalOpen(false)}
+        footer={null}
+        width={800}
+        className="marketing-modal"
+      >
+        <div className="py-4">
+          <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 mb-8">
+            <h3 className="text-lg font-bold text-indigo-900 mb-2">
+              🚀 Boost Visibility by 10x!
+            </h3>
+            <p className="text-indigo-700">
+              Get more leads and sell faster by promoting your property on our
+              platform and social media channels. Choose a plan that fits your
+              needs.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {marketingPlans.map((plan) => (
+              <div
+                key={plan._id}
+                className="bg-white border-2 border-gray-100 hover:border-indigo-500 rounded-2xl p-6 transition-all duration-300 flex flex-col items-center text-center group"
+              >
+                <h4 className="text-xl font-bold text-gray-800 mb-2">
+                  {plan.name}
+                </h4>
+                <div className="text-2xl font-black text-indigo-600 mb-4">
+                  {plan.price}
+                </div>
+                <Divider className="my-4" />
+                <ul className="space-y-3 mb-8 w-full">
+                  {plan.features?.map((feature, idx) => (
+                    <li
+                      key={idx}
+                      className="text-gray-600 text-sm flex items-start gap-2 text-left"
+                    >
+                      <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  type="primary"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold mt-auto transition-transform group-hover:scale-105"
+                  onClick={() => handleRequestMarketing(plan._id)}
+                  loading={requestLoading}
+                >
+                  Request Marketing
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center text-gray-500 text-sm">
+            No payment required today. Our team will contact you to discuss the
+            details.
+          </div>
+        </div>
+      </Modal>
+
+      {/* Sold Modal */}
+      <Modal
+        title={
+          propertyToSell?.isSold ? "Mark as Available" : "Mark as Sold Out"
+        }
+        open={soldModalVisible}
+        onOk={handleConfirmSold}
+        onCancel={() => setSoldModalVisible(false)}
+        okText="Update Status"
+        cancelText="Cancel"
+      >
+        <p className="mb-4">
+          Are you sure you want to mark <b>{propertyToSell?.title}</b> as{" "}
+          {propertyToSell?.isSold ? "Available" : "Sold Out"}?
+        </p>
+        {!propertyToSell?.isSold && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Sold Price (Optional)
+            </label>
+            <Input
+              prefix="₹"
+              placeholder="Enter sold amount"
+              value={soldPrice}
+              onChange={(e) => setSoldPrice(e.target.value)}
+              type="number"
+            />
+          </div>
+        )}
+      </Modal>
 
       {/* Property Detail Modal */}
       <Modal

@@ -9,8 +9,10 @@ import {
   message,
   Popconfirm,
   Tag,
+  Upload,
 } from "antd";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import ImgCrop from "antd-img-crop";
+import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
@@ -20,6 +22,7 @@ const PropertyTypeManager = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingType, setEditingType] = useState(null);
+  const [fileList, setFileList] = useState([]);
   const [form] = Form.useForm();
 
   const fetchPropertyTypes = async () => {
@@ -40,6 +43,7 @@ const PropertyTypeManager = () => {
 
   const handleAdd = () => {
     setEditingType(null);
+    setFileList([]);
     form.resetFields();
     setIsModalOpen(true);
   };
@@ -47,6 +51,18 @@ const PropertyTypeManager = () => {
   const handleEdit = (record) => {
     setEditingType(record);
     form.setFieldsValue(record);
+    if (record.image_url) {
+      setFileList([
+        {
+          uid: "-1",
+          name: "image.png",
+          status: "done",
+          url: `${import.meta.env.VITE_API_URL.replace("/api", "")}${record.image_url}`,
+        },
+      ]);
+    } else {
+      setFileList([]);
+    }
     setIsModalOpen(true);
   };
 
@@ -68,31 +84,60 @@ const PropertyTypeManager = () => {
   const onFinish = async (values) => {
     try {
       const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("status", values.status);
+      formData.append("visible_to_seller", values.visible_to_seller);
+
+      if (fileList.length > 0 && fileList[0].originFileObj) {
+        formData.append("image", fileList[0].originFileObj);
+      }
+
       const config = {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
       };
 
       if (editingType) {
         await axios.put(
           `${API}/property-types/${editingType._id}`,
-          values,
+          formData,
           config,
         );
         message.success("Property Type updated");
       } else {
-        await axios.post(`${API}/property-types`, values, config);
+        await axios.post(`${API}/property-types`, formData, config);
         message.success("Property Type added");
       }
       setIsModalOpen(false);
       fetchPropertyTypes();
-    } catch {
-      message.error("Operation failed");
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || "Operation failed";
+      message.error(errorMessage);
     }
   };
 
   const columns = [
+    {
+      title: "Image",
+      dataIndex: "image_url",
+      key: "image",
+      render: (url) => (
+        <div className="w-12 h-12 rounded overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
+          {url ? (
+            <img
+              src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${url}`}
+              alt="Type"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <ImageIcon className="text-gray-300" size={20} />
+          )}
+        </div>
+      ),
+    },
     {
       title: "Name",
       dataIndex: "name",
@@ -106,21 +151,6 @@ const PropertyTypeManager = () => {
         <Tag color={status === "active" ? "green" : "red"}>
           {status.toUpperCase()}
         </Tag>
-      ),
-    },
-    {
-      title: "Key Attributes",
-      dataIndex: "key_attributes",
-      key: "key_attributes",
-      render: (attributes) => (
-        <>
-          {attributes &&
-            attributes.map((attr) => (
-              <Tag color="purple" key={attr}>
-                {attr}
-              </Tag>
-            ))}
-        </>
       ),
     },
     {
@@ -181,8 +211,37 @@ const PropertyTypeManager = () => {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
+        destroyOnClose
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Form.Item label="Property Type Image">
+            <ImgCrop rotationSlider aspect={1 / 1}>
+              <Upload
+                listType="picture-card"
+                fileList={fileList}
+                onChange={({ fileList: newFileList }) => setFileList(newFileList)}
+                onPreview={async (file) => {
+                  let src = file.url;
+                  if (!src) {
+                    src = await new Promise((resolve) => {
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file.originFileObj);
+                      reader.onload = () => resolve(reader.result);
+                    });
+                  }
+                  const image = new Image();
+                  image.src = src;
+                  const imgWindow = window.open(src);
+                  imgWindow?.document.write(image.outerHTML);
+                }}
+                beforeUpload={() => false}
+                maxCount={1}
+              >
+                {fileList.length < 1 && "+ Upload"}
+              </Upload>
+            </ImgCrop>
+          </Form.Item>
+
           <Form.Item
             name="name"
             label="Name"
@@ -212,17 +271,7 @@ const PropertyTypeManager = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="key_attributes"
-            label="Key Attributes (Press Enter to add)"
-          >
-            <Select
-              mode="tags"
-              style={{ width: "100%" }}
-              placeholder="e.g. Bedrooms, Bathrooms"
-              tokenSeparators={[","]}
-            />
-          </Form.Item>
+
 
           <div className="flex justify-end space-x-2">
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>

@@ -12,10 +12,11 @@ import AdminEnquiries from "./pages/enquiries/AdminEnquiries";
 import BusinessTypeManager from "./pages/BusinessTypeManager";
 import PropertyTypeManager from "./pages/PropertyTypeManager";
 import ApprovalTypeManager from "./pages/ApprovalTypeManager";
+import MarketingPlanManager from "./pages/MarketingPlanManager";
+import MarketingRequests from "./pages/MarketingRequests";
 import TestimonialManager from "./pages/TestimonialManager";
 import GeneralSettings from "./pages/settings/GeneralSettings";
 import SellerRequests from "./pages/SellerRequests";
-import Advertisements from "./pages/Advertisements";
 import SocialMediaManager from "./pages/SocialMediaManager";
 
 const AdminRoute = () => {
@@ -42,7 +43,8 @@ const AdminRoute = () => {
         <Route path="property-types" element={<PropertyTypeManager />} />
         <Route path="approval-types" element={<ApprovalTypeManager />} />
         <Route path="testimonials" element={<TestimonialManager />} />
-        <Route path="advertisements" element={<Advertisements />} />
+        <Route path="marketing-plans" element={<MarketingPlanManager />} />
+        <Route path="marketing-requests" element={<MarketingRequests />} />
         <Route path="social-media" element={<SocialMediaManager />} />
         {/* Settings route can be placeholder too if needed */}
       </Route>

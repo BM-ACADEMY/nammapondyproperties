@@ -74,6 +74,24 @@ exports.createProperty = async (req, res) => {
 
     const property = new Property(propertyData);
     await property.save();
+
+    // Role Automation: Upgrade 'user' to 'seller' after first post
+    if (req.user && req.user.role_id) {
+      const Role = require("../models/Role");
+      const currentRole = await Role.findById(req.user.role_id);
+
+      if (currentRole && currentRole.role_name === "user") {
+        const sellerRole = await Role.findOne({ role_name: "seller" });
+        if (sellerRole) {
+          await User.findByIdAndUpdate(req.user._id, {
+            role_id: sellerRole._id,
+            businessType: req.body.businessType || req.user.businessType // Add businessType if sent
+          });
+          console.log(`User ${req.user._id} upgraded to SELLER role`);
+        }
+      }
+    }
+
     res.status(201).json(property);
   } catch (error) {
     console.error("Create Property Error:", error); // Log full error
@@ -217,7 +235,7 @@ exports.verifyProperty = async (req, res) => {
 
 exports.getFilters = async (req, res) => {
   try {
-    const types = await PropertyType.distinct("name", { status: "active" });
+    const types = await PropertyType.find({ status: "active" }).select("name image_url");
     const approvals = await ApprovalType.distinct("name", { status: "active" });
     // Fetch distinct cities instead of full location objects to prevent frontend crashes
     const locations = await Property.distinct("location.city");

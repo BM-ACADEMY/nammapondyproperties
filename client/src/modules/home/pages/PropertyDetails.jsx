@@ -78,6 +78,8 @@ const PropertyDetails = () => {
     if (!user) {
       toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
+    } else if (!user.phone) {
+      toast.error("Please update your mobile number in profile section");
     } else {
       submitEnquiry(user.name, user.email, user.phone);
     }
@@ -365,7 +367,7 @@ const PropertyDetails = () => {
                         property.location.longitude,
                       ]}
                       zoom={14}
-                      scrollWheelZoom={true}
+                      scrollWheelZoom={false}
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer

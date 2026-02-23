@@ -1,14 +1,21 @@
 import { useState } from "react";
-import { Form, Input, Button, message } from "antd";
-import { UserOutlined, LockOutlined, HomeOutlined } from "@ant-design/icons";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Form, Input, Button, message, Checkbox, Tabs } from "antd";
+import {
+  UserOutlined,
+  LockOutlined,
+  MailOutlined,
+  PhoneOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("email");
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -16,8 +23,10 @@ export default function Login() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      const identifier = activeTab === "email" ? values.email : values.phone;
+
       const res = await axios.post(`${API}/users/login`, {
-        email: values.email,
+        email: identifier, // Backend accepts email or phone in this field
         password: values.password,
       });
 
@@ -46,13 +55,41 @@ export default function Login() {
     }
   };
 
+  const handleGoogleSuccess = async (response) => {
+    try {
+      const res = await axios.post(`${API}/users/google-login`, {
+        credential: response.credential,
+      });
+
+      if (res.data.success) {
+        message.success("Login successful!");
+        localStorage.setItem("token", res.data.token);
+        login(res.data.user, res.data.token);
+
+        const role =
+          res.data.user?.role?.name?.toUpperCase() ||
+          res.data.user?.role_id?.role_name?.toUpperCase();
+
+        if (location.state?.from) {
+          navigate(location.state.from);
+        } else if (role === "ADMIN") navigate("/admin/dashboard");
+        else if (role === "SELLER") navigate("/seller/dashboard");
+        else navigate("/");
+      } else {
+        message.error(res.data.message || "Google Login failed");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error(
+        err.response?.data?.error || "Google authentication failed",
+      );
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-      
-      {/* INLINE STYLES FOR ANIMATIONS */}
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
       <style>
         {`
-          /* 1. Page Load Pop-In Transition */
           @keyframes popIn {
             0% { opacity: 0; transform: scale(0.9) translateY(20px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -61,7 +98,6 @@ export default function Login() {
             animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           }
 
-          /* 2. Image Zoom Effect */
           @keyframes slowZoom {
             0% { transform: scale(1); }
             100% { transform: scale(1.15); }
@@ -69,54 +105,88 @@ export default function Login() {
           .animate-bg-zoom {
             animation: slowZoom 25s infinite alternate ease-in-out;
           }
-          
-          /* 3. Text Fade Up */
+
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
           }
           .animate-fade-up {
-            animation: fadeInUp 1.2s ease-out 0.3s forwards; /* Added delay so it runs AFTER card pops in */
+            animation: fadeInUp 1.2s ease-out 0.3s forwards;
             opacity: 0;
+          }
+
+          .ant-tabs-nav {
+            margin-bottom: 24px !important;
+          }
+          .ant-tabs-tab-active .ant-tabs-tab-btn {
+            color: #2563eb !important;
+            font-weight: 700 !important;
+          }
+          .ant-tabs-ink-bar {
+            background: #2563eb !important;
           }
         `}
       </style>
 
-      {/* The Main Card - Added 'animate-pop-in' class here */}
       <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[550px] animate-pop-in">
-        
         {/* LEFT SIDE: Animated Real Estate Image */}
         <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
-          
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
-            style={{ 
-              backgroundImage: "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop')" 
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop')",
             }}
           ></div>
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-10">
             <div className="animate-fade-up">
-                <h3 className="text-white text-3xl font-bold tracking-wide leading-tight">
-                  Discover Premium <br/> Apartment Living
-                </h3>
-                <p className="text-gray-300 mt-4 text-base font-medium">
-                  Log in to explore exclusive properties in Pondicherry.
-                </p>
-                <div className="h-1 w-20 bg-blue-500 mt-6 rounded-full"></div>
+              <h3 className="text-white text-3xl font-bold tracking-wide leading-tight">
+                Discover Premium <br /> Apartment Living
+              </h3>
+              <p className="text-gray-300 mt-4 text-base font-medium">
+                Log in to explore exclusive properties in Pondicherry.
+              </p>
+              <div className="h-1 w-20 bg-blue-500 mt-6 rounded-full"></div>
             </div>
           </div>
         </div>
 
         {/* RIGHT SIDE: The Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-          
-          <div className="mb-8">
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto max-h-[90vh] md:max-h-none">
+          <div className="mb-4">
             <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
               Welcome Back
             </h2>
-            <p className="text-gray-500 mt-2 text-sm">Please sign-in to access your account.</p>
+            <p className="text-gray-500 mt-2 text-sm">
+              Please sign-in to access your account.
+            </p>
           </div>
+
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            centered
+            className="mb-4"
+            items={[
+              {
+                key: "email",
+                label: (
+                  <span className="flex items-center gap-2">
+                    <MailOutlined /> Email
+                  </span>
+                ),
+              },
+              {
+                key: "phone",
+                label: (
+                  <span className="flex items-center gap-2">
+                    <PhoneOutlined /> Phone
+                  </span>
+                ),
+              },
+            ]}
+          />
 
           <Form
             layout="vertical"
@@ -125,32 +195,60 @@ export default function Login() {
             size="large"
             className="w-full"
           >
-            <Form.Item
-              label={<span className="font-semibold text-gray-700">Email Address</span>}
-              name="email"
-              rules={[
-                { required: true, message: "Please enter your email" },
-                { type: "email", message: "Invalid email format" },
-              ]}
-            >
-              <Input 
-                prefix={<UserOutlined className="text-gray-400 mr-2" />} 
-                placeholder="john@example.com" 
-                className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
-              />
-            </Form.Item>
+            {activeTab === "email" ? (
+              <Form.Item
+                label={
+                  <span className="font-semibold text-gray-700">
+                    Email Address
+                  </span>
+                }
+                name="email"
+                rules={[
+                  { required: true, message: "Email is required" },
+                  { type: "email", message: "Invalid email" },
+                ]}
+              >
+                <Input
+                  prefix={<MailOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Enter your email"
+                  className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+                />
+              </Form.Item>
+            ) : (
+              <Form.Item
+                label={
+                  <span className="font-semibold text-gray-700">
+                    Phone Number
+                  </span>
+                }
+                name="phone"
+                rules={[
+                  { required: true, message: "Phone is required" },
+                  { pattern: /^[0-9]{10}$/, message: "Invalid number" },
+                ]}
+              >
+                <Input
+                  prefix={<PhoneOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Enter phone number"
+                  maxLength={10}
+                  className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+                />
+              </Form.Item>
+            )}
 
             <Form.Item
-              label={<span className="font-semibold text-gray-700">Password</span>}
+              label={
+                <span className="font-semibold text-gray-700">Password</span>
+              }
               name="password"
               rules={[
                 { required: true, message: "Please enter your password" },
                 { min: 6, message: "Password must be at least 6 characters" },
               ]}
             >
-              <Input.Password 
-                prefix={<LockOutlined className="text-gray-400 mr-2" />} 
-                placeholder="••••••••" 
+              <Input.Password
+                prefix={<LockOutlined className="text-gray-400 mr-2" />}
+                placeholder="••••••••"
                 className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
               />
             </Form.Item>
@@ -175,11 +273,36 @@ export default function Login() {
                 Sign In
               </Button>
             </Form.Item>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => message.error("Google Login Failed")}
+                useOneTap
+                theme="outline"
+                shape="rectangular"
+                width="100%"
+              />
+            </div>
           </Form>
 
           <div className="text-center mt-6 text-sm">
             <span className="text-gray-500">New to Namma Pondy? </span>
-            <Link to="/signup" className="text-blue-700 hover:text-blue-900 font-bold ml-1 hover:underline">
+            <Link
+              to="/signup"
+              className="text-blue-700 hover:text-blue-900 font-bold ml-1 hover:underline"
+            >
               create an account
             </Link>
           </div>

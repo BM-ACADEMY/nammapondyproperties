@@ -1,23 +1,25 @@
-
-
-import './App.css'
-import AppRoutes from './AppRoute';
-import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-
+import "./App.css";
+import AppRoutes from "./AppRoute";
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { NavProvider } from "./context/NavContext";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <>
       <div>
+        <Toaster position="top-center" reverseOrder={false} />
         <AuthProvider>
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
+          <NavProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </NavProvider>
         </AuthProvider>
       </div>
     </>
-  )
+  );
 }
 
 export default App;

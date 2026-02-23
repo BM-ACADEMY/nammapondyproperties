@@ -50,7 +50,7 @@ const MapComponent = ({ properties }) => {
       <MapContainer
         center={defaultPosition}
         zoom={13}
-        scrollWheelZoom={true}
+        scrollWheelZoom={false}
         className="h-full w-full z-0"
         style={{ height: "100%", minHeight: "500px" }}
       >

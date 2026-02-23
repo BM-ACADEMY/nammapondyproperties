@@ -2,9 +2,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Eye } from "lucide-react";
 import axios from "axios";
+import { toast } from "react-hot-toast";
+import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 
 const PropertyCard = ({ property, onWhatsAppClick }) => {
+  const { user } = useAuth();
   const handleIncrementView = async (id) => {
     try {
       await axios.put(
@@ -145,6 +148,16 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                 onWhatsAppClick(e, property);
               } else {
                 // Default handling: Track lead then open WhatsApp
+                if (!user) {
+                  toast.error("Please login to contact the seller");
+                  return;
+                }
+                if (!user.phone) {
+                  toast.error(
+                    "Please update your mobile number in profile section",
+                  );
+                  return;
+                }
                 const phoneNumber =
                   property.mobile ||
                   property.seller_id?.phoneNumber ||

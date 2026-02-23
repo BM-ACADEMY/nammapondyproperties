@@ -25,22 +25,29 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* 🔑 Restore auth ONCE (on refresh) */
+  /* 🔑 Restore auth ONCE (on refresh) and Validate session */
   useEffect(() => {
-    try {
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
+    const validateSession = async () => {
+      try {
+        const storedToken = localStorage.getItem("token");
+        const storedUser = localStorage.getItem("user");
 
-      if (storedToken && storedUser) {
-        const decryptedUser = decryptData(storedUser);
-        if (decryptedUser) {
-          setToken(storedToken);
-          setUser(decryptedUser);
+        if (storedToken && storedUser) {
+          const decryptedUser = decryptData(storedUser);
+          if (decryptedUser) {
+            setToken(storedToken);
+            setUser(decryptedUser);
+
+            // 🛡️ Validate with server immediately to ensure user still exists in DB
+            await refetchUser();
+          }
         }
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    validateSession();
   }, []);
 
   /* 🔁 Sync storage (NO AUTO LOGOUT HERE) */

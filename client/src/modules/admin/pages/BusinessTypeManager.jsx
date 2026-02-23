@@ -71,8 +71,9 @@ const BusinessTypeManager = () => {
       }
       setIsModalOpen(false);
       fetchBusinessTypes();
-    } catch {
-      message.error("Operation failed");
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || "Operation failed";
+      message.error(errorMessage);
     }
   };
 

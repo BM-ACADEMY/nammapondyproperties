@@ -8,6 +8,9 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT
 const generateToken = (id) => {
@@ -38,13 +41,20 @@ exports.createUser = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
-    // Check if email already exists
-    let existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already in use" });
+    if (!email && !phone) {
+      return res.status(400).json({ error: "Email or Phone is required" });
     }
 
-    // Get default "user" role
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+    });
+
+    if (existingUser) {
+      const field = existingUser.email === email ? "Email" : "Phone";
+      return res.status(400).json({ error: `${field} already in use` });
+    }
+
     // Get Role
     let roleName = "user";
     if (
@@ -53,17 +63,11 @@ exports.createUser = async (req, res) => {
       req.body.role === "builder" ||
       req.body.role === "owner"
     ) {
-      // Using 'seller' as the main role for all business types for now, or we can use specific roles if they exist.
-      // The user request says: "business type-owner,builder,agent(this only for seller only)"
-      // It seems 'seller' is the role, and 'businessType' distinguishes them.
       roleName = "seller";
     }
 
     const userRole = await Role.findOne({ role_name: roleName });
     if (!userRole) {
-      // Fallback to user if seller role not found (shouldn't happen if seeded)
-      // Or create it? No, better to error or fallback.
-      // Let's try to find 'user' again if 'seller' failed
       const defaultRole = await Role.findOne({ role_name: "user" });
       if (!defaultRole)
         return res.status(500).json({ error: "Default user role not found" });
@@ -72,42 +76,31 @@ exports.createUser = async (req, res) => {
       role_id = userRole._id;
     }
 
-    // Generate random customId (e.g., USER-123456)
     const customId = `USER-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
-
-    // Generate random referralCode (e.g., REF-XYZ123)
     const referralCode = `REF-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
-    // Create user – password will be hashed automatically by pre-save hook
     const user = new User({
-      name,
+      name: name || "User",
       email,
       phone,
-      password, // ← will be hashed in pre('save')
+      password,
       role_id: userRole._id,
       businessType: req.body.businessType || null,
-      isVerified: false,
+      isVerified: true, // Auto-verify for immediate login
       customId,
       referralCode,
     });
 
     await user.save();
 
-    // Generate and send OTP for email verification
-    const otp = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6 chars
-    user.otp = otp;
-    user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-    await user.save();
-
-    await sendEmail(
-      email,
-      "Verify Your Email - OTP",
-      `Welcome! Your OTP is: ${otp}\nIt expires in 10 minutes.`,
-    );
+    // Generate token for auto-login
+    const token = generateToken(user._id);
 
     res.status(201).json({
-      message: "Account created. Please verify your email with the OTP sent.",
-      email: user.email,
+      success: true,
+      message: "Account created successfully",
+      user: { ...user.toObject(), password: undefined },
+      token,
     });
   } catch (error) {
     console.error(error);
@@ -209,6 +202,11 @@ exports.updateUser = async (req, res) => {
     const userId = req.params.id;
     let updateData = req.body;
 
+    // Sanitize businessType if it's an empty string to prevent ObjectId casting error
+    if (updateData.businessType === "") {
+      updateData.businessType = null;
+    }
+
     // Check if image was uploaded
     if (req.file) {
       updateData.profile_image = `/uploads/profiles/${req.file.filename}`;
@@ -282,10 +280,22 @@ exports.deleteUser = async (req, res) => {
 };
 
 exports.sendOtp = async (req, res) => {
-  const { email } = req.body;
+  const { email, phone, otpEmail } = req.body;
+  const identifier = email || phone;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+    });
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Use otpEmail if provided, otherwise fallback to user's registered email
+    const targetEmail = otpEmail || user.email;
+    if (!targetEmail) {
+      return res.status(400).json({
+        error: "No email provided for OTP",
+        requiresEmail: true,
+      });
+    }
 
     const otp = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6-char OTP
     user.otp = otp;
@@ -293,23 +303,34 @@ exports.sendOtp = async (req, res) => {
     await user.save();
 
     await sendEmail(
-      email,
+      targetEmail,
       "Your OTP Code",
       `Your OTP is ${otp}. It expires in 10 minutes.`,
     );
-    res.json({ message: "OTP sent to email" });
+    res.json({
+      message: "OTP sent to email",
+      email: targetEmail,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
 exports.verifyOtp = async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, phone, otp } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+    });
     if (!user) return res.status(404).json({ error: "User not found" });
+
     if (user.otp !== otp || user.otpExpires < Date.now()) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    // Persist recovery email if user doesn't have one
+    if (!user.email && email) {
+      user.email = email;
     }
 
     user.isVerified = true;
@@ -324,10 +345,13 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password, verifiedViaOtp } = req.body;
+  const { email, phone, password, verifiedViaOtp } = req.body;
+  const loginIdentifier = email || phone;
 
   try {
-    const user = await User.findOne({ email })
+    const user = await User.findOne({
+      $or: [{ email: loginIdentifier }, { phone: loginIdentifier }],
+    })
       .select("+password")
       .populate("role_id")
       .populate("businessType");
@@ -360,16 +384,72 @@ exports.login = async (req, res) => {
   }
 };
 
+exports.googleLogin = async (req, res) => {
+  const { credential } = req.body;
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await User.findOne({ email })
+      .populate("role_id")
+      .populate("businessType");
+
+    if (!user) {
+      // Get default "user" role
+      const userRole = await Role.findOne({ role_name: "user" });
+      if (!userRole) {
+        return res.status(500).json({ error: "Default user role not found" });
+      }
+
+      // Create new user if not exists
+      user = new User({
+        name,
+        email,
+        isVerified: true,
+        role_id: userRole._id,
+        googleId,
+        profile_image: picture,
+      });
+      await user.save();
+      user = await User.findById(user._id).populate("role_id");
+    }
+
+    res.json({
+      success: true,
+      message: "Google login successful",
+      user: { ...user.toObject(), password: undefined },
+      token: generateToken(user._id),
+    });
+  } catch (error) {
+    console.error("Google Login Error:", error);
+    res.status(400).json({ error: "Google authentication failed" });
+  }
+};
+
 // Add this new function
 // controllers/userController.js → resetPassword
 
 exports.resetPassword = async (req, res) => {
-  const { email, newPassword } = req.body;
+  const { email, phone, newPassword } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
+    });
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
+    }
+
+    // Persist recovery email if user doesn't have one
+    if (!user.email && email) {
+      user.email = email;
     }
 
     if (!user.isVerified) {
@@ -378,9 +458,7 @@ exports.resetPassword = async (req, res) => {
         .json({ error: "Account not verified. Please verify first." });
     }
 
-    // Optional: add more password strength rules here if needed
-
-    user.password = newPassword; // ← will be hashed by pre-save hook
+    user.password = newPassword;
     await user.save();
 
     res.json({ message: "Password reset successfully" });

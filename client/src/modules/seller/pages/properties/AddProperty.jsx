@@ -3,7 +3,7 @@ import PropertyForm from "../../../../components/Property/PropertyForm";
 import axios from "axios";
 import { message } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "../../../../context/AuthContext";
 
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
@@ -13,7 +13,7 @@ const AddProperty = () => {
   const editId = searchParams.get("edit");
   const [initialData, setInitialData] = useState({});
 
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
 
   const checkLimit = React.useCallback(async () => {
     try {
@@ -52,6 +52,7 @@ const AddProperty = () => {
 
   const onSubmit = async (formData) => {
     setLoading(true);
+    let response = null;
     try {
       if (editId) {
         await axios.put(
@@ -66,7 +67,7 @@ const AddProperty = () => {
         );
         message.success("Property updated successfully!");
       } else {
-        await axios.post(
+        response = await axios.post(
           `${import.meta.env.VITE_API_URL}/properties/create-property`,
           formData,
           {
@@ -77,8 +78,15 @@ const AddProperty = () => {
           },
         );
         message.success("Property added successfully!");
+
+        // 🔄 Refetch user to get the new 'SELLER' role
+        await refetchUser();
       }
-      navigate(editId ? -1 : "/seller/my-properties");
+
+      // Redirect to My Properties in the dashboard
+      navigate(
+        `/seller/my-properties?success=true${!editId ? `&property_id=${response.data._id}` : ""}`,
+      );
     } catch (error) {
       console.error("Error saving property:", error);
       const errorMessage = error.response?.data?.error;
