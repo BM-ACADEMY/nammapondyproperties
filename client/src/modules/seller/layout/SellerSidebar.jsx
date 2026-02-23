@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 
-
 const { Sider } = Layout;
 
 const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {

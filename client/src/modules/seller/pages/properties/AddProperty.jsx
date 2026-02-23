@@ -52,6 +52,7 @@ const AddProperty = () => {
 
   const onSubmit = async (formData) => {
     setLoading(true);
+    let response = null;
     try {
       if (editId) {
         await axios.put(
@@ -66,7 +67,7 @@ const AddProperty = () => {
         );
         message.success("Property updated successfully!");
       } else {
-        await axios.post(
+        response = await axios.post(
           `${import.meta.env.VITE_API_URL}/properties/create-property`,
           formData,
           {
@@ -83,7 +84,9 @@ const AddProperty = () => {
       }
 
       // Redirect to My Properties in the dashboard
-      navigate(`/seller/my-properties?success=true${!editId ? `&property_id=${response.data._id}` : ""}`);
+      navigate(
+        `/seller/my-properties?success=true${!editId ? `&property_id=${response.data._id}` : ""}`,
+      );
     } catch (error) {
       console.error("Error saving property:", error);
       const errorMessage = error.response?.data?.error;

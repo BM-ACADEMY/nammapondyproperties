@@ -100,14 +100,15 @@ const MyProperties = () => {
     const success = params.get("success");
     const property_id = params.get("property_id");
 
-    if (success && properties.length > 0) {
-      message.success({
-        content: "🚀 Promote your property for 10x faster visibility!",
-        duration: 5,
-        // Make it appear at the top
-        style: { marginTop: '10vh' },
-        icon: <Plus className="text-blue-500" />,
-      });
+    if (properties.length > 0) {
+      if (success) {
+        message.success({
+          content: "🚀 Promote your property for 10x faster visibility!",
+          duration: 5,
+          style: { marginTop: "10vh" },
+          icon: <Plus className="text-blue-500" />,
+        });
+      }
 
       if (property_id) {
         const prop = properties.find((p) => p._id === property_id);
@@ -117,8 +118,14 @@ const MyProperties = () => {
         }
       }
 
-      // Clear the query param without refreshing
-      window.history.replaceState({}, document.title, window.location.pathname);
+      if (success || property_id) {
+        // Clear the query param without refreshing
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      }
     }
   }, [properties]);
 
@@ -178,7 +185,7 @@ const MyProperties = () => {
     try {
       await api.post("/marketing/requests", {
         property_id: selectedProperty._id,
-        plan_id: planId
+        plan_id: planId,
       });
       message.success("Request sent! Our team will contact you shortly.");
       setIsMarketingModalOpen(false);
@@ -236,10 +243,11 @@ const MyProperties = () => {
             }
             navigate("/seller/add-property");
           }}
-          className={`h-10 px-6 rounded-lg flex items-center gap-2 ${properties.length >= 2
-            ? "bg-orange-500 hover:bg-orange-600 border-orange-500"
-            : "bg-blue-600 hover:bg-blue-700 border-blue-600"
-            }`}
+          className={`h-10 px-6 rounded-lg flex items-center gap-2 ${
+            properties.length >= 2
+              ? "bg-orange-500 hover:bg-orange-600 border-orange-500"
+              : "bg-blue-600 hover:bg-blue-700 border-blue-600"
+          }`}
         >
           {properties.length >= 2 ? "Request Limit" : "Add Property"}
         </Button>
@@ -359,15 +367,25 @@ const MyProperties = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     {(() => {
-                      const request = marketingRequests.find(r => r.property_id?._id === property._id);
-                      const hasActiveRequest = request && ["pending", "contacted"].includes(request.status);
+                      const request = marketingRequests.find(
+                        (r) => r.property_id?._id === property._id,
+                      );
+                      const hasActiveRequest =
+                        request &&
+                        ["pending", "contacted"].includes(request.status);
 
                       return (
                         <Button
                           type={hasActiveRequest ? "default" : "primary"}
                           size="small"
                           disabled={hasActiveRequest}
-                          icon={hasActiveRequest ? <CheckCircle size={14} /> : <Plus size={14} />}
+                          icon={
+                            hasActiveRequest ? (
+                              <CheckCircle size={14} />
+                            ) : (
+                              <Plus size={14} />
+                            )
+                          }
                           onClick={() => {
                             setSelectedProperty(property);
                             setIsMarketingModalOpen(true);
@@ -498,7 +516,8 @@ const MyProperties = () => {
           </div>
 
           <div className="mt-8 text-center text-gray-500 text-sm">
-            No payment required today. Our team will contact you to discuss the details.
+            No payment required today. Our team will contact you to discuss the
+            details.
           </div>
         </div>
       </Modal>
@@ -719,7 +738,7 @@ const MyProperties = () => {
                     children: (
                       <div className="pt-4 space-y-8 animate-fadeIn">
                         {selectedProperty.key_attributes &&
-                          selectedProperty.key_attributes.length > 0 ? (
+                        selectedProperty.key_attributes.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {selectedProperty.key_attributes.map(
                               (attr, index) =>
