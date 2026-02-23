@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { SafetyCertificateOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { useLocation, useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import { useState, useEffect } from "react";
+import { Form, Input, Button, message } from "antd";
+import {
+  SafetyCertificateOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 export default function OtpVerify() {
   const [loading, setLoading] = useState(false);
@@ -13,15 +16,15 @@ export default function OtpVerify() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { email, password, purpose, from } = location.state || {};
+  const { email, identifier, password, purpose, from } = location.state || {};
   const { login } = useAuth();
 
   // Security redirect if no email is present
   useEffect(() => {
-    if (!email) {
-      navigate('/forgot-password');
+    if (!email && !identifier) {
+      navigate("/forgot-password");
     }
-  }, [email, navigate]);
+  }, [email, identifier, navigate]);
 
   useEffect(() => {
     if (!canResend && countdown > 0) {
@@ -34,45 +37,52 @@ export default function OtpVerify() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      await api.post('/users/verify-otp', {
-        email,
+      const isPhoneIdentifier = identifier && !identifier.includes("@");
+
+      const payload = {
         otp: values.otp,
-      });
+        email: !isPhoneIdentifier ? identifier || email : email, // Always send 'email' if we have it
+        phone: isPhoneIdentifier ? identifier : undefined,
+      };
 
-      message.success('OTP verified successfully!');
+      await api.post("/users/verify-otp", payload);
 
-      if (from === 'signup' && password) {
+      message.success("OTP verified successfully!");
+
+      if (from === "signup" && password) {
         // Auto login for new users
         try {
-          const loginRes = await api.post('/users/login', {
+          const loginRes = await api.post("/users/login", {
             email,
             password,
           });
           if (loginRes.data.success) {
             login(loginRes.data.user, loginRes.data.token);
-            message.success('Logged in successfully!');
-            navigate('/');
+            message.success("Logged in successfully!");
+            navigate("/");
             return;
           }
         } catch (loginErr) {
-          console.error('Auto-login failed:', loginErr);
-          message.info('Verification successful. Please login manually.');
-          navigate('/login');
+          console.error("Auto-login failed:", loginErr);
+          message.info("Verification successful. Please login manually.");
+          navigate("/login");
           return;
         }
       }
 
-      if (purpose === 'reset') {
-        navigate('/reset-password', { state: { email } });
-      } else if (purpose === 'seller-signup') {
-        message.success('Seller account verified! Please login to access your dashboard.');
-        navigate('/login');
+      if (purpose === "reset") {
+        navigate("/reset-password", { state: { email, identifier } });
+      } else if (purpose === "seller-signup") {
+        message.success(
+          "Seller account verified! Please login to access your dashboard.",
+        );
+        navigate("/login");
       } else {
-        message.success('Account verified! Please login.');
-        navigate('/login');
+        message.success("Account verified! Please login.");
+        navigate("/login");
       }
     } catch (err) {
-      message.error(err.response?.data?.error || 'Invalid or expired OTP');
+      message.error(err.response?.data?.error || "Invalid or expired OTP");
     } finally {
       setLoading(false);
     }
@@ -82,12 +92,19 @@ export default function OtpVerify() {
     if (!canResend) return;
     setResendLoading(true);
     try {
-      await api.post('/users/send-otp', { email });
-      message.success('New OTP sent to your email!');
+      const isPhoneIdentifier = identifier && !identifier.includes("@");
+      const payload = {
+        email: !isPhoneIdentifier ? identifier || email : undefined,
+        phone: isPhoneIdentifier ? identifier : undefined,
+        otpEmail: isPhoneIdentifier ? email : undefined, // Here 'email' is the target email
+      };
+
+      await api.post("/users/send-otp", payload);
+      message.success("New OTP sent to your email!");
       setCanResend(false);
       setCountdown(60);
     } catch (err) {
-      message.error(err.response?.data?.error || 'Failed to resend OTP');
+      message.error(err.response?.data?.error || "Failed to resend OTP");
     } finally {
       setResendLoading(false);
     }
@@ -97,7 +114,6 @@ export default function OtpVerify() {
 
   return (
     <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-
       {/* SHARED ANIMATION STYLES */}
       <style>
         {`
@@ -128,20 +144,24 @@ export default function OtpVerify() {
 
       {/* Main Card */}
       <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[500px] animate-pop-in">
-
         {/* LEFT SIDE: Visual (Updated with new image) */}
         <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
           <div
             className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
             style={{
               // Replace the URL below with your desired real estate image URL
-              backgroundImage: "url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1000&auto=format&fit=crop')"
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1000&auto=format&fit=crop')",
             }}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-10">
             <div className="animate-fade-up">
-              <h3 className="text-white text-3xl font-bold tracking-wide">Secure Access</h3>
-              <p className="text-gray-300 mt-2 text-base">Verify your identity to keep your account safe.</p>
+              <h3 className="text-white text-3xl font-bold tracking-wide">
+                Secure Access
+              </h3>
+              <p className="text-gray-300 mt-2 text-base">
+                Verify your identity to keep your account safe.
+              </p>
               <div className="h-1 w-16 bg-blue-500 mt-6 rounded-full"></div>
             </div>
           </div>
@@ -171,8 +191,8 @@ export default function OtpVerify() {
               name="otp"
               className="flex justify-center mb-8"
               rules={[
-                { required: true, message: 'Please enter the code' },
-                { len: 6, message: 'Code must be 6 digits' },
+                { required: true, message: "Please enter the code" },
+                { len: 6, message: "Code must be 6 digits" },
               ]}
             >
               {/* Modern Individual Digit Input */}
@@ -208,7 +228,10 @@ export default function OtpVerify() {
                 </Button>
               ) : (
                 <p className="text-gray-500 text-sm font-medium">
-                  Resend code in <span className="text-blue-600 tabular-nums">{countdown}s</span>
+                  Resend code in{" "}
+                  <span className="text-blue-600 tabular-nums">
+                    {countdown}s
+                  </span>
                 </p>
               )}
             </div>

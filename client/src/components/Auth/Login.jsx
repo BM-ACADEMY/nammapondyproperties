@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Form, Input, Button, message, Checkbox } from "antd";
-import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
-import { motion } from "framer-motion";
+import { Form, Input, Button, message, Checkbox, Tabs } from "antd";
+import {
+  UserOutlined,
+  LockOutlined,
+  MailOutlined,
+  PhoneOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
@@ -11,6 +15,7 @@ const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("email");
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -18,8 +23,10 @@ export default function Login() {
   const onFinish = async (values) => {
     setLoading(true);
     try {
+      const identifier = activeTab === "email" ? values.email : values.phone;
+
       const res = await axios.post(`${API}/users/login`, {
-        email: values.loginIdentifier, // Backend now accepts this as email or phone
+        email: identifier, // Backend accepts email or phone in this field
         password: values.password,
       });
 
@@ -73,17 +80,16 @@ export default function Login() {
       }
     } catch (err) {
       console.error(err);
-      message.error(err.response?.data?.error || "Google authentication failed");
+      message.error(
+        err.response?.data?.error || "Google authentication failed",
+      );
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-
-      {/* INLINE STYLES FOR ANIMATIONS */}
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
       <style>
         {`
-          /* 1. Page Load Pop-In Transition */
           @keyframes popIn {
             0% { opacity: 0; transform: scale(0.9) translateY(20px); }
             100% { opacity: 1; transform: scale(1) translateY(0); }
@@ -92,7 +98,6 @@ export default function Login() {
             animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
           }
 
-          /* 2. Image Zoom Effect */
           @keyframes slowZoom {
             0% { transform: scale(1); }
             100% { transform: scale(1.15); }
@@ -101,28 +106,36 @@ export default function Login() {
             animation: slowZoom 25s infinite alternate ease-in-out;
           }
 
-          /* 3. Text Fade Up */
           @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
           }
           .animate-fade-up {
-            animation: fadeInUp 1.2s ease-out 0.3s forwards; /* Added delay so it runs AFTER card pops in */
+            animation: fadeInUp 1.2s ease-out 0.3s forwards;
             opacity: 0;
+          }
+
+          .ant-tabs-nav {
+            margin-bottom: 24px !important;
+          }
+          .ant-tabs-tab-active .ant-tabs-tab-btn {
+            color: #2563eb !important;
+            font-weight: 700 !important;
+          }
+          .ant-tabs-ink-bar {
+            background: #2563eb !important;
           }
         `}
       </style>
 
-      {/* The Main Card - Added 'animate-pop-in' class here */}
       <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[550px] animate-pop-in">
-
         {/* LEFT SIDE: Animated Real Estate Image */}
         <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
-
           <div
             className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
             style={{
-              backgroundImage: "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop')"
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?q=80&w=1000&auto=format&fit=crop')",
             }}
           ></div>
 
@@ -140,14 +153,40 @@ export default function Login() {
         </div>
 
         {/* RIGHT SIDE: The Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
-
-          <div className="mb-8">
+        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center overflow-y-auto max-h-[90vh] md:max-h-none">
+          <div className="mb-4">
             <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
               Welcome Back
             </h2>
-            <p className="text-gray-500 mt-2 text-sm">Please sign-in to access your account.</p>
+            <p className="text-gray-500 mt-2 text-sm">
+              Please sign-in to access your account.
+            </p>
           </div>
+
+          <Tabs
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            centered
+            className="mb-4"
+            items={[
+              {
+                key: "email",
+                label: (
+                  <span className="flex items-center gap-2">
+                    <MailOutlined /> Email
+                  </span>
+                ),
+              },
+              {
+                key: "phone",
+                label: (
+                  <span className="flex items-center gap-2">
+                    <PhoneOutlined /> Phone
+                  </span>
+                ),
+              },
+            ]}
+          />
 
           <Form
             layout="vertical"
@@ -156,22 +195,51 @@ export default function Login() {
             size="large"
             className="w-full"
           >
-            <Form.Item
-              label={<span className="font-semibold text-gray-700">Email or Phone Number</span>}
-              name="loginIdentifier"
-              rules={[
-                { required: true, message: "Please enter your email or phone number" },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined className="text-gray-400 mr-2" />}
-                placeholder="Email or Phone"
-                className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
-              />
-            </Form.Item>
+            {activeTab === "email" ? (
+              <Form.Item
+                label={
+                  <span className="font-semibold text-gray-700">
+                    Email Address
+                  </span>
+                }
+                name="email"
+                rules={[
+                  { required: true, message: "Email is required" },
+                  { type: "email", message: "Invalid email" },
+                ]}
+              >
+                <Input
+                  prefix={<MailOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Enter your email"
+                  className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+                />
+              </Form.Item>
+            ) : (
+              <Form.Item
+                label={
+                  <span className="font-semibold text-gray-700">
+                    Phone Number
+                  </span>
+                }
+                name="phone"
+                rules={[
+                  { required: true, message: "Phone is required" },
+                  { pattern: /^[0-9]{10}$/, message: "Invalid number" },
+                ]}
+              >
+                <Input
+                  prefix={<PhoneOutlined className="text-gray-400 mr-2" />}
+                  placeholder="Enter phone number"
+                  maxLength={10}
+                  className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
+                />
+              </Form.Item>
+            )}
 
             <Form.Item
-              label={<span className="font-semibold text-gray-700">Password</span>}
+              label={
+                <span className="font-semibold text-gray-700">Password</span>
+              }
               name="password"
               rules={[
                 { required: true, message: "Please enter your password" },
@@ -211,7 +279,9 @@ export default function Login() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with
+                </span>
               </div>
             </div>
 
@@ -229,7 +299,10 @@ export default function Login() {
 
           <div className="text-center mt-6 text-sm">
             <span className="text-gray-500">New to Namma Pondy? </span>
-            <Link to="/signup" className="text-blue-700 hover:text-blue-900 font-bold ml-1 hover:underline">
+            <Link
+              to="/signup"
+              className="text-blue-700 hover:text-blue-900 font-bold ml-1 hover:underline"
+            >
               create an account
             </Link>
           </div>

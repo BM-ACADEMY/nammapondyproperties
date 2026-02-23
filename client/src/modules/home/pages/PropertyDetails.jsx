@@ -365,7 +365,7 @@ const PropertyDetails = () => {
                         property.location.longitude,
                       ]}
                       zoom={14}
-                      scrollWheelZoom={true}
+                      scrollWheelZoom={false}
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer

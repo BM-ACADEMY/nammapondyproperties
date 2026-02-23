@@ -627,7 +627,7 @@ const PropertyForm = ({
               <MapContainer
                 center={mapPosition}
                 zoom={13}
-                scrollWheelZoom={true}
+                scrollWheelZoom={false}
                 style={{ height: "100%", width: "100%" }}
               >
                 <TileLayer
