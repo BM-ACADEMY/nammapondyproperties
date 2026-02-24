@@ -7,12 +7,14 @@ import { useAuth } from "../../../context/AuthContext";
 import LoginModal from "../../../components/Auth/LoginModal";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "./PropertyCard";
+import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
 const FeaturedProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const [enquiryLoading, setEnquiryLoading] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -47,7 +49,8 @@ const FeaturedProperties = () => {
 
     if (user) {
       if (!user.phone) {
-        toast.error("Please update your mobile number in profile section");
+        setSelectedProperty(property);
+        setShowPhoneModal(true);
       } else {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
@@ -58,7 +61,6 @@ const FeaturedProperties = () => {
   };
 
   const submitEnquiry = async (property, name, email, phone) => {
-    setEnquiryLoading(true);
     const sellerPhone = property.seller_id.phone;
     const locationStr =
       typeof property.location === "string"
@@ -82,7 +84,6 @@ const FeaturedProperties = () => {
       toast.error("Redirecting to WhatsApp...");
     } finally {
       window.open(whatsappUrl, "_blank");
-      setEnquiryLoading(false);
     }
   };
 
@@ -140,6 +141,20 @@ const FeaturedProperties = () => {
           </Link>
         </div>
       </div>
+      <PhoneUpdateModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={(updatedPhone) => {
+          if (user && selectedProperty) {
+            submitEnquiry(
+              selectedProperty,
+              user.name,
+              user.email,
+              updatedPhone,
+            );
+          }
+        }}
+      />
     </section>
   );
 };

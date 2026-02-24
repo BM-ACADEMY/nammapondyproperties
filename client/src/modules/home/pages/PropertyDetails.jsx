@@ -22,6 +22,7 @@ import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
 import Loader from "../../../components/Common/Loader";
+import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -44,6 +45,8 @@ const PropertyDetails = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -79,7 +82,7 @@ const PropertyDetails = () => {
       toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
     } else if (!user.phone) {
-      toast.error("Please update your mobile number in profile section");
+      setShowPhoneModal(true);
     } else {
       submitEnquiry(user.name, user.email, user.phone);
     }
@@ -582,6 +585,15 @@ const PropertyDetails = () => {
           </div>
         )}
       </div>
+      <PhoneUpdateModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={(updatedPhone) => {
+          if (user) {
+            submitEnquiry(user.name, user.email, updatedPhone);
+          }
+        }}
+      />
     </div>
   );
 };
