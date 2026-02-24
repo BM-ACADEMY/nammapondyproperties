@@ -1,37 +1,31 @@
 import { useState } from "react";
-import { Form, Input, Button, message } from "antd";
-import {
-  MailOutlined,
-  ArrowLeftOutlined,
-  KeyOutlined,
-} from "@ant-design/icons";
+import { message } from "antd";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../../services/api"; // Consistent with your OTP page
+import api from "../../services/api";
 
 export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
   const [showEmailField, setShowEmailField] = useState(false);
   const [identifier, setIdentifier] = useState("");
+  const [otpEmail, setOtpEmail] = useState("");
   const navigate = useNavigate();
 
-  const onFinish = async (values) => {
+  const onSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
     try {
-      const isEmail = values.identifier.includes("@");
-
+      const isEmail = identifier.includes("@");
       const payload = {
-        email: isEmail ? values.identifier : undefined,
-        phone: !isEmail ? values.identifier : undefined,
-        otpEmail: values.otpEmail,
+        email: isEmail ? identifier : undefined,
+        phone: !isEmail ? identifier : undefined,
+        otpEmail: showEmailField ? otpEmail : undefined,
       };
-
       const res = await api.post("/users/send-otp", payload);
       message.success("OTP sent to your email!");
-
       navigate("/otp-verify", {
         state: {
-          email: res.data.email, // Use the email the backend sent OTP to
-          identifier: values.identifier, // The original phone or email entered
+          email: res.data.email,
+          identifier,
           purpose: "reset",
           from: "forgot-password",
         },
@@ -39,7 +33,6 @@ export default function ForgotPassword() {
     } catch (err) {
       if (err.response?.data?.requiresEmail) {
         setShowEmailField(true);
-        setIdentifier(values.identifier);
         message.info("Please provide an email to receive the OTP");
       } else {
         message.error(err.response?.data?.error || "Failed to send reset code");
@@ -50,150 +43,71 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-      {/* ... styles ... */}
-      <style>
-        {`
-          @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          .animate-pop-in {
-            animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          }
-          @keyframes slowZoom {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.15); }
-          }
-          .animate-bg-zoom {
-            animation: slowZoom 25s infinite alternate ease-in-out;
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-up {
-            animation: fadeInUp 1.2s ease-out 0.3s forwards;
-            opacity: 0;
-          }
-        `}
-      </style>
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gray-50 p-4">
+      <div className="bg-white text-gray-500 w-full max-w-sm mx-4 md:p-8 p-6 text-left text-sm rounded-2xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.08)]">
 
-      {/* Main Card */}
-      <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[500px] animate-pop-in">
-        {/* LEFT SIDE */}
-        <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
-          <div
-            className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1000&auto=format&fit=crop')",
-            }}
-          ></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-10">
-            <div className="animate-fade-up">
-              <h3 className="text-white text-3xl font-bold tracking-wide">
-                Recover Access
-              </h3>
-              <p className="text-gray-300 mt-2 text-base">
-                We'll help you get back to finding your next home.
-              </p>
-              <div className="h-1 w-16 bg-blue-500 mt-6 rounded-full"></div>
-            </div>
-          </div>
-        </div>
+        {/* Back link */}
+        <Link
+          to="/login"
+          className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-500 transition-colors text-xs font-medium mb-6 w-fit"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to login
+        </Link>
 
-        {/* RIGHT SIDE */}
-        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
-          <Link
-            to="/login"
-            className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-6 text-sm font-medium w-fit"
+        {/* Header */}
+        <h2 className="text-2xl font-semibold mb-1 text-gray-800">
+          Forgot password?
+        </h2>
+        <p className="text-gray-400 text-xs mb-6">
+          {showEmailField
+            ? "Enter an email address to receive your reset code."
+            : "Enter your registered email or phone number."}
+        </p>
+
+        <form onSubmit={onSubmit}>
+          {/* Identifier Input */}
+          <input
+            className="w-full bg-transparent border my-1 border-gray-300/60 outline-none rounded-full py-2.5 px-4 text-gray-700 placeholder-gray-400 focus:border-indigo-400 transition-colors disabled:opacity-60"
+            type="text"
+            placeholder="Email or phone number"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            disabled={showEmailField}
+            required
+          />
+
+          {/* OTP Email Field (shown when phone user needs email) */}
+          {showEmailField && (
+            <input
+              className="w-full bg-transparent border mt-3 border-gray-300/60 outline-none rounded-full py-2.5 px-4 text-gray-700 placeholder-gray-400 focus:border-indigo-400 transition-colors"
+              type="email"
+              placeholder="Enter email for OTP"
+              value={otpEmail}
+              onChange={(e) => setOtpEmail(e.target.value)}
+              required
+            />
+          )}
+
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-5 mb-4 bg-indigo-500 hover:bg-indigo-600 py-2.5 rounded-full text-white font-medium transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <ArrowLeftOutlined /> Back to Login
+            {loading ? "Sending..." : showEmailField ? "Send Reset Code" : "Continue"}
+          </button>
+        </form>
+
+        {/* Remember password link */}
+        <p className="text-center text-xs">
+          Remembered your password?{" "}
+          <Link to="/login" className="text-indigo-500 hover:text-indigo-700 font-medium">
+            Sign in
           </Link>
-
-          <div className="mb-8">
-            <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
-              Forgot Password
-            </h2>
-            <p className="text-gray-500 mt-3 text-sm leading-relaxed">
-              {showEmailField
-                ? "Enter an email address to receive your 6-digit reset code."
-                : "Enter your registered email or phone number."}
-            </p>
-          </div>
-
-          <Form
-            layout="vertical"
-            onFinish={onFinish}
-            size="large"
-            initialValues={{ identifier }}
-          >
-            <Form.Item
-              label={
-                <span className="font-semibold text-gray-700">
-                  Email or Phone
-                </span>
-              }
-              name="identifier"
-              rules={[
-                { required: true, message: "Please enter your email or phone" },
-              ]}
-              className="mb-4"
-            >
-              <Input
-                prefix={<MailOutlined className="text-gray-400 mr-2" />}
-                placeholder="Email or Phone"
-                className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
-                disabled={showEmailField}
-              />
-            </Form.Item>
-
-            {showEmailField && (
-              <Form.Item
-                label={
-                  <span className="font-semibold text-gray-700">
-                    OTP Receiver Email
-                  </span>
-                }
-                name="otpEmail"
-                rules={[
-                  { required: true, message: "Please enter an email for OTP" },
-                  { type: "email", message: "Invalid email format" },
-                ]}
-                className="mb-8"
-              >
-                <Input
-                  prefix={<MailOutlined className="text-gray-400 mr-2" />}
-                  placeholder="Enter email for OTP"
-                  className="rounded-lg py-2.5 bg-gray-50 border-gray-200 focus:bg-white transition-all"
-                />
-              </Form.Item>
-            )}
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                className="bg-blue-600 hover:bg-blue-700 h-12 text-lg font-bold rounded-lg shadow-lg"
-              >
-                {showEmailField ? "Send Reset Code" : "Continue"}
-              </Button>
-            </Form.Item>
-          </Form>
-
-          <div className="text-center mt-6 text-sm">
-            <span className="text-gray-500">Remembered your password? </span>
-            <Link
-              to="/login"
-              className="text-blue-700 hover:text-blue-900 font-bold ml-1 hover:underline"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
+        </p>
       </div>
     </div>
   );
