@@ -252,6 +252,16 @@ exports.updateUser = async (req, res) => {
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      const message =
+        field === "phone"
+          ? "This mobile number is already registered with another account."
+          : field === "email"
+            ? "This email address is already registered."
+            : `Duplicate value for ${field}`;
+      return res.status(400).json({ error: message });
+    }
     res.status(400).json({ error: error.message });
   }
 };
@@ -641,6 +651,16 @@ exports.upgradeToSeller = async (req, res) => {
       user,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      const message =
+        field === "phone"
+          ? "This mobile number is already registered with another account."
+          : field === "email"
+            ? "This email address is already registered."
+            : `Duplicate value for ${field}`;
+      return res.status(400).json({ error: message });
+    }
     console.error(error);
     res.status(500).json({ error: error.message });
   }

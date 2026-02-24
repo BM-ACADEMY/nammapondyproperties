@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Input } from "antd";
-import { Search, Download } from "lucide-react";
+import { Table, Tag, Button, message, Input, Popconfirm } from "antd";
+import { Search, Download, Trash2 } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
 
@@ -25,6 +25,22 @@ const AdminEnquiries = () => {
       message.error("Failed to fetch enquiries");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (record) => {
+    try {
+      const endpoint =
+        record.type === "whatsapp_lead"
+          ? `/enquiries/whatsapp/delete/${record._id}`
+          : `/enquiries/delete/${record._id}`;
+
+      await api.delete(endpoint);
+      message.success("Enquiry deleted successfully");
+      fetchEnquiries();
+    } catch (error) {
+      console.error("Error deleting enquiry", error);
+      message.error("Failed to delete enquiry");
     }
   };
 
@@ -88,6 +104,27 @@ const AdminEnquiries = () => {
         <Tag color={status === "new" ? "blue" : "green"}>
           {status.toUpperCase()}
         </Tag>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Popconfirm
+          title="Delete Enquiry"
+          description="Are you sure you want to delete this enquiry?"
+          onConfirm={() => handleDelete(record)}
+          okText="Yes"
+          cancelText="No"
+          okButtonProps={{ danger: true }}
+        >
+          <Button
+            type="text"
+            danger
+            icon={<Trash2 size={16} />}
+            className="flex items-center justify-center"
+          />
+        </Popconfirm>
       ),
     },
   ];

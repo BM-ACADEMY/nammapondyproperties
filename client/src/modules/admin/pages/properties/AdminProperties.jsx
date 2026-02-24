@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
+import { formatIndianPrice } from "@/utils/formatPrice";
 import { useAuth } from "@/context/AuthContext";
 
 const AdminProperties = ({ mode }) => {
@@ -192,7 +193,7 @@ const AdminProperties = ({ mode }) => {
       title: "Price",
       dataIndex: "price",
       key: "price",
-      render: (price) => `₹${price.toLocaleString()}`,
+      render: (price) => formatIndianPrice(price),
       sorter: (a, b) => a.price - b.price,
     },
     {
@@ -238,6 +239,34 @@ const AdminProperties = ({ mode }) => {
         { text: "Pending", value: false },
       ],
       onFilter: (value, record) => record.is_verified === value,
+    },
+    {
+      title: "Expires In",
+      key: "expiry",
+      render: (_, record) => {
+        const sellerRole =
+          record.seller_id?.role_id?.role_name?.toUpperCase() ||
+          record.seller_id?.role?.name?.toUpperCase();
+
+        if (sellerRole === "ADMIN") {
+          return <Tag color="blue">No Expiry</Tag>;
+        }
+
+        const createdAt = new Date(record.createdAt);
+        const expiryDate = new Date(
+          createdAt.getTime() + 21 * 24 * 60 * 60 * 1000,
+        );
+        const now = new Date();
+        const diffTime = expiryDate - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 0) return <Tag color="red">Expired</Tag>;
+        return (
+          <Tag color={diffDays < 5 ? "orange" : "green"}>
+            {diffDays} days left
+          </Tag>
+        );
+      },
     },
     {
       title: "Action",
@@ -446,10 +475,9 @@ const AdminProperties = ({ mode }) => {
                         : "Price"}
                     </p>
                     <p className="text-3xl md:text-4xl font-bold text-white shadow-sm">
-                      ₹
                       {selectedProperty.isSold && selectedProperty.soldPrice
-                        ? selectedProperty.soldPrice.toLocaleString()
-                        : selectedProperty.price?.toLocaleString()}
+                        ? formatIndianPrice(selectedProperty.soldPrice)
+                        : formatIndianPrice(selectedProperty.price)}
                     </p>
                   </div>
                 </div>

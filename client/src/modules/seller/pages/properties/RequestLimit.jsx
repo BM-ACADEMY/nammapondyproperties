@@ -76,14 +76,6 @@ const RequestLimit = () => {
                   {user?.phone || "N/A"}
                 </div>
               </div>
-              <div>
-                <label className="text-xs text-gray-500 uppercase font-bold">
-                  Business Type
-                </label>
-                <div className="text-gray-900 font-medium">
-                  {user?.businessType?.name || "N/A"}
-                </div>
-              </div>
             </div>
           </div>
 

@@ -12,12 +12,21 @@ import {
 } from "lucide-react";
 import PropertyCard from "@/modules/home/components/PropertyCard";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
 const UserPropertiesPage = () => {
   const { userId } = useParams();
   const [properties, setProperties] = useState([]);
-  const [user, setUser] = useState(null);
+  const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
+  const loc = useLocation();
+
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +36,7 @@ const UserPropertiesPage = () => {
         const userRes = await axios.get(
           `${import.meta.env.VITE_API_URL}/users/public-user/${userId}`,
         );
-        setUser(userRes.data);
+        setProfileUser(userRes.data);
 
         // Fetch Properties by this User
         const propertiesRes = await axios.get(
@@ -59,18 +68,53 @@ const UserPropertiesPage = () => {
 
   const handleWhatsAppClick = (e, property) => {
     e.stopPropagation();
-    const sellerPhone = user?.phone;
-    const locationStr =
+    if (!profileUser?.phone) {
+      toast.error("Seller information missing");
+      return;
+    }
+
+    if (authUser) {
+      if (!authUser.phone) {
+        setSelectedProperty(property);
+        setShowPhoneModal(true);
+      } else {
+        submitEnquiry(property, authUser.name, authUser.email, authUser.phone);
+      }
+    } else {
+      toast.error("Please login to contact the seller");
+      navigate("/login", { state: { from: loc.pathname } });
+    }
+  };
+
+  const submitEnquiry = async (property, name, email, phone) => {
+    const sellerPhone = profileUser.phone;
+    const locStr =
       typeof property.location === "string"
         ? property.location
         : `${property.location?.city || ""}, ${property.location?.state || ""}`;
-    const message = `Hi ${user?.name}, I am interested in your property: ${property.title} located at ${locationStr}.`;
+    const message = `Hi ${profileUser.name}, I am interested in your property: ${property.title} located at ${locStr}.`;
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, "_blank");
+
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
+        property_id: property._id,
+        seller_id: profileUser._id,
+        message: message,
+        name,
+        email,
+        phone,
+      });
+      toast.success("Enquiry recorded! Redirecting to WhatsApp...");
+    } catch (error) {
+      console.error("Enquiry Error:", error);
+      toast.error("Redirecting to WhatsApp...");
+    } finally {
+      window.open(whatsappUrl, "_blank");
+    }
   };
 
   const handleProfileContact = () => {
-    const sellerPhone = user?.phone || "";
+    const sellerPhone = profileUser?.phone || "";
     if (sellerPhone) {
       const whatsappUrl = `https://wa.me/${sellerPhone}`;
       window.open(whatsappUrl, "_blank");
@@ -99,15 +143,15 @@ const UserPropertiesPage = () => {
           {/* Left: Image Container */}
           <div className="shrink-0">
             <div className="h-[140px] w-[140px] md:h-[160px] md:w-[160px] rounded-full overflow-hidden bg-gray-50 border-[4px] border-white shadow-md relative">
-              {user?.profile_image ? (
+              {profileUser?.profile_image ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`}
-                  alt={user.name}
+                  src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${profileUser.profile_image}`}
+                  alt={profileUser.name}
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 text-[#3b5998] font-light text-5xl">
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {profileUser?.name?.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
@@ -117,15 +161,15 @@ const UserPropertiesPage = () => {
           <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left w-full">
             {/* Gold Expertise Badge */}
             <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 bg-white/40 backdrop-blur-sm">
-              {user?.businessType?.name ||
-                user?.role_id?.name ||
+              {profileUser?.businessType?.name ||
+                profileUser?.role_id?.name ||
                 "Verified Professional"}
             </div>
 
             {/* Thin Typography Heading */}
             <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight flex items-center gap-3">
-              {user?.name}
-              {user?.isVerified && (
+              {profileUser?.name}
+              {profileUser?.isVerified && (
                 <ShieldCheck
                   className="w-8 h-8 text-[#3b5998]"
                   fill="currentColor"
@@ -136,9 +180,10 @@ const UserPropertiesPage = () => {
             </h1>
 
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-500 font-medium text-sm mb-6">
-              {user?.email && (
+              {profileUser?.email && (
                 <span className="flex items-center gap-1.5">
-                  <Mail className="w-4 h-4 text-slate-400" /> {user.email}
+                  <Mail className="w-4 h-4 text-slate-400" />{" "}
+                  {profileUser.email}
                 </span>
               )}
               <span className="flex items-center gap-1.5">
@@ -162,7 +207,7 @@ const UserPropertiesPage = () => {
               className="flex items-center gap-2 py-3 px-8 bg-[#3b5998] text-white rounded-xl hover:bg-[#2d4373] transition-colors font-semibold shadow-sm w-full sm:w-auto justify-center"
             >
               <Phone className="w-5 h-5" /> Contact{" "}
-              {user?.name?.split(" ")[0] || "Agent"}
+              {profileUser?.name?.split(" ")[0] || "Agent"}
             </button>
           </div>
         </div>
@@ -205,6 +250,20 @@ const UserPropertiesPage = () => {
           )}
         </div>
       </div>
+      <PhoneUpdateModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={(updatedPhone) => {
+          if (authUser && selectedProperty) {
+            submitEnquiry(
+              selectedProperty,
+              authUser.name,
+              authUser.email,
+              updatedPhone,
+            );
+          }
+        }}
+      />
     </div>
   );
 };

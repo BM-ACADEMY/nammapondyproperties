@@ -41,6 +41,66 @@ import { useAuth } from "@/context/AuthContext";
 
 const { Title } = Typography;
 
+import { formatIndianPrice } from "@/utils/formatPrice";
+
+const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (isAdmin) {
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const createdDate = new Date(createdAt);
+      const expiryDate = new Date(
+        createdDate.getTime() + validityDays * 24 * 60 * 60 * 1000,
+      );
+      const now = new Date();
+      const difference = expiryDate - now;
+
+      if (difference <= 0) {
+        setTimeLeft("Expired");
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+
+      const parts = [];
+      if (days > 0) parts.push(`${days}d`);
+      if (hours > 0 || days > 0) parts.push(`${hours}h`);
+      parts.push(`${minutes}m`);
+      parts.push(`${seconds}s`);
+
+      setTimeLeft(parts.join(" "));
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000); // Update every second
+
+    return () => clearInterval(timer);
+  }, [createdAt, validityDays, isAdmin]);
+
+  const displayTime = isAdmin ? "No Expiry" : timeLeft;
+
+  if (!isAdmin && displayTime === "Expired") return null;
+  if (!isAdmin && !displayTime) return null;
+
+  return (
+    <div
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border shadow-sm ${isAdmin ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-amber-50 text-amber-600 border-amber-100"}`}
+    >
+      <Calendar size={13} className="shrink-0" />
+      <span className="text-[11px] font-bold whitespace-nowrap">
+        {isAdmin ? displayTime : `Exp: ${displayTime}`}
+      </span>
+    </div>
+  );
+};
+
 const MyProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -315,6 +375,15 @@ const MyProperties = () => {
                     </Tag>
                   </div>
                 )}
+                <div className="absolute bottom-3 left-3">
+                  <CountdownTimer
+                    createdAt={property.createdAt}
+                    isAdmin={
+                      user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
+                      user?.role?.name?.toUpperCase() === "ADMIN"
+                    }
+                  />
+                </div>
               </div>
 
               <div className="p-4 flex flex-col flex-1">
@@ -332,7 +401,7 @@ const MyProperties = () => {
                 <div className="mt-auto pt-4 border-t border-gray-100">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-lg font-bold text-blue-600">
-                      ₹{property.price?.toLocaleString()}
+                      {formatIndianPrice(property.price)}
                     </span>
                   </div>
 
@@ -620,6 +689,13 @@ const MyProperties = () => {
                       <Tag className="border-none px-3 py-1 text-sm font-semibold shadow-sm backdrop-blur-md bg-black/40 text-white">
                         {selectedProperty.property_type}
                       </Tag>
+                      <CountdownTimer
+                        createdAt={selectedProperty.createdAt}
+                        isAdmin={
+                          user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
+                          user?.role?.name?.toUpperCase() === "ADMIN"
+                        }
+                      />
                     </div>
                     <h1 className="text-2xl md:text-3xl font-bold mb-2 shadow-sm">
                       {selectedProperty.title}
@@ -636,7 +712,7 @@ const MyProperties = () => {
                       Price
                     </p>
                     <p className="text-3xl md:text-4xl font-bold text-white shadow-sm">
-                      ₹{selectedProperty.price?.toLocaleString()}
+                      {formatIndianPrice(selectedProperty.price)}
                     </p>
                   </div>
                 </div>

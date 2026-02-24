@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import PropertyForm from "../../../../components/Property/PropertyForm";
 import axios from "axios";
-import { message } from "antd";
+import { message, Button } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
+import PhoneUpdateModal from "../../../../components/Common/PhoneUpdateModal";
 
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
@@ -14,6 +15,16 @@ const AddProperty = () => {
   const [initialData, setInitialData] = useState({});
 
   const { user, refetchUser } = useAuth();
+
+  // Mobile number prompt state
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+
+  useEffect(() => {
+    // Show modal if user is logged in but has no phone number (only for new properties)
+    if (user && !user.phone && !editId) {
+      setShowPhoneModal(true);
+    }
+  }, [user, editId]);
 
   const checkLimit = React.useCallback(async () => {
     try {
@@ -122,6 +133,15 @@ const AddProperty = () => {
           isEdit={!!editId}
         />
       </div>
+
+      <PhoneUpdateModal
+        isOpen={showPhoneModal}
+        onClose={() => {
+          setShowPhoneModal(false);
+          navigate(-1);
+        }}
+        onSuccess={() => setShowPhoneModal(false)}
+      />
     </div>
   );
 };

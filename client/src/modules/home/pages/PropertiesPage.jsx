@@ -14,6 +14,10 @@ import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "@/modules/home/components/PropertyCard";
 import MapComponent from "../components/MapComponent";
 import Loader from "../../../components/Common/Loader";
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +27,12 @@ const PropertiesPage = () => {
     Number(searchParams.get("page")) || 1,
   );
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const loc = useLocation();
+
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   // --- FILTER DATA STATE ---
   const [types, setTypes] = useState([]);
@@ -45,6 +55,9 @@ const PropertiesPage = () => {
   const [location, setLocation] = useState(searchParams.get("location") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+  const [businessType, setBusinessType] = useState(
+    searchParams.get("businessType") || "",
+  );
 
   // --- DROPDOWN UI STATE ---
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
@@ -116,6 +129,7 @@ const PropertiesPage = () => {
     setLocation(searchParams.get("location") || "");
     setMinPrice(searchParams.get("minPrice") || "");
     setMaxPrice(searchParams.get("maxPrice") || "");
+    setBusinessType(searchParams.get("businessType") || "");
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
 
@@ -123,7 +137,16 @@ const PropertiesPage = () => {
   useEffect(() => {
     fetchProperties();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchQuery, type, approval, location, minPrice, maxPrice]);
+  }, [
+    currentPage,
+    searchQuery,
+    type,
+    approval,
+    location,
+    minPrice,
+    maxPrice,
+    businessType,
+  ]);
 
   // Update URL params when filters change (except during initial load/sync)
   useEffect(() => {
@@ -134,6 +157,7 @@ const PropertiesPage = () => {
     if (location) params.location = location;
     if (minPrice) params.minPrice = minPrice;
     if (maxPrice) params.maxPrice = maxPrice;
+    if (businessType) params.businessType = businessType;
     params.page = currentPage;
     setSearchParams(params);
   }, [
@@ -144,6 +168,7 @@ const PropertiesPage = () => {
     location,
     minPrice,
     maxPrice,
+    businessType,
     setSearchParams,
   ]);
 
@@ -157,6 +182,7 @@ const PropertiesPage = () => {
       if (location) params.append("location", location);
       if (minPrice) params.append("minPrice", minPrice);
       if (maxPrice) params.append("maxPrice", maxPrice);
+      if (businessType) params.append("businessType", businessType);
       params.append("page", currentPage);
 
       const res = await axios.get(
@@ -173,6 +199,53 @@ const PropertiesPage = () => {
       console.error("Error fetching properties", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWhatsAppClick = (e, property) => {
+    e.stopPropagation();
+    if (!property || !property.seller_id) {
+      toast.error("Seller information missing");
+      return;
+    }
+
+    if (user) {
+      if (!user.phone) {
+        setSelectedProperty(property);
+        setShowPhoneModal(true);
+      } else {
+        submitEnquiry(property, user.name, user.email, user.phone);
+      }
+    } else {
+      toast.error("Please login to contact the seller");
+      navigate("/login", { state: { from: loc.pathname } });
+    }
+  };
+
+  const submitEnquiry = async (property, name, email, phone) => {
+    const sellerPhone = property.seller_id.phone || "919000000000";
+    const locStr =
+      typeof property.location === "string"
+        ? property.location
+        : `${property.location?.city || ""}, ${property.location?.state || ""}`;
+    const message = `Hi, I am interested in your property: ${property.title} located at ${locStr}. Please provide more details.`;
+    const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
+
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
+        property_id: property._id,
+        seller_id: property.seller_id._id || property.seller_id,
+        message: message,
+        name,
+        email,
+        phone,
+      });
+      toast.success("Enquiry sent! Opening WhatsApp...");
+    } catch (error) {
+      console.error(error);
+      toast.error("Redirecting to WhatsApp...");
+    } finally {
+      window.open(whatsappUrl, "_blank");
     }
   };
 
@@ -459,7 +532,11 @@ const PropertiesPage = () => {
           <div className="grid grid-cols-1 mx-auto max-w-7xl md:grid-cols-2 lg:grid-cols-3 gap-8 relative z-0">
             {properties.length > 0 ? (
               properties.map((property) => (
-                <PropertyCard key={property._id} property={property} />
+                <PropertyCard
+                  key={property._id}
+                  property={property}
+                  onWhatsAppClick={handleWhatsAppClick}
+                />
               ))
             ) : (
               <div className="col-span-3 text-center py-10">
@@ -500,6 +577,20 @@ const PropertiesPage = () => {
           </div>
         </div>
       </div>
+      <PhoneUpdateModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={(updatedPhone) => {
+          if (user && selectedProperty) {
+            submitEnquiry(
+              selectedProperty,
+              user.name,
+              user.email,
+              updatedPhone,
+            );
+          }
+        }}
+      />
     </div>
   );
 };

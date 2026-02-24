@@ -20,8 +20,6 @@ const Unauthorized = () => {
       navigate('/admin/dashboard', { replace: true });
     } else if (role === 'SELLER') {
       navigate('/seller/dashboard', { replace: true });
-    } else if (role === 'USER') {
-      navigate('/user/dashboard', { replace: true });
     } else {
       navigate('/login', { replace: true });
     }
