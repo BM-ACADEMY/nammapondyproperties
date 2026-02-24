@@ -70,6 +70,8 @@ exports.createProperty = async (req, res) => {
       key_attributes,
       seller_id: req.user && req.user._id ? req.user._id : req.body.seller_id,
       images: images,
+      businessType:
+        req.body.businessType || (req.user ? req.user.businessType : null),
     };
 
     const property = new Property(propertyData);
@@ -85,7 +87,7 @@ exports.createProperty = async (req, res) => {
         if (sellerRole) {
           await User.findByIdAndUpdate(req.user._id, {
             role_id: sellerRole._id,
-            businessType: req.body.businessType || req.user.businessType // Add businessType if sent
+            businessType: req.body.businessType || req.user.businessType, // Add businessType if sent
           });
           console.log(`User ${req.user._id} upgraded to SELLER role`);
         }
@@ -115,6 +117,7 @@ exports.getProperties = async (req, res) => {
       excludeId, // New: Exclude a specific property ID
       isSold, // New: Filter by sold status
       random, // New: Randomize results
+      businessType, // New: Filter by seller's business type
     } = req.query;
     const query = {};
 
@@ -140,6 +143,34 @@ exports.getProperties = async (req, res) => {
         }
       } else {
         query.seller_id = seller_id;
+      }
+    }
+
+    if (businessType) {
+      const sellersWithBizType = await User.find({ businessType }).distinct(
+        "_id",
+      );
+
+      // We want properties that have the businessType directly OR whose seller has that businessType
+      const bizTypeConditions = [
+        { businessType: businessType },
+        { seller_id: { $in: sellersWithBizType } },
+      ];
+
+      if (query.seller_id) {
+        // If we already have a seller filter, we need to respect both
+        query.$and = query.$and || [];
+        query.$and.push({ $or: bizTypeConditions });
+      } else {
+        query.$or = query.$or || [];
+        // If there's already an $or (from search), we must use $and to combine them
+        if (query.$or.length > 0) {
+          const searchOr = query.$or;
+          delete query.$or;
+          query.$and = [{ $or: searchOr }, { $or: bizTypeConditions }];
+        } else {
+          query.$or = bizTypeConditions;
+        }
       }
     }
 
@@ -235,7 +266,9 @@ exports.verifyProperty = async (req, res) => {
 
 exports.getFilters = async (req, res) => {
   try {
-    const types = await PropertyType.find({ status: "active" }).select("name image_url");
+    const types = await PropertyType.find({ status: "active" }).select(
+      "name image_url",
+    );
     const approvals = await ApprovalType.distinct("name", { status: "active" });
     // Fetch distinct cities instead of full location objects to prevent frontend crashes
     const locations = await Property.distinct("location.city");

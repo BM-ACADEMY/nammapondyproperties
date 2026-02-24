@@ -137,7 +137,7 @@ const Header = () => {
                   return (
                     <Link
                       key={id}
-                      to={`/properties/business-type/${id}`}
+                      to={`/properties?businessType=${id}`}
                       className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
                     >
                       {name}
@@ -525,7 +525,7 @@ const Header = () => {
                     return (
                       <Link
                         key={id}
-                        to={`/properties/business-type/${id}`}
+                        to={`/properties?businessType=${id}`}
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"
                       >

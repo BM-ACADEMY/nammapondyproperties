@@ -31,6 +31,10 @@ const propertySchema = new mongoose.Schema(
     advertiseOnSocialMedia: { type: Boolean, default: false }, // Advertisement opt-in
     isSold: { type: Boolean, default: false },
     soldPrice: { type: Number }, // Optional sold price
+    businessType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessType",
+    },
   },
   { timestamps: true },
 );

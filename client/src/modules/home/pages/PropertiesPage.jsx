@@ -55,6 +55,9 @@ const PropertiesPage = () => {
   const [location, setLocation] = useState(searchParams.get("location") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "");
+  const [businessType, setBusinessType] = useState(
+    searchParams.get("businessType") || "",
+  );
 
   // --- DROPDOWN UI STATE ---
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
@@ -126,6 +129,7 @@ const PropertiesPage = () => {
     setLocation(searchParams.get("location") || "");
     setMinPrice(searchParams.get("minPrice") || "");
     setMaxPrice(searchParams.get("maxPrice") || "");
+    setBusinessType(searchParams.get("businessType") || "");
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
 
@@ -133,7 +137,16 @@ const PropertiesPage = () => {
   useEffect(() => {
     fetchProperties();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, searchQuery, type, approval, location, minPrice, maxPrice]);
+  }, [
+    currentPage,
+    searchQuery,
+    type,
+    approval,
+    location,
+    minPrice,
+    maxPrice,
+    businessType,
+  ]);
 
   // Update URL params when filters change (except during initial load/sync)
   useEffect(() => {
@@ -144,6 +157,7 @@ const PropertiesPage = () => {
     if (location) params.location = location;
     if (minPrice) params.minPrice = minPrice;
     if (maxPrice) params.maxPrice = maxPrice;
+    if (businessType) params.businessType = businessType;
     params.page = currentPage;
     setSearchParams(params);
   }, [
@@ -154,6 +168,7 @@ const PropertiesPage = () => {
     location,
     minPrice,
     maxPrice,
+    businessType,
     setSearchParams,
   ]);
 
@@ -167,6 +182,7 @@ const PropertiesPage = () => {
       if (location) params.append("location", location);
       if (minPrice) params.append("minPrice", minPrice);
       if (maxPrice) params.append("maxPrice", maxPrice);
+      if (businessType) params.append("businessType", businessType);
       params.append("page", currentPage);
 
       const res = await axios.get(
