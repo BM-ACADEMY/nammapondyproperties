@@ -72,6 +72,13 @@ exports.createProperty = async (req, res) => {
       images: images,
       businessType:
         req.body.businessType || (req.user ? req.user.businessType : null),
+      is_verified:
+        req.user &&
+        req.user.role_id &&
+        (req.user.role_id.role_name === "seller" ||
+          req.user.role_id.role_name === "admin")
+          ? true
+          : false,
     };
 
     const property = new Property(propertyData);
@@ -222,13 +229,25 @@ exports.getProperties = async (req, res) => {
       // Since we need to populate seller_id, we can look it up or use a separate populate step
       // Aggregate returns plain objects, not Mongoose documents, but Property.populate works on them.
       const randomDocs = await Property.aggregate(pipeline);
-      properties = await Property.populate(randomDocs, { path: "seller_id" });
+      properties = await Property.populate(randomDocs, [
+        {
+          path: "seller_id",
+          populate: { path: "role_id" },
+        },
+        { path: "businessType" },
+      ]);
 
       // For random, total pages/count might be less relevant or just use total count matches
       count = await Property.countDocuments(query);
     } else {
       properties = await Property.find(query)
-        .populate("seller_id")
+        .populate([
+          {
+            path: "seller_id",
+            populate: { path: "role_id" },
+          },
+          { path: "businessType" },
+        ])
         .limit(limit * 1)
         .skip((page - 1) * limit)
         .sort({ createdAt: -1 });
@@ -342,9 +361,13 @@ exports.getFilters = async (req, res) => {
 
 exports.getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id).populate(
-      "seller_id",
-    );
+    const property = await Property.findById(req.params.id).populate([
+      {
+        path: "seller_id",
+        populate: { path: "role_id" },
+      },
+      { path: "businessType" },
+    ]);
     if (!property) return res.status(404).json({ error: "Property not found" });
     res.json(property);
   } catch (error) {

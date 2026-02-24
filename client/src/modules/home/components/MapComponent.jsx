@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { formatIndianPrice } from "@/utils/formatPrice";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Link } from "react-router-dom";
@@ -100,7 +101,7 @@ const MapComponent = ({ properties }) => {
                       {property.location?.city || "Unknown City"}
                     </p>
                     <p className="text-sm font-semibold text-blue-600">
-                      ₹ {property.price?.toLocaleString() || "N/A"}
+                      {formatIndianPrice(property.price)}
                     </p>
                   </Link>
                 </div>

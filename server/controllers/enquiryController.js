@@ -139,3 +139,28 @@ exports.getAllEnquiriesAdmin = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.deleteEnquiry = async (req, res) => {
+  try {
+    const enquiry = await Enquiry.findByIdAndDelete(req.params.id);
+    if (!enquiry) {
+      return res.status(404).json({ error: "Enquiry not found" });
+    }
+    res.json({ message: "Enquiry deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.deleteWhatsappLead = async (req, res) => {
+  try {
+    const WhatsappLead = require("../models/WhatsappLead");
+    const lead = await WhatsappLead.findByIdAndDelete(req.params.id);
+    if (!lead) {
+      return res.status(404).json({ error: "WhatsApp lead not found" });
+    }
+    res.json({ message: "WhatsApp lead deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

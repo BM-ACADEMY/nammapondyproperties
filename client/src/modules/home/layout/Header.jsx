@@ -127,24 +127,6 @@ const Header = () => {
               <nav className="flex items-center space-x-6">
                 {/* Removed Home Link */}
 
-                {/* BUSINESS TYPES (Direct Links) */}
-                {businessTypes.map((type) => {
-                  const id = type._id?.toString() || type.name;
-                  const name =
-                    typeof type.name === "string"
-                      ? type.name
-                      : type.name?.name || "Unknown";
-                  return (
-                    <Link
-                      key={id}
-                      to={`/properties?businessType=${id}`}
-                      className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
-                    >
-                      {name}
-                    </Link>
-                  );
-                })}
-
                 {/* PROPERTY TYPE (Buy & Rent only) */}
                 {propertyTypes
                   .filter((type) => {
@@ -168,12 +150,25 @@ const Header = () => {
                     );
                   })}
 
-                <Link
-                  to="/about"
-                  className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
-                >
-                  About
-                </Link>
+                {/* BUSINESS TYPES (Direct Links) */}
+                {businessTypes.map((type) => {
+                  const id = type._id?.toString() || type.name;
+                  const name =
+                    typeof type.name === "string"
+                      ? type.name
+                      : type.name?.name || "Unknown";
+                  return (
+                    <Link
+                      key={id}
+                      to={`/properties?businessType=${id}`}
+                      className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
+                    >
+                      {name}
+                    </Link>
+                  );
+                })}
+
+                
                 <Link
                   to="/contact"
                   className="text-gray-600 hover:text-blue-600 font-medium transition-colors text-sm uppercase tracking-wide"
@@ -515,25 +510,6 @@ const Header = () => {
                     <PlusCircle className="h-5 w-5 mr-3" /> Post Properties
                   </button>
 
-                  {/* BUSINESS LINK DIRECT */}
-                  {businessTypes.map((type) => {
-                    const id = type._id?.toString() || type.name;
-                    const name =
-                      typeof type.name === "string"
-                        ? type.name
-                        : type.name?.name || "Unknown";
-                    return (
-                      <Link
-                        key={id}
-                        to={`/properties?businessType=${id}`}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"
-                      >
-                        <Briefcase className="h-5 w-5 mr-3" /> {name}
-                      </Link>
-                    );
-                  })}
-
                   {/* BUY & RENT DIRECT */}
                   {propertyTypes
                     .filter((type) => {
@@ -558,13 +534,26 @@ const Header = () => {
                       );
                     })}
 
-                  <Link
-                    to="/about"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"
-                  >
-                    <Info className="h-5 w-5 mr-3" /> About Us
-                  </Link>
+                  {/* BUSINESS LINK DIRECT */}
+                  {businessTypes.map((type) => {
+                    const id = type._id?.toString() || type.name;
+                    const name =
+                      typeof type.name === "string"
+                        ? type.name
+                        : type.name?.name || "Unknown";
+                    return (
+                      <Link
+                        key={id}
+                        to={`/properties?businessType=${id}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 rounded-xl"
+                      >
+                        <Briefcase className="h-5 w-5 mr-3" /> {name}
+                      </Link>
+                    );
+                  })}
+
+                  
                   <Link
                     to="/contact"
                     onClick={() => setIsMenuOpen(false)}

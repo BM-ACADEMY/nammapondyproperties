@@ -21,6 +21,7 @@ import LoginModal from "../../../components/Auth/LoginModal";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
+import { formatIndianPrice } from "../../../utils/formatPrice";
 import Loader from "../../../components/Common/Loader";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
@@ -175,7 +176,7 @@ const PropertyDetails = () => {
                       Sold Price
                     </span>
                     <span className="text-3xl font-bold text-red-600">
-                      ₹ {property.soldPrice.toLocaleString()}
+                      {formatIndianPrice(property.soldPrice)}
                     </span>
                   </>
                 ) : (
@@ -184,7 +185,7 @@ const PropertyDetails = () => {
                       {property.isSold ? "Price" : "Launch Price"}
                     </span>
                     <span className="text-3xl font-bold text-[#3a307f]">
-                      ₹ {property.price.toLocaleString()}
+                      {formatIndianPrice(property.price)}
                     </span>
                   </>
                 )}
@@ -529,7 +530,7 @@ const PropertyDetails = () => {
                     <div className="mt-auto pointer-events-auto">
                       {/* Developer/Type Badge */}
                       <div className="bg-white text-gray-900 text-[10px] font-bold px-2 py-1 inline-block rounded-sm mb-3 capitalize tracking-widest">
-                        {prop.property_type}
+                        {prop.businessType?.name || prop.property_type}
                       </div>
 
                       {/* Title */}
@@ -556,7 +557,7 @@ const PropertyDetails = () => {
                           Launch Price
                         </p>
                         <p className="text-2xl font-bold text-white tracking-tight">
-                          ₹ {prop.price.toLocaleString()}
+                          {formatIndianPrice(prop.price)}
                         </p>
                       </div>
 

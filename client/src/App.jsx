@@ -3,6 +3,7 @@ import AppRoutes from "./AppRoute";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NavProvider } from "./context/NavContext";
+import { SocketProvider } from "./context/SocketContext";
 import { Toaster } from "react-hot-toast";
 
 function App() {
@@ -11,11 +12,13 @@ function App() {
       <div>
         <Toaster position="top-center" reverseOrder={false} />
         <AuthProvider>
-          <NavProvider>
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </NavProvider>
+          <SocketProvider>
+            <NavProvider>
+              <BrowserRouter>
+                <AppRoutes />
+              </BrowserRouter>
+            </NavProvider>
+          </SocketProvider>
         </AuthProvider>
       </div>
     </>

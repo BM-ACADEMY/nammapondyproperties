@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -71,7 +71,6 @@ const PropertyForm = ({
     handleSubmit,
     watch,
     setValue,
-    getValues,
     reset,
     formState: { errors },
   } = useForm({
@@ -203,12 +202,18 @@ const PropertyForm = ({
 
   // Handle Image Selection with Ant Design Upload
   const handleImageChange = ({ fileList: newFileList }) => {
-    // Filter out removed files and validate sizes
+    // Filter out removed files
     const validFiles = [];
     const newPreviews = [];
     let oversizedCount = 0;
 
-    newFileList.forEach((file, index) => {
+    // Check count first
+    if (newFileList.length + existingImages.length > 10) {
+      toast.error("Maximum 10 images allowed only");
+      return;
+    }
+
+    newFileList.forEach((file) => {
       if (file.status === "removed") return;
 
       const actualFile = file.originFileObj || file;
@@ -233,13 +238,8 @@ const PropertyForm = ({
 
     if (oversizedCount > 0) {
       toast.error(
-        `${oversizedCount} image(s) exceeded the 5MB limit and were skipped.`,
+        `${oversizedCount} image(s) oversize or too big (max 5MB each).`,
       );
-    }
-
-    if (validFiles.length + existingImages.length > 10) {
-      toast.error("Maximum 10 images allowed");
-      return;
     }
 
     setImages(validFiles);
@@ -652,7 +652,6 @@ const PropertyForm = ({
                 {...register("location.latitude")}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
                 placeholder="Ex: 11.9416"
-                readOnly
               />
             </div>
             <div>
@@ -663,7 +662,6 @@ const PropertyForm = ({
                 {...register("location.longitude")}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
                 placeholder="Ex: 79.8083"
-                readOnly
               />
             </div>
           </div>
@@ -675,6 +673,9 @@ const PropertyForm = ({
         <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
           <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
           Property Images
+          <span className="text-xs font-normal text-gray-500 ml-2">
+            (Max 10 images, 5MB each)
+          </span>
         </h3>
 
         <div className="grid grid-cols-1 gap-6">
@@ -694,6 +695,16 @@ const PropertyForm = ({
                 multiple
                 accept="image/*"
                 beforeUpload={() => false} // Prevent automatic upload
+                itemRender={(originNode, file) => (
+                  <div className="relative group">
+                    {originNode}
+                    {file.size && (
+                      <div className="absolute bottom-1 left-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded backdrop-blur-sm pointer-events-none">
+                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                      </div>
+                    )}
+                  </div>
+                )}
               >
                 {images.length + existingImages.length < 10 && (
                   <div className="flex flex-col items-center justify-center">
@@ -746,8 +757,8 @@ const PropertyForm = ({
         </div>
       </div>
 
-      <div className="flex justify-end pt-4 pb-8 sticky bottom-4 z-[999]">
-        <div className="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-[0_-4px_20px_rgba(0,0,0,0.1)] border border-gray-200 flex gap-4">
+      <div className="flex justify-end pt-8 pb-12">
+        <div className="flex gap-4">
           <button
             type="button"
             className="px-6 py-3 text-gray-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"

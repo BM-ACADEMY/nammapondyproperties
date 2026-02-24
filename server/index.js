@@ -6,6 +6,8 @@ const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 const connectDB = require("./config/db");
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 
 // Import all routes
 const roleRoutes = require("./routes/roleRoute");
@@ -122,14 +124,36 @@ const PORT = process.env.PORT || 5000;
 
 const { initCronJobs } = require("./utils/cronJobs");
 
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+  },
+});
+
+// Basic Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("🔌 New websocket connection:", socket.id);
+
+  socket.on("join-seller-room", (sellerId) => {
+    socket.join(`seller-${sellerId}`);
+    console.log(`👤 Seller joined room: seller-${sellerId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔌 Websocket disconnected:", socket.id);
+  });
+});
+
 const startServer = async () => {
   try {
     await connectDB(); // Wait for DB connection
 
-    // Initialize scheduled tasks
-    initCronJobs();
+    // Initialize scheduled tasks with io instance
+    initCronJobs(io);
 
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });

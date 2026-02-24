@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
+import { formatIndianPrice } from "../../../utils/formatPrice";
 
 const PropertyCard = ({ property, onWhatsAppClick }) => {
   const { user } = useAuth();
@@ -70,11 +71,13 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
       </div>
 
       {/* Bottom Content Area */}
-      <div className="absolute bottom-0 left-0 w-full p-6 text-white z-10 flex flex-col justify-end h-full pointer-events-none">
-        <div className="mt-auto pointer-events-auto">
+      <div className="absolute bottom-0 left-0 w-full p-6 text-white z-30 flex flex-col justify-end h-full pointer-events-none">
+        <div className="mt-auto">
           {/* Developer Badge */}
           <div className="bg-white text-gray-900 text-[12px] font-bold px-2 py-1 inline-block rounded-sm mb-3 capitalize tracking-widest">
-            {property.property_type || "DEVELOPER"}
+            {property.businessType?.name ||
+              property.property_type ||
+              "DEVELOPER"}
           </div>
 
           {/* Title */}
@@ -118,11 +121,8 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
           <div className="mb-5">
             {property.isSold && property.soldPrice ? (
               <>
-                <p className="text-[10px] uppercase tracking-widest text-gray-200 mb-1">
-                  Sold Price
-                </p>
                 <p className="text-2xl font-medium text-white tracking-tight">
-                  ₹ {property.soldPrice.toLocaleString()}
+                  {formatIndianPrice(property.soldPrice)}
                 </p>
               </>
             ) : (
@@ -131,7 +131,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                   {property.isSold ? "Price" : "Launch Price"}
                 </p>
                 <p className="text-2xl font-medium text-white tracking-tight">
-                  ₹ {property.price.toLocaleString()}
+                  {formatIndianPrice(property.price)}
                 </p>
               </>
             )}

@@ -31,4 +31,12 @@ router.get("/seller-enquiries", protect, enquiryController.getEnquiries);
 // Admin specific
 router.get("/admin/fetch-all", protect, enquiryController.getAllEnquiriesAdmin);
 
+// Delete Enquiries/Leads (Admin)
+router.delete("/delete/:id", protect, enquiryController.deleteEnquiry);
+router.delete(
+  "/whatsapp/delete/:id",
+  protect,
+  enquiryController.deleteWhatsappLead,
+);
+
 module.exports = router;
