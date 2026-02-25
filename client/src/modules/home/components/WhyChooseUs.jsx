@@ -66,11 +66,7 @@ const WhyChooseUs = () => {
                     viewport={{ once: true, margin: "-50px" }}
                     variants={fadeUp}
                 >
-                    <div className="inline-block mb-6 px-4 py-1.5 border border-yellow-200 rounded-full bg-yellow-50/50">
-                        <span className="uppercase tracking-[0.2em] text-xs font-bold" style={{ color: brandYellow }}>
-                            Why Choose Us
-                        </span>
-                    </div>
+                   
                     
                     <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-6">
                         The NammaPondy Difference
