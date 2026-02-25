@@ -307,7 +307,7 @@ exports.sendOtp = async (req, res) => {
       });
     }
 
-    const otp = crypto.randomBytes(3).toString("hex").toUpperCase(); // 6-char OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit numeric OTP
     user.otp = otp;
     user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 min expiry
     await user.save();
@@ -428,6 +428,21 @@ exports.googleLogin = async (req, res) => {
       });
       await user.save();
       user = await User.findById(user._id).populate("role_id");
+    } else {
+      // Sync profile image if missing and provided by Google
+      let updated = false;
+      if (!user.profile_image && picture) {
+        user.profile_image = picture;
+        updated = true;
+      }
+      // Sync googleId if missing
+      if (!user.googleId) {
+        user.googleId = googleId;
+        updated = true;
+      }
+      if (updated) {
+        await user.save();
+      }
     }
 
     res.json({

@@ -1,69 +1,85 @@
-import { useState, useEffect } from "react";
-import { Form, Input, Button, message } from "antd";
-import {
-  SafetyCertificateOutlined,
-  ArrowLeftOutlined,
-} from "@ant-design/icons";
+import { useState, useEffect, useRef } from "react";
+import { message } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
 export default function OtpVerify() {
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
+  const inputRefs = useRef([]);
 
   const navigate = useNavigate();
   const location = useLocation();
   const { email, identifier, password, purpose, from } = location.state || {};
   const { login } = useAuth();
 
-  // Security redirect if no email is present
   useEffect(() => {
-    if (!email && !identifier) {
-      navigate("/forgot-password");
-    }
+    if (!email && !identifier) navigate("/forgot-password");
   }, [email, identifier, navigate]);
 
   useEffect(() => {
     if (!canResend && countdown > 0) {
-      const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
+      const timer = setTimeout(() => setCountdown((p) => p - 1), 1000);
       return () => clearTimeout(timer);
     }
     if (countdown === 0) setCanResend(true);
   }, [countdown, canResend]);
 
-  const onFinish = async (values) => {
+  const handleChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value.slice(-1);
+    setOtp(newOtp);
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pasted.length === 6) {
+      setOtp(pasted.split(""));
+      inputRefs.current[5]?.focus();
+    }
+    e.preventDefault();
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const otpCode = otp.join("");
+    if (otpCode.length !== 6) {
+      message.error("Please enter all 6 digits");
+      return;
+    }
     setLoading(true);
     try {
       const isPhoneIdentifier = identifier && !identifier.includes("@");
-
       const payload = {
-        otp: values.otp,
-        email: !isPhoneIdentifier ? identifier || email : email, // Always send 'email' if we have it
+        otp: otpCode,
+        email: !isPhoneIdentifier ? identifier || email : email,
         phone: isPhoneIdentifier ? identifier : undefined,
       };
-
       await api.post("/users/verify-otp", payload);
-
       message.success("OTP verified successfully!");
 
       if (from === "signup" && password) {
-        // Auto login for new users
         try {
-          const loginRes = await api.post("/users/login", {
-            email,
-            password,
-          });
+          const loginRes = await api.post("/users/login", { email, password });
           if (loginRes.data.success) {
             login(loginRes.data.user, loginRes.data.token);
             message.success("Logged in successfully!");
             navigate("/");
             return;
           }
-        } catch (loginErr) {
-          console.error("Auto-login failed:", loginErr);
+        } catch {
           message.info("Verification successful. Please login manually.");
           navigate("/login");
           return;
@@ -73,9 +89,7 @@ export default function OtpVerify() {
       if (purpose === "reset") {
         navigate("/reset-password", { state: { email, identifier } });
       } else if (purpose === "seller-signup") {
-        message.success(
-          "Seller account verified! Please login to access your dashboard.",
-        );
+        message.success("Seller account verified! Please login.");
         navigate("/login");
       } else {
         message.success("Account verified! Please login.");
@@ -96,13 +110,14 @@ export default function OtpVerify() {
       const payload = {
         email: !isPhoneIdentifier ? identifier || email : undefined,
         phone: isPhoneIdentifier ? identifier : undefined,
-        otpEmail: isPhoneIdentifier ? email : undefined, // Here 'email' is the target email
+        otpEmail: isPhoneIdentifier ? email : undefined,
       };
-
       await api.post("/users/send-otp", payload);
-      message.success("New OTP sent to your email!");
+      message.success("New OTP sent!");
       setCanResend(false);
       setCountdown(60);
+      setOtp(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
     } catch (err) {
       message.error(err.response?.data?.error || "Failed to resend OTP");
     } finally {
@@ -113,130 +128,89 @@ export default function OtpVerify() {
   if (!email) return null;
 
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-80px)] bg-gray-100 p-4 relative overflow-hidden">
-      {/* SHARED ANIMATION STYLES */}
-      <style>
-        {`
-          @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          .animate-pop-in {
-            animation: popIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-          }
-          @keyframes slowZoom {
-            0% { transform: scale(1); }
-            100% { transform: scale(1.15); }
-          }
-          .animate-bg-zoom {
-            animation: slowZoom 25s infinite alternate ease-in-out;
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-fade-up {
-            animation: fadeInUp 1.2s ease-out 0.3s forwards;
-            opacity: 0;
-          }
-        `}
-      </style>
+    <div 
+      className="flex items-center justify-center lg:justify-end min-h-[calc(100vh-80px)] p-4 lg:pr-24 xl:pr-90 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url('/authbackground.png')`
+      }}
+    >
+      <div className="bg-white text-gray-500 w-full max-w-sm mx-4 md:p-8 p-6 text-left text-sm rounded-2xl shadow-[0px_10px_30px_rgba(0,0,0,0.15)]">
 
-      {/* Main Card */}
-      <div className="flex w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[500px] animate-pop-in">
-        {/* LEFT SIDE: Visual (Updated with new image) */}
-        <div className="hidden md:block md:w-1/2 relative overflow-hidden bg-gray-900">
-          <div
-            className="absolute inset-0 bg-cover bg-center animate-bg-zoom opacity-90"
-            style={{
-              // Replace the URL below with your desired real estate image URL
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=1000&auto=format&fit=crop')",
-            }}
-          ></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-10">
-            <div className="animate-fade-up">
-              <h3 className="text-white text-3xl font-bold tracking-wide">
-                Secure Access
-              </h3>
-              <p className="text-gray-300 mt-2 text-base">
-                Verify your identity to keep your account safe.
-              </p>
-              <div className="h-1 w-16 bg-blue-500 mt-6 rounded-full"></div>
-            </div>
+        {/* Back button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-500 transition-colors text-xs font-medium mb-6 w-fit"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+
+        {/* Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
           </div>
         </div>
 
-        {/* RIGHT SIDE: OTP Form */}
-        <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors mb-6 text-sm font-medium w-fit"
-          >
-            <ArrowLeftOutlined /> Back
-          </button>
+        {/* Header */}
+        <h2 className="text-2xl font-semibold mb-1 text-center text-gray-800">
+          Verify your email
+        </h2>
+        <p className="text-center text-gray-400 text-xs mb-6">
+          We sent a 6-digit code to{" "}
+          <span className="font-medium text-gray-600">{email}</span>
+        </p>
 
-          <div className="mb-8">
-            <h2 className="text-3xl font-extrabold text-gray-800 flex items-center gap-3">
-              Verify OTP
-            </h2>
-            <p className="text-gray-500 mt-3 text-sm leading-relaxed">
-              We've sent a 6-digit code to <br />
-              <span className="font-semibold text-gray-800">{email}</span>
-            </p>
-          </div>
-
-          <Form layout="vertical" onFinish={onFinish} size="large">
-            <Form.Item
-              name="otp"
-              className="flex justify-center mb-8"
-              rules={[
-                { required: true, message: "Please enter the code" },
-                { len: 6, message: "Code must be 6 digits" },
-              ]}
-            >
-              {/* Modern Individual Digit Input */}
-              <Input.OTP
-                length={6}
-                formatter={(str) => str.toUpperCase()}
-                disabled={loading}
-                className="otp-input-custom"
+        <form onSubmit={onSubmit}>
+          {/* OTP Digit Boxes */}
+          <div className="flex gap-2 justify-center mb-6" onPaste={handlePaste}>
+            {otp.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => (inputRefs.current[index] = el)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="w-10 h-11 text-center text-lg font-semibold border border-gray-300/60 rounded-xl outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all text-gray-800"
               />
-            </Form.Item>
+            ))}
+          </div>
 
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                block
-                className="bg-blue-600 hover:bg-blue-700 h-12 text-lg font-bold rounded-lg shadow-lg"
-              >
-                Verify & Continue
-              </Button>
-            </Form.Item>
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mb-4 bg-indigo-500 hover:bg-indigo-600 py-2.5 rounded-full text-white font-medium transition-colors duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {loading ? "Verifying..." : "Verify & Continue"}
+          </button>
+        </form>
 
-            <div className="text-center mt-6">
-              {canResend ? (
-                <Button
-                  type="link"
-                  onClick={handleResendOtp}
-                  loading={resendLoading}
-                  className="text-blue-600 font-semibold hover:text-blue-800 underline p-0"
-                >
-                  Resend OTP
-                </Button>
-              ) : (
-                <p className="text-gray-500 text-sm font-medium">
-                  Resend code in{" "}
-                  <span className="text-blue-600 tabular-nums">
-                    {countdown}s
-                  </span>
-                </p>
-              )}
-            </div>
-          </Form>
-        </div>
+        {/* Resend */}
+        <p className="text-center text-xs text-gray-400">
+          Didn&apos;t receive the code?{" "}
+          {canResend ? (
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={resendLoading}
+              className="text-indigo-500 hover:text-indigo-700 font-medium disabled:opacity-60"
+            >
+              {resendLoading ? "Sending..." : "Resend OTP"}
+            </button>
+          ) : (
+            <span className="text-gray-500">
+              Resend in <span className="text-indigo-500 tabular-nums font-medium">{countdown}s</span>
+            </span>
+          )}
+        </p>
       </div>
     </div>
   );

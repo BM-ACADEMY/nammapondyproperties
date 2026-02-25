@@ -34,6 +34,8 @@ import {
   Calendar,
   X,
   CheckCircle,
+  CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
@@ -162,7 +164,7 @@ const MyProperties = () => {
 
     if (success && properties.length > 0) {
       message.success({
-        content: "🚀 Promote your property for 10x faster visibility!",
+        content: "Promote your property for 10x faster visibility!",
         duration: 5,
         // Make it appear at the top
         style: { marginTop: "10vh" },
@@ -515,71 +517,159 @@ const MyProperties = () => {
         </div>
       )}
 
-      {/* Marketing Promotion Modal */}
+{/* Marketing Promotion Modal - Compact */}
       <Modal
-        title={
-          <div className="flex items-center gap-2 text-indigo-600">
-            <Plus className="h-5 w-5" />
-            <span className="text-xl font-bold">Promote Your Property</span>
-          </div>
-        }
+        title={null}
         open={isMarketingModalOpen}
         onCancel={() => setIsMarketingModalOpen(false)}
         footer={null}
-        width={800}
-        className="marketing-modal"
+        width={850} // Reduced modal width
+        className="marketing-modal pb-0"
+        bodyStyle={{ padding: 0, borderRadius: "16px", overflow: "hidden" }}
+        closeIcon={
+          <div className="bg-slate-200 hover:bg-slate-300 p-1.5 rounded-full transition-colors mt-2 mr-2">
+            <X size={16} className="text-slate-700" />
+          </div>
+        }
       >
-        <div className="py-4">
-          <div className="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 mb-8">
-            <h3 className="text-lg font-bold text-indigo-900 mb-2">
-              🚀 Boost Visibility by 10x!
-            </h3>
-            <p className="text-indigo-700">
-              Get more leads and sell faster by promoting your property on our
-              platform and social media channels. Choose a plan that fits your
-              needs.
-            </p>
-          </div>
+        <style>
+          {`
+            @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+            .poppins-font, .poppins-font * {
+                font-family: 'Poppins', sans-serif;
+            }
+          `}
+        </style>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {marketingPlans.map((plan) => (
-              <div
-                key={plan._id}
-                className="bg-white border-2 border-gray-100 hover:border-indigo-500 rounded-2xl p-6 transition-all duration-300 flex flex-col items-center text-center group"
-              >
-                <h4 className="text-xl font-bold text-gray-800 mb-2">
-                  {plan.name}
-                </h4>
-                <div className="text-2xl font-black text-indigo-600 mb-4">
-                  {plan.price}
-                </div>
-                <Divider className="my-4" />
-                <ul className="space-y-3 mb-8 w-full">
-                  {plan.features?.map((feature, idx) => (
-                    <li
-                      key={idx}
-                      className="text-gray-600 text-sm flex items-start gap-2 text-left"
+        {/* Reduced vertical padding from py-16 to py-10 */}
+        <div className="poppins-font bg-slate-50 py-10 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-8">
+              {/* Reduced title font size */}
+              <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
+                Promote Your Property
+              </h1>
+              {/* Reduced subtitle font size */}
+              <p className="text-xs md:text-sm text-slate-600 max-w-md mx-auto">
+                Get access to premium features and faster visibility. No hidden subscriptions. No surprises.
+              </p>
+            </div>
+
+            {/* Reduced gap between cards from gap-6 to gap-4 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {marketingPlans.map((plan, index) => {
+                const isPopular = index === 1;
+
+                return (
+                  <div
+                    key={plan._id}
+                    // Reduced card padding from px-6 py-8 to px-5 py-6
+                    className={`rounded-2xl px-5 py-6 ${
+                      isPopular
+                        ? "bg-slate-900 shadow-xl shadow-black/10"
+                        : "bg-white border border-slate-200"
+                    }`}
+                  >
+                    <h3
+                      className={`text-xs uppercase tracking-wider font-semibold mb-4 ${
+                        isPopular ? "text-white" : "text-slate-900"
+                      }`}
                     >
-                      <div className="h-1.5 w-1.5 rounded-full bg-indigo-400 mt-1.5 shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  type="primary"
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-bold mt-auto transition-transform group-hover:scale-105"
-                  onClick={() => handleRequestMarketing(plan._id)}
-                  loading={requestLoading}
-                >
-                  Request Marketing
-                </Button>
-              </div>
-            ))}
-          </div>
+                      {plan.name}
+                    </h3>
+                    <p
+                      className={`text-[13px] leading-snug mb-6 max-w-[200px] ${
+                        isPopular ? "text-white/90" : "text-slate-700"
+                      }`}
+                    >
+                      {plan.description || "Perfect for getting your property noticed by potential buyers fast."}
+                    </p>
 
-          <div className="mt-8 text-center text-gray-500 text-sm">
-            No payment required today. Our team will contact you to discuss the
-            details.
+                    <div className="mb-6">
+                      <div className="flex items-start gap-2">
+                        <div className="flex items-baseline gap-1">
+                          {/* Reduced price font size */}
+                          <span
+                            className={`text-3xl font-semibold leading-none ${
+                              isPopular ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {plan.price}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleRequestMarketing(plan._id)}
+                      disabled={requestLoading}
+                      // Reduced button padding and text size
+                      className={`w-full py-2.5 rounded-sm text-xs font-medium mb-2.5 transition cursor-pointer flex justify-center items-center ${
+                        isPopular
+                          ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white hover:from-orange-600 hover:to-orange-500"
+                          : "bg-white border border-slate-200 text-slate-800 hover:bg-slate-50"
+                      }`}
+                    >
+                      {requestLoading ? "Processing..." : "Request Plan"}
+                    </button>
+
+                    <p
+                      className={`text-[11px] leading-tight max-w-[200px] mb-5 ${
+                        isPopular ? "text-white/70" : "text-black/50"
+                      }`}
+                    >
+                      Pay later. Our team will contact you.
+                    </p>
+
+                    <div
+                      className={`border-t mb-4 ${
+                        isPopular ? "border-white/20" : "border-slate-200"
+                      }`}
+                    ></div>
+
+                    {/* Reduced spacing between features */}
+                    <div className="space-y-2">
+                      {plan.features?.map((feature, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                          {/* Reduced icon size */}
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="mt-[3px] shrink-0"
+                          >
+                            <path
+                              d="M7.75 14.75a7 7 0 1 0 0-14 7 7 0 0 0 0 14"
+                              stroke={isPopular ? "#F8FAFC" : "#62748e"}
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="m5.65 7.752 1.4 1.4 2.8-2.8"
+                              stroke={isPopular ? "#F8FAFC" : "#62748e"}
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          {/* Reduced feature text size */}
+                          <span
+                            className={`text-[13px] ${
+                              isPopular ? "text-slate-100" : "text-slate-600"
+                            }`}
+                          >
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </Modal>

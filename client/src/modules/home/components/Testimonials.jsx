@@ -115,11 +115,7 @@ const Testimonials = () => {
           {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
             <div className="text-center md:text-left">
-              <div className="inline-block px-4 py-1.5 mb-6 border border-[#eeb920] rounded-full bg-yellow-50/50">
-                <span className="uppercase tracking-[0.2em] text-xs font-bold text-[#eeb920]">
-                  Loved by clients
-                </span>
-              </div>
+              
               
               <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">
                 What people are saying

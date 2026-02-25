@@ -47,7 +47,11 @@ const AdminProfile = () => {
                 uid: "-1",
                 name: "profile.png",
                 status: "done",
-                url: `${baseUrl}${response.data.user.profile_image}`,
+                url:
+                  response.data.user.profile_image.startsWith("http") ||
+                  response.data.user.profile_image.startsWith("//")
+                    ? response.data.user.profile_image
+                    : `${baseUrl}${response.data.user.profile_image}`,
               },
             ]);
           } else {
