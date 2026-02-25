@@ -99,10 +99,8 @@ const FeaturedProperties = () => {
       <div className=" mx-auto max-w-7xl px-4">
         <div className="flex justify-between items-end mb-8">
           <div>
-            {/* Gold Expertise Badge Style */}
-            <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 bg-white/40 shadow-sm cursor-default">
-              Handpicked
-            </div>
+            
+            <div className="pt-15"></div>
 
             {/* Elegant Typography Heading */}
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
@@ -112,6 +110,7 @@ const FeaturedProperties = () => {
             <p className="text-lg text-slate-500 mt-4 leading-relaxed">
               Check out our latest verified and premium listings.
             </p>
+            
           </div>
           <Link
             to="/properties"
