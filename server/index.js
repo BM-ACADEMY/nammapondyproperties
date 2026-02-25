@@ -55,6 +55,12 @@ app.use(
   }),
 );
 
+// COOP header for Google One Tap / Sign-in popup communication
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
+
 /* ===============================
    Routes
 ================================ */
