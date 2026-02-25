@@ -145,7 +145,12 @@ const UserPropertiesPage = () => {
             <div className="h-[140px] w-[140px] md:h-[160px] md:w-[160px] rounded-full overflow-hidden bg-gray-50 border-[4px] border-white shadow-md relative">
               {profileUser?.profile_image ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${profileUser.profile_image}`}
+                  src={
+                    profileUser.profile_image.startsWith("http") ||
+                    profileUser.profile_image.startsWith("//")
+                      ? profileUser.profile_image
+                      : `${import.meta.env.VITE_API_URL.replace("/api", "")}${profileUser.profile_image}`
+                  }
                   alt={profileUser.name}
                   className="h-full w-full object-cover"
                 />

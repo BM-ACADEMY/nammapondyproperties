@@ -56,7 +56,10 @@ const AdminProperties = ({ mode }) => {
   };
 
   const getImageUrl = (path) => {
-    return `${import.meta.env.VITE_API_URL.replace("/api", "")}${path}`;
+    if (!path) return "";
+    return path.startsWith("http") || path.startsWith("//")
+      ? path
+      : `${import.meta.env.VITE_API_URL.replace("/api", "")}${path}`;
   };
 
   const fetchProperties = React.useCallback(async () => {
@@ -154,7 +157,7 @@ const AdminProperties = ({ mode }) => {
       render: (images) =>
         images && images.length > 0 ? (
           <img
-            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${images[0].image_url}`}
+            src={getImageUrl(images[0].image_url)}
             alt="Property"
             className="w-16 h-12 object-cover rounded"
           />

@@ -204,9 +204,18 @@ const AdminLayout = () => {
                 </div>
                 <Avatar
                   size="large"
+                  src={
+                    user?.profile_image
+                      ? user.profile_image.startsWith("http") ||
+                        user.profile_image.startsWith("//")
+                        ? user.profile_image
+                        : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
+                      : null
+                  }
                   className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold"
                 >
-                  {user?.name?.charAt(0).toUpperCase() || "A"}
+                  {!user?.profile_image &&
+                    (user?.name?.charAt(0).toUpperCase() || "A")}
                 </Avatar>
               </div>
             </Dropdown>

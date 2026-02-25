@@ -15,7 +15,10 @@ const { Sider } = Layout;
 const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { logout } = useAuth(); // Get logout function
+  const { logout } = useAuth();
+
+  // Automatically expand the "Properties" menu if the current path matches
+  const defaultOpenKeys = pathname.includes("properties") ? ["properties"] : [];
 
   const handleMenuClick = (path) => {
     navigate(path);
@@ -69,41 +72,45 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   ];
 
   const SidebarContent = (
-    <div className="flex flex-col h-full">
-      <Link to="/">
-        <div className="flex items-center justify-center h-16 m-2 rounded-lg shrink-0">
+    <div className="flex flex-col h-full bg-[#001529]">
+      {/* Brand Logo Area */}
+      <Link to="/seller/dashboard">
+        <div className="flex items-center justify-center h-16 m-4 rounded-lg bg-blue-600/10 border border-blue-500/20 shrink-0">
           {collapsed && !isMobile ? (
             <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold bg-blue-600">
               SP
             </div>
           ) : (
-            <span className="text-white text-lg font-bold tracking-wide">
+            <span className="text-white text-lg font-bold tracking-widest">
               SELLER PANEL
             </span>
           )}
         </div>
       </Link>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      {/* Menu Area */}
+      <div className="flex-1 overflow-y-auto pt-2">
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[pathname]}
+          defaultOpenKeys={defaultOpenKeys}
           items={menuItems}
           className="px-2 border-none"
           style={{ background: "transparent" }}
         />
       </div>
 
-      <div className="p-4 border-t border-gray-700 shrink-0">
+      {/* Logout Footer */}
+      <div className="p-4 border-t border-gray-800 shrink-0">
         <Button
           type="primary"
           danger
-          block={!collapsed}
+          block={!collapsed || isMobile}
           icon={<LogOut size={18} />}
           onClick={logout}
           className="flex items-center justify-center gap-2"
-          style={collapsed && !isMobile ? { padding: "0 8px" } : {}}
+          style={collapsed && !isMobile ? { width: 48, margin: "0 auto" } : {}}
         >
           {(!collapsed || isMobile) && "Logout"}
         </Button>
@@ -132,22 +139,16 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       collapsible
       collapsed={collapsed}
       width={250}
-      breakpoint="lg"
-      collapsedWidth="80"
-      onBreakpoint={(broken) => {
-        if (broken) {
-          setCollapsed(true);
-        }
-      }}
+      collapsedWidth={80}
       className="shadow-xl z-20"
       style={{
-        background: "#001529",
         overflow: "auto",
         height: "100vh",
         position: "fixed",
         left: 0,
         top: 0,
         bottom: 0,
+        background: "#001529",
       }}
     >
       {SidebarContent}

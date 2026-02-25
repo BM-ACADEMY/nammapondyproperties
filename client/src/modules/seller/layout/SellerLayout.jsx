@@ -1,15 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu as MenuIcon, Bell, Search, User, LogOut } from "lucide-react";
-import {
-  Layout,
-  Button,
-  Avatar,
-  Dropdown,
-  Badge,
-  Breadcrumb,
-  theme,
-} from "antd";
+import { Menu as MenuIcon, User, LogOut } from "lucide-react";
+import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme } from "antd";
 import { useAuth } from "../../../context/AuthContext";
 import SellerSidebar from "./SellerSidebar";
 
@@ -26,19 +18,18 @@ const SellerLayout = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  // Responsive Width Settings
+  const SIDEBAR_WIDTH = 250;
+  const COLLAPSED_WIDTH = 80;
+
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
-      if (mobile) {
-        setCollapsed(true);
-      } else {
-        setCollapsed(false);
-      }
+      setCollapsed(mobile); // Auto-collapse on mobile
     };
 
     handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -48,18 +39,16 @@ const SellerLayout = () => {
       key: "1",
       label: (
         <div className="px-1 py-1">
-          <p className="font-semibold text-gray-800">
+          <p className="font-semibold text-gray-800 m-0">
             {user?.name || "Seller User"}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-500 m-0">
             {user?.email || "seller@example.com"}
           </p>
         </div>
       ),
     },
-    {
-      type: "divider",
-    },
+    { type: "divider" },
     {
       key: "2",
       label: "My Profile",
@@ -78,23 +67,22 @@ const SellerLayout = () => {
   const getBreadcrumbItems = () => {
     const pathSnippets = pathname.split("/").filter((i) => i);
     const breadcrumbItems = [
-      { title: <Link to="/seller/dashboard">Seller</Link> },
+      { title: <Link to="/seller/dashboard">Home</Link> },
     ];
 
     pathSnippets.forEach((snippet, index) => {
       if (snippet === "seller") return;
-
       const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
       const title =
-        snippet.charAt(0).toUpperCase() + snippet.slice(1).replace("-", " ");
+        snippet.charAt(0).toUpperCase() + snippet.slice(1).replace(/-/g, " ");
+      const isLast = index === pathSnippets.length - 1;
 
       breadcrumbItems.push({
-        title:
-          index === pathSnippets.length - 1 ? (
-            title
-          ) : (
-            <Link to={url}>{title}</Link>
-          ),
+        title: isLast ? (
+          <span className="text-blue-600 font-medium">{title}</span>
+        ) : (
+          <Link to={url}>{title}</Link>
+        ),
       });
     });
 
@@ -111,13 +99,17 @@ const SellerLayout = () => {
 
       <Layout
         style={{
-          marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
-          transition: "all 0.2s",
+          marginLeft: isMobile
+            ? 0
+            : collapsed
+              ? COLLAPSED_WIDTH
+              : SIDEBAR_WIDTH,
+          transition: "margin-left 0.2s cubic-bezier(0.645, 0.045, 0.355, 1)",
         }}
       >
         <Header
           style={{
-            padding: isMobile ? "0 16px" : "0 24px",
+            padding: "0 24px",
             background: colorBgContainer,
             position: "sticky",
             top: 0,
@@ -125,7 +117,8 @@ const SellerLayout = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+            boxShadow: "0 1px 4px rgba(0,21,41,0.08)",
+            height: 64,
           }}
         >
           <div className="flex items-center gap-4">
@@ -133,12 +126,8 @@ const SellerLayout = () => {
               type="text"
               icon={<MenuIcon size={20} />}
               onClick={() => setCollapsed(!collapsed)}
-              className="lg:hidden"
-              style={{
-                fontSize: "16px",
-                width: 40,
-                height: 40,
-              }}
+              className="hover:bg-gray-100 flex items-center justify-center"
+              style={{ width: 40, height: 40 }}
             />
             <Breadcrumb
               items={getBreadcrumbItems()}
@@ -146,24 +135,35 @@ const SellerLayout = () => {
             />
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center">
             <Dropdown
               menu={{ items: userMenuParts }}
               trigger={["click"]}
               placement="bottomRight"
             >
-              <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 pl-3 rounded-full transition-colors border border-transparent hover:border-gray-100">
+              <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1.5 px-3 rounded-full transition-all border border-transparent hover:border-gray-100">
                 <div className="text-right hidden sm:block leading-tight">
-                  <div className="text-sm font-semibold text-gray-700">
+                  <div className="text-sm font-bold text-gray-700">
                     {user?.name || "Seller"}
                   </div>
-                  <div className="text-xs text-gray-500">Seller Account</div>
+                  <div className="text-[10px] text-gray-400 uppercase font-semibold">
+                    Verified Account
+                  </div>
                 </div>
                 <Avatar
                   size="large"
-                  className="bg-gradient-to-r from-green-500 to-teal-600 text-white font-bold"
+                  src={
+                    user?.profile_image
+                      ? user.profile_image.startsWith("http") ||
+                        user.profile_image.startsWith("//")
+                        ? user.profile_image
+                        : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
+                      : null
+                  }
+                  className="bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-sm"
                 >
-                  {user?.name?.charAt(0).toUpperCase() || "S"}
+                  {!user?.profile_image &&
+                    (user?.name?.charAt(0).toUpperCase() || "S")}
                 </Avatar>
               </div>
             </Dropdown>
@@ -172,14 +172,21 @@ const SellerLayout = () => {
 
         <Content
           style={{
-            margin: "24px 16px",
-            padding: isMobile ? 16 : 24,
-            minHeight: 280,
-            background: "#f5f7fa",
-            borderRadius: borderRadiusLG,
+            margin: isMobile ? "16px" : "24px",
+            minHeight: "calc(100vh - 112px)", // Adjust for header and margin
           }}
         >
-          <Outlet />
+          <div
+            style={{
+              padding: isMobile ? 16 : 24,
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
+              minHeight: "100%",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+            }}
+          >
+            <Outlet />
+          </div>
         </Content>
       </Layout>
     </Layout>
