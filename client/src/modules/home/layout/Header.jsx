@@ -217,7 +217,8 @@ const Header = () => {
                           {user?.profile_image ? (
                             <img
                               src={
-                                user.profile_image.startsWith("http")
+                                user.profile_image.startsWith("http") ||
+                                user.profile_image.startsWith("//")
                                   ? user.profile_image
                                   : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
                               }
@@ -246,10 +247,11 @@ const Header = () => {
                           {/* Profile Card Header inside Dropdown */}
                           <div className="px-5 py-4 border-b border-gray-100 mb-2 flex items-center space-x-3 bg-slate-50">
                             <div className="h-11 w-11 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 bg-blue-100 flex items-center justify-center text-blue-600">
-                               {user?.profile_image ? (
+                              {user?.profile_image ? (
                                 <img
                                   src={
-                                    user.profile_image.startsWith("http")
+                                    user.profile_image.startsWith("http") ||
+                                    user.profile_image.startsWith("//")
                                       ? user.profile_image
                                       : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
                                   }
@@ -272,7 +274,8 @@ const Header = () => {
 
                           {/* Navigation Links */}
                           <div className="px-2 space-y-1">
-                            {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
+                            {user?.role_id?.role_name?.toUpperCase() ===
+                              "ADMIN" ||
                             user?.role?.name?.toUpperCase() === "ADMIN" ? (
                               <Link
                                 to="/admin/dashboard"
@@ -280,9 +283,12 @@ const Header = () => {
                                 className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
                               >
                                 <LayoutDashboard className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                                <span className="group-hover:translate-x-1 transition-transform">Admin Dashboard</span>
+                                <span className="group-hover:translate-x-1 transition-transform">
+                                  Admin Dashboard
+                                </span>
                               </Link>
-                            ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
+                            ) : user?.role_id?.role_name?.toUpperCase() ===
+                                "SELLER" ||
                               user?.role?.name?.toUpperCase() === "SELLER" ? (
                               <Link
                                 to="/seller/dashboard"
@@ -290,7 +296,9 @@ const Header = () => {
                                 className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
                               >
                                 <LayoutDashboard className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                                <span className="group-hover:translate-x-1 transition-transform">Seller Dashboard</span>
+                                <span className="group-hover:translate-x-1 transition-transform">
+                                  Seller Dashboard
+                                </span>
                               </Link>
                             ) : (
                               <>
@@ -300,7 +308,9 @@ const Header = () => {
                                   className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
                                 >
                                   <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                                  <span className="group-hover:translate-x-1 transition-transform">My Profile</span>
+                                  <span className="group-hover:translate-x-1 transition-transform">
+                                    My Profile
+                                  </span>
                                 </Link>
                                 <Link
                                   to="/user/reviews"
@@ -308,7 +318,9 @@ const Header = () => {
                                   className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
                                 >
                                   <Star className="h-4 w-4 mr-3 text-gray-400 group-hover:text-yellow-500 transition-colors" />
-                                  <span className="group-hover:translate-x-1 transition-transform">My Reviews</span>
+                                  <span className="group-hover:translate-x-1 transition-transform">
+                                    My Reviews
+                                  </span>
                                 </Link>
                                 <Link
                                   to="/favorites"
@@ -316,7 +328,9 @@ const Header = () => {
                                   className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
                                 >
                                   <Heart className="h-4 w-4 mr-3 text-gray-400 group-hover:text-pink-500 transition-colors" />
-                                  <span className="group-hover:translate-x-1 transition-transform">Favorites</span>
+                                  <span className="group-hover:translate-x-1 transition-transform">
+                                    Favorites
+                                  </span>
                                 </Link>
                               </>
                             )}
@@ -329,7 +343,9 @@ const Header = () => {
                               className="w-full flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all group"
                             >
                               <LogOut className="h-4 w-4 mr-3 text-red-500 transition-transform group-hover:scale-110" />
-                              <span className="group-hover:translate-x-1 transition-transform">Sign Out</span>
+                              <span className="group-hover:translate-x-1 transition-transform">
+                                Sign Out
+                              </span>
                             </button>
                           </div>
                         </motion.div>
@@ -366,8 +382,10 @@ const Header = () => {
                               to="/login"
                               className="flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
                             >
-                              <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" /> 
-                              <span className="group-hover:translate-x-1 transition-transform">Login / Register</span>
+                              <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                              <span className="group-hover:translate-x-1 transition-transform">
+                                Login / Register
+                              </span>
                             </Link>
                           </div>
                         </motion.div>
@@ -380,7 +398,10 @@ const Header = () => {
 
             {/* Mobile Menu Toggle - Visible below lg */}
             <div className="lg:hidden flex items-center space-x-3">
-              <Link to="/favorites" className="text-gray-300 p-2 hover:text-white transition-colors">
+              <Link
+                to="/favorites"
+                className="text-gray-300 p-2 hover:text-white transition-colors"
+              >
                 <Heart className="h-6 w-6" />
               </Link>
               <button
@@ -430,7 +451,8 @@ const Header = () => {
                         {user?.profile_image ? (
                           <img
                             src={
-                              user.profile_image.startsWith("http")
+                              user.profile_image.startsWith("http") ||
+                              user.profile_image.startsWith("//")
                                 ? user.profile_image
                                 : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
                             }
@@ -462,7 +484,8 @@ const Header = () => {
                         >
                           Dashboard
                         </Link>
-                      ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
+                      ) : user?.role_id?.role_name?.toUpperCase() ===
+                          "SELLER" ||
                         user?.role?.name?.toUpperCase() === "SELLER" ? (
                         <Link
                           to="/seller/dashboard"
@@ -535,7 +558,9 @@ const Header = () => {
                     }}
                     className="flex items-center w-full px-4 py-3 bg-white text-[#003366] hover:bg-gray-100 transition-colors rounded-xl font-bold mb-2 shadow-sm"
                   >
-                    <span className="flex-1 text-left text-[14px]">Post Properties</span>
+                    <span className="flex-1 text-left text-[14px]">
+                      Post Properties
+                    </span>
                     <span className="bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded">
                       FREE
                     </span>

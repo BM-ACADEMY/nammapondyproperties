@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Input, message, Button } from "antd";
-import { Search, Download } from "lucide-react";
+import { Table, Tag, Input, message, Button, Popconfirm, Tooltip } from "antd";
+import {
+  Search,
+  Download,
+  Trash2,
+  Mail,
+  Phone,
+  ExternalLink,
+  MessageCircle,
+} from "lucide-react";
 import moment from "moment";
 import api from "@/services/api";
 
@@ -26,12 +34,37 @@ const SellerEnquiries = () => {
     }
   };
 
+  const handleDelete = async (id, type) => {
+    try {
+      const endpoint =
+        type === "whatsapp_lead"
+          ? `/enquiries/whatsapp/delete/${id}`
+          : `/enquiries/delete/${id}`;
+
+      await api.delete(endpoint);
+      message.success("Enquiry deleted successfully");
+      fetchEnquiries();
+    } catch (error) {
+      console.error("Error deleting enquiry:", error);
+      message.error(error.response?.data?.error || "Failed to delete enquiry");
+    }
+  };
+
   const columns = [
     {
       title: "Date",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => moment(date).format("DD MMM YYYY, hh:mm A"),
+      render: (date) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">
+            {moment(date).format("DD MMM YYYY")}
+          </span>
+          <span className="text-xs text-gray-500">
+            {moment(date).format("hh:mm A")}
+          </span>
+        </div>
+      ),
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
       defaultSortOrder: "descend",
     },
@@ -41,31 +74,64 @@ const SellerEnquiries = () => {
       key: "property",
       render: (property) =>
         property ? (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <img
               src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${
                 property.images?.[0]?.image_url
               }`}
               alt="prop"
-              className="w-8 h-8 rounded object-cover"
+              className="w-10 h-10 rounded-lg object-cover border border-gray-100"
             />
-            <span className="font-medium">{property.title}</span>
+            <div className="flex flex-col">
+              <span className="font-semibold text-gray-800 text-sm line-clamp-1">
+                {property.title}
+              </span>
+              <span className="text-xs text-gray-500 truncate">
+                {property.location?.address}
+              </span>
+            </div>
           </div>
         ) : (
-          <span className="text-gray-400">Deleted Property</span>
+          <Tag color="default">Deleted Property</Tag>
         ),
     },
     {
       title: "Enquirer",
       key: "enquirer",
       render: (record) => (
-        <div className="flex flex-col text-sm">
-          <span className="font-semibold">
+        <div className="flex flex-col gap-1">
+          <span className="font-semibold text-gray-900">
             {record.enquirer_name || "Guest"}
           </span>
-          <span className="text-gray-500">{record.enquirer_phone}</span>
-          <span className="text-xs text-gray-400">{record.enquirer_email}</span>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Phone size={12} className="text-blue-500" />
+            <span>{record.enquirer_phone}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <Mail size={12} className="text-orange-500" />
+            <span>{record.enquirer_email}</span>
+          </div>
         </div>
+      ),
+    },
+    {
+      title: "Source",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => (
+        <Tag
+          icon={
+            type === "whatsapp_lead" ? (
+              <MessageCircle size={12} className="inline mr-1" />
+            ) : (
+              <Mail size={12} className="inline mr-1" />
+            )
+          }
+          color={type === "whatsapp_lead" ? "green" : "blue"}
+          className="rounded-full px-3"
+        >
+          {type === "whatsapp_lead" ? "WhatsApp" : "Direct"}
+        </Tag>
       ),
     },
     {
@@ -73,15 +139,51 @@ const SellerEnquiries = () => {
       dataIndex: "message",
       key: "message",
       ellipsis: true,
+      render: (msg) => (
+        <Tooltip title={msg}>
+          <span className="text-gray-600 italic">"{msg}"</span>
+        </Tooltip>
+      ),
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag color={status === "new" ? "blue" : "green"}>
-          {status ? status.toUpperCase() : "NEW"}
-        </Tag>
+      render: (status) => {
+        const isNew = !status || status.toLowerCase() === "new";
+        return (
+          <Tag
+            color={isNew ? "processing" : "success"}
+            className="uppercase font-medium text-xs rounded"
+          >
+            {isNew ? "NEW" : status}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      fixed: "right",
+      width: 80,
+      render: (record) => (
+        <div className="flex items-center gap-2">
+          <Popconfirm
+            title="Delete Enquiry"
+            description="Are you sure you want to delete this enquiry?"
+            onConfirm={() => handleDelete(record._id, record.type)}
+            okText="Yes"
+            cancelText="No"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              type="text"
+              danger
+              icon={<Trash2 size={18} />}
+              className="hover:bg-red-50 flex items-center justify-center"
+            />
+          </Popconfirm>
+        </div>
       ),
     },
   ];
@@ -92,7 +194,8 @@ const SellerEnquiries = () => {
       item.property_id?.title
         ?.toLowerCase()
         .includes(searchText.toLowerCase()) ||
-      item.enquirer_name?.toLowerCase().includes(searchText.toLowerCase()),
+      item.enquirer_name?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.enquirer_phone?.includes(searchText),
   );
 
   const downloadCSV = () => {
@@ -107,6 +210,7 @@ const SellerEnquiries = () => {
       "Enquirer Name",
       "Enquirer Phone",
       "Enquirer Email",
+      "Source",
       "Message",
       "Status",
     ];
@@ -117,6 +221,7 @@ const SellerEnquiries = () => {
       item.enquirer_name || "Guest",
       item.enquirer_phone || "N/A",
       item.enquirer_email || "N/A",
+      item.type === "whatsapp_lead" ? "WhatsApp" : "Direct",
       `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
       item.status?.toUpperCase() || "NEW",
     ]);
@@ -140,116 +245,190 @@ const SellerEnquiries = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Property Enquiries
-      </h1>
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+              Property Enquiries
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Manage and respond to your property leads
+            </p>
+          </div>
+          <Button
+            type="primary"
+            icon={<Download size={18} />}
+            onClick={downloadCSV}
+            className="bg-indigo-600 hover:bg-indigo-700 h-11 px-6 rounded-xl flex items-center gap-2 shadow-sm border-none transition-all"
+          >
+            Export Records
+          </Button>
+        </div>
 
-      <div className="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <Input
-          prefix={<Search size={18} className="text-gray-400" />}
-          placeholder="Search by property or enquirer..."
-          onChange={(e) => setSearchText(e.target.value)}
-          className="max-w-md w-full"
-          size="large"
-        />
-        <Button
-          type="primary"
-          icon={<Download size={18} />}
-          onClick={downloadCSV}
-          className="bg-green-600 hover:bg-green-700 w-full md:w-auto flex items-center justify-center gap-2 text-white h-10 px-4 rounded-lg transition-colors"
-        >
-          Export CSV
-        </Button>
-      </div>
+        <div className="mb-6 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
+          <Input
+            prefix={<Search size={20} className="text-gray-400 ml-2" />}
+            placeholder="Search by property, enquirer name, or phone..."
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-full border-none h-12 text-base focus:ring-0"
+            size="large"
+            allowClear
+          />
+        </div>
 
-      {/* Desktop View */}
-      <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
-        <Table
-          columns={columns}
-          dataSource={filteredEnquiries}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          locale={{ emptyText: "No enquiries found" }}
-        />
-      </div>
+        {/* Desktop View */}
+        <div className="hidden lg:block bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+          <Table
+            columns={columns}
+            dataSource={filteredEnquiries}
+            rowKey="_id"
+            loading={loading}
+            pagination={{
+              pageSize: 10,
+              showTotal: (total) => `Total ${total} enquiries`,
+              className: "px-6 py-4",
+            }}
+            locale={{
+              emptyText: (
+                <div className="py-20 flex flex-col items-center">
+                  <Search size={48} className="text-gray-200 mb-4" />
+                  <p className="text-gray-400">No enquiries found</p>
+                </div>
+              ),
+            }}
+          />
+        </div>
 
-      {/* Mobile View */}
-      <div className="md:hidden space-y-4">
-        {loading ? (
-          // Loading skeleton for mobile
-          [1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-pulse"
-            >
-              <div className="flex gap-4 mb-3">
-                <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+        {/* Mobile View */}
+        <div className="lg:hidden space-y-4">
+          {loading ? (
+            [1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 animate-pulse"
+              >
+                <div className="flex gap-4 mb-4">
+                  <div className="w-20 h-20 bg-gray-100 rounded-xl"></div>
+                  <div className="flex-1 space-y-3 py-1">
+                    <div className="h-5 bg-gray-100 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-100 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-100 rounded w-full"></div>
+                  <div className="h-4 bg-gray-100 rounded w-5/6"></div>
                 </div>
               </div>
-              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-            </div>
-          ))
-        ) : filteredEnquiries.length > 0 ? (
-          filteredEnquiries.map((item) => (
-            <div
-              key={item._id}
-              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-3"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex gap-3">
-                  {item.property_id ? (
-                    <img
-                      src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${item.property_id.images?.[0]?.image_url}`}
-                      alt="prop"
-                      className="w-16 h-16 rounded-lg object-cover border border-gray-100"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                      Deleted
+            ))
+          ) : filteredEnquiries.length > 0 ? (
+            filteredEnquiries.map((item) => (
+              <div
+                key={item._id}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative group"
+              >
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex gap-4">
+                      {item.property_id ? (
+                        <img
+                          src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${item.property_id.images?.[0]?.image_url}`}
+                          alt="prop"
+                          className="w-16 h-16 rounded-xl object-cover border border-gray-50 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl bg-gray-50 flex items-center justify-center text-[10px] text-gray-400 border border-dashed border-gray-200">
+                          DELETED
+                        </div>
+                      )}
+                      <div className="flex flex-col justify-center">
+                        <h3 className="font-bold text-gray-900 line-clamp-1 text-base leading-tight">
+                          {item.property_id?.title || "Property Unavailable"}
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                          {moment(item.createdAt).format(
+                            "DD MMM YYYY, hh:mm A",
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-gray-800 line-clamp-1">
-                      {item.property_id?.title || "Property Unavailable"}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {moment(item.createdAt).format("DD MMM YYYY, hh:mm A")}
-                    </p>
-                    <Tag
-                      color={item.status === "new" ? "blue" : "green"}
-                      className="mt-2 text-xs"
+                    <Popconfirm
+                      title="Delete Enquiry"
+                      onConfirm={() => handleDelete(item._id, item.type)}
+                      okText="Yes"
+                      cancelText="No"
                     >
-                      {item.status ? item.status.toUpperCase() : "NEW"}
+                      <Button
+                        type="text"
+                        danger
+                        icon={<Trash2 size={20} />}
+                        className="bg-red-50 hover:bg-red-100 rounded-xl h-10 w-10 flex items-center justify-center p-0"
+                      />
+                    </Popconfirm>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Tag
+                      color={
+                        !item.status || item.status === "new" ? "blue" : "green"
+                      }
+                      className="rounded-full px-3 m-0 border-none font-medium"
+                    >
+                      {!item.status || item.status === "new"
+                        ? "NEW"
+                        : item.status.toUpperCase()}
+                    </Tag>
+                    <Tag
+                      color={item.type === "whatsapp_lead" ? "green" : "blue"}
+                      className="rounded-full px-3 m-0 border-none font-medium"
+                      icon={
+                        item.type === "whatsapp_lead" ? (
+                          <MessageCircle size={10} className="inline mr-1" />
+                        ) : (
+                          <Mail size={10} className="inline mr-1" />
+                        )
+                      }
+                    >
+                      {item.type === "whatsapp_lead" ? "WhatsApp" : "Direct"}
                     </Tag>
                   </div>
-                </div>
-              </div>
 
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 text-sm">
-                <div className="flex flex-col gap-1 mb-2 pb-2 border-b border-gray-200">
-                  <span className="font-medium text-gray-700">
-                    {item.enquirer_name || "Guest"}
-                  </span>
-                  <div className="text-gray-500 text-xs flex gap-3">
-                    <span>{item.enquirer_phone}</span>
-                    <span>{item.enquirer_email}</span>
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-50">
+                    <div className="flex flex-col gap-2 mb-3 pb-3 border-b border-gray-200/60">
+                      <span className="font-bold text-gray-800">
+                        {item.enquirer_name || "Guest"}
+                      </span>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Phone size={14} className="text-indigo-500" />
+                          <span>{item.enquirer_phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Mail size={14} className="text-indigo-500" />
+                          <span className="truncate">
+                            {item.enquirer_email}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed italic">
+                      "{item.message}"
+                    </p>
                   </div>
                 </div>
-                <p className="text-gray-600 italic">"{item.message}"</p>
               </div>
+            ))
+          ) : (
+            <div className="text-center py-16 bg-white rounded-2xl border-2 border-dashed border-gray-100">
+              <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search size={24} className="text-gray-300" />
+              </div>
+              <p className="text-gray-400 font-medium">
+                No enquiries matching your criteria
+              </p>
             </div>
-          ))
-        ) : (
-          <div className="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
-            No enquiries found
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

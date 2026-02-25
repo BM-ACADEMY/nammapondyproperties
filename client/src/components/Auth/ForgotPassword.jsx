@@ -43,8 +43,13 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-gray-50 p-4">
-      <div className="bg-white text-gray-500 w-full max-w-sm mx-4 md:p-8 p-6 text-left text-sm rounded-2xl shadow-[0px_0px_20px_0px_rgba(0,0,0,0.08)]">
+    <div 
+      className="flex items-center justify-center lg:justify-end min-h-[calc(100vh-80px)] p-4 lg:pr-24 xl:pr-90 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url('/authbackground.png')`
+      }}
+    >
+      <div className="bg-white text-gray-500 w-full max-w-sm mx-4 md:p-8 p-6 text-left text-sm rounded-2xl shadow-[0px_10px_30px_rgba(0,0,0,0.15)]">
 
         {/* Back link */}
         <Link

@@ -5,21 +5,21 @@ import {
   Button,
   message,
   Typography,
-  Card,
-  Badge,
   Space,
+  Tooltip,
 } from "antd";
 import {
-  Plus,
   Megaphone,
   Clock,
   CheckCircle,
-  ExternalLink,
+  Home,
+  Sparkles,
+  TrendingUp
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const SellerAdvertisements = () => {
   const [properties, setProperties] = useState([]);
@@ -50,53 +50,70 @@ const SellerAdvertisements = () => {
 
   const columns = [
     {
-      title: "Property",
+      title: "Property Details",
       dataIndex: "title",
       key: "title",
       render: (text, record) => (
-        <div className="flex items-center gap-3">
-          {record.images?.[0] && (
+        <div className="flex items-center gap-4 py-1">
+          {record.images?.[0] ? (
             <img
               src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${record.images[0].image_url}`}
               alt={text}
-              className="w-12 h-12 rounded object-cover"
+              className="w-14 h-14 rounded-xl object-cover border border-gray-100 shadow-sm"
             />
+          ) : (
+            <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200">
+              <Home className="text-gray-400" size={20} />
+            </div>
           )}
-          <span className="font-medium">{text}</span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-800 text-base">{text}</span>
+            <span className="text-xs text-gray-500 mt-0.5">ID: {record._id.slice(-6).toUpperCase()}</span>
+          </div>
         </div>
       ),
     },
     {
-      title: "Marketing Status",
+      title: "Campaign Status",
       key: "status",
       render: (_, record) => {
         const request = marketingRequests.find(
           (r) => r.property_id._id === record._id,
         );
-        if (!request) return <Tag>No Request</Tag>;
+        
+        if (!request) {
+          return (
+            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              Not Promoted
+            </span>
+          );
+        }
 
-        const statusColors = {
-          pending: "orange",
-          contacted: "blue",
-          completed: "green",
-          cancelled: "red",
+        const statusStyles = {
+          pending: "bg-amber-50 text-amber-700 border-amber-200",
+          contacted: "bg-blue-50 text-blue-700 border-blue-200",
+          completed: "bg-emerald-50 text-emerald-700 border-emerald-200",
+          cancelled: "bg-rose-50 text-rose-700 border-rose-200",
         };
 
         return (
-          <Space direction="vertical" size={0}>
-            <Tag color={statusColors[request.status]}>
-              {request.status.toUpperCase()}
-            </Tag>
-            <span className="text-[10px] text-gray-400">
-              Plan: {request.plan_id?.name}
+          <Space direction="vertical" size={2}>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyles[request.status]}`}>
+              {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
             </span>
+            {request.plan_id?.name && (
+              <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1 mt-1">
+                <Sparkles size={10} /> {request.plan_id.name}
+              </span>
+            )}
           </Space>
         );
       },
     },
     {
-      title: "Actions",
+      title: "Action",
       key: "actions",
+      align: "right",
       render: (_, record) => {
         const hasActiveRequest = marketingRequests.some(
           (r) =>
@@ -108,21 +125,15 @@ const SellerAdvertisements = () => {
           <Button
             disabled={hasActiveRequest}
             type={hasActiveRequest ? "default" : "primary"}
-            icon={
-              hasActiveRequest ? (
-                <CheckCircle size={14} />
-              ) : (
-                <Megaphone size={14} />
-              )
-            }
+            className={`rounded-lg flex items-center justify-center gap-2 px-4 shadow-sm ${
+              hasActiveRequest ? "" : "bg-blue-600 hover:bg-blue-700 border-none"
+            }`}
+            icon={hasActiveRequest ? <CheckCircle size={16} /> : <Megaphone size={16} />}
             onClick={() => {
-              // We'll use the same modal logic or redirect to MyProperties with a trigger
-              // For simplicity, let's keep it here too if needed, or redirect.
-              // Redirecting to MyProperties with the modal trigger is cleaner to avoid code duplication.
               window.location.href = `/seller/my-properties?advertise=${record._id}`;
             }}
           >
-            {hasActiveRequest ? "Request Sent" : "Promote"}
+            {hasActiveRequest ? "Request Pending" : "Boost Listing"}
           </Button>
         );
       },
@@ -130,72 +141,72 @@ const SellerAdvertisements = () => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <Title level={2}>Property Promotion</Title>
-        <p className="text-gray-500">
-          Track and manage marketing requests for your listings.
-        </p>
+    <div className="p-6 max-w-7xl mx-auto min-h-screen bg-gray-50/50">
+      {/* Header Section */}
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <Title level={2} className="!mb-1 !text-gray-800">Property Promotions</Title>
+          <Text className="text-gray-500 text-base">
+            Manage your marketing campaigns and boost visibility to sell faster.
+          </Text>
+        </div>
       </div>
 
+      {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-none shadow-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-wider">
-                Pending Requests
-              </div>
-              <div className="text-4xl font-black mt-2 drop-shadow-md">
-                {marketingRequests.filter((r) => r.status === "pending").length}
-              </div>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10">
-              <Clock size={28} />
-            </div>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Total Properties</p>
+            <h3 className="text-3xl font-bold text-gray-800">{properties.length}</h3>
           </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white border-none shadow-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-sm font-semibold uppercase tracking-wider">
-                Active Promotions
-              </div>
-              <div className="text-4xl font-black mt-2 drop-shadow-md">
-                {
-                  marketingRequests.filter((r) => r.status === "completed")
-                    .length
-                }
-              </div>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10">
-              <CheckCircle size={28} />
-            </div>
+          <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+            <Home size={28} />
           </div>
-        </Card>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Pending Requests</p>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {marketingRequests.filter((r) => r.status === "pending").length}
+            </h3>
+          </div>
+          <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center text-amber-500">
+            <Clock size={28} />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Active Campaigns</p>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {marketingRequests.filter((r) => r.status === "completed").length}
+            </h3>
+          </div>
+          <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+            <TrendingUp size={28} />
+          </div>
+        </div>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={properties}
-        loading={loading}
-        rowKey="_id"
-        className="bg-white rounded-xl shadow-sm overflow-hidden"
-      />
-
-      {/* <div className="mt-8 bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className="bg-blue-600 p-3 rounded-full text-white">
-                        <Megaphone size={24} />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-gray-900 text-lg">Need a Custom Marketing Plan?</h4>
-                        <p className="text-gray-600">Our experts can create a tailored strategy for your high-value properties.</p>
-                    </div>
-                </div>
-                <Button type="primary" className="bg-blue-600" onClick={() => window.open('https://wa.me/911234567890', '_blank')}>
-                    Contact Sales Head
-                </Button>
-            </div> */}
+      {/* Main Table Area */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-6 border-b border-gray-100 bg-white">
+          <h3 className="text-lg font-semibold text-gray-800">Your Listings</h3>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={properties}
+          loading={loading}
+          rowKey="_id"
+          pagination={{
+            pageSize: 5,
+            showSizeChanger: false,
+            className: "pr-6"
+          }}
+          className="custom-antd-table"
+        />
+      </div>
     </div>
   );
 };

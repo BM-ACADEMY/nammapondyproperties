@@ -142,10 +142,25 @@ exports.getAllEnquiriesAdmin = async (req, res) => {
 
 exports.deleteEnquiry = async (req, res) => {
   try {
-    const enquiry = await Enquiry.findByIdAndDelete(req.params.id);
+    const enquiry = await Enquiry.findById(req.params.id);
     if (!enquiry) {
       return res.status(404).json({ error: "Enquiry not found" });
     }
+
+    // Authorization check: Only admin or the assigned seller can delete
+    const isAdmin =
+      req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
+
+    // enquiry.seller_id is an ObjectId, so .toString() works correctly
+    const isOwner = enquiry.seller_id?.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this enquiry" });
+    }
+
+    await Enquiry.findByIdAndDelete(req.params.id);
     res.json({ message: "Enquiry deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -155,10 +170,25 @@ exports.deleteEnquiry = async (req, res) => {
 exports.deleteWhatsappLead = async (req, res) => {
   try {
     const WhatsappLead = require("../models/WhatsappLead");
-    const lead = await WhatsappLead.findByIdAndDelete(req.params.id);
+    const lead = await WhatsappLead.findById(req.params.id);
     if (!lead) {
       return res.status(404).json({ error: "WhatsApp lead not found" });
     }
+
+    // Authorization check
+    const isAdmin =
+      req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
+
+    // lead.seller_id is an ObjectId, so .toString() works correctly
+    const isOwner = lead.seller_id?.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to delete this lead" });
+    }
+
+    await WhatsappLead.findByIdAndDelete(req.params.id);
     res.json({ message: "WhatsApp lead deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
