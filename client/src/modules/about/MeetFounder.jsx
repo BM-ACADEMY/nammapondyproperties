@@ -64,14 +64,8 @@ export default function MeetFounder() {
             
             {/* Header */}
             <div className="mb-8 relative">
-              {/* Tiny decorative line */}
-              <div className="absolute -left-20 top-4 w-12 h-[1px] bg-[#D4AF37] hidden lg:block"></div>
               
-              <div className="inline-block mb-3">
-                <span className="text-[#D4AF37] font-bold uppercase tracking-[0.2em] text-xs border border-[#D4AF37]/30 px-3 py-1 rounded-full bg-white shadow-sm">
-                  The Founder
-                </span>
-              </div>
+             
               
               {/* UPDATED: Removed font-serif, Changed font-bold to font-light */}
               <h2 className="text-4xl md:text-5xl font-light text-[#050B14] leading-tight">
@@ -103,9 +97,7 @@ export default function MeetFounder() {
                 </p>
               </div>
 
-              <p>
-                Namma Pondy Properties was founded with a clear vision: <strong className="text-[#050B14] font-semibold">To build a real estate brand based on transparency, trust, and long-term relationships.</strong> In an industry where confusion can create stress, Kamar believes in complete clarity — from property selection to registration support.
-              </p>
+              
             </div>
 
             
