@@ -23,9 +23,7 @@ const { Title, Text } = Typography;
 const AdminProfile = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [passwordSaving, setPasswordSaving] = useState(false);
   const [form] = Form.useForm();
-  const [passwordForm] = Form.useForm();
   const { user, refreshUser } = useAuth();
   const [fileList, setFileList] = useState([]);
 
@@ -108,31 +106,6 @@ const AdminProfile = () => {
     }
   };
 
-  const handleUpdatePassword = async (values) => {
-    setPasswordSaving(true);
-    try {
-      if (!user || !user._id) return message.error("User ID missing");
-
-      if (values.password !== values.confirmPassword) {
-        return message.error("Passwords do not match");
-      }
-
-      const response = await api.put(`/users/update-user-by-id/${user._id}`, {
-        password: values.password,
-      });
-
-      if (response.data) {
-        message.success("Password changed successfully!");
-        passwordForm.resetFields();
-      }
-    } catch (error) {
-      console.error("Password update failed", error);
-      message.error(error.response?.data?.error || "Failed to change password");
-    } finally {
-      setPasswordSaving(false);
-    }
-  };
-
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
     if (newFileList.length > 0 && newFileList[0].originFileObj) {
@@ -168,7 +141,7 @@ const AdminProfile = () => {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-8xl mx-auto">
       <div className="mb-6">
         <Title level={2}>Account Settings</Title>
         <Text type="secondary">
@@ -176,9 +149,9 @@ const AdminProfile = () => {
         </Text>
       </div>
 
-      <Row gutter={[24, 24]}>
+      <Row gutter={[24, 24]} justify="start">
         {/* Profile Details Section */}
-        <Col xs={24} lg={14}>
+        <Col xs={24} md={18} lg={12}>
           <Card title="Profile Information" className="shadow-sm h-full">
             <div className="flex justify-center mb-6">
               <ImgCrop rotationSlider>
@@ -287,78 +260,6 @@ const AdminProfile = () => {
                   size="large"
                 >
                   Save Profile
-                </Button>
-              </div>
-            </Form>
-          </Card>
-        </Col>
-
-        {/* Password Change Section */}
-        <Col xs={24} lg={10}>
-          <Card title="Security" className="shadow-sm h-full">
-            <Form
-              form={passwordForm}
-              layout="vertical"
-              onFinish={handleUpdatePassword}
-            >
-              <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-100">
-                <Text className="text-blue-800 text-sm">
-                  Ensure your account is using a long, random password to stay
-                  secure.
-                </Text>
-              </div>
-
-              <Form.Item
-                name="password"
-                label="New Password"
-                rules={[
-                  { required: true, message: "Please enter new password" },
-                  { min: 6, message: "Password must be at least 6 characters" },
-                ]}
-              >
-                <Input.Password
-                  prefix={<Lock size={18} className="text-gray-400" />}
-                  placeholder="New Password"
-                  size="large"
-                />
-              </Form.Item>
-
-              <Form.Item
-                name="confirmPassword"
-                label="Confirm New Password"
-                deps={["password"]}
-                rules={[
-                  { required: true, message: "Please confirm your password" },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || getFieldValue("password") === value) {
-                        return Promise.resolve();
-                      }
-                      return Promise.reject(
-                        new Error("The two passwords do not match!"),
-                      );
-                    },
-                  }),
-                ]}
-              >
-                <Input.Password
-                  prefix={<Lock size={18} className="text-gray-400" />}
-                  placeholder="Confirm Password"
-                  size="large"
-                />
-              </Form.Item>
-
-              <div className="flex justify-end pt-4">
-                <Button
-                  danger
-                  htmlType="submit"
-                  icon={<Lock size={18} />}
-                  loading={passwordSaving}
-                  size="large"
-                  type="primary" // Reverting to primary danger for better look
-                  className="bg-red-500 hover:bg-red-600 border-red-500 text-white"
-                >
-                  Change Password
                 </Button>
               </div>
             </Form>
