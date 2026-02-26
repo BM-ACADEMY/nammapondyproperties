@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useSearchParams, Link } from "react-router-dom";
@@ -273,6 +274,13 @@ const PropertiesPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen py-8 font-sans">
+      <Helmet>
+        <title>Properties for Sale in Pondicherry | Verified Listings</title>
+        <meta
+          name="description"
+          content="Browse verified residential and commercial properties in Pondicherry. Transparent pricing and expert guidance for buyers."
+        />
+      </Helmet>
       <div className="container mx-auto px-4">
         {/* --- NEW SEARCH BAR STYLE (Start) --- */}
         <div className="mb-10 relative z-30">

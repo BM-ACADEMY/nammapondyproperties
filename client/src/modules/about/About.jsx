@@ -1,21 +1,21 @@
-import React from 'react';
-import { Helmet } from 'react-helmet'; // Helmet is now here
-import AboutBanner from './AboutBanner';
-import WhatWeDo from './WhatWeDo';
-import MeetFounder from './MeetFounder';
-import WhyChooseUs from './WhyChooseUs';
-import OurVision from './OurVision';
-import PropertyCTA from './FindYourProperty';
+import React from "react";
+import { Helmet } from "react-helmet"; // Helmet is now here
+import AboutBanner from "./AboutBanner";
+import WhatWeDo from "./WhatWeDo";
+import MeetFounder from "./MeetFounder";
+import WhyChooseUs from "./WhyChooseUs";
+import OurVision from "./OurVision";
+import PropertyCTA from "./FindYourProperty";
 
 export default function About() {
   return (
     <>
       {/* SEO META DETAILS */}
       <Helmet>
-        <title>Namma Pondy Properties | Real Estate with Kamar</title>
-        <meta 
-          name="description" 
-          content="Trusted real estate in Pondicherry. Buy plots, villas & commercial properties with expert guidance from Kamar." 
+        <title>About Namma Pondy Properties | Trusted Experts</title>
+        <meta
+          name="description"
+          content="Learn about Namma Pondy Properties, your trusted real estate partner in Kottakuppam, Puducherry for buying and selling property."
         />
       </Helmet>
 
