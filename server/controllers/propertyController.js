@@ -72,12 +72,7 @@ exports.createProperty = async (req, res) => {
       images: images,
       businessType:
         req.body.businessType || (req.user ? req.user.businessType : null),
-      is_verified:
-        req.user &&
-        req.user.role_id &&
-        ["seller", "admin"].includes(req.user.role_id.role_name?.toLowerCase())
-          ? true
-          : false,
+      is_verified: true,
     };
 
     const property = new Property(propertyData);
