@@ -45,10 +45,7 @@ const HomePage = () => {
           {/* --- UPDATED TYPOGRAPHY HEADER (Matched to Reference Image) --- */}
           <div className="mb-10 text-center md:text-left flex flex-col md:items-start items-center">
             
-            {/* Gold Badge */}
-            <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4 bg-white/40 shadow-sm cursor-default">
-              Interactive Map
-            </div>
+            
             
             {/* Thin Heading with Bold-Italic Emphasis */}
             <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">

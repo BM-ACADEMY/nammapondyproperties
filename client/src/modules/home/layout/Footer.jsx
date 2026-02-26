@@ -63,7 +63,16 @@ const Footer = () => {
 
           {/* Brand & About */}
           <div className="space-y-6 flex flex-col items-center md:items-start">
-            <Link to="/" className="inline-block">
+            <Link
+              to="/"
+              className="inline-block"
+              onClick={() => {
+                const mainContent = document.getElementById("main-content");
+                if (mainContent) {
+                  mainContent.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+            >
               <img
                 src="/Logo/logo.png"
                 alt="NammaPondy Logo"
@@ -154,6 +163,14 @@ const Footer = () => {
                 <li key={item}>
                   <Link
                     to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
+                    onClick={() => {
+                      if (item === 'Home') {
+                        const mainContent = document.getElementById("main-content");
+                        if (mainContent) {
+                          mainContent.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }
+                    }}
                     className="text-gray-400 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                   >
                     {item}

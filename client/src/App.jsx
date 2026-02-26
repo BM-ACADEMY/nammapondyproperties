@@ -6,6 +6,8 @@ import { NavProvider } from "./context/NavContext";
 import { SocketProvider } from "./context/SocketContext";
 import { Toaster } from "react-hot-toast";
 
+import ScrollToTop from "./components/Common/ScrollToTop";
+
 function App() {
   return (
     <>
@@ -15,6 +17,7 @@ function App() {
           <SocketProvider>
             <NavProvider>
               <BrowserRouter>
+                <ScrollToTop />
                 <AppRoutes />
               </BrowserRouter>
             </NavProvider>
