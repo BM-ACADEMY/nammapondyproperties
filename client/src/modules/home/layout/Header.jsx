@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import { getImageUrl } from "@/utils/imageUrl";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
   X,
