@@ -3,6 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { getImageUrl } from "@/utils/imageUrl";
 import {
   X,
   Upload as UploadIcon,
@@ -731,7 +732,7 @@ const PropertyForm = ({
                     className="relative group rounded-xl overflow-hidden shadow-sm hover:shadow-md aspect-square border border-gray-100"
                   >
                     <img
-                      src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${img.image_url || img}`}
+                      src={getImageUrl(img.image_url || img)}
                       alt={`Existing ${index}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {

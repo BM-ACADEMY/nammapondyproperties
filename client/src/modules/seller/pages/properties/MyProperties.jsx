@@ -44,6 +44,7 @@ import { useAuth } from "@/context/AuthContext";
 const { Title } = Typography;
 
 import { formatIndianPrice } from "@/utils/formatPrice";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -127,10 +128,6 @@ const MyProperties = () => {
   const handleCloseModal = () => {
     setViewModalVisible(false);
     setSelectedProperty(null);
-  };
-
-  const getImageUrl = (path) => {
-    return `${import.meta.env.VITE_API_URL.replace("/api", "")}${path}`;
   };
 
   const fetchProperties = React.useCallback(async () => {
@@ -517,7 +514,7 @@ const MyProperties = () => {
         </div>
       )}
 
-{/* Marketing Promotion Modal - Compact */}
+      {/* Marketing Promotion Modal - Compact */}
       <Modal
         title={null}
         open={isMarketingModalOpen}
@@ -551,7 +548,8 @@ const MyProperties = () => {
               </h1>
               {/* Reduced subtitle font size */}
               <p className="text-xs md:text-sm text-slate-600 max-w-md mx-auto">
-                Get access to premium features and faster visibility. No hidden subscriptions. No surprises.
+                Get access to premium features and faster visibility. No hidden
+                subscriptions. No surprises.
               </p>
             </div>
 
@@ -582,7 +580,8 @@ const MyProperties = () => {
                         isPopular ? "text-white/90" : "text-slate-700"
                       }`}
                     >
-                      {plan.description || "Perfect for getting your property noticed by potential buyers fast."}
+                      {plan.description ||
+                        "Perfect for getting your property noticed by potential buyers fast."}
                     </p>
 
                     <div className="mb-6">

@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { formatIndianPrice } from "../../../utils/formatPrice";
+import { getImageUrl } from "../../../utils/imageUrl";
 
 const PropertyCard = ({ property, onWhatsAppClick }) => {
   const { user } = useAuth();
@@ -34,11 +35,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
 
       {/* Background Image */}
       <img
-        src={
-          property.images?.[0]?.image_url
-            ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${property.images[0].image_url}`
-            : "https://placehold.co/600x800?text=No+Image"
-        }
+        src={getImageUrl(property.images?.[0]?.image_url)}
         alt={property.title}
         className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
       />

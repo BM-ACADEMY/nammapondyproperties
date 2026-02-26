@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNav } from "@/context/NavContext";
+import { getImageUrl } from "@/utils/imageUrl";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -75,7 +76,7 @@ const PropertyTypeList = () => {
 
     // If dynamic image exists in the object, use it
     if (typeof type === "object" && type.image_url) {
-      details.image = `${import.meta.env.VITE_API_URL.replace("/api", "")}${type.image_url}`;
+      details.image = getImageUrl(type.image_url);
     }
 
     return details;

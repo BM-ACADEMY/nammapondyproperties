@@ -9,7 +9,8 @@ import {
   ShieldCheck,
   Star,
 } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const BusinessUserList = () => {
   const { businessTypeId } = useParams();
@@ -123,12 +124,7 @@ const BusinessUserList = () => {
 
                     {user.profile_image ? (
                       <img
-                        src={
-                          user.profile_image.startsWith("http") ||
-                          user.profile_image.startsWith("//")
-                            ? user.profile_image
-                            : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
-                        }
+                        src={getImageUrl(user.profile_image)}
                         alt={user.name}
                         className="relative z-10 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />

@@ -4,6 +4,7 @@ import { Menu as MenuIcon, User, LogOut } from "lucide-react";
 import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme } from "antd";
 import { useAuth } from "../../../context/AuthContext";
 import SellerSidebar from "./SellerSidebar";
+import { getImageUrl } from "../../../utils/imageUrl";
 
 const { Header, Content } = Layout;
 
@@ -152,14 +153,7 @@ const SellerLayout = () => {
                 </div>
                 <Avatar
                   size="large"
-                  src={
-                    user?.profile_image
-                      ? user.profile_image.startsWith("http") ||
-                        user.profile_image.startsWith("//")
-                        ? user.profile_image
-                        : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
-                      : null
-                  }
+                  src={getImageUrl(user?.profile_image)}
                   className="bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-sm"
                 >
                   {!user?.profile_image &&

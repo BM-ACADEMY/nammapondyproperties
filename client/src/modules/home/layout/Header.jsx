@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { getImageUrl } from "@/utils/imageUrl";
+import { AnimatePresence } from "framer-motion";
 import {
   Menu,
   X,
@@ -216,12 +217,7 @@ const Header = () => {
                         <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center overflow-hidden border border-transparent group-hover:border-gray-400 transition-all duration-300 text-gray-900">
                           {user?.profile_image ? (
                             <img
-                              src={
-                                user.profile_image.startsWith("http") ||
-                                user.profile_image.startsWith("//")
-                                  ? user.profile_image
-                                  : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
-                              }
+                              src={getImageUrl(user.profile_image)}
                               alt={user.name}
                               className="h-full w-full object-cover"
                             />
@@ -450,12 +446,7 @@ const Header = () => {
                       <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-[#1a1a1a] shadow-sm ring-2 ring-gray-700">
                         {user?.profile_image ? (
                           <img
-                            src={
-                              user.profile_image.startsWith("http") ||
-                              user.profile_image.startsWith("//")
-                                ? user.profile_image
-                                : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
-                            }
+                            src={getImageUrl(user.profile_image)}
                             alt={user.name}
                             className="h-full w-full object-cover"
                           />

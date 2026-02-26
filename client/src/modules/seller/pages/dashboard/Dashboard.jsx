@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
+import { getImageUrl } from "@/utils/imageUrl";
 import {
   message,
   Alert,
@@ -422,7 +423,7 @@ const Dashboard = () => {
                       <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
                         {item.images && item.images[0] ? (
                           <img
-                            src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${item.images[0].image_url}`}
+                            src={getImageUrl(item.images[0].image_url)}
                             alt={item.title}
                             className="w-full h-full object-cover"
                           />

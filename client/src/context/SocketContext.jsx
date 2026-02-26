@@ -3,6 +3,8 @@ import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import { toast } from "react-hot-toast";
 
+import { getBaseUrl } from "../utils/baseUrl";
+
 const SocketContext = createContext();
 
 export const useSocket = () => {
@@ -15,7 +17,7 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     // Initialize socket connection
-    const newSocket = io(import.meta.env.VITE_API_URL.replace("/api", ""), {
+    const newSocket = io(getBaseUrl(), {
       withCredentials: true,
     });
 

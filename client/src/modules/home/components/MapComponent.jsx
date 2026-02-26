@@ -4,6 +4,7 @@ import { formatIndianPrice } from "@/utils/formatPrice";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Link } from "react-router-dom";
+import { getImageUrl } from "@/utils/imageUrl";
 
 // Fix for default marker icon in React-Leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -85,11 +86,7 @@ const MapComponent = ({ properties }) => {
                   >
                     <div className="relative h-32 w-full mb-2 rounded-md overflow-hidden">
                       <img
-                        src={
-                          property.images?.[0]?.image_url
-                            ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${property.images[0].image_url}`
-                            : "https://placehold.co/600x400?text=No+Image"
-                        }
+                        src={getImageUrl(property.images?.[0]?.image_url)}
                         alt={property.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
