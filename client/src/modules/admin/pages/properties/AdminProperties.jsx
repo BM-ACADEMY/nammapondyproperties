@@ -32,6 +32,7 @@ import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { formatIndianPrice } from "@/utils/formatPrice";
 import { useAuth } from "@/context/AuthContext";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const AdminProperties = ({ mode }) => {
   const [properties, setProperties] = useState([]);
@@ -53,13 +54,6 @@ const AdminProperties = ({ mode }) => {
   const handleCloseModal = () => {
     setViewModalVisible(false);
     setSelectedProperty(null);
-  };
-
-  const getImageUrl = (path) => {
-    if (!path) return "";
-    return path.startsWith("http") || path.startsWith("//")
-      ? path
-      : `${import.meta.env.VITE_API_URL.replace("/api", "")}${path}`;
   };
 
   const fetchProperties = React.useCallback(async () => {

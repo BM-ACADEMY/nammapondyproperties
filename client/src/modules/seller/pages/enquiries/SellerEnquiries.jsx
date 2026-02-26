@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import moment from "moment";
 import api from "@/services/api";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const SellerEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
@@ -76,9 +77,7 @@ const SellerEnquiries = () => {
         property ? (
           <div className="flex items-center gap-3">
             <img
-              src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${
-                property.images?.[0]?.image_url
-              }`}
+              src={getImageUrl(property.images?.[0]?.image_url)}
               alt="prop"
               className="w-10 h-10 rounded-lg object-cover border border-gray-100"
             />

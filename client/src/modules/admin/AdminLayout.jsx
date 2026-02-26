@@ -13,6 +13,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "./Sidebar";
 import api from "@/services/api";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const { Header, Content } = Layout;
 
@@ -204,14 +205,7 @@ const AdminLayout = () => {
                 </div>
                 <Avatar
                   size="large"
-                  src={
-                    user?.profile_image
-                      ? user.profile_image.startsWith("http") ||
-                        user.profile_image.startsWith("//")
-                        ? user.profile_image
-                        : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
-                      : null
-                  }
+                  src={getImageUrl(user?.profile_image)}
                   className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold"
                 >
                   {!user?.profile_image &&

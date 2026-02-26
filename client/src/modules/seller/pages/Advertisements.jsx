@@ -1,23 +1,16 @@
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  Tag,
-  Button,
-  message,
-  Typography,
-  Space,
-  Tooltip,
-} from "antd";
+import { Table, Tag, Button, message, Typography, Space, Tooltip } from "antd";
 import {
   Megaphone,
   Clock,
   CheckCircle,
   Home,
   Sparkles,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
 
@@ -57,7 +50,7 @@ const SellerAdvertisements = () => {
         <div className="flex items-center gap-4 py-1">
           {record.images?.[0] ? (
             <img
-              src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${record.images[0].image_url}`}
+              src={getImageUrl(record.images[0].image_url)}
               alt={text}
               className="w-14 h-14 rounded-xl object-cover border border-gray-100 shadow-sm"
             />
@@ -67,8 +60,12 @@ const SellerAdvertisements = () => {
             </div>
           )}
           <div className="flex flex-col">
-            <span className="font-semibold text-gray-800 text-base">{text}</span>
-            <span className="text-xs text-gray-500 mt-0.5">ID: {record._id.slice(-6).toUpperCase()}</span>
+            <span className="font-semibold text-gray-800 text-base">
+              {text}
+            </span>
+            <span className="text-xs text-gray-500 mt-0.5">
+              ID: {record._id.slice(-6).toUpperCase()}
+            </span>
           </div>
         </div>
       ),
@@ -80,7 +77,7 @@ const SellerAdvertisements = () => {
         const request = marketingRequests.find(
           (r) => r.property_id._id === record._id,
         );
-        
+
         if (!request) {
           return (
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
@@ -98,7 +95,9 @@ const SellerAdvertisements = () => {
 
         return (
           <Space direction="vertical" size={2}>
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyles[request.status]}`}>
+            <span
+              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${statusStyles[request.status]}`}
+            >
               {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
             </span>
             {request.plan_id?.name && (
@@ -126,9 +125,17 @@ const SellerAdvertisements = () => {
             disabled={hasActiveRequest}
             type={hasActiveRequest ? "default" : "primary"}
             className={`rounded-lg flex items-center justify-center gap-2 px-4 shadow-sm ${
-              hasActiveRequest ? "" : "bg-blue-600 hover:bg-blue-700 border-none"
+              hasActiveRequest
+                ? ""
+                : "bg-blue-600 hover:bg-blue-700 border-none"
             }`}
-            icon={hasActiveRequest ? <CheckCircle size={16} /> : <Megaphone size={16} />}
+            icon={
+              hasActiveRequest ? (
+                <CheckCircle size={16} />
+              ) : (
+                <Megaphone size={16} />
+              )
+            }
             onClick={() => {
               window.location.href = `/seller/my-properties?advertise=${record._id}`;
             }}
@@ -145,7 +152,9 @@ const SellerAdvertisements = () => {
       {/* Header Section */}
       <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <Title level={2} className="!mb-1 !text-gray-800">Property Promotions</Title>
+          <Title level={2} className="!mb-1 !text-gray-800">
+            Property Promotions
+          </Title>
           <Text className="text-gray-500 text-base">
             Manage your marketing campaigns and boost visibility to sell faster.
           </Text>
@@ -156,8 +165,12 @@ const SellerAdvertisements = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Total Properties</p>
-            <h3 className="text-3xl font-bold text-gray-800">{properties.length}</h3>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Total Properties
+            </p>
+            <h3 className="text-3xl font-bold text-gray-800">
+              {properties.length}
+            </h3>
           </div>
           <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
             <Home size={28} />
@@ -166,7 +179,9 @@ const SellerAdvertisements = () => {
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Pending Requests</p>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Pending Requests
+            </p>
             <h3 className="text-3xl font-bold text-gray-800">
               {marketingRequests.filter((r) => r.status === "pending").length}
             </h3>
@@ -178,7 +193,9 @@ const SellerAdvertisements = () => {
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
           <div>
-            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">Active Campaigns</p>
+            <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Active Campaigns
+            </p>
             <h3 className="text-3xl font-bold text-gray-800">
               {marketingRequests.filter((r) => r.status === "completed").length}
             </h3>
@@ -202,7 +219,7 @@ const SellerAdvertisements = () => {
           pagination={{
             pageSize: 5,
             showSizeChanger: false,
-            className: "pr-6"
+            className: "pr-6",
           }}
           className="custom-antd-table"
         />

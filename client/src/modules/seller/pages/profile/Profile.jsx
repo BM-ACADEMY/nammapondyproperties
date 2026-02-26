@@ -16,6 +16,7 @@ import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "../../../../components/Common/Loader";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
 
@@ -40,18 +41,12 @@ const Profile = () => {
           form.setFieldsValue(response.data.user);
           // Set initial image if exists
           if (response.data.user.profile_image) {
-            setHasInitialImage(true);
-            const baseUrl = import.meta.env.VITE_API_URL.replace("/api", "");
             setFileList([
               {
                 uid: "-1",
                 name: "profile.png",
                 status: "done",
-                url:
-                  response.data.user.profile_image.startsWith("http") ||
-                  response.data.user.profile_image.startsWith("//")
-                    ? response.data.user.profile_image
-                    : `${baseUrl}${response.data.user.profile_image}`,
+                url: getImageUrl(response.data.user.profile_image),
               },
             ]);
           } else {

@@ -14,6 +14,7 @@ import {
 import ImgCrop from "antd-img-crop";
 import { Plus, Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import axios from "axios";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -57,7 +58,7 @@ const PropertyTypeManager = () => {
           uid: "-1",
           name: "image.png",
           status: "done",
-          url: `${import.meta.env.VITE_API_URL.replace("/api", "")}${record.image_url}`,
+          url: getImageUrl(record.image_url),
         },
       ]);
     } else {
@@ -128,7 +129,7 @@ const PropertyTypeManager = () => {
         <div className="w-12 h-12 rounded overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
           {url ? (
             <img
-              src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${url}`}
+              src={getImageUrl(url)}
               alt="Type"
               className="w-full h-full object-cover"
             />
@@ -219,7 +220,9 @@ const PropertyTypeManager = () => {
               <Upload
                 listType="picture-card"
                 fileList={fileList}
-                onChange={({ fileList: newFileList }) => setFileList(newFileList)}
+                onChange={({ fileList: newFileList }) =>
+                  setFileList(newFileList)
+                }
                 onPreview={async (file) => {
                   let src = file.url;
                   if (!src) {
@@ -270,8 +273,6 @@ const PropertyTypeManager = () => {
               <Select.Option value={false}>No</Select.Option>
             </Select>
           </Form.Item>
-
-
 
           <div className="flex justify-end space-x-2">
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>

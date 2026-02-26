@@ -24,6 +24,7 @@ import { recordPropertyView } from "../../../utils/propertyViewTracker";
 import { formatIndianPrice } from "../../../utils/formatPrice";
 import Loader from "../../../components/Common/Loader";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
+import { getImageUrl } from "../../../utils/imageUrl";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -128,10 +129,7 @@ const PropertyDetails = () => {
       </div>
     );
 
-  const getImageUrl = (path) =>
-    path
-      ? `${import.meta.env.VITE_API_URL.replace("/api", "")}${path}`
-      : "https://placehold.co/800x600";
+  // Removed local getImageUrl as we use the one from utils
 
   return (
     <div className="bg-white min-h-screen py-8 font-sans text-gray-900">

@@ -3,6 +3,7 @@ import { Table, Tag, Button, message, Input, Popconfirm } from "antd";
 import { Search, Download, Trash2 } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const AdminEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
@@ -61,7 +62,7 @@ const AdminEnquiries = () => {
         property ? (
           <div className="flex items-center gap-2">
             <img
-              src={`${import.meta.env.VITE_API_URL.replace("/api", "")}${property.images?.[0]?.image_url}`}
+              src={getImageUrl(property.images?.[0]?.image_url)}
               alt="prop"
               className="w-8 h-8 rounded object-cover"
             />
