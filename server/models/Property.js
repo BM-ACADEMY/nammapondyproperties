@@ -23,7 +23,7 @@ const propertySchema = new mongoose.Schema(
     area_size: { type: String },
     property_type: { type: String, required: true }, // Dynamic now
     status: { type: String, default: "available" },
-    is_verified: { type: Boolean, default: false },
+    is_verified: { type: Boolean, default: true },
     images: [{ image_url: { type: String } }], // Embedded array for images
     view_count: { type: Number, default: 0 },
     approval: { type: String }, // Dynamic now

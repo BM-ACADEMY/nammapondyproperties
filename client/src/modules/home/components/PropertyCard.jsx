@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { MapPin, Eye } from "lucide-react";
-import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
@@ -10,25 +9,12 @@ import { getImageUrl } from "../../../utils/imageUrl";
 
 const PropertyCard = ({ property, onWhatsAppClick }) => {
   const { user } = useAuth();
-  const handleIncrementView = async (id) => {
-    try {
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/properties/increment-view-count/${id}`,
-      );
-    } catch (error) {
-      console.error("Error incrementing view", error);
-    }
-  };
 
   return (
-    <div
-      onClick={() => handleIncrementView(property._id)}
-      className="relative h-[550px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100"
-    >
+    <div className="relative h-[550px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
       <Link
         to={`/properties/${property._id}`}
         className="absolute inset-0 z-20"
-        onClick={() => handleIncrementView(property._id)}
       >
         <span className="sr-only">View Details</span>
       </Link>
