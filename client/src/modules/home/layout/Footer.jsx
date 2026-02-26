@@ -230,6 +230,20 @@ const Footer = () => {
               BM TechX
             </a>
           </p>
+          <div className="flex items-center gap-6">
+            <Link
+              to="/terms-and-condition"
+              className="text-gray-500 hover:text-yellow-300 transition-colors"
+            >
+              Terms & Conditions
+            </Link>
+            <Link
+              to="/privacy-policy"
+              className="text-gray-500 hover:text-yellow-300 transition-colors"
+            >
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

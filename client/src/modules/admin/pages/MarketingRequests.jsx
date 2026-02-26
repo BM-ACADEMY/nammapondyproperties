@@ -12,6 +12,8 @@ import {
   Select,
   Input,
   Popconfirm,
+  Avatar,
+  Tooltip,
 } from "antd";
 import {
   Clock,
@@ -19,8 +21,11 @@ import {
   Mail,
   User,
   CheckCircle,
-  ExternalLink,
   Trash2,
+  Building2,
+  Edit2,
+  RefreshCcw,
+  Users
 } from "lucide-react";
 import axios from "axios";
 
@@ -90,37 +95,73 @@ const MarketingRequests = () => {
     }
   };
 
+  // Helper arrays for cleaner JSX
+  const statCards = [
+    {
+      title: "Total Leads",
+      count: requests.length,
+      icon: <Users size={24} />,
+      colors: "bg-purple-50 text-purple-600 border-purple-100 hover:border-purple-300",
+    },
+    {
+      title: "New Leads",
+      count: requests.filter((r) => r.status === "pending").length,
+      icon: <Clock size={24} />,
+      colors: "bg-orange-50 text-orange-600 border-orange-100 hover:border-orange-300",
+    },
+    {
+      title: "Contacted",
+      count: requests.filter((r) => r.status === "contacted").length,
+      icon: <Phone size={24} />,
+      colors: "bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300",
+    },
+    {
+      title: "Successful",
+      count: requests.filter((r) => r.status === "completed").length,
+      icon: <CheckCircle size={24} />,
+      colors: "bg-green-50 text-green-600 border-green-100 hover:border-green-300",
+    },
+  ];
+
   const columns = [
     {
       title: "Seller Details",
       key: "seller",
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <div className="font-bold flex items-center gap-2">
-            <User size={14} className="text-gray-400" />
-            {record.seller_id?.name}
-          </div>
-          <div className="text-xs text-gray-500 flex items-center gap-2">
-            <Phone size={12} /> {record.seller_id?.phone}
-          </div>
-          <div className="text-[10px] text-gray-400">
-            CID: {record.seller_id?.customId}
-          </div>
-        </Space>
+        <div className="flex items-center gap-3">
+          <Avatar 
+            className="bg-indigo-100 text-indigo-600" 
+            icon={<User size={18} />} 
+          />
+          <Space direction="vertical" size={0}>
+            <div className="font-semibold text-gray-800">
+              {record.seller_id?.name || "Unknown Seller"}
+            </div>
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              <Phone size={10} /> {record.seller_id?.phone}
+            </div>
+            <div className="text-[10px] text-gray-400 mt-0.5">
+              CID: {record.seller_id?.customId || "N/A"}
+            </div>
+          </Space>
+        </div>
       ),
     },
     {
       title: "Property & Plan",
       key: "property",
       render: (_, record) => (
-        <Space direction="vertical" size={0}>
-          <div className="font-medium text-indigo-600">
-            {record.property_id?.title}
-          </div>
-          <Tag color="cyan" className="m-0 mt-1 uppercase text-[10px]">
-            Plan: {record.plan_id?.name} ({record.plan_id?.price})
-          </Tag>
-        </Space>
+        <div className="flex items-start gap-2">
+          <Building2 size={18} className="text-gray-400 mt-0.5" />
+          <Space direction="vertical" size={0}>
+            <div className="font-medium text-gray-800">
+              {record.property_id?.title || "Property Not Found"}
+            </div>
+            <Tag color="cyan" bordered={false} className="m-0 mt-1 uppercase text-[10px] font-semibold">
+              {record.plan_id?.name} ({record.plan_id?.price})
+            </Tag>
+          </Space>
+        </div>
       ),
     },
     {
@@ -129,164 +170,212 @@ const MarketingRequests = () => {
       key: "status",
       render: (status) => {
         const colors = {
-          pending: "orange",
-          contacted: "blue",
-          completed: "green",
-          cancelled: "red",
+          pending: "warning",
+          contacted: "processing",
+          completed: "success",
+          cancelled: "error",
         };
-        return <Tag color={colors[status]}>{status.toUpperCase()}</Tag>;
+        return (
+          <Tag color={colors[status]} bordered={false} className="px-2 py-0.5 rounded-md font-medium">
+            {status?.toUpperCase()}
+          </Tag>
+        );
       },
     },
     {
       title: "Requested Date",
       dataIndex: "createdAt",
       key: "date",
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => (
+        <span className="text-gray-600 font-medium">
+          {new Date(date).toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          })}
+        </span>
+      ),
     },
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Space>
-          <Button size="small" onClick={() => handleUpdateStatus(record)}>
-            Manage
-          </Button>
-          <Popconfirm
-            title="Delete Request"
-            description="Are you sure you want to delete this marketing request?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              size="small"
-              type="text"
-              danger
-              icon={<Trash2 size={14} />}
-            />
-          </Popconfirm>
+        <Space size="small">
+          <Tooltip title="Update Status">
+            <Button 
+              size="small" 
+              type="primary" 
+              ghost
+              icon={<Edit2 size={14} />} 
+              onClick={() => handleUpdateStatus(record)}
+            >
+              Manage
+            </Button>
+          </Tooltip>
+          <Tooltip title="Delete Request">
+            <Popconfirm
+              title="Delete Request"
+              description="Are you sure you want to delete this lead?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+              placement="topRight"
+            >
+              <Button
+                size="small"
+                danger
+                icon={<Trash2 size={14} />}
+              />
+            </Popconfirm>
+          </Tooltip>
         </Space>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
-        <Title level={2}>Marketing Leads</Title>
-        <p className="text-gray-500">
-          Track and follow up with sellers who requested property promotion.
-        </p>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+          <Title level={2} className="!mb-1 !mt-0 text-gray-800">Marketing Leads</Title>
+          <p className="text-gray-500 m-0">
+            Track and follow up with sellers who requested property promotion.
+          </p>
+        </div>
+        <Button 
+          icon={<RefreshCcw size={16} />} 
+          onClick={fetchRequests} 
+          loading={loading}
+        >
+          Refresh Data
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card className="shadow-sm border-orange-100 hover:border-orange-300 transition-colors">
-          <div className="flex flex-col items-center">
-            <div className="bg-orange-50 p-4 rounded-full text-orange-600 mb-3">
-              <Clock />
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map((stat, idx) => (
+          <Card 
+            key={idx} 
+            className={`shadow-sm transition-all duration-300 border ${stat.colors.split(' ').slice(-2).join(' ')}`}
+            bodyStyle={{ padding: '20px' }}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl ${stat.colors.split(' ').slice(0, 2).join(' ')}`}>
+                {stat.icon}
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-gray-800">
+                  {stat.count}
+                </div>
+                <div className="text-gray-500 font-medium uppercase text-[11px] tracking-wider">
+                  {stat.title}
+                </div>
+              </div>
             </div>
-            <div className="text-2xl font-black">
-              {requests.filter((r) => r.status === "pending").length}
-            </div>
-            <div className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">
-              New Leads
-            </div>
-          </div>
-        </Card>
-        <Card className="shadow-sm border-blue-100 hover:border-blue-300 transition-colors">
-          <div className="flex flex-col items-center">
-            <div className="bg-blue-50 p-4 rounded-full text-blue-600 mb-3">
-              <Phone />
-            </div>
-            <div className="text-2xl font-black">
-              {requests.filter((r) => r.status === "contacted").length}
-            </div>
-            <div className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">
-              Contacted
-            </div>
-          </div>
-        </Card>
-        <Card className="shadow-sm border-green-100 hover:border-green-300 transition-colors">
-          <div className="flex flex-col items-center">
-            <div className="bg-green-50 p-4 rounded-full text-green-600 mb-3">
-              <CheckCircle />
-            </div>
-            <div className="text-2xl font-black">
-              {requests.filter((r) => r.status === "completed").length}
-            </div>
-            <div className="text-gray-400 font-medium uppercase text-[10px] tracking-wider">
-              Successful
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={requests}
-        loading={loading}
-        rowKey="_id"
-        className="bg-white rounded-xl shadow-sm overflow-hidden"
-      />
+      {/* Data Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <Table
+          columns={columns}
+          dataSource={requests}
+          loading={loading}
+          rowKey="_id"
+          pagination={{ pageSize: 10, showSizeChanger: true }}
+          scroll={{ x: 800 }}
+        />
+      </div>
 
+      {/* Management Modal */}
       <Modal
-        title="Manage Marketing Request"
+        title={
+          <div className="flex items-center gap-2 text-lg">
+            <Edit2 size={20} className="text-indigo-600" />
+            Manage Marketing Request
+          </div>
+        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         destroyOnClose
+        centered
       >
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="font-bold text-gray-800">
-            {selectedRequest?.seller_id?.name}
+        <div className="mb-6 mt-4 p-5 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+          <div className="flex items-center gap-3 mb-3">
+            <Avatar size="large" className="bg-indigo-600" icon={<User />} />
+            <div>
+              <div className="font-bold text-gray-800 text-base">
+                {selectedRequest?.seller_id?.name}
+              </div>
+              <div className="text-gray-500 text-sm flex items-center gap-1">
+                <Building2 size={14} />
+                {selectedRequest?.property_id?.title}
+              </div>
+            </div>
           </div>
-          <div className="text-gray-500 mb-2">
-            {selectedRequest?.property_id?.title}
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            <a
+          
+          <div className="flex items-center gap-3 pt-2">
+            <Button 
               href={`tel:${selectedRequest?.seller_id?.phone}`}
-              className="flex items-center gap-2 text-indigo-600 hover:underline"
+              type="primary"
+              className="bg-indigo-600 w-full flex items-center justify-center gap-2"
+              icon={<Phone size={16} />}
             >
-              <Phone size={16} /> Call
-            </a>
-            <a
+              Call Seller
+            </Button>
+            <Button 
               href={`mailto:${selectedRequest?.seller_id?.email}`}
-              className="flex items-center gap-2 text-indigo-600 hover:underline"
+              className="w-full flex items-center justify-center gap-2 border-indigo-200 text-indigo-700 hover:text-indigo-800"
+              icon={<Mail size={16} />}
             >
-              <Mail size={16} /> Email
-            </a>
+              Send Email
+            </Button>
           </div>
         </div>
 
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form form={form} layout="vertical" onFinish={onFinish} requiredMark="optional">
           <Form.Item
             name="status"
-            label="Update Status"
+            label={<span className="font-medium text-gray-700">Update Status</span>}
             rules={[{ required: true }]}
           >
-            <Select>
-              <Select.Option value="pending">Pending</Select.Option>
-              <Select.Option value="contacted">Contacted</Select.Option>
-              <Select.Option value="completed">
-                Completed / Active Promotion
+            <Select size="large" className="w-full">
+              <Select.Option value="pending">
+                <div className="flex items-center gap-2"><Tag color="warning" bordered={false}>Pending</Tag></div>
               </Select.Option>
-              <Select.Option value="cancelled">Cancelled</Select.Option>
+              <Select.Option value="contacted">
+                <div className="flex items-center gap-2"><Tag color="processing" bordered={false}>Contacted</Tag></div>
+              </Select.Option>
+              <Select.Option value="completed">
+                <div className="flex items-center gap-2"><Tag color="success" bordered={false}>Completed / Active</Tag></div>
+              </Select.Option>
+              <Select.Option value="cancelled">
+                <div className="flex items-center gap-2"><Tag color="error" bordered={false}>Cancelled</Tag></div>
+              </Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item name="notes" label="Internal Notes">
+          <Form.Item 
+            name="notes" 
+            label={<span className="font-medium text-gray-700">Internal Notes</span>}
+          >
             <Input.TextArea
               rows={4}
-              placeholder="Track conversation or progress here..."
+              placeholder="Track conversation details, next steps, or reasons for cancellation..."
+              className="resize-none rounded-lg"
             />
           </Form.Item>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
-              Update Request
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
+            <Button onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="primary" htmlType="submit" className="bg-indigo-600">
+              Save Changes
             </Button>
           </div>
         </Form>
