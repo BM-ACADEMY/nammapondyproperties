@@ -74,7 +74,7 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const SidebarContent = (
     <div className="flex flex-col h-full bg-[#001529]">
       {/* Brand Logo Area */}
-      <Link to="/seller/dashboard">
+      <Link to="/">
         <div className="flex items-center justify-center h-16 m-4 rounded-lg bg-blue-600/10 border border-blue-500/20 shrink-0">
           {collapsed && !isMobile ? (
             <div className="w-8 h-8 rounded-md flex items-center justify-center text-white font-bold bg-blue-600">
