@@ -70,33 +70,35 @@ const SellerList = () => {
     setEditingUser(null);
   };
 
-  const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
-      render: (text) => <span className="font-medium">{text}</span>,
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-      key: "phone",
-    },
-    {
-      title: "Status",
-      dataIndex: "isVerified",
-      key: "status",
-      render: (verified) => (
-        <Tag color={verified ? "green" : "orange"}>
-          {verified ? "Verified" : "Pending"}
-        </Tag>
-      ),
-    },
+    const columns = [
+        {
+            title: "Name",
+            dataIndex: "name",
+            key: "name",
+            render: (text) => <span className="font-medium">{text}</span>,
+        },
+        {
+            title: "Email",
+            dataIndex: "email",
+            key: "email",
+            responsive: ["md"], // Hide on small screens, show on tablet and up
+        },
+        {
+            title: "Phone",
+            dataIndex: "phone",
+            key: "phone",
+            responsive: ["sm"], // Hide on mobile, show on small screens and up
+        },
+        {
+            title: "Status",
+            dataIndex: "isVerified",
+            key: "status",
+            render: (verified) => (
+                <Tag color={verified ? "green" : "orange"}>
+                    {verified ? "Verified" : "Pending"}
+                </Tag>
+            ),
+        },
 
     {
       title: "Action",
@@ -119,35 +121,39 @@ const SellerList = () => {
     },
   ];
 
-  return (
-    <div className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <Title level={3} className="!mb-0">
-          Seller Management
-        </Title>
-        <Button
-          type="primary"
-          icon={<Plus size={18} />}
-          onClick={() => {
-            setEditingUser(null);
-            setIsModalVisible(true);
-          }}
-          className="w-full sm:w-auto"
-        >
-          Add New Seller
-        </Button>
-      </div>
+    return (
+        <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-6">
+                <Title level={3} className="!mb-0 w-full sm:w-auto text-left">Seller Management</Title>
+                <Button
+                    type="primary"
+                    icon={<Plus size={18} />}
+                    onClick={() => {
+                        setEditingUser(null);
+                        setIsModalVisible(true);
+                    }}
+                    className="w-auto"
+                >
+                    Add New Seller
+                </Button>
+            </div>
 
-      <Card className="shadow-sm border-none">
-        <Table
-          columns={columns}
-          dataSource={sellers}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: true }}
-        />
-      </Card>
+            <Card className="shadow-sm border-none overflow-hidden">
+                <div className="overflow-x-auto">
+                    <Table
+                        columns={columns}
+                        dataSource={sellers}
+                        rowKey="_id"
+                        loading={loading}
+                        pagination={{
+                            pageSize: 10,
+                            size: "small",
+                            responsive: true
+                        }}
+                        scroll={{ x: "max-content" }}
+                    />
+                </div>
+            </Card>
 
       <CreateUserModal
         visible={isModalVisible}

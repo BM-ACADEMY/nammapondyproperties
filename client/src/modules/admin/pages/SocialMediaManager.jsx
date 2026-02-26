@@ -168,6 +168,7 @@ const SocialMediaManager = () => {
       title: "URL",
       dataIndex: "url",
       key: "url",
+      ellipsis: true,
       render: (text) => (
         <a href={text} target="_blank" rel="noopener noreferrer">
           {text}
@@ -208,13 +209,13 @@ const SocialMediaManager = () => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <Title level={2} className="!mb-0">
+          <Title level={2} className="!mb-0 text-xl sm:text-2xl">
             Social Media Links
           </Title>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">
             Manage social media links displayed in the footer.
           </p>
         </div>
@@ -223,7 +224,7 @@ const SocialMediaManager = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={handleAdd}
-          className="bg-blue-600"
+          className="bg-blue-600 w-full sm:w-auto h-10 flex items-center justify-center order-last sm:order-none"
         >
           Add New Link
         </Button>
