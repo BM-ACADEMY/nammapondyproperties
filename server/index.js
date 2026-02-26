@@ -50,7 +50,7 @@ app.use(cookieParser());
 // CORS (after parsers)
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000", // better default than *
+    origin: process.env.CLIENT_URL, // better default than *
     credentials: true,
   }),
 );
@@ -133,7 +133,7 @@ const { initCronJobs } = require("./utils/cronJobs");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL,
     credentials: true,
   },
 });
@@ -160,7 +160,7 @@ const startServer = async () => {
     initCronJobs(io);
 
     server.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`🚀 Server running on ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });
   } catch (error) {
