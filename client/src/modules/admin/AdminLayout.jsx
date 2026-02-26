@@ -181,7 +181,7 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <Badge count={pendingCount} size="small" offset={[-2, 2]}>
+            {/* <Badge count={pendingCount} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
                 shape="circle"
@@ -189,7 +189,7 @@ const AdminLayout = () => {
                 onClick={() => navigate("/admin/properties")}
                 title="Pending approvals"
               />
-            </Badge>
+            </Badge> */}
 
             <Dropdown
               menu={{ items: userMenuParts }}

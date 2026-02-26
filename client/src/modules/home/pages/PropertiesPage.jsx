@@ -298,7 +298,12 @@ const PropertiesPage = () => {
             {/* 2. FILTERS CONTAINER */}
             <div className="flex flex-wrap md:flex-nowrap items-center justify-center gap-2 px-2 md:px-4 w-full md:w-auto">
               {/* Type Dropdown */}
-              <div className="relative" ref={typeDropdownRef}>
+              <div
+                className="relative"
+                ref={typeDropdownRef}
+                onMouseEnter={() => setIsTypeDropdownOpen(true)}
+                onMouseLeave={() => setIsTypeDropdownOpen(false)}
+              >
                 <button
                   onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                   className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-gray-100 font-semibold text-gray-700 text-sm focus:outline-none whitespace-nowrap transition"
@@ -309,7 +314,7 @@ const PropertiesPage = () => {
                   />
                 </button>
                 {isTypeDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
+                  <div className="absolute top-full mt-2 w-40 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
                     <div className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 uppercase tracking-wider mb-1">
                       Property Type
                     </div>
@@ -349,7 +354,12 @@ const PropertiesPage = () => {
               </div>
 
               {/* Location Dropdown */}
-              <div className="relative" ref={locationDropdownRef}>
+              <div
+                className="relative"
+                ref={locationDropdownRef}
+                onMouseEnter={() => setIsLocationDropdownOpen(true)}
+                onMouseLeave={() => setIsLocationDropdownOpen(false)}
+              >
                 <button
                   onClick={() =>
                     setIsLocationDropdownOpen(!isLocationDropdownOpen)
@@ -362,7 +372,7 @@ const PropertiesPage = () => {
                   />
                 </button>
                 {isLocationDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
+                  <div className="absolute top-full mt-2 w-40 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
                     <div className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 uppercase tracking-wider mb-1">
                       Location
                     </div>
@@ -406,7 +416,12 @@ const PropertiesPage = () => {
               </div>
 
               {/* Approval Dropdown */}
-              <div className="relative" ref={approvalDropdownRef}>
+              <div
+                className="relative"
+                ref={approvalDropdownRef}
+                onMouseEnter={() => setIsApprovalDropdownOpen(true)}
+                onMouseLeave={() => setIsApprovalDropdownOpen(false)}
+              >
                 <button
                   onClick={() =>
                     setIsApprovalDropdownOpen(!isApprovalDropdownOpen)
@@ -419,7 +434,7 @@ const PropertiesPage = () => {
                   />
                 </button>
                 {isApprovalDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
+                  <div className="absolute top-full mt-2 w-40 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
                     <div className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 uppercase tracking-wider mb-1">
                       Approval
                     </div>
@@ -462,7 +477,12 @@ const PropertiesPage = () => {
               </div>
 
               {/* Budget Dropdown */}
-              <div className="relative" ref={budgetDropdownRef}>
+              <div
+                className="relative"
+                ref={budgetDropdownRef}
+                onMouseEnter={() => setIsBudgetDropdownOpen(true)}
+                onMouseLeave={() => setIsBudgetDropdownOpen(false)}
+              >
                 <button
                   onClick={() => setIsBudgetDropdownOpen(!isBudgetDropdownOpen)}
                   className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-gray-100 font-semibold text-gray-700 text-sm focus:outline-none whitespace-nowrap transition"
@@ -473,7 +493,7 @@ const PropertiesPage = () => {
                   />
                 </button>
                 {isBudgetDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-56 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
+                  <div className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
                     <div className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 uppercase tracking-wider mb-1">
                       Budget
                     </div>
