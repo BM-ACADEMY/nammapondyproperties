@@ -75,8 +75,7 @@ exports.createProperty = async (req, res) => {
       is_verified:
         req.user &&
         req.user.role_id &&
-        (req.user.role_id.role_name === "seller" ||
-          req.user.role_id.role_name === "admin")
+        ["seller", "admin"].includes(req.user.role_id.role_name?.toLowerCase())
           ? true
           : false,
     };
@@ -132,7 +131,7 @@ exports.getProperties = async (req, res) => {
     if (req.query.role === "seller") {
       const Role = require("../models/Role");
       const sellerRoleDoc = await Role.findOne({
-        name: { $regex: /^seller$/i },
+        role_name: { $regex: /^seller$/i },
       });
       if (sellerRoleDoc) {
         const User = require("../models/User");
@@ -479,6 +478,21 @@ exports.deleteProperty = async (req, res) => {
   try {
     const property = await Property.findByIdAndDelete(req.params.id);
     if (!property) return res.status(404).json({ error: "Property not found" });
+
+    // Delete associated image files from filesystem
+    if (property.images && property.images.length > 0) {
+      property.images.forEach((img) => {
+        try {
+          const filePath = path.join(__dirname, "..", img.image_url);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (err) {
+          console.error(`Failed to delete image file: ${img.image_url}`, err);
+        }
+      });
+    }
+
     res.json({ message: "Property deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });

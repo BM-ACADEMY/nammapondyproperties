@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Country, State, City } from "country-state-city";
 import { toast } from "react-hot-toast";
 import axios from "axios";
@@ -92,7 +92,13 @@ const PropertyForm = ({
         pincode: initialData?.location?.pincode || "",
       },
       advertiseOnSocialMedia: initialData?.advertiseOnSocialMedia || false,
+      key_attributes: initialData?.key_attributes || [{ key: "", value: "" }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "key_attributes",
   });
 
   // Reset form when initialData changes (for edit mode)
@@ -121,6 +127,10 @@ const PropertyForm = ({
         advertiseOnSocialMedia: initialData.advertiseOnSocialMedia || false,
         isSold: initialData.isSold || false,
         soldPrice: initialData.soldPrice || "",
+        key_attributes:
+          initialData.key_attributes && initialData.key_attributes.length > 0
+            ? initialData.key_attributes
+            : [{ key: "", value: "" }],
       };
       // We also need to update existing images state
       setExistingImages(initialData.images || []);
@@ -288,6 +298,11 @@ const PropertyForm = ({
 
     // Structured Location - Stringify for FormData
     formData.append("location", JSON.stringify(data.location));
+
+    // Key Attributes - Stringify for FormData
+    if (data.key_attributes && data.key_attributes.length > 0) {
+      formData.append("key_attributes", JSON.stringify(data.key_attributes));
+    }
 
     // New Images
     images.forEach((image) => {
@@ -666,6 +681,58 @@ const PropertyForm = ({
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Property Attributes Card */}
+      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
+          Property Attributes
+          <span className="text-xs font-normal text-gray-500 ml-2">
+            (e.g., Bedrooms, Washrooms, Balcony)
+          </span>
+        </h3>
+
+        <div className="space-y-4">
+          {fields.map((field, index) => (
+            <div key={field.id} className="flex gap-4 items-start">
+              <div className="flex-1">
+                <input
+                  {...register(`key_attributes.${index}.key`, {
+                    required: "Required",
+                  })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+                  placeholder="Attribute Name (e.g. Bedrooms)"
+                />
+              </div>
+              <div className="flex-1">
+                <input
+                  {...register(`key_attributes.${index}.value`, {
+                    required: "Required",
+                  })}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+                  placeholder="Value (e.g. 3)"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(index)}
+                className="mt-3 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Remove Attribute"
+              >
+                <Trash2 size={20} />
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => append({ key: "", value: "" })}
+            className="flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors mt-2"
+          >
+            <Plus size={20} /> Add Attribute
+          </button>
         </div>
       </div>
 
