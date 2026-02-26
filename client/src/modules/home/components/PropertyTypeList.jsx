@@ -2,35 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNav } from "@/context/NavContext";
 import { getImageUrl } from "@/utils/imageUrl";
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 
-const PrevArrow = (props) => {
-  const { onClick } = props;
-  return (
-    <button
-      onClick={onClick}
-      className="absolute -left-2 lg:-left-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white text-gray-800 p-2.5 rounded-full shadow-xl border border-gray-100 transition-all hover:scale-110 active:scale-95 group focus:outline-none hidden md:flex items-center justify-center cursor-pointer"
-      aria-label="Previous slide"
-    >
-      <ArrowLeft className="w-5 h-5 group-hover:text-amber-700 transition-colors" />
-    </button>
-  );
-};
-
-const NextArrow = (props) => {
-  const { onClick } = props;
-  return (
-    <button
-      onClick={onClick}
-      className="absolute -right-2 lg:-right-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white text-gray-800 p-2.5 rounded-full shadow-xl border border-gray-100 transition-all hover:scale-110 active:scale-95 group focus:outline-none hidden md:flex items-center justify-center cursor-pointer"
-      aria-label="Next slide"
-    >
-      <ArrowRight className="w-5 h-5 group-hover:text-amber-700 transition-colors" />
-    </button>
-  );
-};
+// Import Swiper React components and styles
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 
 const PropertyTypeList = () => {
   const navigate = useNavigate();
@@ -93,8 +70,8 @@ const PropertyTypeList = () => {
   });
 
   return (
-    <section className="pt-18 pb-2 bg-[#FAFAFA] font-sans">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <section className="pt-18 pb-10 bg-[#FAFAFA] font-sans overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative">
         {/* Premium Header */}
         <div className="text-center mb-10 flex flex-col items-center">
           <h2 className="text-4xl md:text-5xl font-light font-serif text-gray-900">
@@ -105,12 +82,10 @@ const PropertyTypeList = () => {
 
         {/* Loading State */}
         {loading ? (
-          // Adjusted to 4 columns on large screens
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
-                // Reduced skeleton height
                 className="bg-gray-200 rounded-xl flex h-[320px] animate-pulse overflow-hidden"
               ></div>
             ))}
@@ -122,52 +97,51 @@ const PropertyTypeList = () => {
             </p>
           </div>
         ) : (
-          /* Property Types Slider */
-          <div className="property-types-slider -mx-1 sm:-mx-2">
-            <Slider
-              dots={false}
-              infinite={types.length > 4}
-              speed={800}
-              slidesToShow={4}
-              slidesToScroll={1}
-              autoplay={true}
-              autoplaySpeed={4000}
-              pauseOnHover={true}
-              arrows={true}
-              prevArrow={<PrevArrow />}
-              nextArrow={<NextArrow />}
-              responsive={[
-                {
-                  breakpoint: 1024,
-                  settings: {
-                    slidesToShow: 3,
-                    centerMode: true,
-                    centerPadding: "20px",
-                    infinite: types.length > 3,
-                  },
+          <div className="relative group/slider">
+            {/* Custom Navigation */}
+            <button className="swiper-prev-btn absolute left-0 lg:-left-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white text-gray-800 p-2.5 rounded-full shadow-xl border border-gray-100 transition-all hover:scale-110 active:scale-95 group focus:outline-none hidden md:flex items-center justify-center cursor-pointer disabled:opacity-0 disabled:pointer-events-none">
+              <ArrowLeft className="w-5 h-5 group-hover:text-amber-700 transition-colors" />
+            </button>
+            <button className="swiper-next-btn absolute right-0 lg:-right-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white text-gray-800 p-2.5 rounded-full shadow-xl border border-gray-100 transition-all hover:scale-110 active:scale-95 group focus:outline-none hidden md:flex items-center justify-center cursor-pointer disabled:opacity-0 disabled:pointer-events-none">
+              <ArrowRight className="w-5 h-5 group-hover:text-amber-700 transition-colors" />
+            </button>
+
+            <Swiper
+              modules={[Navigation, Autoplay]}
+              spaceBetween={20}
+              slidesPerView={1}
+              navigation={{
+                prevEl: ".swiper-prev-btn",
+                nextEl: ".swiper-next-btn",
+              }}
+              autoplay={{
+                delay: 4000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              loop={types.length > 1}
+              breakpoints={{
+                540: {
+                  slidesPerView: 2,
+                  spaceBetween: 20,
                 },
-                {
-                  breakpoint: 768,
-                  settings: {
-                    slidesToShow: 2,
-                    centerMode: true,
-                    centerPadding: "20px",
-                    infinite: types.length > 2,
-                  },
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 24,
                 },
-                {
-                  breakpoint: 480,
-                  settings: {
-                    slidesToShow: 1,
-                    centerMode: true,
-                    centerPadding: "40px",
-                    infinite: types.length > 1,
-                  },
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 30,
                 },
-              ]}
+                1440: {
+                  slidesPerView: 4,
+                  spaceBetween: 40,
+                },
+              }}
+              className="py-6"
             >
               {types.map((item, index) => (
-                <div key={index} className="px-1 sm:px-2">
+                <SwiperSlide key={index}>
                   <div
                     onClick={() =>
                       navigate(
@@ -211,9 +185,9 @@ const PropertyTypeList = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </SwiperSlide>
               ))}
-            </Slider>
+            </Swiper>
           </div>
         )}
       </div>
