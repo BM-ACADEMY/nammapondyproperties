@@ -309,18 +309,20 @@ const AdminProperties = ({ mode }) => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           {mode === "seller" ? "Seller Listings" : "Our Properties"}
         </h1>
-        <Button
-          type="primary"
-          onClick={() => navigate("/admin/properties/add")}
-          className="bg-blue-600"
-        >
-          + Add New Property
-        </Button>
+        <div className="w-full sm:w-auto flex justify-start">
+          <Button
+            type="primary"
+            onClick={() => navigate("/admin/properties/add")}
+            className="bg-blue-600 w-auto"
+          >
+            + Add New Property
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -569,7 +571,7 @@ const AdminProperties = ({ mode }) => {
                     children: (
                       <div className="pt-4 space-y-8 animate-fadeIn">
                         {selectedProperty.key_attributes &&
-                        selectedProperty.key_attributes.length > 0 ? (
+                          selectedProperty.key_attributes.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {selectedProperty.key_attributes.map(
                               (attr, index) =>

@@ -72,11 +72,13 @@ const SellerList = () => {
             title: "Email",
             dataIndex: "email",
             key: "email",
+            responsive: ["md"], // Hide on small screens, show on tablet and up
         },
         {
             title: "Phone",
             dataIndex: "phone",
             key: "phone",
+            responsive: ["sm"], // Hide on mobile, show on small screens and up
         },
         {
             title: "Status",
@@ -111,9 +113,9 @@ const SellerList = () => {
     ];
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <Title level={3}>Seller Management</Title>
+        <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-6">
+                <Title level={3} className="!mb-0 w-full sm:w-auto text-left">Seller Management</Title>
                 <Button
                     type="primary"
                     icon={<Plus size={18} />}
@@ -121,20 +123,27 @@ const SellerList = () => {
                         setEditingUser(null);
                         setIsModalVisible(true);
                     }}
+                    className="w-auto"
                 >
                     Add New Seller
                 </Button>
             </div>
 
-            <Card className="shadow-sm border-none">
-                <Table
-                    columns={columns}
-                    dataSource={sellers}
-                    rowKey="_id"
-                    loading={loading}
-                    pagination={{ pageSize: 10 }}
-                    scroll={{ x: true }}
-                />
+            <Card className="shadow-sm border-none overflow-hidden">
+                <div className="overflow-x-auto">
+                    <Table
+                        columns={columns}
+                        dataSource={sellers}
+                        rowKey="_id"
+                        loading={loading}
+                        pagination={{
+                            pageSize: 10,
+                            size: "small",
+                            responsive: true
+                        }}
+                        scroll={{ x: "max-content" }}
+                    />
+                </div>
             </Card>
 
             <CreateUserModal
