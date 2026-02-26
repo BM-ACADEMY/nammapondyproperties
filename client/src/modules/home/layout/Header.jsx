@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import { getImageUrl } from "@/utils/imageUrl";
-import { AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
   X,
@@ -106,7 +106,16 @@ const Header = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo - Left Side */}
-            <Link to="/" className="flex-shrink-0 flex items-center group">
+            <Link
+              to="/"
+              className="flex-shrink-0 flex items-center group"
+              onClick={() => {
+                const mainContent = document.getElementById("main-content");
+                if (mainContent) {
+                  mainContent.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+            >
               <img
                 src="/Logo/logo.png"
                 alt="NammaPondy Logo"
@@ -247,7 +256,7 @@ const Header = () => {
                                 <img
                                   src={
                                     user.profile_image.startsWith("http") ||
-                                    user.profile_image.startsWith("//")
+                                      user.profile_image.startsWith("//")
                                       ? user.profile_image
                                       : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
                                   }
@@ -272,7 +281,7 @@ const Header = () => {
                           <div className="px-2 space-y-1">
                             {user?.role_id?.role_name?.toUpperCase() ===
                               "ADMIN" ||
-                            user?.role?.name?.toUpperCase() === "ADMIN" ? (
+                              user?.role?.name?.toUpperCase() === "ADMIN" ? (
                               <Link
                                 to="/admin/dashboard"
                                 onClick={() => setIsUserMenuOpen(false)}
@@ -284,7 +293,7 @@ const Header = () => {
                                 </span>
                               </Link>
                             ) : user?.role_id?.role_name?.toUpperCase() ===
-                                "SELLER" ||
+                              "SELLER" ||
                               user?.role?.name?.toUpperCase() === "SELLER" ? (
                               <Link
                                 to="/seller/dashboard"
@@ -431,7 +440,18 @@ const Header = () => {
               className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[#1a1a1a] border-l border-gray-800 shadow-2xl z-50 lg:hidden flex flex-col overflow-hidden"
             >
               <div className="flex items-center justify-between p-5 border-b border-gray-800 bg-[#1a1a1a]">
-                <img src="/Logo/logo.png" alt="Logo" className="h-12 w-auto" />
+                <Link
+                  to="/"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    const mainContent = document.getElementById("main-content");
+                    if (mainContent) {
+                      mainContent.scrollTo({ top: 0, behavior: "smooth" });
+                    }
+                  }}
+                >
+                  <img src="/Logo/logo.png" alt="Logo" className="h-12 w-auto" />
+                </Link>
                 <button
                   onClick={() => setIsMenuOpen(false)}
                   className="p-2 rounded-full hover:bg-[#333333] text-gray-400 hover:text-white transition-colors"
@@ -467,7 +487,7 @@ const Header = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
-                      user?.role?.name?.toUpperCase() === "ADMIN" ? (
+                        user?.role?.name?.toUpperCase() === "ADMIN" ? (
                         <Link
                           to="/admin/dashboard"
                           onClick={() => setIsMenuOpen(false)}
@@ -476,7 +496,7 @@ const Header = () => {
                           Dashboard
                         </Link>
                       ) : user?.role_id?.role_name?.toUpperCase() ===
-                          "SELLER" ||
+                        "SELLER" ||
                         user?.role?.name?.toUpperCase() === "SELLER" ? (
                         <Link
                           to="/seller/dashboard"

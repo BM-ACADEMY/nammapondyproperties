@@ -181,7 +181,7 @@ const AdminLayout = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <Badge count={pendingCount} size="small" offset={[-2, 2]}>
+            {/* <Badge count={pendingCount} size="small" offset={[-2, 2]}>
               <Button
                 type="text"
                 shape="circle"
@@ -189,7 +189,7 @@ const AdminLayout = () => {
                 onClick={() => navigate("/admin/properties")}
                 title="Pending approvals"
               />
-            </Badge>
+            </Badge> */}
 
             <Dropdown
               menu={{ items: userMenuParts }}
@@ -217,15 +217,15 @@ const AdminLayout = () => {
         </Header>
 
         <Content
+          id="admin-content"
           style={{
             margin: "24px 16px",
             padding: 24,
             minHeight: 280,
             background: "#f5f7fa",
             borderRadius: borderRadiusLG,
-            overflowY: "auto", // Make content scrollable
-            height: "calc(100vh - 112px)", // Calculate height (100vh - header - margins approx)
-            // Or better: flex-grow if using flex column
+            overflowY: "auto",
+            height: "calc(100vh - 112px)",
           }}
         >
           <Outlet />

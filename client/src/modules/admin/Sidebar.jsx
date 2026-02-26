@@ -136,14 +136,24 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
   const SidebarContent = (
     <>
-      <Link to="/">
-        <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg">
+      <Link
+        to="/"
+        onClick={() => {
+          // If they navigate home, ensure it scrolls to top
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          const mainContent = document.getElementById("main-content");
+          if (mainContent) {
+            mainContent.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }}
+      >
+        <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg group hover:bg-white/20 transition-all duration-300">
           {collapsed && !isMobile ? (
-            <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold">
+            <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
               AP
             </div>
           ) : (
-            <span className="text-white text-lg font-bold tracking-wide">
+            <span className="text-white text-lg font-bold tracking-wide group-hover:scale-105 transition-transform">
               ADMIN PANEL
             </span>
           )}

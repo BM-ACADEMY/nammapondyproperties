@@ -269,7 +269,7 @@ const AdminProperties = ({ mode }) => {
       title: "Action",
       key: "action",
       render: (_, record) => (
-        <Space size="middle">
+        <Space size="small" wrap>
           <Button
             size="small"
             onClick={() => handleMarkAsSoldClick(record)}
@@ -309,18 +309,20 @@ const AdminProperties = ({ mode }) => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-800">
           {mode === "seller" ? "Seller Listings" : "Our Properties"}
         </h1>
-        <Button
-          type="primary"
-          onClick={() => navigate("/admin/properties/add")}
-          className="bg-blue-600"
-        >
-          + Add New Property
-        </Button>
+        <div className="w-full sm:w-auto flex justify-start">
+          <Button
+            type="primary"
+            onClick={() => navigate("/admin/properties/add")}
+            className="bg-blue-600 w-auto"
+          >
+            + Add New Property
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -425,7 +427,7 @@ const AdminProperties = ({ mode }) => {
 
               {/* Overlay Content */}
               <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white z-10 pointer-events-none">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                   <div>
                     <div className="flex flex-wrap gap-2 mb-3">
                       <Tag
@@ -455,7 +457,7 @@ const AdminProperties = ({ mode }) => {
                         </Tag>
                       )}
                     </div>
-                    <h1 className="text-2xl md:text-3xl font-bold mb-2 shadow-sm">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 shadow-sm break-words">
                       {selectedProperty.title}
                     </h1>
                     <p className="flex items-center gap-2 text-gray-200 text-sm md:text-base font-medium">
@@ -471,7 +473,7 @@ const AdminProperties = ({ mode }) => {
                         ? "Sold Price"
                         : "Price"}
                     </p>
-                    <p className="text-3xl md:text-4xl font-bold text-white shadow-sm">
+                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white shadow-sm">
                       {selectedProperty.isSold && selectedProperty.soldPrice
                         ? formatIndianPrice(selectedProperty.soldPrice)
                         : formatIndianPrice(selectedProperty.price)}
@@ -569,7 +571,7 @@ const AdminProperties = ({ mode }) => {
                     children: (
                       <div className="pt-4 space-y-8 animate-fadeIn">
                         {selectedProperty.key_attributes &&
-                        selectedProperty.key_attributes.length > 0 ? (
+                          selectedProperty.key_attributes.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {selectedProperty.key_attributes.map(
                               (attr, index) =>
@@ -661,7 +663,7 @@ const AdminProperties = ({ mode }) => {
                 ]}
               />
 
-              <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end gap-3">
+              <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                 <Button
                   size="large"
                   onClick={handleCloseModal}
@@ -679,7 +681,7 @@ const AdminProperties = ({ mode }) => {
                     handleCloseModal();
                   }}
                   disabled={mode === "seller"} // Respect the mode logic from original
-                  className="bg-blue-600 hover:bg-blue-700 px-8"
+                  className="bg-blue-600 hover:bg-blue-700 px-8 w-full sm:w-auto"
                 >
                   Edit Property
                 </Button>

@@ -18,6 +18,8 @@ import SellerRegister from "./modules/auth/SellerRegister";
 import BecomeSeller from "./modules/user/BecomeSeller";
 import About from "./modules/about/About";
 import Contact from "./modules/contact/Contact";
+import TermsAndConditions from "./modules/home/pages/TermsAndConditions";
+import PrivacyPolicy from "./modules/home/pages/PrivacyPolicy";
 
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
 
@@ -42,6 +44,8 @@ const AppRoutes = () => {
         {/* Public pages accessible to everyone */}
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/terms-and-condition" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/favorites" element={<FavoritesPage />} />
       </Route>
 
