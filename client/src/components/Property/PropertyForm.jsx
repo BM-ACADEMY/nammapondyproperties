@@ -89,6 +89,8 @@ const PropertyForm = ({
         country: initialData?.location?.country || "IN", // Default to India
         state: initialData?.location?.state || "",
         city: initialData?.location?.city || "",
+        locality: initialData?.location?.locality || "",
+        sub_area: initialData?.location?.sub_area || "",
         pincode: initialData?.location?.pincode || "",
       },
       advertiseOnSocialMedia: initialData?.advertiseOnSocialMedia || false,
@@ -119,6 +121,8 @@ const PropertyForm = ({
           country: initialData.location?.country || "IN",
           state: initialData.location?.state || "",
           city: initialData.location?.city || "",
+          locality: initialData.location?.locality || "",
+          sub_area: initialData.location?.sub_area || "",
 
           pincode: initialData.location?.pincode || "",
           latitude: initialData.location?.latitude || "",
@@ -156,22 +160,52 @@ const PropertyForm = ({
   const selectedCountry = watch("location.country");
   const selectedState = watch("location.state");
   const selectedCity = watch("location.city");
+  const selectedLocality = watch("location.locality");
+  const selectedSubArea = watch("location.sub_area");
   const [mapPosition, setMapPosition] = useState(null);
 
-  // Auto-center map when city changes
+  // Auto-center map when city/locality/subArea changes
   useEffect(() => {
-    if (selectedCity && selectedState && selectedCountry) {
-      const cities = City.getCitiesOfState(selectedCountry, selectedState);
-      const cityData = cities.find((c) => c.name === selectedCity);
-      if (cityData && cityData.latitude && cityData.longitude) {
-        const lat = parseFloat(cityData.latitude);
-        const lng = parseFloat(cityData.longitude);
-        setMapPosition({ lat, lng });
-        setValue("location.latitude", lat);
-        setValue("location.longitude", lng);
+    const updateMapCenter = async () => {
+      let searchQuery = "";
+      if (selectedSubArea)
+        searchQuery = `${selectedSubArea}, ${selectedLocality || ""}, ${selectedCity || ""}, ${selectedState || ""}, India`;
+      else if (selectedLocality)
+        searchQuery = `${selectedLocality}, ${selectedCity || ""}, ${selectedState || ""}, India`;
+      else if (selectedCity)
+        searchQuery = `${selectedCity}, ${selectedState || ""}, India`;
+
+      if (searchQuery) {
+        try {
+          const response = await axios.get(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
+          );
+          if (response.data && response.data.length > 0) {
+            const { lat, lon } = response.data[0];
+            const newPos = { lat: parseFloat(lat), lng: parseFloat(lon) };
+            setMapPosition(newPos);
+            setValue("location.latitude", newPos.lat);
+            setValue("location.longitude", newPos.lng);
+          }
+        } catch (error) {
+          console.error("Geocoding error:", error);
+        }
       }
-    }
-  }, [selectedCity, selectedState, selectedCountry, setValue]);
+    };
+
+    const timer = setTimeout(() => {
+      updateMapCenter();
+    }, 1000); // Debounce to avoid excessive API calls
+
+    return () => clearTimeout(timer);
+  }, [
+    selectedCity,
+    selectedLocality,
+    selectedSubArea,
+    selectedState,
+    selectedCountry,
+    setValue,
+  ]);
 
   useEffect(() => {
     if (initialData?.location?.latitude && initialData?.location?.longitude) {
@@ -612,6 +646,42 @@ const PropertyForm = ({
                 </select>
               )}
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Locality <span className="text-red-500">*</span>
+            </label>
+            <input
+              {...register("location.locality", {
+                required: "Locality is required",
+              })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+              placeholder="e.g. White Town"
+            />
+            {errors.location?.locality?.message && (
+              <p className="text-red-500 text-xs mt-1 font-medium">
+                {errors.location.locality.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Area <span className="text-red-500">*</span>
+            </label>
+            <input
+              {...register("location.sub_area", {
+                required: "Area is required",
+              })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+              placeholder="e.g. Heritage Area"
+            />
+            {errors.location?.sub_area?.message && (
+              <p className="text-red-500 text-xs mt-1 font-medium">
+                {errors.location.sub_area.message}
+              </p>
+            )}
           </div>
 
           <div>

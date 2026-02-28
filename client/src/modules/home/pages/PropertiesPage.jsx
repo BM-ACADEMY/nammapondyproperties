@@ -290,7 +290,7 @@ const PropertiesPage = () => {
               <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Search by title..."
+                placeholder="Search properties (title, description, location...)"
                 className="w-full bg-transparent text-gray-800 text-sm md:text-base placeholder-gray-400 focus:outline-none"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}

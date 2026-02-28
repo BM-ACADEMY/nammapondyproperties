@@ -177,12 +177,11 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
               }
             }}
             disabled={property.isSold}
-            className={`w-full font-bold py-2.5 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-[0.98] duration-300 
-                            ${
-                              property.isSold
-                                ? "bg-gray-500/50 text-white cursor-not-allowed backdrop-blur-sm"
-                                : "bg-white hover:bg-[#e7e5f4] text-gray-900 opacity-90 group-hover:opacity-100 cursor-pointer pointer-events-auto"
-                            }`}
+            className={`w-full font-bold py-2.5 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-[0.98] duration-300
+                            ${property.isSold
+                ? "bg-gray-500/50 text-white cursor-not-allowed backdrop-blur-sm"
+                : "bg-white hover:bg-[#e7e5f4] text-gray-900 opacity-90 group-hover:opacity-100 cursor-pointer pointer-events-auto"
+              }`}
           >
             {property.isSold ? (
               "Sold Out"

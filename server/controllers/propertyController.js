@@ -192,15 +192,32 @@ exports.getProperties = async (req, res) => {
 
     if (type) query.property_type = type;
     if (approval) query.approval = approval;
-    if (location) query["location.city"] = location;
+    if (location) {
+      query.$or = [
+        { "location.city": location },
+        { "location.locality": location },
+        { "location.sub_area": location },
+      ];
+    }
     if (is_verified) query.is_verified = is_verified === "true";
 
     if (search) {
       const searchRegex = { $regex: search, $options: "i" };
-      const searchConditions = [{ title: searchRegex }];
-      searchConditions.push({ "location.address_line_1": searchRegex });
-      searchConditions.push({ "location.city": searchRegex });
-      searchConditions.push({ "location.state": searchRegex });
+      const searchConditions = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { "location.address_line_1": searchRegex },
+        { "location.address_line_2": searchRegex },
+        { "location.city": searchRegex },
+        { "location.locality": searchRegex },
+        { "location.sub_area": searchRegex },
+        { "location.state": searchRegex },
+        { "location.pincode": searchRegex },
+        { property_type: searchRegex },
+        { approval: searchRegex },
+        { "key_attributes.key": searchRegex },
+        { "key_attributes.value": searchRegex },
+      ];
       query.$or = searchConditions;
     }
 
@@ -283,8 +300,11 @@ exports.getFilters = async (req, res) => {
       "name image_url",
     );
     const approvals = await ApprovalType.distinct("name", { status: "active" });
-    // Fetch distinct cities instead of full location objects to prevent frontend crashes
-    const locations = await Property.distinct("location.city");
+    // Fetch distinct cities, localities, and sub-areas
+    const cities = await Property.distinct("location.city");
+    const localities = await Property.distinct("location.locality");
+    const subAreas = await Property.distinct("location.sub_area");
+
     const priceStats = await Property.aggregate([
       {
         $group: {
@@ -345,6 +365,9 @@ exports.getFilters = async (req, res) => {
       types: types,
       approvals: approvals,
       locations: cleanLocations,
+      cities: cities.filter((c) => c),
+      localities: localities.filter((l) => l),
+      subAreas: subAreas.filter((s) => s),
       priceRanges,
       maxPrice,
     });

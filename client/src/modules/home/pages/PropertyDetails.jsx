@@ -225,11 +225,10 @@ const PropertyDetails = () => {
                     <button
                       key={idx}
                       onClick={() => setMainImage(img.image_url)}
-                      className={`relative w-28 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all cursor-pointer ${
-                        mainImage === img.image_url
+                      className={`relative w-28 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all cursor-pointer ${mainImage === img.image_url
                           ? "ring-2 ring-black opacity-100"
                           : "opacity-60 hover:opacity-100"
-                      }`}
+                        }`}
                     >
                       <img
                         src={getImageUrl(img.image_url)}
@@ -447,11 +446,10 @@ const PropertyDetails = () => {
                 <button
                   onClick={handleWhatsAppClick}
                   disabled={enquiryLoading || property.isSold}
-                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${
-                    property.isSold
+                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${property.isSold
                       ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
                       : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"
-                  }`}
+                    }`}
                 >
                   {property.isSold ? (
                     "Property Sold Out"

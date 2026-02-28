@@ -16,10 +16,10 @@ const HeroSection = () => {
 
   // Animated Placeholder State
   const searchPlaceholders = [
-    "Search by title...",
-    "Search by location...",
-    "Search by Luxury Apartments...",
-    "Search by Pondicherry...",
+    "Search by title or description...",
+    "Search by area or pincode...",
+    "Search by property type (Villa, Plot...)",
+    "Search by attributes (3 BHK...)",
   ];
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
 
@@ -179,7 +179,7 @@ const HeroSection = () => {
             {/* 1. SEARCH INPUT */}
             <div className="flex-grow flex items-center pl-4 pr-2 md:px-6 h-full md:border-r border-gray-200 min-w-0 relative">
               <Search className="w-5 h-5 text-gray-400 mr-2 md:mr-3 flex-shrink-0" />
-              
+
               {/* Custom Animated Placeholder Wrapper */}
               <div className="relative w-full h-full flex items-center overflow-hidden">
                 {!searchQuery && (
@@ -196,7 +196,7 @@ const HeroSection = () => {
                     </motion.span>
                   </AnimatePresence>
                 )}
-                
+
                 {/* Actual Input Field */}
                 <input
                   type="text"

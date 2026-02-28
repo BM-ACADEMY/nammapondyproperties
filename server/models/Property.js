@@ -16,6 +16,8 @@ const propertySchema = new mongoose.Schema(
       country: { type: String },
       state: { type: String },
       city: { type: String },
+      locality: { type: String },
+      sub_area: { type: String },
       pincode: { type: String },
       latitude: { type: Number },
       longitude: { type: Number },
