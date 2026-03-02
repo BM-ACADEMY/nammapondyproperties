@@ -11,16 +11,16 @@ export const NavProvider = ({ children }) => {
     useEffect(() => {
         const fetchNavData = async () => {
             try {
-                const [businessRes, filtersRes] = await Promise.all([
+                const [businessRes, propertyTypesRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_URL}/business-types?status=active`),
-                    axios.get(`${import.meta.env.VITE_API_URL}/properties/filters`)
+                    axios.get(`${import.meta.env.VITE_API_URL}/properties/property-types`)
                 ]);
 
                 setBusinessTypes(businessRes.data);
 
-                if (filtersRes.data && filtersRes.data.types) {
-                    // Filter out unwanted types if necessary
-                    setPropertyTypes(filtersRes.data.types.filter(type => type !== "realestate_with_kamar"));
+                if (propertyTypesRes.data && Array.isArray(propertyTypesRes.data)) {
+                    // Filter out unwanted types if necessary by name since it's an object array now
+                    setPropertyTypes(propertyTypesRes.data.filter(type => type.name && type.name !== "realestate_with_kamar"));
                 }
             } catch (error) {
                 console.error("Error fetching navigation data:", error);

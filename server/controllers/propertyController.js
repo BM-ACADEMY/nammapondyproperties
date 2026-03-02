@@ -305,6 +305,8 @@ exports.getFilters = async (req, res) => {
     const localities = await Property.distinct("location.locality");
     const subAreas = await Property.distinct("location.sub_area");
 
+    const locations = [...new Set([...cities, ...localities, ...subAreas])];
+
     const priceStats = await Property.aggregate([
       {
         $group: {
@@ -574,7 +576,7 @@ exports.getPropertyTypes = async (req, res) => {
     }
 
     const types = await PropertyType.find(query).select(
-      "name key_attributes -_id",
+      "name key_attributes image_url -_id",
     );
     res.json(types);
   } catch (error) {
