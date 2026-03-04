@@ -21,7 +21,7 @@ const FeaturedProperties = () => {
       try {
         // Fetch only verified properties, limited to 6
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?is_verified=true&limit=6`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=6`,
         );
         if (Array.isArray(res.data.properties)) {
           setProperties(res.data.properties);
@@ -66,7 +66,7 @@ const FeaturedProperties = () => {
       typeof property.location === "string"
         ? property.location
         : `${property.location?.city || ""}, ${property.location?.state || ""}`;
-    const message = `Hi, I am interested in your property: ${property.title} located at ${locationStr}. Please provide more details.`;
+    const message = `Hi, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${locationStr}. Please provide more details.`;
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {
@@ -99,7 +99,7 @@ const FeaturedProperties = () => {
       <div className=" mx-auto max-w-7xl px-4">
         <div className="flex justify-between items-end mb-8">
           <div>
-            
+
             <div className="pt-15"></div>
 
             {/* Elegant Typography Heading */}
@@ -110,7 +110,7 @@ const FeaturedProperties = () => {
             <p className="text-lg text-slate-500 mt-4 leading-relaxed">
               Check out our latest verified and premium listings.
             </p>
-            
+
           </div>
           <Link
             to="/properties"

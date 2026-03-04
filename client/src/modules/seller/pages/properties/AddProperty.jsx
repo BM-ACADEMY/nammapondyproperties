@@ -60,10 +60,10 @@ const AddProperty = () => {
       }
     }
   }, [editId, checkLimit, fetchProperty, user]);
-
   const onSubmit = async (formData) => {
     setLoading(true);
     let response = null;
+
     try {
       if (editId) {
         await axios.put(
@@ -113,7 +113,7 @@ const AddProperty = () => {
 
   return (
     <div className="p-4 md:p-8 bg-gray-50/50 min-h-screen">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {editId ? "Edit Property" : "Add New Property"}

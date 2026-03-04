@@ -1,48 +1,219 @@
-// models/Property.js
 const mongoose = require("mongoose");
+
 const propertySchema = new mongoose.Schema(
   {
-    seller_id: {
+    // =====================================================
+    // 1️⃣ OWNER INFO
+    // =====================================================
+    seller: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    title: { type: String, required: true },
-    description: { type: String },
-    price: { type: Number, required: true },
-    location: {
-      address_line_1: { type: String },
-      address_line_2: { type: String },
-      country: { type: String },
-      state: { type: String },
-      city: { type: String },
-      locality: { type: String },
-      sub_area: { type: String },
-      pincode: { type: String },
-      latitude: { type: Number },
-      longitude: { type: Number },
+
+    // =====================================================
+    // 2️⃣ BASIC INFO
+    // =====================================================
+    basicInfo: {
+      title: { type: String, required: true },
+      description: String,
+
+      category: {
+        type: String,
+        enum: ["Sell", "Rent"],
+        required: true
+      },
+
+      usageType: {
+        type: String,
+        enum: ["Residential", "Commercial"],
+        required: true
+      },
+
+      propertyType: {
+        type: String,
+        required: true
+      },
+
+      approvalType: String
     },
-    area_size: { type: String },
-    property_type: { type: String, required: true }, // Dynamic now
-    status: { type: String, default: "available" },
-    is_verified: { type: Boolean, default: true },
-    images: [{ image_url: { type: String } }], // Embedded array for images
-    view_count: { type: Number, default: 0 },
-    approval: { type: String }, // Dynamic now
-    key_attributes: [{ key: String, value: String }], // Array of key-value pairs
-    advertiseOnSocialMedia: { type: Boolean, default: false }, // Advertisement opt-in
-    isSold: { type: Boolean, default: false },
-    soldPrice: { type: Number }, // Optional sold price
+
+    // =====================================================
+    // 2.5️⃣ BUSINESS
+    // =====================================================
     businessType: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "BusinessType",
+      ref: "BusinessType"
     },
+
+    // =====================================================
+    // 3️⃣ LOCATION
+    // =====================================================
+    location: {
+      addressLine1: String,
+      addressLine2: String,
+      country: String,
+      state: String,
+      city: String,
+      locality: String,
+      subArea: String,
+      pincode: String,
+
+      coordinates: {
+        lat: Number,
+        lng: Number
+      }
+    },
+
+    // =====================================================
+    // 4️⃣ PRICING
+    // =====================================================
+    pricing: {
+      sell: {
+        price: Number,
+        pricePerSqft: Number
+      },
+
+      rent: {
+        monthlyRent: Number,
+        securityDeposit: Number,
+        maintenance: Number,
+        availableFrom: Date,
+
+        tenantPreference: {
+          bachelor: Boolean,
+          family: Boolean,
+          pets: Boolean
+        }
+      }
+    },
+
+    // =====================================================
+    // 5️⃣ SPECIFICATIONS
+    // =====================================================
+    specifications: {
+      facing: {
+        type: String,
+        enum: [
+          "North",
+          "East",
+          "West",
+          "South",
+          "North-East",
+          "North-West",
+          "South-East",
+          "South-West",
+        ],
+      },
+
+      area: {
+        totalArea: Number,
+        builtupArea: Number,
+        superBuiltupArea: Number,
+        carpetArea: Number
+      },
+
+      floor: {
+        totalFloor: Number,
+        propertyOnFloor: String
+      },
+
+      residential: {
+        bedrooms: Number,
+        bathrooms: Number,
+        balconies: Number,
+        hall: Number,
+        kitchens: Number,
+
+        furnishing: {
+          type: String,
+          enum: ["Fully Furnished", "Semi Furnished", "Unfurnished"]
+        },
+      },
+
+      plot: {
+        plotLength: Number,
+        plotWidth: Number,
+        cornerPlot: Boolean,
+        gatedCommunity: Boolean,
+        roadWidth: Number
+      },
+
+      commercial: {
+        cabins: Number,
+        meetingRooms: Number,
+        washrooms: Number,
+        pantry: Boolean,
+        receptionArea: Boolean,
+        workstations: Number,
+
+        suitableFor: String
+      },
+
+      utilities: {
+        waterSupply: {
+          type: String,
+          enum: ["Corporation", "Borewell", "Both"]
+        },
+        powerBackup: Boolean
+      }
+    },
+
+    // =====================================================
+    // 6️⃣ AMENITIES
+    // =====================================================
+    amenities: [String],
+
+    // =====================================================
+    // 7️⃣ MEDIA
+    // =====================================================
+    media: {
+      featuredImage: String,
+      images: [String],
+      video: String,
+      floorPlan: String
+    },
+
+    // =====================================================
+    // 8️⃣ LEGAL
+    // =====================================================
+    legal: {
+      propertyStatus: {
+        type: String,
+        enum: ["Ready to Move", "Under Construction"]
+      }
+    },
+
+    // =====================================================
+    // 9️⃣ SYSTEM / TRACKING
+    // =====================================================
+    status: {
+      type: String,
+      enum: ["Active", "Sold", "Rented", "Pending"],
+      default: "Active"
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
+
+    viewCount: {
+      type: Number,
+      default: 0
+    },
+
+    isSold: {
+      type: Boolean,
+      default: false
+    },
+
+    soldPrice: Number
+
   },
-  { timestamps: true },
+  {
+    timestamps: true
+  }
 );
 
-const Property = mongoose.model("Property", propertySchema);
-// Property.PROPERTY_TYPES = PROPERTY_TYPES; // Deprecated
-// Property.APPROVAL_TYPES = APPROVAL_TYPES; // Deprecated
-
-module.exports = Property;
+module.exports = mongoose.model("Property", propertySchema);

@@ -32,7 +32,7 @@ exports.createProperty = async (req, res) => {
       req.user.role_id.role_name === "seller"
     ) {
       const propertyCount = await Property.countDocuments({
-        seller_id: req.user._id,
+        seller: req.user._id,
       });
       if (propertyCount >= 2) {
         // Delete uploaded files if any, to avoid accumulating garbage
@@ -61,18 +61,41 @@ exports.createProperty = async (req, res) => {
       }));
     }
 
-    const location = parseJSON(req.body.location);
-    const key_attributes = parseJSON(req.body.key_attributes);
+    // Arrays might come as strings or arrays depending on frontend
+    const amenities = typeof req.body.amenities === 'string' ? JSON.parse(req.body.amenities) : (req.body.amenities || []);
+
+    const removeEmptyStrings = (obj) => {
+      Object.keys(obj).forEach(key => {
+        if (obj[key] === "") {
+          delete obj[key];
+        } else if (typeof obj[key] === "object" && obj[key] !== null) {
+          removeEmptyStrings(obj[key]);
+        }
+      });
+      return obj;
+    };
+
+    const location = removeEmptyStrings(parseJSON(req.body.location) || {});
+    const basicInfo = removeEmptyStrings(parseJSON(req.body.basicInfo) || {});
+    const pricing = removeEmptyStrings(parseJSON(req.body.pricing) || {});
+    const specifications = removeEmptyStrings(parseJSON(req.body.specifications) || {});
+    const legal = removeEmptyStrings(parseJSON(req.body.legal) || {});
 
     const propertyData = {
       ...req.body,
+      basicInfo,
+      pricing,
+      specifications,
+      legal,
+      amenities,
       location, // Use parsed location
-      key_attributes,
-      seller_id: req.user && req.user._id ? req.user._id : req.body.seller_id,
-      images: images,
-      businessType:
-        req.body.businessType || (req.user ? req.user.businessType : null),
-      is_verified: true,
+      seller: req.user && req.user._id ? req.user._id : req.body.seller,
+      media: {
+        images: images.map(img => img.image_url),
+        featuredImage: images.length > 0 ? images[0].image_url : ""
+      },
+      status: "Active",
+      isVerified: true,
     };
 
     const property = new Property(propertyData);
@@ -113,119 +136,153 @@ exports.getProperties = async (req, res) => {
       minPrice,
       maxPrice,
       approval,
-      is_verified,
-      seller_id,
-      excludeId, // New: Exclude a specific property ID
-      isSold, // New: Filter by sold status
       random, // New: Randomize results
       businessType, // New: Filter by seller's business type
+      isVerified, // Renamed from is_verified
+      seller_id,
+      excludeId,
+      isSold,
     } = req.query;
-    const query = {};
+    const queryConditions = [];
 
-    // Handle role based filtering
+    // 1. Role / Ownership
     if (req.query.role === "seller") {
       const Role = require("../models/Role");
-      const sellerRoleDoc = await Role.findOne({
-        role_name: { $regex: /^seller$/i },
-      });
+      const sellerRoleDoc = await Role.findOne({ role_name: { $regex: /^seller$/i } });
       if (sellerRoleDoc) {
-        const User = require("../models/User");
-        const sellers = await User.find({
-          role_id: sellerRoleDoc._id,
-        }).distinct("_id");
-        query.seller_id = { $in: sellers };
+        const sellers = await User.find({ role_id: sellerRoleDoc._id }).distinct("_id");
+        queryConditions.push({ seller: { $in: sellers } });
       }
     }
 
     if (seller_id) {
-      if (seller_id === "me") {
-        if (req.user) {
-          query.seller_id = req.user._id;
-        }
-      } else {
-        query.seller_id = seller_id;
+      if (seller_id === "me" && req.user) {
+        queryConditions.push({ seller: req.user._id });
+      } else if (seller_id !== "me") {
+        queryConditions.push({ seller: seller_id });
       }
     }
 
+    // 2. Business Type
     if (businessType) {
-      const sellersWithBizType = await User.find({ businessType }).distinct(
-        "_id",
-      );
-
-      // We want properties that have the businessType directly OR whose seller has that businessType
-      const bizTypeConditions = [
-        { businessType: businessType },
-        { seller_id: { $in: sellersWithBizType } },
-      ];
-
-      if (query.seller_id) {
-        // If we already have a seller filter, we need to respect both
-        query.$and = query.$and || [];
-        query.$and.push({ $or: bizTypeConditions });
-      } else {
-        query.$or = query.$or || [];
-        // If there's already an $or (from search), we must use $and to combine them
-        if (query.$or.length > 0) {
-          const searchOr = query.$or;
-          delete query.$or;
-          query.$and = [{ $or: searchOr }, { $or: bizTypeConditions }];
-        } else {
-          query.$or = bizTypeConditions;
-        }
-      }
+      const sellersWithBizType = await User.find({ businessType }).distinct("_id");
+      queryConditions.push({
+        $or: [
+          { businessType: businessType },
+          { seller: { $in: sellersWithBizType } }
+        ]
+      });
     }
 
+    // 3. Status / Verification
     if (excludeId) {
-      query._id = mongoose.isValidObjectId(excludeId)
-        ? { $ne: new mongoose.Types.ObjectId(excludeId) }
-        : { $ne: excludeId };
+      queryConditions.push({
+        _id: mongoose.isValidObjectId(excludeId) ? { $ne: new mongoose.Types.ObjectId(excludeId) } : { $ne: excludeId }
+      });
     }
 
     if (isSold !== undefined) {
-      // If isSold is 'false', we want properties where isSold is strictly false or doesn't exist
       if (isSold === "false") {
-        query.isSold = { $in: [false, undefined, null] };
+        queryConditions.push({ isSold: { $in: [false, undefined, null] } });
       } else if (isSold === "true") {
-        query.isSold = true;
+        queryConditions.push({ isSold: true });
       }
     }
 
-    if (type) query.property_type = type;
-    if (approval) query.approval = approval;
+    if (isVerified) {
+      queryConditions.push({ isVerified: isVerified === "true" });
+    }
+
+    // 4. Property Specifications
+    if (type) queryConditions.push({ "basicInfo.propertyType": type });
+    if (approval) queryConditions.push({ "basicInfo.approvalType": approval });
+
     if (location) {
-      query.$or = [
-        { "location.city": location },
-        { "location.locality": location },
-        { "location.sub_area": location },
-      ];
+      queryConditions.push({
+        $or: [
+          { "location.city": { $regex: location, $options: "i" } },
+          { "location.locality": { $regex: location, $options: "i" } },
+          { "location.state": { $regex: location, $options: "i" } },
+          { "location.subArea": { $regex: location, $options: "i" } }
+        ]
+      });
     }
-    if (is_verified) query.is_verified = is_verified === "true";
 
+    // 5. Advanced Search
     if (search) {
-      const searchRegex = { $regex: search, $options: "i" };
-      const searchConditions = [
-        { title: searchRegex },
-        { description: searchRegex },
-        { "location.address_line_1": searchRegex },
-        { "location.address_line_2": searchRegex },
-        { "location.city": searchRegex },
-        { "location.locality": searchRegex },
-        { "location.sub_area": searchRegex },
-        { "location.state": searchRegex },
-        { "location.pincode": searchRegex },
-        { property_type: searchRegex },
-        { approval: searchRegex },
-        { "key_attributes.key": searchRegex },
-        { "key_attributes.value": searchRegex },
-      ];
-      query.$or = searchConditions;
+      const tokens = search.split(/[\s,]+/).filter(t => t.length > 0);
+
+      if (tokens.length > 0) {
+        const tokenConditions = await Promise.all(tokens.map(async (token) => {
+          const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const tokenRegex = { $regex: escapedToken, $options: "i" };
+
+          // Find sellers matching this specific token
+          const matchingSellers = await User.find({
+            $or: [
+              { name: tokenRegex },
+              { phone: tokenRegex },
+              { email: tokenRegex }
+            ]
+          }).distinct("_id");
+
+          const searchOr = [
+            { "basicInfo.title": tokenRegex },
+            { "basicInfo.description": tokenRegex },
+            { "location.addressLine1": tokenRegex },
+            { "location.addressLine2": tokenRegex },
+            { "location.city": tokenRegex },
+            { "location.locality": tokenRegex },
+            { "location.subArea": tokenRegex },
+            { "location.state": tokenRegex },
+            { "location.pincode": tokenRegex },
+            { "basicInfo.propertyType": tokenRegex },
+            { "basicInfo.approvalType": tokenRegex },
+            { "basicInfo.usageType": tokenRegex },
+            { "basicInfo.category": tokenRegex },
+            { "legal.propertyStatus": tokenRegex },
+            { "specifications.facing": tokenRegex },
+            { "specifications.residential.furnishing": tokenRegex },
+            { "specifications.commercial.suitableFor": tokenRegex },
+            { "specifications.utilities.waterSupply": tokenRegex },
+            { "amenities": tokenRegex }
+          ];
+
+          if (matchingSellers.length > 0) {
+            searchOr.push({ seller: { $in: matchingSellers } });
+          }
+
+          // Smart Numeric Search
+          const numericValue = parseInt(token.replace(/\D/g, ''));
+          if (!isNaN(numericValue) && token.match(/^\d+$/)) {
+            searchOr.push({ "specifications.builtupArea": numericValue });
+            searchOr.push({ "specifications.residential.bedrooms": numericValue });
+            searchOr.push({ "specifications.residential.bathrooms": numericValue });
+          }
+
+          return { $or: searchOr };
+        }));
+
+        queryConditions.push({ $and: tokenConditions });
+      }
     }
 
+    // 6. Price Range
     if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      const priceQuery = {};
+      if (minPrice) priceQuery.$gte = Number(minPrice);
+      if (maxPrice) priceQuery.$lte = Number(maxPrice);
+
+      queryConditions.push({
+        $or: [
+          { "pricing.sell.price": priceQuery },
+          { "pricing.rent.monthlyRent": priceQuery }
+        ]
+      });
     }
+
+    // Build Final Query
+    const query = queryConditions.length > 0 ? { $and: queryConditions } : {};
 
     let properties;
     let count;
@@ -242,7 +299,7 @@ exports.getProperties = async (req, res) => {
       const randomDocs = await Property.aggregate(pipeline);
       properties = await Property.populate(randomDocs, [
         {
-          path: "seller_id",
+          path: "seller",
           populate: { path: "role_id" },
         },
         { path: "businessType" },
@@ -254,7 +311,7 @@ exports.getProperties = async (req, res) => {
       properties = await Property.find(query)
         .populate([
           {
-            path: "seller_id",
+            path: "seller",
             populate: { path: "role_id" },
           },
           { path: "businessType" },
@@ -283,10 +340,10 @@ exports.verifyProperty = async (req, res) => {
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
     }
-    property.is_verified = !property.is_verified;
+    property.isVerified = !property.isVerified;
     await property.save();
     res.json({
-      message: `Property ${property.is_verified ? "verified" : "unverified"}`,
+      message: `Property ${property.isVerified ? "verified" : "unverified"}`,
       property,
     });
   } catch (error) {
@@ -303,7 +360,7 @@ exports.getFilters = async (req, res) => {
     // Fetch distinct cities, localities, and sub-areas
     const cities = await Property.distinct("location.city");
     const localities = await Property.distinct("location.locality");
-    const subAreas = await Property.distinct("location.sub_area");
+    const subAreas = await Property.distinct("location.subArea");
 
     const locations = [...new Set([...cities, ...localities, ...subAreas])];
 
@@ -311,13 +368,19 @@ exports.getFilters = async (req, res) => {
       {
         $group: {
           _id: null,
-          minPrice: { $min: "$price" },
-          maxPrice: { $max: "$price" },
+          maxPrice: {
+            $max: {
+              $cond: [
+                { $ifNull: ["$pricing.sell.price", false] },
+                "$pricing.sell.price",
+                { $ifNull: ["$pricing.rent.monthlyRent", 0] }
+              ]
+            }
+          },
         },
       },
     ]);
 
-    const minPrice = priceStats[0]?.minPrice || 0;
     const maxPrice = priceStats[0]?.maxPrice || 10000000;
 
     // Better: Helper to format Indian currency
@@ -382,7 +445,7 @@ exports.getPropertyById = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id).populate([
       {
-        path: "seller_id",
+        path: "seller",
         populate: { path: "role_id" },
       },
       { path: "businessType" },
@@ -407,7 +470,7 @@ exports.updateProperty = async (req, res) => {
 
     // Security Check: If user is seller, ensure they own the property
     if (req.user.role && req.user.role.name === "seller") {
-      if (property.seller_id.toString() !== req.user._id.toString()) {
+      if (property.seller.toString() !== req.user._id.toString()) {
         return res
           .status(403)
           .json({ error: "You are not authorized to update this property" });
@@ -426,63 +489,73 @@ exports.updateProperty = async (req, res) => {
       return data;
     };
 
-    // Handle Location parsing
-    if (req.body.location) {
-      req.body.location = parseJSON(req.body.location);
-    }
-
-    // Handle Key Attributes parsing
-    if (req.body.key_attributes) {
-      req.body.key_attributes = parseJSON(req.body.key_attributes);
-    }
-
     // Handle Image Deletion
     const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
     if (imagesToDelete.length > 0) {
       // Find images to delete
-      const invalidImages = property.images.filter((img) =>
-        imagesToDelete.includes(img._id.toString()),
+      const invalidImages = (property.media?.images || []).filter((img) =>
+        imagesToDelete.includes(img)
       );
 
       // Delete files from filesystem
       invalidImages.forEach((img) => {
         try {
-          // Construct full path. img.image_url is like "/uploads/properties/filename.jpg"
-          // We need path from valid root.
-          // Assuming app runs from 'server' dir or we used path.join before.
-          // In createProperty: path.join(__dirname, '../uploads/properties', file.filename)
-          // img.image_url includes /uploads/properties/
-          const filePath = path.join(__dirname, "..", img.image_url);
+          const filePath = path.join(__dirname, "..", img);
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
           }
         } catch (err) {
-          console.error(`Failed to delete image file: ${img.image_url}`, err);
+          console.error(`Failed to delete image file: ${img}`, err);
         }
       });
-
-      // Filter out deleted images from property
-      property.images = property.images.filter(
-        (img) => !imagesToDelete.includes(img._id.toString()),
-      );
     }
+
+    const currentImages = property.media?.images || [];
+    const remainingImages = currentImages.filter(img => !imagesToDelete.includes(img));
 
     // Handle New Images
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map((file) => ({
-        image_url: `/uploads/properties/${file.filename}`,
-      }));
-      property.images.push(...newImages);
+      const newImages = req.files.map((file) => `/uploads/properties/${file.filename}`);
+      remainingImages.push(...newImages);
     }
 
-    // Update other fields
+    // Parse nested structures
+    const removeEmptyStrings = (obj) => {
+      if (!obj) return obj;
+      Object.keys(obj).forEach(key => {
+        if (obj[key] === "") {
+          delete obj[key];
+        } else if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
+          removeEmptyStrings(obj[key]);
+        }
+      });
+      return obj;
+    };
+
+    const parsedBasicInfo = removeEmptyStrings(parseJSON(req.body.basicInfo));
+    const parsedPricing = removeEmptyStrings(parseJSON(req.body.pricing));
+    const parsedSpecs = removeEmptyStrings(parseJSON(req.body.specifications));
+    const parsedLegal = removeEmptyStrings(parseJSON(req.body.legal));
+    const parsedAmenities = typeof req.body.amenities === 'string' ? parseJSON(req.body.amenities) : req.body.amenities;
+
     const updates = { ...req.body };
-    delete updates.images; // Don't overwrite images array directly
+    delete updates.images;
     delete updates.images_to_delete;
 
-    // Prevent overriding existing complex objects with undefined/null if not sent
-    if (!updates.location) delete updates.location;
-    if (!updates.key_attributes) delete updates.key_attributes;
+    // Apply nested parsing
+    if (updates.location) updates.location = removeEmptyStrings(parseJSON(updates.location));
+    if (parsedBasicInfo) updates.basicInfo = { ...property.basicInfo, ...parsedBasicInfo };
+    if (parsedPricing) updates.pricing = { ...property.pricing, ...parsedPricing };
+    if (parsedSpecs) updates.specifications = { ...property.specifications, ...parsedSpecs };
+    if (parsedLegal) updates.legal = { ...property.legal, ...parsedLegal };
+    if (parsedAmenities) updates.amenities = parsedAmenities;
+
+    // Save Media
+    updates.media = {
+      ...(property.media || {}),
+      images: remainingImages,
+      featuredImage: remainingImages.length > 0 ? remainingImages[0] : ""
+    };
 
     Object.assign(property, updates);
 
@@ -566,6 +639,47 @@ exports.incrementViewCount = async (req, res) => {
   }
 };
 
+exports.getAmenities = async (req, res) => {
+  try {
+    const amenities = [
+      "Lift",
+      "Car Parking",
+      "Bike Parking",
+      "Visitor Parking",
+      "Power Backup",
+      "24x7 Water Supply",
+      "CCTV Surveillance",
+      "24x7 Security",
+      "Intercom",
+      "Fire Safety System",
+      "Gated Community",
+      "Gym",
+      "Swimming Pool",
+      "Club House",
+      "Party Hall",
+      "Jogging Track",
+      "Garden",
+      "Children Play Area",
+      "WiFi",
+      "Laundry Service",
+      "Housekeeping",
+      "Rainwater Harvesting",
+      "Solar Power",
+      "Balcony",
+      "Modular Kitchen",
+      "Food Included",
+      "AC Room",
+      "Conference Room",
+      "Pantry",
+      "Corner Plot",
+      "Street Light",
+    ];
+    res.json(amenities);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getPropertyTypes = async (req, res) => {
   try {
     const { role } = req.query;
@@ -613,8 +727,8 @@ exports.getSellerStats = async (req, res) => {
     else if (range === "all") dateFrom = new Date(0); // All time
 
     // 1. Property Status Breakdown
-    const properties = await Property.find({ seller_id: sellerId }).select(
-      "status is_verified isSold view_count title start_date",
+    const properties = await Property.find({ seller: sellerId }).select(
+      "status isVerified isSold view_count basicInfo.title start_date",
     );
 
     const totalProperties = properties.length;
@@ -648,7 +762,7 @@ exports.getSellerStats = async (req, res) => {
     const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
-          seller_id: new mongoose.Types.ObjectId(sellerId),
+          seller: new mongoose.Types.ObjectId(sellerId),
           createdAt: { $gte: dateFrom },
         },
       },
@@ -692,7 +806,7 @@ exports.getSellerStats = async (req, res) => {
 
     // 5. Recent Activity (Enquiries)
     const recentEnquiries = await Enquiry.find({
-      seller_id: sellerId,
+      seller: sellerId,
     })
       .sort({ createdAt: -1 })
       .limit(5)
@@ -712,10 +826,10 @@ exports.getSellerStats = async (req, res) => {
     );
     const totalLeadsAllTime =
       (await Enquiry.countDocuments({
-        seller_id: sellerId,
+        seller: sellerId,
       })) +
       (await require("../models/WhatsappLead").countDocuments({
-        seller_id: sellerId,
+        seller: sellerId,
       }));
 
     res.json({
@@ -772,7 +886,7 @@ exports.getAdminStats = async (req, res) => {
     });
     const soldProperties = await Property.countDocuments({ isSold: true });
     const pendingApprovals = await Property.countDocuments({
-      is_verified: false,
+      isVerified: false,
     });
 
     // 3. Views Aggregation (Global, Time-Series)
@@ -797,7 +911,7 @@ exports.getAdminStats = async (req, res) => {
     const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
-          seller_id: req.user._id,
+          seller: req.user._id,
           createdAt: { $gte: dateFrom },
         },
       },
@@ -811,9 +925,9 @@ exports.getAdminStats = async (req, res) => {
     ]);
 
     const totalEnquiries =
-      (await Enquiry.countDocuments({ seller_id: req.user._id })) +
+      (await Enquiry.countDocuments({ seller: req.user._id })) +
       (await require("../models/WhatsappLead").countDocuments({
-        seller_id: req.user._id,
+        seller: req.user._id,
       }));
 
     // 5. Merge Chart Data
@@ -850,13 +964,13 @@ exports.getAdminStats = async (req, res) => {
 
     // Recent Properties
     const recentProperties = await Property.find()
-      .populate("seller_id", "name")
+      .populate("seller", "name")
       .limit(5)
-      .select("title seller_id is_verified createdAt status")
+      .select("basicInfo.title seller isVerified createdAt status")
       .sort({ createdAt: -1 });
 
     // Recent Enquiries (Only for this admin/seller to avoid leaking others' leads)
-    const recentEnquiries = await Enquiry.find({ seller_id: req.user._id })
+    const recentEnquiries = await Enquiry.find({ seller: req.user._id })
       .populate("property_id", "title")
       .populate("user_id", "name email")
       .sort({ createdAt: -1 })
@@ -884,9 +998,9 @@ exports.getAdminStats = async (req, res) => {
       })),
       recentProperties: recentProperties.map((p) => ({
         _id: p._id,
-        title: p.title,
-        seller: p.seller_id?.name || "Unknown",
-        status: p.is_verified ? p.status : "Pending Approval",
+        title: p.basicInfo?.title,
+        seller: p.seller?.name || "Unknown",
+        status: p.isVerified ? p.status : "Pending Approval",
         createdAt: p.createdAt,
       })),
       recentEnquiries: recentEnquiries.map((e) => ({

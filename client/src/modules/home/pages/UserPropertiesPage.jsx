@@ -93,7 +93,7 @@ const UserPropertiesPage = () => {
       typeof property.location === "string"
         ? property.location
         : `${property.location?.city || ""}, ${property.location?.state || ""}`;
-    const message = `Hi ${profileUser.name}, I am interested in your property: ${property.title} located at ${locStr}.`;
+    const message = `Hi ${profileUser.name}, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${locStr}.`;
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {

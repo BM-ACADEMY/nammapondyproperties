@@ -21,8 +21,8 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
 
       {/* Background Image */}
       <img
-        src={getImageUrl(property.images?.[0]?.image_url)}
-        alt={property.title}
+        src={getImageUrl(property.media?.featuredImage || property.media?.images?.[0])}
+        alt={property.basicInfo?.title || "Property"}
         className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
       />
 
@@ -59,13 +59,13 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
           {/* Developer Badge */}
           <div className="bg-white text-gray-900 text-[12px] font-bold px-2 py-1 inline-block rounded-sm mb-3 capitalize tracking-widest">
             {property.businessType?.name ||
-              property.property_type ||
+              property.basicInfo?.propertyType ||
               "DEVELOPER"}
           </div>
 
           {/* Title */}
           <h3 className="text-2xl font-medium mb-2 leading-tight text-white drop-shadow-md line-clamp-2">
-            {property.title}
+            {property.basicInfo?.title || "Untitled Property"}
           </h3>
 
           {/* Location */}
@@ -96,7 +96,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                 <path d="M14 10h-4" />
                 <path d="M10 14h4" />
               </svg>
-              {property.property_type || "Apartment"}
+              {property.basicInfo?.propertyType || "Apartment"}
             </div>
           </div>
 
@@ -114,7 +114,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                   {property.isSold ? "Price" : "Launch Price"}
                 </p>
                 <p className="text-2xl font-medium text-white tracking-tight">
-                  {formatIndianPrice(property.price)}
+                  {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
                 </p>
               </>
             )}
@@ -147,7 +147,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                   property.seller_id?.phone ||
                   "919876543210";
 
-                const message = `Hi, I'm interested in your property: ${property.title}`;
+                const message = `Hi, I'm interested in your property: ${property.basicInfo?.title}`;
                 const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
                 // Fire and forget API call to record the lead

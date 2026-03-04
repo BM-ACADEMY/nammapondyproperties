@@ -229,7 +229,7 @@ const PropertiesPage = () => {
       typeof property.location === "string"
         ? property.location
         : `${property.location?.city || ""}, ${property.location?.state || ""}`;
-    const message = `Hi, I am interested in your property: ${property.title} located at ${locStr}. Please provide more details.`;
+    const message = `Hi, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${locStr}. Please provide more details.`;
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {

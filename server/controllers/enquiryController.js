@@ -73,7 +73,7 @@ exports.getEnquiries = async (req, res) => {
     // If NOT admin OR (is admin AND specific view requested as 'my')
     // then filter by their own seller_id
     if (!isAdmin || (isAdmin && req.query.view === "my")) {
-      filter.seller_id = req.user._id;
+      filter.seller = req.user._id;
     }
 
     // However, if the user asking is the ADMIN, they might want to see ALL enquiries.
@@ -82,7 +82,7 @@ exports.getEnquiries = async (req, res) => {
 
     // For now, let's allow fetching by query param if admin, or default to self.
     // actually safer:
-    // const enquiries = await Enquiry.find({ seller_id: req.user._id })...
+    // const enquiries = await Enquiry.find({ seller: req.user._id })...
 
     // But for the "Admin Panel" requirement, the Admin needs to see leads.
     // I'll fetch all if admin, else filtered.
@@ -94,7 +94,7 @@ exports.getEnquiries = async (req, res) => {
     const enquiries = await Enquiry.find(filter)
       .populate("property_id", "title location images")
       .populate("user_id", "name email phone")
-      .populate("seller_id", "name email")
+      .populate("seller", "name email")
       .lean(); // Use lean for easier merging
 
     // 2. Fetch WhatsappLeads (Legacy)
@@ -102,7 +102,7 @@ exports.getEnquiries = async (req, res) => {
       .populate("property_id", "title location images")
       .populate("user_id", "name email phone")
       // WhatsappLead schema has seller_id? Yes.
-      .populate("seller_id", "name email")
+      .populate("seller", "name email")
       .lean();
 
     // 3. Normalize WhatsappLeads to match Enquiry structure
@@ -132,7 +132,7 @@ exports.getAllEnquiriesAdmin = async (req, res) => {
     const enquiries = await Enquiry.find()
       .populate("property_id", "title location images")
       .populate("user_id", "name email phone")
-      .populate("seller_id", "name email")
+      .populate("seller", "name email")
       .sort({ createdAt: -1 });
     res.json(enquiries);
   } catch (error) {
@@ -151,8 +151,8 @@ exports.deleteEnquiry = async (req, res) => {
     const isAdmin =
       req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
 
-    // enquiry.seller_id is an ObjectId, so .toString() works correctly
-    const isOwner = enquiry.seller_id?.toString() === req.user._id.toString();
+    // enquiry.seller is an ObjectId, so .toString() works correctly
+    const isOwner = enquiry.seller?.toString() === req.user._id.toString();
 
     if (!isAdmin && !isOwner) {
       return res
@@ -179,8 +179,8 @@ exports.deleteWhatsappLead = async (req, res) => {
     const isAdmin =
       req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
 
-    // lead.seller_id is an ObjectId, so .toString() works correctly
-    const isOwner = lead.seller_id?.toString() === req.user._id.toString();
+    // lead.seller is an ObjectId, so .toString() works correctly
+    const isOwner = lead.seller?.toString() === req.user._id.toString();
 
     if (!isAdmin && !isOwner) {
       return res

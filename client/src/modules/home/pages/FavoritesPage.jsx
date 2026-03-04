@@ -171,11 +171,11 @@ const FavoritesPage = () => {
       {/* ── Property Cards ── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-4">
         {favorites.map((property) => {
-          const imgUrl = getImageUrl(property.images?.[0]?.image_url);
+          const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
           const locStr = getLocation(property.location);
           const sellerPhone = property.seller_id?.phone;
 
-          const whatsappMsg = `Hi, I am interested in your property: ${property.title} located at ${locStr}.`;
+          const whatsappMsg = `Hi, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${locStr}.`;
           const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(whatsappMsg)}`;
 
           return (
@@ -191,7 +191,7 @@ const FavoritesPage = () => {
                 {imgUrl ? (
                   <img
                     src={imgUrl}
-                    alt={property.title}
+                    alt={property.basicInfo?.title || "Property"}
                     className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${property.isSold ? "grayscale-[0.6]" : ""}`}
                   />
                 ) : (
@@ -234,7 +234,7 @@ const FavoritesPage = () => {
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 bg-indigo-50 px-2.5 py-1 rounded-full shrink-0">
                     {property.businessType?.name ||
-                      property.property_type ||
+                      property.basicInfo?.propertyType ||
                       "Property"}
                   </span>
                   <div className="shrink-0 -mt-0.5">
@@ -245,7 +245,7 @@ const FavoritesPage = () => {
                 {/* Title */}
                 <Link to={`/properties/${property._id}`}>
                   <h3 className="text-base font-semibold text-gray-800 line-clamp-1 hover:text-indigo-600 transition-colors mb-1.5">
-                    {property.title}
+                    {property.basicInfo?.title || "Untitled Property"}
                   </h3>
                 </Link>
 
@@ -278,7 +278,7 @@ const FavoritesPage = () => {
                       {formatIndianPrice(
                         property.isSold && property.soldPrice
                           ? property.soldPrice
-                          : property.price,
+                          : property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0,
                       )}
                     </p>
                   </div>

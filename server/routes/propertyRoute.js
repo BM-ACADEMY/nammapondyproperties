@@ -35,6 +35,8 @@ router.get("/property-types", propertyController.getPropertyTypes);
 router.get("/approval-types", propertyController.getPropertyApprovals);
 // Get all filters (types, approvals, locations, maxPrice)
 router.get("/filters", propertyController.getFilters);
+// Get amenities
+router.get("/amenities", propertyController.getAmenities);
 
 // Get Seller Stats (Protected)
 router.get("/seller-stats", protect, propertyController.getSellerStats);
