@@ -120,11 +120,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Business Types",
           onClick: () => handleMenuClick("/admin/business-types"),
         },
-        {
-          key: "/admin/property-types",
-          label: "Property Types",
-          onClick: () => handleMenuClick("/admin/property-types"),
-        },
+        // {
+        //   key: "/admin/property-types",
+        //   label: "Property Types",
+        //   onClick: () => handleMenuClick("/admin/property-types"),
+        // }, // Removed
         {
           key: "/admin/approval-types",
           label: "Approval Types",

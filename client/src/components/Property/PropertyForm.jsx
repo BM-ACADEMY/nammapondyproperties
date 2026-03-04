@@ -169,7 +169,7 @@ const PropertyForm = ({
 
   const [category, setCategory] = useState(getFormValues(initialData).basicInfo.category);
   const [usageType, setUsageType] = useState(getFormValues(initialData).basicInfo.usageType);
-  const [propertyTypes, setPropertyTypes] = useState([]);
+  // const [propertyTypes, setPropertyTypes] = useState([]); // Removed
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES); // Use state for amenities
 
@@ -255,12 +255,12 @@ const PropertyForm = ({
     const fetchTypes = async () => {
       try {
         const queryParam = isSeller ? "?role=seller" : "";
-        const [pTypes, aTypes, bTypes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`),
+        const [aTypes, bTypes] = await Promise.all([
+          // axios.get(`${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`), // Removed
           axios.get(`${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`),
           axios.get(`${import.meta.env.VITE_API_URL}/business-types?status=active`),
         ]);
-        setPropertyTypes(pTypes.data);
+        // setPropertyTypes(pTypes.data); // Removed
         setApprovalTypes(aTypes.data);
         setBusinessTypes(bTypes.data);
       } catch (error) {

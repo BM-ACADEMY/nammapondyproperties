@@ -16,7 +16,7 @@ import {
 
 const Footer = () => {
   const [socialLinks, setSocialLinks] = useState([]);
-  const { businessTypes, propertyTypes } = useNav();
+  const { businessTypes, propertyTypes = [] } = useNav();
 
   useEffect(() => {
     const fetchSocialLinks = async () => {

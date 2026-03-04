@@ -9,9 +9,13 @@ import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
+import { propertyFieldMap } from "@/utils/propertyFieldMap";
+
 const PropertyTypeList = () => {
   const navigate = useNavigate();
-  const { propertyTypes, isLoading: loading } = useNav();
+  // const { propertyTypes, isLoading: loading } = useNav(); // Removed
+  const loading = false;
+  const propertyTypes = Object.keys(propertyFieldMap);
 
   // Helper function to get details and images based on type name
   const getCardDetails = (type) => {

@@ -5,7 +5,7 @@ const Enquiry = require("../models/Enquiry");
 const PropertyView = require("../models/PropertyView");
 const fs = require("fs");
 const path = require("path");
-const PropertyType = require("../models/PropertyType");
+// const PropertyType = require("../models/PropertyType"); // Removed
 const ApprovalType = require("../models/ApprovalType");
 const User = require("../models/User");
 
@@ -142,6 +142,7 @@ exports.getProperties = async (req, res) => {
       seller_id,
       excludeId,
       isSold,
+      category,
     } = req.query;
     const queryConditions = [];
 
@@ -196,6 +197,7 @@ exports.getProperties = async (req, res) => {
     // 4. Property Specifications
     if (type) queryConditions.push({ "basicInfo.propertyType": type });
     if (approval) queryConditions.push({ "basicInfo.approvalType": approval });
+    if (category) queryConditions.push({ "basicInfo.category": category });
 
     if (location) {
       queryConditions.push({
@@ -353,9 +355,10 @@ exports.verifyProperty = async (req, res) => {
 
 exports.getFilters = async (req, res) => {
   try {
-    const types = await PropertyType.find({ status: "active" }).select(
-      "name image_url",
-    );
+    // const types = await PropertyType.find({ status: "active" }).select(
+    //   "name image_url",
+    // ); // Removed
+    const types = []; // Temporary empty array to avoid breaking frontend immediately if it expects it
     const approvals = await ApprovalType.distinct("name", { status: "active" });
     // Fetch distinct cities, localities, and sub-areas
     const cities = await Property.distinct("location.city");
@@ -426,8 +429,10 @@ exports.getFilters = async (req, res) => {
     // Filter out null/undefined/empty values
     const cleanLocations = locations.filter((l) => l);
 
+    const categories = Property.schema.path("basicInfo.category").enumValues;
     res.json({
       types: types,
+      categories: categories,
       approvals: approvals,
       locations: cleanLocations,
       cities: cities.filter((c) => c),
@@ -680,23 +685,7 @@ exports.getAmenities = async (req, res) => {
   }
 };
 
-exports.getPropertyTypes = async (req, res) => {
-  try {
-    const { role } = req.query;
-
-    const query = { status: "active" };
-    if (role === "seller") {
-      query.visible_to_seller = true;
-    }
-
-    const types = await PropertyType.find(query).select(
-      "name key_attributes image_url -_id",
-    );
-    res.json(types);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// getPropertyTypes removed
 
 exports.getPropertyApprovals = async (req, res) => {
   try {

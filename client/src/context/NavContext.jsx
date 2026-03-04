@@ -5,23 +5,21 @@ const NavContext = createContext(null);
 
 export const NavProvider = ({ children }) => {
     const [businessTypes, setBusinessTypes] = useState([]);
-    const [propertyTypes, setPropertyTypes] = useState([]);
+    const [propertyCategories, setPropertyCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchNavData = async () => {
             try {
-                const [businessRes, propertyTypesRes] = await Promise.all([
+                const [businessRes, filtersRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_URL}/business-types?status=active`),
-                    axios.get(`${import.meta.env.VITE_API_URL}/properties/property-types`)
+                    axios.get(`${import.meta.env.VITE_API_URL}/properties/filters`)
                 ]);
 
                 setBusinessTypes(businessRes.data);
+                setPropertyCategories(filtersRes.data.categories || []);
 
-                if (propertyTypesRes.data && Array.isArray(propertyTypesRes.data)) {
-                    // Filter out unwanted types if necessary by name since it's an object array now
-                    setPropertyTypes(propertyTypesRes.data.filter(type => type.name && type.name !== "realestate_with_kamar"));
-                }
+                // setPropertyTypes removed
             } catch (error) {
                 console.error("Error fetching navigation data:", error);
             } finally {
@@ -33,7 +31,7 @@ export const NavProvider = ({ children }) => {
     }, []);
 
     return (
-        <NavContext.Provider value={{ businessTypes, propertyTypes, isLoading }}>
+        <NavContext.Provider value={{ businessTypes, propertyCategories, isLoading }}>
             {children}
         </NavContext.Provider>
     );

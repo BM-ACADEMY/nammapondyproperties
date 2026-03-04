@@ -8,7 +8,7 @@ const HeroSection = () => {
 
   // --- STATE MANAGEMENT ---
   const [searchQuery, setSearchQuery] = useState("");
-  const [propertyType, setPropertyType] = useState("");
+  const [propertyType, setPropertyType] = useState(""); // Already existing but will be unused or removed. Actually user wants it REMOVED.
   const [location, setLocation] = useState("");
   const [approval, setApproval] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -24,19 +24,16 @@ const HeroSection = () => {
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
 
   // Filter Data
-  const [types, setTypes] = useState([]);
   const [locations, setLocations] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [priceRanges, setPriceRanges] = useState([]);
 
   // Dropdown Open States
-  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isApprovalDropdownOpen, setIsApprovalDropdownOpen] = useState(false);
   const [isBudgetDropdownOpen, setIsBudgetDropdownOpen] = useState(false);
 
   // Refs for click outside
-  const typeDropdownRef = useRef(null);
   const locationDropdownRef = useRef(null);
   const approvalDropdownRef = useRef(null);
   const budgetDropdownRef = useRef(null);
@@ -47,7 +44,7 @@ const HeroSection = () => {
     fetch(`${import.meta.env.VITE_API_URL}/properties/filters`)
       .then((res) => res.json())
       .then((data) => {
-        setTypes(data.types || []);
+        // setTypes Removed
         setLocations(data.locations || []);
         setApprovalTypes(data.approvals || []);
         setPriceRanges(data.priceRanges || []);
@@ -56,11 +53,7 @@ const HeroSection = () => {
 
     // 2. Click Outside Logic
     const handleClickOutside = (event) => {
-      if (
-        typeDropdownRef.current &&
-        !typeDropdownRef.current.contains(event.target)
-      )
-        setIsTypeDropdownOpen(false);
+      // typeDropdownRef logic removed
       if (
         locationDropdownRef.current &&
         !locationDropdownRef.current.contains(event.target)
@@ -95,7 +88,7 @@ const HeroSection = () => {
   const handleSearch = () => {
     const params = new URLSearchParams();
     if (searchQuery) params.append("search", searchQuery);
-    if (propertyType) params.append("type", propertyType);
+    // if (propertyType) params.append("type", propertyType); // Removed
     if (location) params.append("location", location);
     if (approval) params.append("approval", approval);
     if (minPrice) params.append("minPrice", minPrice);
@@ -210,64 +203,7 @@ const HeroSection = () => {
 
             {/* 2. FILTERS CONTAINER (Hidden on mobile) */}
             <div className="relative z-20 hidden md:flex items-center justify-center gap-2 px-4">
-              {/* Type Dropdown */}
-              <div
-                className="relative group"
-                ref={typeDropdownRef}
-                onMouseEnter={() => setIsTypeDropdownOpen(true)}
-                onMouseLeave={() => setIsTypeDropdownOpen(false)}
-              >
-                <button
-                  onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-gray-100 font-semibold text-gray-700 text-sm focus:outline-none whitespace-nowrap transition"
-                >
-                  {propertyType || "Type"}
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform ${isTypeDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                <AnimatePresence>
-                  {isTypeDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute top-full mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0"
-                    >
-                      <div className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 uppercase tracking-wider mb-1">
-                        Property Type
-                      </div>
-                      <div className="max-h-60 overflow-y-auto">
-                        <button
-                          onClick={() => {
-                            setPropertyType("");
-                            setIsTypeDropdownOpen(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${propertyType === "" ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                        >
-                          All Types {propertyType === "" && <Check className="w-4 h-4" />}
-                        </button>
-                        {types.map((t) => {
-                          const name = typeof t === "string" ? t : t?.name || "Unknown";
-                          const key = typeof t === "object" ? t._id || name : t;
-                          return (
-                            <button
-                              key={key}
-                              onClick={() => {
-                                setPropertyType(name);
-                                setIsTypeDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${propertyType === name ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                            >
-                              {name} {propertyType === name && <Check className="w-4 h-4" />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              {/* Type Dropdown Removed */}
 
               {/* Location Dropdown */}
               <div

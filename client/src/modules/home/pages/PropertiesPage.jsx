@@ -36,7 +36,6 @@ const PropertiesPage = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
 
   // --- FILTER DATA STATE ---
-  const [types, setTypes] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [locations, setLocations] = useState([]);
   const [priceRanges, setPriceRanges] = useState([]);
@@ -51,7 +50,6 @@ const PropertiesPage = () => {
     searchParams.get("search") || "",
   );
 
-  const [type, setType] = useState(searchParams.get("type") || "");
   const [approval, setApproval] = useState(searchParams.get("approval") || "");
   const [location, setLocation] = useState(searchParams.get("location") || "");
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "");
@@ -59,15 +57,14 @@ const PropertiesPage = () => {
   const [businessType, setBusinessType] = useState(
     searchParams.get("businessType") || "",
   );
+  const [category, setCategory] = useState(searchParams.get("category") || "");
 
   // --- DROPDOWN UI STATE ---
-  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
   const [isApprovalDropdownOpen, setIsApprovalDropdownOpen] = useState(false);
   const [isBudgetDropdownOpen, setIsBudgetDropdownOpen] = useState(false);
 
   // --- REFS ---
-  const typeDropdownRef = useRef(null);
   const locationDropdownRef = useRef(null);
   const approvalDropdownRef = useRef(null);
   const budgetDropdownRef = useRef(null);
@@ -80,7 +77,7 @@ const PropertiesPage = () => {
           `${import.meta.env.VITE_API_URL}/properties/filters`,
         );
         if (res.data) {
-          setTypes(res.data.types || []);
+          // setTypes removed
           setApprovalTypes(res.data.approvals || []);
           setLocations(res.data.locations || []);
           setPriceRanges(res.data.priceRanges || []);
@@ -93,11 +90,7 @@ const PropertiesPage = () => {
 
     // Handle click outside to close dropdowns
     const handleClickOutside = (event) => {
-      if (
-        typeDropdownRef.current &&
-        !typeDropdownRef.current.contains(event.target)
-      )
-        setIsTypeDropdownOpen(false);
+      // typeDropdownRef logic removed
       if (
         locationDropdownRef.current &&
         !locationDropdownRef.current.contains(event.target)
@@ -125,12 +118,13 @@ const PropertiesPage = () => {
     setSearchQuery(currentSearch);
     setInputValue(currentSearch);
 
-    setType(searchParams.get("type") || "");
+    // setType removed
     setApproval(searchParams.get("approval") || "");
     setLocation(searchParams.get("location") || "");
     setMinPrice(searchParams.get("minPrice") || "");
     setMaxPrice(searchParams.get("maxPrice") || "");
     setBusinessType(searchParams.get("businessType") || "");
+    setCategory(searchParams.get("category") || "");
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
 
@@ -141,35 +135,38 @@ const PropertiesPage = () => {
   }, [
     currentPage,
     searchQuery,
-    type,
+    // type removed
     approval,
     location,
     minPrice,
     maxPrice,
     businessType,
+    category,
   ]);
 
   // Update URL params when filters change (except during initial load/sync)
   useEffect(() => {
     const params = {};
     if (searchQuery) params.search = searchQuery;
-    if (type) params.type = type;
+    // if (type) params.type = type; // Removed
     if (approval) params.approval = approval;
     if (location) params.location = location;
     if (minPrice) params.minPrice = minPrice;
-    if (maxPrice) params.maxPrice = maxPrice;
     if (businessType) params.businessType = businessType;
+    if (category) params.category = category;
     params.page = currentPage;
     setSearchParams(params);
   }, [
     currentPage,
     searchQuery,
-    type,
+    // type removed
     approval,
     location,
     minPrice,
     maxPrice,
+    maxPrice,
     businessType,
+    category,
     setSearchParams,
   ]);
 
@@ -178,12 +175,13 @@ const PropertiesPage = () => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append("search", searchQuery);
-      if (type) params.append("type", type);
+      // if (type) params.append("type", type); // Removed
       if (approval) params.append("approval", approval);
       if (location) params.append("location", location);
       if (minPrice) params.append("minPrice", minPrice);
       if (maxPrice) params.append("maxPrice", maxPrice);
       if (businessType) params.append("businessType", businessType);
+      if (category) params.append("category", category);
       params.append("page", currentPage);
 
       const res = await axios.get(
@@ -305,61 +303,7 @@ const PropertiesPage = () => {
 
             {/* 2. FILTERS CONTAINER */}
             <div className="flex flex-wrap md:flex-nowrap items-center justify-center gap-2 px-2 md:px-4 w-full md:w-auto">
-              {/* Type Dropdown */}
-              <div
-                className="relative"
-                ref={typeDropdownRef}
-                onMouseEnter={() => setIsTypeDropdownOpen(true)}
-                onMouseLeave={() => setIsTypeDropdownOpen(false)}
-              >
-                <button
-                  onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-full hover:bg-gray-100 font-semibold text-gray-700 text-sm focus:outline-none whitespace-nowrap transition"
-                >
-                  {type || "Type"}
-                  <ChevronDown
-                    className={`w-4 h-4 text-gray-400 transition-transform ${isTypeDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {isTypeDropdownOpen && (
-                  <div className="absolute top-full mt-2 w-40 bg-white rounded-lg shadow-xl overflow-hidden py-2 border border-gray-100 z-50 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-0">
-                    <div className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50 uppercase tracking-wider mb-1">
-                      Property Type
-                    </div>
-                    <div className="max-h-60 overflow-y-auto">
-                      <button
-                        onClick={() => {
-                          setType("");
-                          setCurrentPage(1);
-                          setIsTypeDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${type === "" ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                      >
-                        All Types {type === "" && <Check className="w-4 h-4" />}
-                      </button>
-                      {types.map((t) => {
-                        const name =
-                          typeof t === "string" ? t : t?.name || "Unknown";
-                        const key = typeof t === "object" ? t._id || name : t;
-                        return (
-                          <button
-                            key={key}
-                            onClick={() => {
-                              setType(name);
-                              setCurrentPage(1);
-                              setIsTypeDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${type === name ? "text-blue-600 font-medium" : "text-gray-700"}`}
-                          >
-                            {name}{" "}
-                            {type === name && <Check className="w-4 h-4" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Type Dropdown Removed */}
 
               {/* Location Dropdown */}
               <div

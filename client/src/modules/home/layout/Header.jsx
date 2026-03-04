@@ -25,7 +25,7 @@ const Header = () => {
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
 
-  const { businessTypes, propertyTypes } = useNav();
+  const { businessTypes, propertyCategories = [] } = useNav();
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated } = useAuth();
@@ -131,21 +131,13 @@ const Header = () => {
             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               {/* Desktop Navigation */}
               <nav className="flex items-center space-x-5 xl:space-x-6">
-                {propertyTypes
-                  .filter((type) => {
-                    const name = typeof type === "string" ? type : type?.name;
-                    return (
-                      name &&
-                      typeof name === "string" &&
-                      ["buy", "rent"].includes(name.toLowerCase())
-                    );
-                  })
-                  .map((type) => {
-                    const name = typeof type === "string" ? type : type.name;
+                {propertyCategories
+                  .map((category) => {
+                    const name = category; // Sell, Rent
                     return (
                       <Link
                         key={name}
-                        to={`/properties?type=${encodeURIComponent(name)}`}
+                        to={`/properties?category=${encodeURIComponent(name)}`}
                         className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                       >
                         For {name.charAt(0).toUpperCase() + name.slice(1)}
@@ -247,7 +239,7 @@ const Header = () => {
                           </div>
                         </div>
 
-                        <button 
+                        <button
                           onClick={() => {
                             setIsContactMenuOpen(false);
                             setIsCallbackModalOpen(true);
@@ -637,21 +629,13 @@ const Header = () => {
                     </span>
                   </button>
 
-                  {propertyTypes
-                    .filter((type) => {
-                      const name = typeof type === "string" ? type : type?.name;
-                      return (
-                        name &&
-                        typeof name === "string" &&
-                        ["buy", "rent"].includes(name.toLowerCase())
-                      );
-                    })
-                    .map((type) => {
-                      const name = typeof type === "string" ? type : type.name;
+                  {propertyCategories
+                    .map((category) => {
+                      const name = category;
                       return (
                         <Link
                           key={name}
-                          to={`/properties?type=${encodeURIComponent(name)}`}
+                          to={`/properties?category=${encodeURIComponent(name)}`}
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium"
                         >
@@ -692,9 +676,9 @@ const Header = () => {
         )}
       </AnimatePresence>
 
-      <RequestCallBackModal 
-        isOpen={isCallbackModalOpen} 
-        onClose={() => setIsCallbackModalOpen(false)} 
+      <RequestCallBackModal
+        isOpen={isCallbackModalOpen}
+        onClose={() => setIsCallbackModalOpen(false)}
       />
     </>
   );
