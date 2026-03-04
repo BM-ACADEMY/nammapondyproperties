@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import HeroSection from "../components/HeroSection";
 import PropertyTypeList from "../components/PropertyTypeList";
 import FeaturedProperties from "../components/FeaturedProperties";
+import BannerAdSection from "../components/BannerAdSection";
 import WhyChooseUs from "../components/WhyChooseUs";
 import Testimonials from "../components/Testimonials";
 import MapComponent from "../components/MapComponent";
@@ -42,6 +43,7 @@ const HomePage = () => {
       <HeroSection />
       <PropertyTypeList />
       <FeaturedProperties />
+      <BannerAdSection />
 
       {/* Map Section */}
       <section className="py-16 bg-[#f9fafb] relative overflow-hidden">

@@ -27,6 +27,7 @@ const advertisementRoutes = require("./routes/advertisementRoute");
 const propertyViewRoutes = require("./routes/propertyViewRoute");
 const marketingRoutes = require("./routes/marketingRoute");
 const propertyTypeRoutes = require("./routes/propertyTypeRoute");
+const bannerAdRoutes = require("./routes/bannerAdRoute");
 
 const app = express();
 
@@ -99,6 +100,7 @@ app.use("/api/seller-requests", sellerRequestRoutes);
 app.use("/api/advertisements", advertisementRoutes);
 app.use("/api/property-views", propertyViewRoutes);
 app.use("/api/marketing", marketingRoutes);
+app.use("/api/banner-ads", bannerAdRoutes);
 
 /* ===============================
    404 Handler (must be last route)

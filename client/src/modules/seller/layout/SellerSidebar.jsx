@@ -52,12 +52,6 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       ],
     },
     {
-      key: "/seller/advertisements",
-      icon: <Megaphone size={20} />,
-      label: "Promotion",
-      onClick: () => handleMenuClick("/seller/advertisements"),
-    },
-    {
       key: "/seller/enquiries",
       icon: <MessageSquare size={20} />,
       label: "Enquiry Property",
