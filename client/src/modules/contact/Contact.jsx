@@ -6,7 +6,7 @@ import {
   LikeOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 const { TextArea } = Input;
 

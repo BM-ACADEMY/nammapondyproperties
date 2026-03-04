@@ -7,10 +7,11 @@ import { SocketProvider } from "./context/SocketContext";
 import { Toaster } from "react-hot-toast";
 
 import ScrollToTop from "./components/Common/ScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <div>
         <Toaster position="top-center" reverseOrder={false} />
         <AuthProvider>
@@ -24,7 +25,7 @@ function App() {
           </SocketProvider>
         </AuthProvider>
       </div>
-    </>
+    </HelmetProvider>
   );
 }
 

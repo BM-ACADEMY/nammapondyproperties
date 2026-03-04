@@ -6,18 +6,21 @@ const NavContext = createContext(null);
 export const NavProvider = ({ children }) => {
     const [businessTypes, setBusinessTypes] = useState([]);
     const [propertyCategories, setPropertyCategories] = useState([]);
+    const [propertyTypes, setPropertyTypes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchNavData = async () => {
             try {
-                const [businessRes, filtersRes] = await Promise.all([
+                const [businessRes, filtersRes, typesRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_URL}/business-types?status=active`),
-                    axios.get(`${import.meta.env.VITE_API_URL}/properties/filters`)
+                    axios.get(`${import.meta.env.VITE_API_URL}/properties/filters`),
+                    axios.get(`${import.meta.env.VITE_API_URL}/property-types?status=active`)
                 ]);
 
                 setBusinessTypes(businessRes.data);
                 setPropertyCategories(filtersRes.data.categories || []);
+                setPropertyTypes(typesRes.data);
 
                 // setPropertyTypes removed
             } catch (error) {
@@ -31,7 +34,7 @@ export const NavProvider = ({ children }) => {
     }, []);
 
     return (
-        <NavContext.Provider value={{ businessTypes, propertyCategories, isLoading }}>
+        <NavContext.Provider value={{ businessTypes, propertyCategories, propertyTypes, isLoading }}>
             {children}
         </NavContext.Provider>
     );

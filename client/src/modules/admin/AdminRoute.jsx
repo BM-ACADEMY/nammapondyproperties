@@ -10,7 +10,7 @@ import AdminProfile from "./pages/AdminProfile";
 import AddProperty from "./pages/AddProperty";
 import AdminEnquiries from "./pages/enquiries/AdminEnquiries";
 import BusinessTypeManager from "./pages/BusinessTypeManager";
-// import PropertyTypeManager from "./pages/PropertyTypeManager"; // Removed
+import PropertyTypeManager from "./pages/PropertyTypeManager";
 import ApprovalTypeManager from "./pages/ApprovalTypeManager";
 import MarketingPlanManager from "./pages/MarketingPlanManager";
 import MarketingRequests from "./pages/MarketingRequests";
@@ -40,7 +40,7 @@ const AdminRoute = () => {
         <Route path="properties/add" element={<AddProperty />} />
         <Route path="enquiries" element={<AdminEnquiries />} />
         <Route path="business-types" element={<BusinessTypeManager />} />
-        {/* <Route path="property-types" element={<PropertyTypeManager />} /> // Removed */}
+        <Route path="property-types" element={<PropertyTypeManager />} />
         <Route path="approval-types" element={<ApprovalTypeManager />} />
         <Route path="testimonials" element={<TestimonialManager />} />
         <Route path="marketing-plans" element={<MarketingPlanManager />} />

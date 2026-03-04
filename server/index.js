@@ -26,6 +26,7 @@ const sellerRequestRoutes = require("./routes/sellerRequestRoute");
 const advertisementRoutes = require("./routes/advertisementRoute");
 const propertyViewRoutes = require("./routes/propertyViewRoute");
 const marketingRoutes = require("./routes/marketingRoute");
+const propertyTypeRoutes = require("./routes/propertyTypeRoute");
 
 const app = express();
 
@@ -92,7 +93,7 @@ app.use("/api/social-media", socialMediaRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/enquiries", enquiryRoutes);
 app.use("/api/business-types", businessTypeRoutes);
-// app.use("/api/property-types", propertyTypeRoutes); // Removed
+app.use("/api/property-types", propertyTypeRoutes);
 app.use("/api/approval-types", approvalTypeRoutes);
 app.use("/api/seller-requests", sellerRequestRoutes);
 app.use("/api/advertisements", advertisementRoutes);

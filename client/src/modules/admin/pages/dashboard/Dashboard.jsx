@@ -193,7 +193,7 @@ const Dashboard = () => {
         {statCardsData.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
             >
               <div className="flex justify-between items-start">
@@ -226,10 +226,10 @@ const Dashboard = () => {
           <Card
             title="Platform Activity Trends"
             className="shadow-sm rounded-xl h-full"
-            bordered={false}
+            variant="borderless"
           >
-            <div style={{ width: "100%", height: 350 }}>
-              <ResponsiveContainer>
+            <div style={{ width: "100%", height: 350, minHeight: 350 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart
                   data={data.chartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -283,10 +283,10 @@ const Dashboard = () => {
             <Card
               title="User Distribution"
               className="shadow-sm rounded-xl flex-1"
-              bordered={false}
+              variant="borderless"
             >
               <div className="h-[150px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <PieChart>
                     <Pie
                       data={userDistributionData}
@@ -316,7 +316,7 @@ const Dashboard = () => {
             <Card
               title="Property Status"
               className="shadow-sm rounded-xl flex-1"
-              bordered={false}
+              variant="borderless"
             >
               <div className="h-[150px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -360,35 +360,26 @@ const Dashboard = () => {
           <Card
             title="Latest Enquiries"
             className="shadow-sm rounded-xl"
-            bordered={false}
+            variant="borderless"
             extra={<Link to="/admin/enquiries">View All</Link>}
           >
-            <List
-              itemLayout="horizontal"
-              dataSource={data.recentEnquiries}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}
-                      >
-                        <MessageSquare size={16} />
-                      </Avatar>
-                    }
-                    // title={<span className="font-medium">{item.user}</span>}
-                    description={
-                      <div className="text-xs text-gray-500">
-                        <div>On: {item.property}</div>
-                        <div>
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    }
-                  />
-                </List.Item>
+            <div className="space-y-4">
+              {data.recentEnquiries.length > 0 ? (
+                data.recentEnquiries.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <Avatar style={{ backgroundColor: "#e6f7ff", color: "#1890ff", flexShrink: 0 }}>
+                      <MessageSquare size={16} />
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-gray-900 truncate">On: {item.property}</div>
+                      <div className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-400 text-sm">No recent enquiries</div>
               )}
-            />
+            </div>
           </Card>
         </Col>
 
@@ -397,51 +388,33 @@ const Dashboard = () => {
           <Card
             title="New Properties"
             className="shadow-sm rounded-xl"
-            bordered={false}
+            variant="borderless"
             extra={<Link to="/admin/properties">View All</Link>}
           >
-            <List
-              itemLayout="horizontal"
-              dataSource={data.recentProperties}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        style={{ backgroundColor: "#f6ffed", color: "#52c41a" }}
-                      >
-                        <Home size={16} />
-                      </Avatar>
-                    }
-                    title={
-                      <Link
-                        to={`/property/${item._id}`}
-                        className="font-medium hover:text-blue-600"
-                      >
+            <div className="space-y-4">
+              {data.recentProperties.length > 0 ? (
+                data.recentProperties.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <Avatar style={{ backgroundColor: "#f6ffed", color: "#52c41a", flexShrink: 0 }}>
+                      <Home size={16} />
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <Link to={`/property/${item._id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate block">
                         {item.title}
                       </Link>
-                    }
-                    description={
-                      <div className="text-xs text-gray-500">
-                        <div>By: {item.seller}</div>
-                        <Tag
-                          color={
-                            item.status === "available"
-                              ? "green"
-                              : item.status === "sold"
-                                ? "red"
-                                : "gold"
-                          }
-                          className="mt-1"
-                        >
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-gray-500">By: {item.seller}</span>
+                        <Tag color={item.status === "available" ? "green" : item.status === "sold" ? "red" : "gold"}>
                           {item.status.toUpperCase()}
                         </Tag>
                       </div>
-                    }
-                  />
-                </List.Item>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-400 text-sm">No recent properties</div>
               )}
-            />
+            </div>
           </Card>
         </Col>
 
@@ -450,33 +423,29 @@ const Dashboard = () => {
           <Card
             title="New Users"
             className="shadow-sm rounded-xl"
-            bordered={false}
+            variant="borderless"
             extra={<Link to="/admin/users">View All</Link>}
           >
-            <List
-              itemLayout="horizontal"
-              dataSource={data.recentUsers}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        style={{ backgroundColor: "#f9f0ff", color: "#722ed1" }}
-                      >
-                        <UserPlus size={16} />
-                      </Avatar>
-                    }
-                    title={<span className="font-medium">{item.name}</span>}
-                    description={
-                      <div className="flex justify-between items-center text-xs text-gray-500 mt-1">
-                        <span>{item.email}</span>
-                        <Tag>{item.role}</Tag>
+            <div className="space-y-4">
+              {data.recentUsers.length > 0 ? (
+                data.recentUsers.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                    <Avatar style={{ backgroundColor: "#f9f0ff", color: "#722ed1", flexShrink: 0 }}>
+                      <UserPlus size={16} />
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium text-gray-900 truncate">{item.name}</div>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-xs text-gray-500">{item.email}</span>
+                        <Tag className="m-0 text-[10px]">{item.role}</Tag>
                       </div>
-                    }
-                  />
-                </List.Item>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-400 text-sm">No recent users</div>
               )}
-            />
+            </div>
           </Card>
         </Col>
       </Row>

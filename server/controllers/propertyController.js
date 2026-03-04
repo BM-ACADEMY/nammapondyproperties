@@ -5,7 +5,7 @@ const Enquiry = require("../models/Enquiry");
 const PropertyView = require("../models/PropertyView");
 const fs = require("fs");
 const path = require("path");
-// const PropertyType = require("../models/PropertyType"); // Removed
+const PropertyType = require("../models/PropertyType");
 const ApprovalType = require("../models/ApprovalType");
 const User = require("../models/User");
 
@@ -355,10 +355,9 @@ exports.verifyProperty = async (req, res) => {
 
 exports.getFilters = async (req, res) => {
   try {
-    // const types = await PropertyType.find({ status: "active" }).select(
-    //   "name image_url",
-    // ); // Removed
-    const types = []; // Temporary empty array to avoid breaking frontend immediately if it expects it
+    const types = await PropertyType.find({ status: "active" }).select(
+      "name hasRooms hasFloor hasPlot hasCommercial",
+    );
     const approvals = await ApprovalType.distinct("name", { status: "active" });
     // Fetch distinct cities, localities, and sub-areas
     const cities = await Property.distinct("location.city");

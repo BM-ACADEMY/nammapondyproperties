@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useSearchParams, Link } from "react-router-dom";
@@ -58,6 +58,7 @@ const PropertiesPage = () => {
     searchParams.get("businessType") || "",
   );
   const [category, setCategory] = useState(searchParams.get("category") || "");
+  const [type, setType] = useState(searchParams.get("type") || "");
 
   // --- DROPDOWN UI STATE ---
   const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
@@ -125,6 +126,7 @@ const PropertiesPage = () => {
     setMaxPrice(searchParams.get("maxPrice") || "");
     setBusinessType(searchParams.get("businessType") || "");
     setCategory(searchParams.get("category") || "");
+    setType(searchParams.get("type") || "");
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
 
@@ -142,6 +144,7 @@ const PropertiesPage = () => {
     maxPrice,
     businessType,
     category,
+    type,
   ]);
 
   // Update URL params when filters change (except during initial load/sync)
@@ -154,6 +157,7 @@ const PropertiesPage = () => {
     if (minPrice) params.minPrice = minPrice;
     if (businessType) params.businessType = businessType;
     if (category) params.category = category;
+    if (type) params.type = type;
     params.page = currentPage;
     setSearchParams(params);
   }, [
@@ -164,9 +168,9 @@ const PropertiesPage = () => {
     location,
     minPrice,
     maxPrice,
-    maxPrice,
     businessType,
     category,
+    type,
     setSearchParams,
   ]);
 
@@ -182,6 +186,7 @@ const PropertiesPage = () => {
       if (maxPrice) params.append("maxPrice", maxPrice);
       if (businessType) params.append("businessType", businessType);
       if (category) params.append("category", category);
+      if (type) params.append("type", type);
       params.append("page", currentPage);
 
       const res = await axios.get(

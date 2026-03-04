@@ -4,7 +4,7 @@ import { Country, State, City } from "country-state-city";
 import { toast } from "react-hot-toast";
 import axios from "axios";
 import { getImageUrl } from "@/utils/imageUrl";
-import { propertyFieldMap } from "@/utils/propertyFieldMap";
+import { useNav } from "@/context/NavContext";
 import {
   X,
   Upload as UploadIcon,
@@ -168,8 +168,7 @@ const PropertyForm = ({
   });
 
   const [category, setCategory] = useState(getFormValues(initialData).basicInfo.category);
-  const [usageType, setUsageType] = useState(getFormValues(initialData).basicInfo.usageType);
-  // const [propertyTypes, setPropertyTypes] = useState([]); // Removed
+  const { propertyTypes } = useNav();
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES); // Use state for amenities
 
@@ -373,7 +372,8 @@ const PropertyForm = ({
     onSubmit(formData);
   };
 
-  const activeConfig = propertyFieldMap[propertyTypeWatch] || {};
+  const selectedType = propertyTypes.find(t => t.name === propertyTypeWatch);
+  const activeConfig = selectedType || {};
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
@@ -429,10 +429,10 @@ const PropertyForm = ({
               className="w-full px-4 py-3 border border-gray-200 rounded-xl"
             >
               <option value="">Select Type</option>
-              {Object.keys(propertyFieldMap).map((key) => {
-                const isCommercial = propertyFieldMap[key].commercial;
+              {propertyTypes.map((type) => {
+                const isCommercial = type.usageType === "Commercial";
                 if ((usageTypeWatch === "Commercial" && isCommercial) || (usageTypeWatch === "Residential" && !isCommercial)) {
-                  return <option key={key} value={key}>{key}</option>;
+                  return <option key={type._id} value={type.name}>{type.name}</option>;
                 }
                 return null;
               })}
@@ -520,7 +520,7 @@ const PropertyForm = ({
               <label className="block text-sm font-semibold mb-2">Total Area (sqft) <span className="text-red-500">*</span></label>
               <input type="number" {...register("specifications.area.totalArea", { required: true })} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
             </div>
-            {!activeConfig.plot && (
+            {!activeConfig.hasPlot && (
               <div>
                 <label className="block text-sm font-semibold mb-2">Built-up Area (sqft)</label>
                 <input type="number" {...register("specifications.area.builtupArea")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
@@ -528,7 +528,7 @@ const PropertyForm = ({
             )}
 
             {/* Rooms/Residential Details */}
-            {activeConfig.rooms && (
+            {activeConfig.hasRooms && (
               <>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Bedrooms</label>
@@ -579,7 +579,7 @@ const PropertyForm = ({
             </div>
 
             {/* Floor Details */}
-            {activeConfig.floor && (
+            {activeConfig.hasFloor && (
               <>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Property on Floor</label>
@@ -593,7 +593,7 @@ const PropertyForm = ({
             )}
 
             {/* Plot Details */}
-            {activeConfig.plot && (
+            {activeConfig.hasPlot && (
               <>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Plot Length (ft)</label>
@@ -619,7 +619,7 @@ const PropertyForm = ({
             )}
 
             {/* Commercial Details */}
-            {activeConfig.commercial && (
+            {activeConfig.hasCommercial && (
               <>
                 <div>
                   <label className="block text-sm font-semibold mb-2">Cabins</label>

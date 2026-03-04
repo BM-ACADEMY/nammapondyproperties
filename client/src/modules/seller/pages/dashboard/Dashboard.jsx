@@ -179,7 +179,7 @@ const Dashboard = () => {
         {statCardsData.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
             <Card
-              bordered={false}
+              variant="borderless"
               className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
             >
               <div className="flex justify-between items-start">
@@ -212,10 +212,10 @@ const Dashboard = () => {
           <Card
             title="Performance Trends"
             className="shadow-sm rounded-xl h-full"
-            bordered={false}
+            variant="borderless"
           >
-            <div style={{ width: "100%", height: 350 }}>
-              <ResponsiveContainer>
+            <div style={{ width: "100%", height: 350, minHeight: 350 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <AreaChart
                   data={data.chartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -268,11 +268,11 @@ const Dashboard = () => {
           <Card
             title="Listing Status"
             className="shadow-sm rounded-xl h-full"
-            bordered={false}
+            variant="borderless"
           >
             <div className="flex flex-col items-center justify-center h-[350px]">
               {statusData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250}>
+                <ResponsiveContainer width="100%" height={250} minWidth={0} minHeight={0}>
                   <PieChart>
                     <Pie
                       data={statusData}
@@ -339,69 +339,44 @@ const Dashboard = () => {
             bordered={false}
             extra={<Link to="/seller/enquiries">View All</Link>}
           >
-            <List
-              itemLayout="horizontal"
-              dataSource={data.recentEnquiries}
-              renderItem={(item) => (
-                <List.Item
-                  actions={[
-                    item.user_id?.phoneNumber || item.enquirer_phone ? (
-                      <a
-                        key="call"
-                        href={`tel:${item.user_id?.phoneNumber || item.enquirer_phone}`}
-                        className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"
-                      >
-                        <Phone size={16} />
-                      </a>
-                    ) : null,
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        style={{
-                          backgroundColor: "#fde3cf",
-                          color: "#f56a00",
-                        }}
-                      >
-                        {item.user_id?.name
-                          ? item.user_id.name[0].toUpperCase()
-                          : item.enquirer_name
-                            ? item.enquirer_name[0].toUpperCase()
-                            : "U"}
-                      </Avatar>
-                    }
-                    title={
-                      <div className="flex justify-between">
-                        <span className="font-medium">
-                          {item.user_id?.name ||
-                            item.enquirer_name ||
-                            "Guest User"}
+            <div className="space-y-4">
+              {data.recentEnquiries.length > 0 ? (
+                data.recentEnquiries.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100">
+                    <Avatar
+                      style={{ backgroundColor: "#fde3cf", color: "#f56a00", flexShrink: 0 }}
+                    >
+                      {item.user_id?.name
+                        ? item.user_id.name[0].toUpperCase()
+                        : item.enquirer_name
+                          ? item.enquirer_name[0].toUpperCase()
+                          : "U"}
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-semibold text-gray-900 truncate">
+                          {item.user_id?.name || item.enquirer_name || "Guest User"}
                         </span>
-                        <span className="text-xs text-gray-400 font-normal">
+                        <span className="text-[10px] text-gray-400">
                           {new Date(item.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                    }
-                    description={
-                      <div className="space-y-1">
-                        <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit">
-                          For: {item.property_id?.title || "Unknown Property"}
-                        </div>
-                        <div className="text-sm text-gray-500 line-clamp-1">
-                          {item.user_id?.email ||
-                            item.enquirer_email ||
-                            "Interested in this property"}
-                        </div>
+                      <div className="text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit mt-1 truncate max-w-full">
+                        For: {item.property_id?.title || "Unknown Property"}
                       </div>
-                    }
-                  />
-                </List.Item>
+                      <div className="text-xs text-gray-500 mt-1 truncate">
+                        {item.user_id?.email || item.enquirer_email || "Interested in this property"}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-400">
+                  <MessageSquare size={32} className="mx-auto mb-2 opacity-20" />
+                  <p className="text-sm">No recent enquiries</p>
+                </div>
               )}
-              locale={{
-                emptyText: "No recent enquiries",
-              }}
-            />
+            </div>
           </Card>
         </Col>
 
@@ -413,55 +388,40 @@ const Dashboard = () => {
             bordered={false}
             extra={<Link to="/seller/my-properties">View All</Link>}
           >
-            <List
-              itemLayout="horizontal"
-              dataSource={data.topProperties}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden">
-                        {item.images && item.images[0] ? (
-                          <img
-                            src={getImageUrl(item.images[0].image_url)}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Building className="w-6 h-6 m-3 text-gray-400" />
-                        )}
-                      </div>
-                    }
-                    title={
-                      <Link
-                        to={`/property/${item._id}`}
-                        className="font-medium hover:text-blue-600 transition"
-                      >
+            <div className="space-y-4">
+              {data.topProperties.length > 0 ? (
+                data.topProperties.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-xl transition-colors">
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                      {item.images && item.images[0] ? (
+                        <img
+                          src={getImageUrl(item.images[0].image_url)}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Building className="w-6 h-6 m-3 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <Link to={`/property/${item._id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate block">
                         {item.title}
                       </Link>
-                    }
-                    description={
-                      <div className="flex gap-2 mt-1">
-                        <Tag
-                          color={
-                            item.status === "available"
-                              ? "green"
-                              : item.status === "sold"
-                                ? "red"
-                                : "orange"
-                          }
-                        >
+                      <div className="flex gap-2 mt-1 items-center">
+                        <Tag color={item.status === "available" ? "green" : item.status === "sold" ? "red" : "orange"} className="text-[10px] px-1 line-height-1">
                           {item.status.toUpperCase()}
                         </Tag>
-                        <span className="flex items-center gap-1 text-xs text-gray-500">
-                          <Eye size={12} /> {item.view_count} Views
+                        <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <Eye size={10} /> {item.view_count} Views
                         </span>
                       </div>
-                    }
-                  />
-                </List.Item>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-400 text-sm">No properties found</div>
               )}
-            />
+            </div>
           </Card>
         </Col>
       </Row>
