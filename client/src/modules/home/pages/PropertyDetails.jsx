@@ -73,10 +73,10 @@ const PropertyDetails = () => {
         }
 
         const relatedRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?limit=3&random=true&isSold=false&excludeId=${id}`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${id}`,
         );
-        if (Array.isArray(relatedRes.data.properties)) {
-          setMoreProperties(relatedRes.data.properties);
+        if (Array.isArray(relatedRes.data)) {
+          setMoreProperties(relatedRes.data);
         }
 
         recordPropertyView(id);
@@ -743,7 +743,7 @@ const PropertyDetails = () => {
           <div className="mt-24">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-3xl font-bold text-gray-900">
-                More Properties
+                Recommended Properties
               </h2>
               <Link
                 to="/properties"

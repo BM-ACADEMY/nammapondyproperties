@@ -20,7 +20,7 @@ const propertySchema = new mongoose.Schema(
 
       category: {
         type: String,
-        enum: ["Sell", "Rent"],
+        enum: ["Rent", "Sell"],
         required: true
       },
 
@@ -62,6 +62,10 @@ const propertySchema = new mongoose.Schema(
       coordinates: {
         lat: Number,
         lng: Number
+      },
+      locationPoint: {
+        type: { type: String, enum: ['Point'], default: 'Point' },
+        coordinates: { type: [Number], default: [0, 0] } // [lng, lat]
       }
     },
 
@@ -215,5 +219,19 @@ const propertySchema = new mongoose.Schema(
     timestamps: true
   }
 );
+
+// Index for geo-spatial queries
+propertySchema.index({ "location.locationPoint": "2dsphere" });
+
+// Pre-save hook to keep locationPoint in sync with coordinates
+propertySchema.pre("save", async function () {
+  if (this.location && this.location.coordinates &&
+    this.location.coordinates.lat && this.location.coordinates.lng) {
+    this.location.locationPoint = {
+      type: "Point",
+      coordinates: [this.location.coordinates.lng, this.location.coordinates.lat]
+    };
+  }
+});
 
 module.exports = mongoose.model("Property", propertySchema);

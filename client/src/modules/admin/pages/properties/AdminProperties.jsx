@@ -48,6 +48,7 @@ const AdminProperties = ({ mode }) => {
   const [soldModalVisible, setSoldModalVisible] = useState(false);
   const [soldPrice, setSoldPrice] = useState("");
   const [propertyToSell, setPropertyToSell] = useState(null);
+  const [filterType, setFilterType] = useState("all"); // "all" or "my"
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -66,10 +67,8 @@ const AdminProperties = ({ mode }) => {
     try {
       let url = "/properties/fetch-all-property?limit=100";
       if (mode === "admin") {
-        // Fetch Admin's own properties
-        if (user && user._id) {
-          url += `&seller_id=${user._id}`;
-        }
+        // Fetch ALL Admin properties
+        url += "&role=admin";
       } else if (mode === "seller") {
         // Fetch ALL Sellers' properties
         url += "&role=seller";
@@ -212,6 +211,22 @@ const AdminProperties = ({ mode }) => {
       render: (loc) => loc?.city || "N/A",
     },
     {
+      title: "Added By",
+      key: "addedBy",
+      render: (_, record) => {
+        const isMe = user && record.seller?._id === user._id;
+        return (
+          <Space>
+            <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} />
+            <span className={isMe ? "font-bold text-blue-600" : "text-gray-600"}>
+              {isMe ? "Me" : (record.seller?.name || "Admin")}
+            </span>
+          </Space>
+        );
+      },
+      hidden: mode === "seller", // Only show on admin properties page
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -326,6 +341,17 @@ const AdminProperties = ({ mode }) => {
         <h1 className="text-2xl font-bold text-gray-800">
           {mode === "seller" ? "Seller Listings" : "Our Properties"}
         </h1>
+        {mode === "admin" && (
+          <Tabs
+            activeKey={filterType}
+            onChange={setFilterType}
+            className="admin-property-filter-tabs"
+            items={[
+              { key: "all", label: "All Admin Properties" },
+              { key: "my", label: "My Additions" },
+            ]}
+          />
+        )}
         <div className="w-full sm:w-auto flex justify-start">
           <Button
             type="primary"
@@ -349,8 +375,8 @@ const AdminProperties = ({ mode }) => {
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <Table
-          columns={columns}
-          dataSource={properties}
+          columns={columns.filter(col => !col.hidden)}
+          dataSource={filterType === "my" ? properties.filter(p => p.seller?._id === user?._id) : properties}
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10 }}

@@ -147,12 +147,13 @@ exports.getProperties = async (req, res) => {
     const queryConditions = [];
 
     // 1. Role / Ownership
-    if (req.query.role === "seller") {
+    if (req.query.role) {
       const Role = require("../models/Role");
-      const sellerRoleDoc = await Role.findOne({ role_name: { $regex: /^seller$/i } });
-      if (sellerRoleDoc) {
-        const sellers = await User.find({ role_id: sellerRoleDoc._id }).distinct("_id");
-        queryConditions.push({ seller: { $in: sellers } });
+      const targetRole = req.query.role.toLowerCase();
+      const roleDoc = await Role.findOne({ role_name: { $regex: new RegExp(`^${targetRole}$`, "i") } });
+      if (roleDoc) {
+        const usersWithRole = await User.find({ role_id: roleDoc._id }).distinct("_id");
+        queryConditions.push({ seller: { $in: usersWithRole } });
       }
     }
 
@@ -457,6 +458,118 @@ exports.getPropertyById = async (req, res) => {
     if (!property) return res.status(404).json({ error: "Property not found" });
     res.json(property);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getRecommendedProperties = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const property = await Property.findById(id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    const limit = 6;
+    let recommended = [];
+
+    // 1. Try Nearby Search (10km) if coordinates exist
+    if (property.location?.coordinates?.lat && property.location?.coordinates?.lng) {
+      const lng = parseFloat(property.location.coordinates.lng);
+      const lat = parseFloat(property.location.coordinates.lat);
+
+      if (!isNaN(lng) && !isNaN(lat)) {
+        recommended = await Property.find({
+          _id: { $ne: id },
+          status: "Active",
+          isSold: { $ne: true },
+          "location.locationPoint": {
+            $near: {
+              $geometry: { type: "Point", coordinates: [lng, lat] },
+              $maxDistance: 10000 // 10km in meters
+            }
+          }
+        }).limit(limit).populate([
+          {
+            path: "seller",
+            populate: { path: "role_id" },
+          },
+          { path: "businessType" },
+        ]);
+      }
+    }
+
+    // 2. Fallback if not enough properties found or no coordinates
+    if (recommended.length < 3) {
+      const existingIds = recommended.map(p => p._id);
+      existingIds.push(new mongoose.Types.ObjectId(id));
+
+      const queryConditions = [
+        { _id: { $nin: existingIds } },
+        { status: "Active" },
+        { isSold: { $ne: true } },
+        { "basicInfo.category": property.basicInfo?.category }
+      ];
+
+      // Match by locality or city
+      const locationOr = [];
+      if (property.location?.locality) locationOr.push({ "location.locality": { $regex: property.location.locality, $options: "i" } });
+      if (property.location?.city) locationOr.push({ "location.city": { $regex: property.location.city, $options: "i" } });
+
+      if (locationOr.length > 0) {
+        queryConditions.push({ $or: locationOr });
+      }
+
+      // Match by price range (+/- 30% for wider fallback)
+      const price = property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent;
+      if (price) {
+        const minPrice = price * 0.7;
+        const maxPrice = price * 1.3;
+        queryConditions.push({
+          $or: [
+            { "pricing.sell.price": { $gte: minPrice, $lte: maxPrice } },
+            { "pricing.rent.monthlyRent": { $gte: minPrice, $lte: maxPrice } }
+          ]
+        });
+      }
+
+      const fallbackProperties = await Property.find({ $and: queryConditions })
+        .limit(limit - recommended.length)
+        .populate([
+          {
+            path: "seller",
+            populate: { path: "role_id" },
+          },
+          { path: "businessType" },
+        ]);
+
+      recommended = [...recommended, ...fallbackProperties];
+    }
+
+    // 3. Last resort fallback: just similar properties in same category
+    if (recommended.length < 3) {
+      const existingIds = recommended.map(p => p._id);
+      existingIds.push(new mongoose.Types.ObjectId(id));
+
+      const lastResort = await Property.find({
+        _id: { $nin: existingIds },
+        status: "Active",
+        isSold: { $ne: true },
+        "basicInfo.category": property.basicInfo?.category
+      })
+        .limit(limit - recommended.length)
+        .populate([
+          {
+            path: "seller",
+            populate: { path: "role_id" },
+          },
+          { path: "businessType" },
+        ]);
+
+      recommended = [...recommended, ...lastResort];
+    }
+
+    res.json(recommended);
+  } catch (error) {
+    console.error("Recommended Properties Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
