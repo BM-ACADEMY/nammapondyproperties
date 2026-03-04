@@ -21,12 +21,12 @@ const socialMediaRoutes = require("./routes/socialMediaRoute");
 const testimonialRoutes = require("./routes/testimonialRoute");
 const enquiryRoutes = require("./routes/enquiryRoute");
 const businessTypeRoutes = require("./routes/businessTypeRoute");
-const propertyTypeRoutes = require("./routes/propertyTypeRoute");
 const approvalTypeRoutes = require("./routes/approvalTypeRoute");
 const sellerRequestRoutes = require("./routes/sellerRequestRoute");
 const advertisementRoutes = require("./routes/advertisementRoute");
 const propertyViewRoutes = require("./routes/propertyViewRoute");
 const marketingRoutes = require("./routes/marketingRoute");
+const propertyTypeRoutes = require("./routes/propertyTypeRoute");
 
 const app = express();
 

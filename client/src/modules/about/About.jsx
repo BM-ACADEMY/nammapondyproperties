@@ -1,5 +1,5 @@
 import React from "react";
-import { Helmet } from "react-helmet"; // Helmet is now here
+import { Helmet } from "react-helmet-async"; // Helmet is now here
 import AboutBanner from "./AboutBanner";
 import WhatWeDo from "./WhatWeDo";
 import MeetFounder from "./MeetFounder";

@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Breadcrumb, Divider } from "antd";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 const { Title, Paragraph, Text } = Typography;
 

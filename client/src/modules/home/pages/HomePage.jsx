@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import HeroSection from "../components/HeroSection";
 import PropertyTypeList from "../components/PropertyTypeList";
 import FeaturedProperties from "../components/FeaturedProperties";
@@ -16,7 +16,7 @@ const HomePage = () => {
       try {
         // Fetch properties for the map (verified, all properties)
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?is_verified=true`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true`,
         );
         if (Array.isArray(res.data.properties)) {
           setMapProperties(res.data.properties);

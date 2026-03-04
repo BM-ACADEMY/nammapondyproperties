@@ -129,9 +129,9 @@ const MarketingRequests = () => {
       key: "seller",
       render: (_, record) => (
         <div className="flex items-center gap-3">
-          <Avatar 
-            className="bg-indigo-100 text-indigo-600" 
-            icon={<User size={18} />} 
+          <Avatar
+            className="bg-indigo-100 text-indigo-600"
+            icon={<User size={18} />}
           />
           <Space direction="vertical" size={0}>
             <div className="font-semibold text-gray-800">
@@ -202,11 +202,11 @@ const MarketingRequests = () => {
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="Update Status">
-            <Button 
-              size="small" 
-              type="primary" 
+            <Button
+              size="small"
+              type="primary"
               ghost
-              icon={<Edit2 size={14} />} 
+              icon={<Edit2 size={14} />}
               onClick={() => handleUpdateStatus(record)}
             >
               Manage
@@ -244,9 +244,9 @@ const MarketingRequests = () => {
             Track and follow up with sellers who requested property promotion.
           </p>
         </div>
-        <Button 
-          icon={<RefreshCcw size={16} />} 
-          onClick={fetchRequests} 
+        <Button
+          icon={<RefreshCcw size={16} />}
+          onClick={fetchRequests}
           loading={loading}
         >
           Refresh Data
@@ -256,10 +256,10 @@ const MarketingRequests = () => {
       {/* Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((stat, idx) => (
-          <Card 
-            key={idx} 
+          <Card
+            key={idx}
             className={`shadow-sm transition-all duration-300 border ${stat.colors.split(' ').slice(-2).join(' ')}`}
-            bodyStyle={{ padding: '20px' }}
+            styles={{ body: { padding: '20px' } }}
           >
             <div className="flex items-center gap-4">
               <div className={`p-3 rounded-xl ${stat.colors.split(' ').slice(0, 2).join(' ')}`}>
@@ -317,9 +317,9 @@ const MarketingRequests = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 pt-2">
-            <Button 
+            <Button
               href={`tel:${selectedRequest?.seller_id?.phone}`}
               type="primary"
               className="bg-indigo-600 w-full flex items-center justify-center gap-2"
@@ -327,7 +327,7 @@ const MarketingRequests = () => {
             >
               Call Seller
             </Button>
-            <Button 
+            <Button
               href={`mailto:${selectedRequest?.seller_id?.email}`}
               className="w-full flex items-center justify-center gap-2 border-indigo-200 text-indigo-700 hover:text-indigo-800"
               icon={<Mail size={16} />}
@@ -359,8 +359,8 @@ const MarketingRequests = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item 
-            name="notes" 
+          <Form.Item
+            name="notes"
             label={<span className="font-medium text-gray-700">Internal Notes</span>}
           >
             <Input.TextArea

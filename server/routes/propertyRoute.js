@@ -30,11 +30,13 @@ router.put("/increment-view-count/:id", propertyController.incrementViewCount);
 // Verify property
 router.put("/verify-property/:id", protect, propertyController.verifyProperty);
 // Get property types
-router.get("/property-types", propertyController.getPropertyTypes);
+// router.get("/property-types", propertyController.getPropertyTypes); // Removed
 // Get approval types
 router.get("/approval-types", propertyController.getPropertyApprovals);
 // Get all filters (types, approvals, locations, maxPrice)
 router.get("/filters", propertyController.getFilters);
+// Get amenities
+router.get("/amenities", propertyController.getAmenities);
 
 // Get Seller Stats (Protected)
 router.get("/seller-stats", protect, propertyController.getSellerStats);

@@ -181,6 +181,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         open={!collapsed}
         styles={{ body: { padding: 0, background: "#001529" } }}
         width={250}
+        size="default"
       >
         {SidebarContent}
       </Drawer>

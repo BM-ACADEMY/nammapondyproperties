@@ -14,14 +14,18 @@ import {
   ChevronDown,
   Headphones,
   Star,
+  PhoneCall,
 } from "lucide-react";
+import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
+  const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
 
-  const { businessTypes, propertyTypes } = useNav();
+  const { businessTypes, propertyCategories = [] } = useNav();
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated } = useAuth();
@@ -127,21 +131,13 @@ const Header = () => {
             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               {/* Desktop Navigation */}
               <nav className="flex items-center space-x-5 xl:space-x-6">
-                {propertyTypes
-                  .filter((type) => {
-                    const name = typeof type === "string" ? type : type?.name;
-                    return (
-                      name &&
-                      typeof name === "string" &&
-                      ["buy", "rent"].includes(name.toLowerCase())
-                    );
-                  })
-                  .map((type) => {
-                    const name = typeof type === "string" ? type : type.name;
+                {propertyCategories
+                  .map((category) => {
+                    const name = category; // Sell, Rent
                     return (
                       <Link
                         key={name}
-                        to={`/properties?type=${encodeURIComponent(name)}`}
+                        to={`/properties?category=${encodeURIComponent(name)}`}
                         className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                       >
                         For {name.charAt(0).toUpperCase() + name.slice(1)}
@@ -205,13 +201,68 @@ const Header = () => {
                   </span>
                 </button>
 
-                {/* Support/Headphones Icon */}
+                {/* Support/Headphones Icon Dropdown */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsContactMenuOpen(true)}
+                  onMouseLeave={() => setIsContactMenuOpen(false)}
+                >
+                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none">
+                    <Headphones className="h-5 w-5" />
+                  </button>
+
+                  <AnimatePresence>
+                    {isContactMenuOpen && (
+                      <motion.div
+                        variants={dropdownVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-6 px-6 z-50 overflow-hidden cursor-default"
+                      >
+                        <h3 className="text-[#003366] font-bold text-[13px] tracking-wide mb-6">
+                          CONTACT US
+                        </h3>
+
+                        <div className="flex items-start mb-6">
+                          <PhoneCall className="h-5 w-5 text-[#4A5568] mt-1 mr-4 shrink-0" />
+                          <div>
+                            <p className="text-[#A0AEC0] text-[13px] font-medium tracking-wide">
+                              Toll Free | 9:30 AM to 6:30 PM
+                            </p>
+                            <p className="text-[#A0AEC0] text-[13px] font-medium tracking-wide">
+                              (Mon-Sun)
+                            </p>
+                            <p className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide">
+                              1800-41-99099
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setIsContactMenuOpen(false);
+                            setIsCallbackModalOpen(true);
+                          }}
+                          className="w-full border-2 border-[#0056b3] text-[#0056b3] hover:bg-[#0056b3] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
+                        >
+                          <PhoneCall className="h-4 w-4" />
+                          <span>Request a Call Back</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Favorites icon is commented out as requested */}
+                {/* 
                 <Link
                   to="/favorites"
                   className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm"
                 >
                   <Heart className="h-5 w-5" />
-                </Link>
+                </Link> 
+                */}
 
                 {/* USER PROFILE DROPDOWN (NEW LIGHT DESIGN) */}
                 {isAuthenticated ? (
@@ -327,7 +378,7 @@ const Header = () => {
                                     My Reviews
                                   </span>
                                 </Link>
-                                <Link
+                                {/* <Link
                                   to="/favorites"
                                   onClick={() => setIsUserMenuOpen(false)}
                                   className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
@@ -336,7 +387,7 @@ const Header = () => {
                                   <span className="group-hover:translate-x-1 transition-transform">
                                     Favorites
                                   </span>
-                                </Link>
+                                </Link> */}
                               </>
                             )}
                           </div>
@@ -403,12 +454,13 @@ const Header = () => {
 
             {/* Mobile Menu Toggle - Visible below lg */}
             <div className="lg:hidden flex items-center space-x-3">
-              <Link
-                to="/favorites"
-                className="text-gray-300 p-2 hover:text-white transition-colors"
+              {/* Mobile Contact Button */}
+              <button
+                onClick={() => setIsCallbackModalOpen(true)}
+                className="text-gray-300 p-2 hover:text-white transition-colors focus:outline-none"
               >
-                <Heart className="h-6 w-6" />
-              </Link>
+                <Headphones className="h-6 w-6" />
+              </button>
               <button
                 onClick={() => setIsMenuOpen(true)}
                 className="text-gray-300 hover:text-white hover:bg-gray-800 p-2 rounded-lg focus:outline-none transition-colors"
@@ -577,21 +629,13 @@ const Header = () => {
                     </span>
                   </button>
 
-                  {propertyTypes
-                    .filter((type) => {
-                      const name = typeof type === "string" ? type : type?.name;
-                      return (
-                        name &&
-                        typeof name === "string" &&
-                        ["buy", "rent"].includes(name.toLowerCase())
-                      );
-                    })
-                    .map((type) => {
-                      const name = typeof type === "string" ? type : type.name;
+                  {propertyCategories
+                    .map((category) => {
+                      const name = category;
                       return (
                         <Link
                           key={name}
-                          to={`/properties?type=${encodeURIComponent(name)}`}
+                          to={`/properties?category=${encodeURIComponent(name)}`}
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium"
                         >
@@ -631,6 +675,11 @@ const Header = () => {
           </>
         )}
       </AnimatePresence>
+
+      <RequestCallBackModal
+        isOpen={isCallbackModalOpen}
+        onClose={() => setIsCallbackModalOpen(false)}
+      />
     </>
   );
 };
