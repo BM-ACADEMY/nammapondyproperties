@@ -30,6 +30,8 @@ const propertyTypeRoutes = require("./routes/propertyTypeRoute");
 const bannerAdRoutes = require("./routes/bannerAdRoute");
 
 const app = express();
+app.set("trust proxy", true);
+
 
 /* ===============================
    Middleware (order matters)

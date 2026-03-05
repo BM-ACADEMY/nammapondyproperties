@@ -132,8 +132,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = Boolean(user && token);
-
-  // ... (previous code)
   return (
     <AuthContext.Provider
       value={{

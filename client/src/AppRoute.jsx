@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import PrivateRoute from "./guard/PrivateRoute";
-import PublicRoute from "./guard/PublicRoute"; // Import PublicRoute
+import PublicRoute from "./guard/PublicRoute";
 import Unauthorized from "./modules/common-pages/Unauthorized";
 import NotFound from "./modules/common-pages/NotFound";
 import UserRoutes from "./modules/user/routes/UserRoutes";
@@ -9,38 +9,32 @@ import SellerRoute from "./modules/seller/Routes/SellerRoute";
 import AdminRoute from "./modules/admin/AdminRoute";
 import HomePageRoute from "./modules/home/routes/HomePageRoute";
 import HomeLayout from "./modules/home/layout/HomeLayout";
-import Login from "./components/Auth/Login"; // Import Login
-import Signup from "./components/Auth/Signup";
-import OtpVerify from "./components/Auth/OtpVerify";
-import ForgotPassword from "./components/Auth/ForgotPassword";
-import ResetPassword from "./components/Auth/ResetPassword";
-import SellerRegister from "./modules/auth/SellerRegister";
 import BecomeSeller from "./modules/user/BecomeSeller";
 import About from "./modules/about/About";
 import Contact from "./modules/contact/Contact";
 import TermsAndConditions from "./modules/home/pages/TermsAndConditions";
 import PrivacyPolicy from "./modules/home/pages/PrivacyPolicy";
-
-const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
-
 import Loader from "./components/Common/Loader";
 import AddProperty from "./modules/seller/pages/properties/AddProperty";
 
+const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
+const LoginPage = lazy(() => import("./modules/home/pages/LoginPage"));
 const PageLoader = () => <Loader />;
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<HomeLayout />}>
-        {/* Public Routes (Accessible only if NOT logged in) */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/otp-verify" element={<OtpVerify />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/seller-register" element={<SellerRegister />} />
-        </Route>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Suspense fallback={<PageLoader />}>
+                <LoginPage />
+              </Suspense>
+            </PublicRoute>
+          }
+        />
         {/* Public pages accessible to everyone */}
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />

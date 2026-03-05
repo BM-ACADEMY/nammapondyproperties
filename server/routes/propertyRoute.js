@@ -45,6 +45,9 @@ router.get("/amenities", propertyController.getAmenities);
 // Get Seller Stats (Protected)
 router.get("/seller-stats", protect, propertyController.getSellerStats);
 
+// Update a property view count (Admin only)
+router.put("/update-view-count/:id", protect, propertyController.updateViewCount);
+
 // Get Admin Stats (Protected)
 router.get("/admin-stats", protect, propertyController.getAdminStats);
 

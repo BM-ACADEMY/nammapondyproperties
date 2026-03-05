@@ -58,6 +58,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Add Property",
           onClick: () => handleMenuClick("/admin/properties/add"),
         },
+        {
+          key: "/admin/view-count-manager",
+          label: "View Count Manager",
+          onClick: () => handleMenuClick("/admin/view-count-manager"),
+        },
       ],
     },
     {

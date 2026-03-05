@@ -28,11 +28,12 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { toast } from "react-hot-toast";
-import LoginModal from "../../../components/Auth/LoginModal";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
 import { formatIndianPrice } from "../../../utils/formatPrice";
+import { formatNumber } from "../../../utils/formatNumber";
+
 import Loader from "../../../components/Common/Loader";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 import { getImageUrl } from "../../../utils/imageUrl";
@@ -85,7 +86,13 @@ const PropertyDetails = () => {
           setMoreProperties(relatedRes.data);
         }
 
-        recordPropertyView(res.data._id);
+        const viewResult = await recordPropertyView(res.data._id);
+        if (viewResult && viewResult.success && !viewResult.alreadyViewed) {
+          setProperty(prev => ({
+            ...prev,
+            view_count: viewResult.view_count || (prev?.view_count + 50)
+          }));
+        }
       } catch (error) {
         console.error("Error fetching property details", error);
       } finally {
@@ -97,6 +104,10 @@ const PropertyDetails = () => {
   }, [slug]);
 
   const handleWhatsAppClick = () => {
+    if (!property || !property.seller) {
+      toast.error("Seller information missing");
+      return;
+    }
     if (!user) {
       toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
@@ -122,7 +133,7 @@ const PropertyDetails = () => {
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
         property_id: property._id,
-        seller_id: property.seller._id,
+        seller_id: property.seller._id || property.seller,
         message: message,
         name,
         email,
@@ -176,6 +187,14 @@ const PropertyDetails = () => {
               <h1 className="text-3xl md:text-4xl font-bold capitalize tracking-tight text-gray-900 leading-tight">
                 {property.basicInfo?.title || "Untitled Property"}
               </h1>
+
+              <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100">
+                  <Eye size={16} className="text-blue-500" />
+                  <span className="font-semibold text-gray-700">{formatNumber(property.view_count || 0)}</span>
+                  <span className="text-gray-500">Views</span>
+                </div>
+              </div>
 
               <div className="flex items-center text-gray-500 text-lg">
                 <MapPin className="w-5 h-5 mr-2" />

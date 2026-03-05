@@ -365,7 +365,8 @@ exports.getFilters = async (req, res) => {
     const localities = await Property.distinct("location.locality");
     const subAreas = await Property.distinct("location.subArea");
 
-    const locations = [...new Set([...cities, ...localities, ...subAreas])];
+    // const locations = [...new Set([...cities, ...localities, ...subAreas])];
+    const locations = [...new Set([...cities])];
 
     const priceStats = await Property.aggregate([
       {
@@ -752,24 +753,21 @@ exports.incrementViewCount = async (req, res) => {
     });
 
     if (existingView) {
-      // View exists roughly within 24h, do not increment.
-      // Return current count.
+      // Already viewed recently, don't increment
       const property = await Property.findById(propertyId).select("view_count");
-      if (!property)
-        return res.status(404).json({ error: "Property not found" });
-      return res.json({ view_count: property.view_count });
+      return res.json({ view_count: property?.view_count || 0 });
     }
 
-    // Create new view record
+    // Record new view record
     await PropertyView.create({
       property_id: propertyId,
       ip_address: ip,
     });
 
-    // Increment view count
+    // Increment view count by 50
     const property = await Property.findByIdAndUpdate(
       propertyId,
-      { $inc: { view_count: 1 } },
+      { $inc: { view_count: 50 } },
       { new: true },
     );
     if (!property) return res.status(404).json({ error: "Property not found" });
@@ -1137,6 +1135,31 @@ exports.getAdminStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching admin stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.updateViewCount = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { view_count } = req.body;
+
+    if (view_count === undefined || view_count < 0) {
+      return res.status(400).json({ error: "Invalid view count" });
+    }
+
+    const property = await Property.findByIdAndUpdate(
+      id,
+      { view_count },
+      { new: true },
+    );
+
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    res.json({
+      message: "View count updated successfully",
+      view_count: property.view_count,
+    });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };

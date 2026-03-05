@@ -10,9 +10,9 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     name: { type: String, required: false },
-    email: { type: String, unique: true, required: false, sparse: true },
-    password: { type: String },
-    phone: { type: String },
+    email: { type: String, required: false }, // Optional and no longer unique for auth
+    password: { type: String, required: false },
+    phone: { type: String, required: true, unique: true },
     status: { type: String, default: "active" },
     otp: { type: String },
     otpExpires: { type: Date },

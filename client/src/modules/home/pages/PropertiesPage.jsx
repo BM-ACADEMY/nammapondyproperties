@@ -208,7 +208,7 @@ const PropertiesPage = () => {
 
   const handleWhatsAppClick = (e, property) => {
     e.stopPropagation();
-    if (!property || !property.seller_id) {
+    if (!property || !property.seller) {
       toast.error("Seller information missing");
       return;
     }
@@ -227,7 +227,7 @@ const PropertiesPage = () => {
   };
 
   const submitEnquiry = async (property, name, email, phone) => {
-    const sellerPhone = property.seller_id.phone || "919000000000";
+    const sellerPhone = property.seller.phone || "919000000000";
     const locStr =
       typeof property.location === "string"
         ? property.location
@@ -238,7 +238,7 @@ const PropertiesPage = () => {
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
         property_id: property._id,
-        seller_id: property.seller_id._id || property.seller_id,
+        seller_id: property.seller._id || property.seller,
         message: message,
         name,
         email,

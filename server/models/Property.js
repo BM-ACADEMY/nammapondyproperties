@@ -202,7 +202,7 @@ const propertySchema = new mongoose.Schema(
       default: false
     },
 
-    viewCount: {
+    view_count: {
       type: Number,
       default: 0
     },
@@ -239,7 +239,7 @@ function generateSlug(title) {
 }
 
 // Pre-save hook to keep locationPoint and slug in sync
-propertySchema.pre("save", async function (next) {
+propertySchema.pre("save", async function () {
   if (this.location && this.location.coordinates &&
     this.location.coordinates.lat && this.location.coordinates.lng) {
     this.location.locationPoint = {
@@ -262,7 +262,6 @@ propertySchema.pre("save", async function (next) {
     }
     this.slug = slug;
   }
-  next();
 });
 
 module.exports = mongoose.model("Property", propertySchema);

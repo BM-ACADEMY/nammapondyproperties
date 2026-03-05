@@ -12,6 +12,8 @@ exports.recordPropertyView = async (req, res) => {
         const user_id = req.user ? req.user._id : null;
         const ip_address = req.ip || req.connection.remoteAddress;
 
+        console.log(`[ViewRecord] Property: ${property_id}, User: ${user_id}, IP: ${ip_address}`);
+
         // Get start and end of today
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
@@ -20,17 +22,24 @@ exports.recordPropertyView = async (req, res) => {
         endOfDay.setHours(23, 59, 59, 999);
 
         // Check if this user/IP already viewed this property today
-        const existingView = await PropertyView.findOne({
+        const query = {
             property_id,
-            ...(user_id ? { user_id } : { ip_address }),
             viewed_at: {
                 $gte: startOfDay,
                 $lte: endOfDay,
             },
-        });
+        };
+
+        if (user_id) {
+            query.user_id = user_id;
+        } else {
+            query.ip_address = ip_address;
+        }
+
+        const existingView = await PropertyView.findOne(query);
 
         if (existingView) {
-            // User already viewed today, don't increment
+            console.log(`[ViewRecord] Already viewed today: ${property_id}`);
             return res.status(200).json({
                 success: true,
                 message: "View already recorded today",
@@ -45,15 +54,18 @@ exports.recordPropertyView = async (req, res) => {
             ip_address,
         });
 
-        // Increment property view count
-        await Property.findByIdAndUpdate(property_id, {
-            $inc: { view_count: 1 },
-        });
+        // Increment property view count by 50
+        const updated = await Property.findByIdAndUpdate(property_id, {
+            $inc: { view_count: 50 },
+        }, { new: true });
+
+        console.log(`[ViewRecord] Success! New view_count: ${updated?.view_count}`);
 
         res.status(200).json({
             success: true,
             message: "View recorded successfully",
             alreadyViewed: false,
+            view_count: updated?.view_count
         });
     } catch (error) {
         console.error("Error recording property view:", error);

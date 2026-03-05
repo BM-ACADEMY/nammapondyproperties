@@ -1,14 +1,17 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { MapPin, Eye } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { formatIndianPrice } from "../../../utils/formatPrice";
+import { formatNumber } from "../../../utils/formatNumber";
 import { getImageUrl } from "../../../utils/imageUrl";
 
 const PropertyCard = ({ property, onWhatsAppClick }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="relative h-[550px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
@@ -39,7 +42,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
         ) : (
           <>
             <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/20 flex items-center gap-1">
-              <Eye className="w-3 h-3" /> {property.view_count || 0}
+              <Eye className="w-3 h-3" /> {formatNumber(property.view_count || 0)}
             </span>
             <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/20">
               Negotiable
@@ -133,6 +136,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                 // Default handling: Track lead then open WhatsApp
                 if (!user) {
                   toast.error("Please login to contact the seller");
+                  navigate("/login", { state: { from: location.pathname } });
                   return;
                 }
                 if (!user.phone) {
@@ -141,32 +145,33 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
                   );
                   return;
                 }
+
+                const seller = property.seller_id || property.seller;
+                if (!seller) {
+                  toast.error("Seller information missing");
+                  return;
+                }
+
                 const phoneNumber =
                   property.mobile ||
-                  property.seller_id?.phoneNumber ||
-                  property.seller_id?.phone ||
+                  seller.phoneNumber ||
+                  seller.phone ||
                   "919876543210";
 
                 const message = `Hi, I'm interested in your property: ${property.basicInfo?.title}`;
                 const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
                 // Fire and forget API call to record the lead
-                // We use the Enquiry API now, which supports optional fields
                 import("@/services/api").then((module) => {
                   const api = module.default;
                   api
                     .post("/enquiries/create", {
                       property_id: property._id,
-                      seller_id: property.seller_id._id || property.seller_id,
+                      seller_id: seller._id || seller,
                       message: "WhatsApp Click (Quick Lead)",
-                      enquirer_name: "Guest User", // Placeholder for click leads
-                      enquirer_email: "",
-                      enquirer_phone: "",
-                      // user_id will be handled by backend if token is present?
-                      // actually PropertyCard might not have user context easily access without hook.
-                      // If we are deep in component tree, we might not want to couple with AuthContext if not needed.
-                      // But for better data, we should.
-                      // For now, let's just record the click.
+                      enquirer_name: user.name || "Guest User",
+                      enquirer_email: user.email || "",
+                      enquirer_phone: user.phone || "",
                     })
                     .catch((err) =>
                       console.error("Failed to record lead", err),

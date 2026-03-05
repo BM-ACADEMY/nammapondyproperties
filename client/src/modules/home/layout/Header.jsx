@@ -28,7 +28,7 @@ const Header = () => {
   const { businessTypes, propertyCategories = [] } = useNav();
 
   const userMenuRef = useRef(null);
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
 
   // Prevent body scroll when mobile menu is open
@@ -57,7 +57,6 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
     setIsMenuOpen(false);
   };
 
@@ -190,7 +189,7 @@ const Header = () => {
                         navigate("/add-property");
                       }
                     } else {
-                      navigate("/login", { state: { from: "/add-property" } });
+                      navigate("/login");
                     }
                   }}
                   className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
@@ -434,15 +433,18 @@ const Header = () => {
                           className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 z-50 border border-gray-100 overflow-hidden"
                         >
                           <div className="px-2">
-                            <Link
-                              to="/login"
-                              className="flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
+                            <button
+                              onClick={() => {
+                                setIsLoginMenuOpen(false);
+                                navigate("/login");
+                              }}
+                              className="w-full flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
                             >
                               <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
                               <span className="group-hover:translate-x-1 transition-transform">
-                                Login / Register
+                                Login
                               </span>
-                            </Link>
+                            </button>
                           </div>
                         </motion.div>
                       )}
@@ -585,13 +587,15 @@ const Header = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-3">
-                    <Link
-                      to="/login"
-                      onClick={() => setIsMenuOpen(false)}
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        navigate("/login");
+                      }}
                       className="flex justify-center px-4 py-3 bg-white text-gray-900 hover:bg-gray-200 transition-colors rounded-xl text-sm font-semibold shadow-md"
                     >
                       Login / Register
-                    </Link>
+                    </button>
                   </div>
                 )}
                 <div className="space-y-1">
@@ -614,9 +618,8 @@ const Header = () => {
                           navigate("/add-property");
                         }
                       } else {
-                        navigate("/login", {
-                          state: { from: "/add-property" },
-                        });
+                        setIsMenuOpen(false);
+                        navigate("/login");
                       }
                     }}
                     className="flex items-center w-full px-4 py-3 bg-white text-[#003366] hover:bg-gray-100 transition-colors rounded-xl font-bold mb-2 shadow-sm"

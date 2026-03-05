@@ -160,11 +160,20 @@ const AdminBannerAds = () => {
             dataIndex: "expiryDate",
             key: "expiryDate",
             render: (date) => {
-                const isExpired = dayjs().isAfter(dayjs(date));
+                const now = dayjs();
+                const expiry = dayjs(date);
+                const isExpired = now.isAfter(expiry);
+                const daysDiff = expiry.diff(now, 'day');
+
                 return (
-                    <Tag color={isExpired ? "red" : "green"}>
-                        {dayjs(date).format("DD MMM YYYY")}
-                    </Tag>
+                    <Space direction="vertical" size={0}>
+                        <Tag color={isExpired ? "red" : "green"}>
+                            {expiry.format("DD MMM YYYY")}
+                        </Tag>
+                        <span className={`text-xs ${isExpired ? "text-red-500 font-medium" : "text-gray-500"}`}>
+                            {isExpired ? "Expired" : `${daysDiff} days remaining`}
+                        </span>
+                    </Space>
                 );
             },
         },
@@ -232,6 +241,9 @@ const AdminBannerAds = () => {
                 loading={loading}
                 pagination={{ pageSize: 10 }}
                 className="bg-white rounded-lg shadow-sm"
+                rowClassName={(record) => {
+                    return dayjs().isAfter(dayjs(record.expiryDate)) ? 'bg-gray-100 opacity-60' : '';
+                }}
             />
 
             <Modal

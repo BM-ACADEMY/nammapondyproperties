@@ -4,7 +4,6 @@ import { MapPin, ArrowRight, Eye } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
-import LoginModal from "../../../components/Auth/LoginModal";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "./PropertyCard";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
@@ -42,7 +41,7 @@ const FeaturedProperties = () => {
 
   const handleWhatsAppClick = (e, property) => {
     e.stopPropagation();
-    if (!property || !property.seller_id) {
+    if (!property || !property.seller) {
       toast.error("Seller information missing");
       return;
     }
@@ -61,7 +60,7 @@ const FeaturedProperties = () => {
   };
 
   const submitEnquiry = async (property, name, email, phone) => {
-    const sellerPhone = property.seller_id.phone;
+    const sellerPhone = property.seller.phone;
     const locationStr =
       typeof property.location === "string"
         ? property.location
@@ -72,7 +71,7 @@ const FeaturedProperties = () => {
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
         property_id: property._id,
-        seller_id: property.seller_id._id,
+        seller_id: property.seller._id,
         message: message,
         name,
         email,

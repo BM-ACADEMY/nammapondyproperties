@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { getImageUrl } from "@/utils/imageUrl";
 
+// Import Swiper React components and styles
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
+
 const BannerAdSection = () => {
     const [activeAds, setActiveAds] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -24,24 +30,49 @@ const BannerAdSection = () => {
         fetchActiveAds();
     }, []);
 
-    if (loading) return null;
-    if (activeAds.length === 0) return null;
+    if (loading) return (
+        <section className="py-12 bg-[#f9fafb]">
+            <div className="container mx-auto px-4 max-w-7xl">
+                <div className="w-full aspect-[21/6] md:aspect-[21/5] lg:aspect-[21/4] bg-gray-200 animate-pulse rounded-[24px]"></div>
+            </div>
+        </section>
+    );
 
-    // For now, we display the most recent active ad
-    const ad = activeAds[0];
+    if (activeAds.length === 0) return null;
 
     return (
         <section className="py-12 bg-[#f9fafb]">
             <div className="container mx-auto px-4 max-w-7xl">
-                <div className={`relative overflow-hidden rounded-[24px] shadow-lg duration-500 ${ad.linkUrl?.trim() ? 'hover:shadow-2xl cursor-pointer' : ''}`}>
-                    {ad.linkUrl?.trim() ? (
-                        <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="block">
-                            <AdContent ad={ad} />
-                        </a>
-                    ) : (
-                        <AdContent ad={ad} />
-                    )}
-                </div>
+                <Swiper
+                    modules={[Autoplay, Pagination]}
+                    spaceBetween={0}
+                    slidesPerView={1}
+                    loop={activeAds.length > 1}
+                    autoplay={{
+                        delay: 5000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true
+                    }}
+                    pagination={{
+                        clickable: true,
+                        dynamicBullets: true,
+                    }}
+                    className="rounded-[24px] shadow-lg overflow-hidden"
+                >
+                    {activeAds.map((ad) => (
+                        <SwiperSlide key={ad._id}>
+                            <div className={`relative w-full h-full duration-500 ${ad.linkUrl?.trim() ? 'hover:shadow-2xl cursor-pointer' : ''}`}>
+                                {ad.linkUrl?.trim() ? (
+                                    <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="block">
+                                        <AdContent ad={ad} />
+                                    </a>
+                                ) : (
+                                    <AdContent ad={ad} />
+                                )}
+                            </div>
+                        </SwiperSlide>
+                    ))}
+                </Swiper>
             </div>
         </section>
     );
@@ -52,7 +83,7 @@ const AdContent = ({ ad }) => (
         <img
             src={getImageUrl(ad.imageUrl)}
             alt={ad.title}
-            className="w-full h-full object-cover transition-transform duration-700"
+            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
         />
     </div>
 );

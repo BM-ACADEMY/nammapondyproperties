@@ -36,6 +36,8 @@ import {
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { formatIndianPrice } from "@/utils/formatPrice";
+import { formatNumber } from "@/utils/formatNumber";
+
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
 
@@ -244,6 +246,7 @@ const AdminProperties = ({ mode }) => {
       dataIndex: "view_count",
       key: "view_count",
       sorter: (a, b) => a.view_count - b.view_count,
+      render: (count) => formatNumber(count || 0),
     },
     {
       title: "Verified",
