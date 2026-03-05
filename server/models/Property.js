@@ -207,6 +207,12 @@ const propertySchema = new mongoose.Schema(
       default: 0
     },
 
+    slug: {
+      type: String,
+      unique: true,
+      index: true
+    },
+
     isSold: {
       type: Boolean,
       default: false
@@ -223,8 +229,17 @@ const propertySchema = new mongoose.Schema(
 // Index for geo-spatial queries
 propertySchema.index({ "location.locationPoint": "2dsphere" });
 
-// Pre-save hook to keep locationPoint in sync with coordinates
-propertySchema.pre("save", async function () {
+// Helper to generate slug
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// Pre-save hook to keep locationPoint and slug in sync
+propertySchema.pre("save", async function (next) {
   if (this.location && this.location.coordinates &&
     this.location.coordinates.lat && this.location.coordinates.lng) {
     this.location.locationPoint = {
@@ -232,6 +247,22 @@ propertySchema.pre("save", async function () {
       coordinates: [this.location.coordinates.lng, this.location.coordinates.lat]
     };
   }
+
+  // Generate slug if it doesn't exist or title changed
+  if (this.isModified("basicInfo.title") || !this.slug) {
+    let baseSlug = generateSlug(this.basicInfo.title);
+    let slug = baseSlug;
+    let count = 1;
+
+    // Check for uniqueness
+    while (true) {
+      const existing = await this.constructor.findOne({ slug, _id: { $ne: this._id } });
+      if (!existing) break;
+      slug = `${baseSlug}-${count++}`;
+    }
+    this.slug = slug;
+  }
+  next();
 });
 
 module.exports = mongoose.model("Property", propertySchema);

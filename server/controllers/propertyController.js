@@ -462,6 +462,30 @@ exports.getPropertyById = async (req, res) => {
   }
 };
 
+exports.getPropertyBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    let query = { slug: slug };
+
+    // Support old links by allowing fallback to ID if it's a valid ObjectId
+    if (mongoose.Types.ObjectId.isValid(slug)) {
+      query = { $or: [{ slug: slug }, { _id: slug }] };
+    }
+
+    const property = await Property.findOne(query).populate([
+      {
+        path: "seller",
+        populate: { path: "role_id" },
+      },
+      { path: "businessType" },
+    ]);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+    res.json(property);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getRecommendedProperties = async (req, res) => {
   try {
     const { id } = req.params;

@@ -16,6 +16,8 @@ router.post(
 router.get("/fetch-all-property", propertyController.getProperties);
 // Get a property by ID
 router.get("/fetch-property-by-id/:id", propertyController.getPropertyById);
+// Get a property by Slug
+router.get("/fetch-property-by-slug/:slug", propertyController.getPropertyBySlug);
 // Get recommended properties
 router.get("/fetch-recommended-properties/:id", propertyController.getRecommendedProperties);
 // Update a property

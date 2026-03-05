@@ -13,7 +13,7 @@ const PropertyCard = ({ property, onWhatsAppClick }) => {
   return (
     <div className="relative h-[550px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
       <Link
-        to={`/properties/${property._id}`}
+        to={`/properties/${property.slug || property._id}`}
         className="absolute inset-0 z-20"
       >
         <span className="sr-only">View Details</span>

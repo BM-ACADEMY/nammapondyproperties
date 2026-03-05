@@ -49,7 +49,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const PropertyDetails = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mainImage, setMainImage] = useState("");
@@ -63,9 +63,15 @@ const PropertyDetails = () => {
 
   useEffect(() => {
     const fetchProperty = async () => {
+      // Reset states at the start to fix stale image issue
+      setLoading(true);
+      setProperty(null);
+      setMainImage("");
+      setMoreProperties([]);
+
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-id/${id}`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-slug/${slug}`,
         );
         setProperty(res.data);
         if (res.data?.media?.images?.length > 0) {
@@ -73,13 +79,13 @@ const PropertyDetails = () => {
         }
 
         const relatedRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${id}`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${res.data._id}`,
         );
         if (Array.isArray(relatedRes.data)) {
           setMoreProperties(relatedRes.data);
         }
 
-        recordPropertyView(id);
+        recordPropertyView(res.data._id);
       } catch (error) {
         console.error("Error fetching property details", error);
       } finally {
@@ -88,7 +94,7 @@ const PropertyDetails = () => {
     };
     fetchProperty();
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [slug]);
 
   const handleWhatsAppClick = () => {
     if (!user) {
@@ -757,7 +763,7 @@ const PropertyDetails = () => {
               {moreProperties.map((prop) => (
                 <div
                   key={prop._id}
-                  onClick={() => navigate(`/properties/${prop._id}`)}
+                  onClick={() => navigate(`/properties/${prop.slug || prop._id}`)}
                   className="relative h-[500px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100"
                 >
                   {/* Background Image */}

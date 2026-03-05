@@ -81,7 +81,7 @@ const MapComponent = ({ properties }) => {
               <Popup>
                 <div className="min-w-[200px]">
                   <Link
-                    to={`/properties/${property._id}`}
+                    to={`/properties/${property.slug || property._id}`}
                     className="block group"
                   >
                     <div className="relative h-32 w-full mb-2 rounded-md overflow-hidden">

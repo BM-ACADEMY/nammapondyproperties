@@ -13,7 +13,7 @@ const HomePageRoute = () => {
         <Route index element={<HomePage />} />
         <Route path="home" element={<HomePage />} />
         <Route path="properties" element={<PropertiesPage />} />
-        <Route path="properties/:id" element={<PropertyDetails />} />
+        <Route path="properties/:slug" element={<PropertyDetails />} />
 
         {/* Dynamic Routes for User Properties */}
         <Route
