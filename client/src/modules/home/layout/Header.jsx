@@ -177,20 +177,7 @@ const Header = () => {
                 {/* Post Property Button */}
                 <button
                   onClick={() => {
-                    if (isAuthenticated) {
-                      const role =
-                        user?.role_id?.role_name?.toUpperCase() ||
-                        user?.role?.name?.toUpperCase();
-                      if (role === "ADMIN") {
-                        navigate("/admin/properties/add");
-                      } else if (role === "SELLER") {
-                        navigate("/seller/add-property");
-                      } else {
-                        navigate("/add-property");
-                      }
-                    } else {
-                      navigate("/login");
-                    }
+                    navigate("/post-property");
                   }}
                   className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
                 >
@@ -606,21 +593,7 @@ const Header = () => {
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      if (isAuthenticated) {
-                        const role =
-                          user?.role_id?.role_name?.toUpperCase() ||
-                          user?.role?.name?.toUpperCase();
-                        if (role === "ADMIN") {
-                          navigate("/admin/properties/add");
-                        } else if (role === "SELLER") {
-                          navigate("/seller/add-property");
-                        } else {
-                          navigate("/add-property");
-                        }
-                      } else {
-                        setIsMenuOpen(false);
-                        navigate("/login");
-                      }
+                      navigate("/post-property");
                     }}
                     className="flex items-center w-full px-4 py-3 bg-white text-[#003366] hover:bg-gray-100 transition-colors rounded-xl font-bold mb-2 shadow-sm"
                   >

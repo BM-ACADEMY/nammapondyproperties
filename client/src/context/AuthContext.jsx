@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoginModalOpen, setLoginModalOpen] = useState(false);
 
   /* 🔑 Restore auth ONCE (on refresh) and Validate session */
   useEffect(() => {
@@ -143,6 +144,8 @@ export const AuthProvider = ({ children }) => {
         logout,
         refetchUser,
         refreshUser,
+        isLoginModalOpen,
+        setLoginModalOpen,
       }}
     >
       {children}

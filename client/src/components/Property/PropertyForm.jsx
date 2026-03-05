@@ -67,6 +67,7 @@ const PropertyForm = ({
   loading = false,
   isEdit = false,
   isSeller = false,
+  user = {},
 }) => {
   const getFormValues = (data) => ({
     basicInfo: {
@@ -167,10 +168,15 @@ const PropertyForm = ({
     defaultValues: getFormValues(initialData)
   });
 
-  const [category, setCategory] = useState(getFormValues(initialData).basicInfo.category);
-  const { propertyTypes } = useNav();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState(initialData?.media?.images || initialData?.images || []);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
-  const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES); // Use state for amenities
+  const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES);
+  const [businessTypes, setBusinessTypes] = useState([]);
+  const [mapPosition, setMapPosition] = useState(null);
 
   useEffect(() => {
     const fetchAmenities = async () => {
@@ -183,11 +189,32 @@ const PropertyForm = ({
     };
     fetchAmenities();
   }, []);
-  const [businessTypes, setBusinessTypes] = useState([]);
-  const [images, setImages] = useState([]);
-  const [existingImages, setExistingImages] = useState(initialData?.media?.images || initialData?.images || []);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [imagesToDelete, setImagesToDelete] = useState([]);
+
+  const steps = [
+    { number: 1, title: "Basic Details", sub: "Step 1" },
+    { number: 2, title: "Location Details", sub: "Step 2" },
+    { number: 3, title: "Property Profile", sub: "Step 3" },
+    { number: 4, title: "Photos, Videos & Voice-over", sub: "Step 4" },
+    { number: 5, title: "Amenities section", sub: "Step 5" },
+  ];
+
+  const calculateScore = (data) => {
+    let score = 0;
+    if (data.basicInfo.title) score += 10;
+    if (data.basicInfo.description) score += 10;
+    if (data.location.addressLine1) score += 10;
+    if (data.location.city) score += 10;
+    if (data.location.locality) score += 10;
+    if (data.pricing.sell.price || data.pricing.rent.monthlyRent) score += 10;
+    if (data.amenities?.length > 0) score += 10;
+    if (images.length > 0) score += 15;
+    if (data.specifications.area.totalArea) score += 15;
+    return score;
+  };
+
+  const propertyScore = calculateScore(watch());
+
+  const { propertyTypes } = useNav();
 
   const categoryWatch = watch("basicInfo.category");
   const usageTypeWatch = watch("basicInfo.usageType");
@@ -198,7 +225,6 @@ const PropertyForm = ({
   const selectedCity = watch("location.city");
   const selectedLocality = watch("location.locality");
   const selectedSubArea = watch("location.subArea");
-  const [mapPosition, setMapPosition] = useState(null);
 
   useEffect(() => {
     if (isEdit && initialData && Object.keys(initialData).length > 0) {
@@ -375,443 +401,491 @@ const PropertyForm = ({
   const selectedType = propertyTypes.find(t => t.name === propertyTypeWatch);
   const activeConfig = selectedType || {};
 
+  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
+  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
-      {/* Basic Info */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
-          Basic Details
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Property Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...register("basicInfo.title", { required: "Title is required" })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-              placeholder="e.g. Luxurious 3BHK Villa in White Town"
-            />
-          </div>
+    <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
+      {/* Sidebar - Desktop Only */}
+      <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-8 h-fit">
+        {/* Stepper Card */}
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+          <div className="space-y-10 relative">
+            {/* Connecting Line */}
+            <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gray-100"></div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              {...register("basicInfo.description", { required: "Description is required" })}
-              rows="4"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Category (I want to...)</label>
-            <select {...register("basicInfo.category")} className="w-full px-4 py-3 border border-gray-200 rounded-xl">
-              <option value="Sell">Sell</option>
-              <option value="Rent">Rent</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Usage Type</label>
-            <select {...register("basicInfo.usageType")} className="w-full px-4 py-3 border border-gray-200 rounded-xl">
-              <option value="Residential">Residential</option>
-              <option value="Commercial">Commercial</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Property Type <span className="text-red-500">*</span></label>
-            <select
-              {...register("basicInfo.propertyType", { required: "Required" })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl"
-            >
-              <option value="">Select Type</option>
-              {propertyTypes.map((type) => {
-                const isCommercial = type.usageType === "Commercial";
-                if ((usageTypeWatch === "Commercial" && isCommercial) || (usageTypeWatch === "Residential" && !isCommercial)) {
-                  return <option key={type._id} value={type.name}>{type.name}</option>;
-                }
-                return null;
-              })}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Approval Type</label>
-            <select {...register("basicInfo.approvalType")} className="w-full px-4 py-3 border border-gray-200 rounded-xl">
-              <option value="">Select Approval</option>
-              {approvalTypes.map((type) => (
-                <option key={type.name || type} value={type.name || type}>{type.name || type}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Business Type (Optional)</label>
-            <select {...register("businessType")} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
-              <option value="">Select Business Type</option>
-              {businessTypes.map(b => (
-                <option key={b._id} value={b._id}>{b.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Property Status</label>
-            <select {...register("legal.propertyStatus")} className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white">
-              <option value="Ready to Move">Ready to Move</option>
-              <option value="Under Construction">Under Construction</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <div className="w-1 h-6 bg-green-500 rounded-full"></div>
-          Pricing Details
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {categoryWatch === "Sell" ? (
-            <>
-              <div>
-                <label className="block text-sm font-semibold">Total Price (₹) <span className="text-red-500">*</span></label>
-                <input type="number" {...register("pricing.sell.price", { required: categoryWatch === "Sell" })} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold">Price Per Sqft (₹)</label>
-                <input type="number" {...register("pricing.sell.pricePerSqft")} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <label className="block text-sm font-semibold">Monthly Rent (₹) <span className="text-red-500">*</span></label>
-                <input type="number" {...register("pricing.rent.monthlyRent", { required: categoryWatch === "Rent" })} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold">Security Deposit (₹)</label>
-                <input type="number" {...register("pricing.rent.securityDeposit")} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold">Maintenance Charges (₹)</label>
-                <input type="number" {...register("pricing.rent.maintenance")} className="w-full px-4 py-3 border border-gray-200 rounded-xl" />
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Dynamic Specifications */}
-      {propertyTypeWatch && (
-        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <div className="w-1 h-6 bg-purple-500 rounded-full"></div>
-            Specifications
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            {/* General Area */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">Total Area (sqft) <span className="text-red-500">*</span></label>
-              <input type="number" {...register("specifications.area.totalArea", { required: true })} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-            </div>
-            {!activeConfig.hasPlot && (
-              <div>
-                <label className="block text-sm font-semibold mb-2">Built-up Area (sqft)</label>
-                <input type="number" {...register("specifications.area.builtupArea")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-              </div>
-            )}
-
-            {/* Rooms/Residential Details */}
-            {activeConfig.hasRooms && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Bedrooms</label>
-                  <input type="number" {...register("specifications.residential.bedrooms")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
+            {steps.map((s) => (
+              <div key={s.number} className="flex gap-6 relative group">
+                <div className={`w-6 h-6 rounded-full border-2 z-10 flex items-center justify-center transition-all ${currentStep >= s.number
+                  ? "bg-blue-600 border-blue-600 ring-4 ring-blue-50"
+                  : "bg-white border-gray-300"
+                  }`}>
+                  {currentStep > s.number ? (
+                    <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+                  ) : currentStep === s.number ? (
+                    <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
+                  ) : null}
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Bathrooms</label>
-                  <input type="number" {...register("specifications.residential.bathrooms")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
+                <div className="flex flex-col">
+                  <span className={`text-sm font-bold transition-all ${currentStep >= s.number ? "text-gray-800" : "text-gray-400"
+                    }`}>
+                    {s.title}
+                  </span>
+                  <span className={`text-xs transition-all ${currentStep >= s.number ? "text-blue-600" : "text-gray-400"
+                    }`}>
+                    {s.sub}
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Balconies</label>
-                  <input type="number" {...register("specifications.residential.balconies")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Hall</label>
-                  <input type="number" {...register("specifications.residential.hall")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Kitchens</label>
-                  <input type="number" {...register("specifications.residential.kitchens")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Furnishing</label>
-                  <select {...register("specifications.residential.furnishing")} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white">
-                    <option value="">Select Furnishing</option>
-                    <option value="Fully Furnished">Fully Furnished</option>
-                    <option value="Semi Furnished">Semi Furnished</option>
-                    <option value="Unfurnished">Unfurnished</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {/* General Specs - Facing */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">Facing</label>
-              <select {...register("specifications.facing")} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white">
-                <option value="">Select Facing</option>
-                <option value="North">North</option>
-                <option value="East">East</option>
-                <option value="West">West</option>
-                <option value="South">South</option>
-                <option value="North-East">North-East</option>
-                <option value="North-West">North-West</option>
-                <option value="South-East">South-East</option>
-                <option value="South-West">South-West</option>
-              </select>
-            </div>
-
-            {/* Floor Details */}
-            {activeConfig.hasFloor && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Property on Floor</label>
-                  <input type="text" {...register("specifications.floor.propertyOnFloor")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Total Floors</label>
-                  <input type="number" {...register("specifications.floor.totalFloor")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-              </>
-            )}
-
-            {/* Plot Details */}
-            {activeConfig.hasPlot && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Plot Length (ft)</label>
-                  <input type="number" {...register("specifications.plot.plotLength")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Plot Width (ft)</label>
-                  <input type="number" {...register("specifications.plot.plotWidth")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Road Width (ft)</label>
-                  <input type="number" {...register("specifications.plot.roadWidth")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <input type="checkbox" {...register("specifications.plot.cornerPlot")} id="cornerPlot" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                  <label htmlFor="cornerPlot" className="text-sm font-semibold text-gray-700">Corner Plot</label>
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <input type="checkbox" {...register("specifications.plot.gatedCommunity")} id="gatedCommunity" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                  <label htmlFor="gatedCommunity" className="text-sm font-semibold text-gray-700">Gated Community</label>
-                </div>
-              </>
-            )}
-
-            {/* Commercial Details */}
-            {activeConfig.hasCommercial && (
-              <>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Cabins</label>
-                  <input type="number" {...register("specifications.commercial.cabins")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Meeting Rooms</label>
-                  <input type="number" {...register("specifications.commercial.meetingRooms")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Workstations</label>
-                  <input type="number" {...register("specifications.commercial.workstations")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2">Washrooms</label>
-                  <input type="number" {...register("specifications.commercial.washrooms")} className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <input type="checkbox" {...register("specifications.commercial.pantry")} id="pantry" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                  <label htmlFor="pantry" className="text-sm font-semibold text-gray-700">Pantry Available</label>
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                  <input type="checkbox" {...register("specifications.commercial.receptionArea")} id="receptionArea" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                  <label htmlFor="receptionArea" className="text-sm font-semibold text-gray-700">Reception Area</label>
-                </div>
-                <div className="md:col-span-2 mt-2">
-                  <label className="block text-sm font-semibold mb-2">Suitable For</label>
-                  <input type="text" {...register("specifications.commercial.suitableFor")} placeholder="e.g. IT Office, Showroom, Clinic" className="w-full px-4 py-2 border border-gray-200 rounded-xl" />
-                </div>
-              </>
-            )}
-
-            {/* Utilities */}
-            <div className="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 pt-4 border-t border-gray-100">
-              <div>
-                <label className="block text-sm font-semibold mb-2">Water Supply</label>
-                <select {...register("specifications.utilities.waterSupply")} className="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white">
-                  <option value="">Select Water Supply</option>
-                  <option value="Corporation">Corporation</option>
-                  <option value="Borewell">Borewell</option>
-                  <option value="Both">Both</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2 mt-8">
-                <input type="checkbox" {...register("specifications.utilities.powerBackup")} id="powerBackup" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                <label htmlFor="powerBackup" className="text-sm font-semibold text-gray-700">Power Backup Available</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Amenities Section */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <div className="w-1 h-6 bg-yellow-500 rounded-full"></div>
-          Amenities
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {[...new Set([...amenitiesList, ...(watch("amenities") || [])])].map((amenity) => (
-            <label key={amenity} className="flex items-center gap-2 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors">
-              <input
-                type="checkbox"
-                value={amenity}
-                {...register("amenities")}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700">{amenity}</span>
-            </label>
-          ))}
-        </div>
-
-        {/* Custom Amenity Input */}
-        <div className="mt-6 flex gap-4">
-          <input
-            type="text"
-            id="customAmenity"
-            placeholder="Add custom amenity..."
-            className="flex-1 px-4 py-2 border border-gray-200 rounded-xl"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                const val = e.target.value.trim();
-                if (val) {
-                  const currentAmenities = watch("amenities") || [];
-                  if (!currentAmenities.includes(val)) {
-                    setValue("amenities", [...currentAmenities, val]);
-                  }
-                  e.target.value = "";
-                }
-              }
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              const input = document.getElementById('customAmenity');
-              const val = input.value.trim();
-              if (val) {
-                const currentAmenities = watch("amenities") || [];
-                if (!currentAmenities.includes(val)) {
-                  setValue("amenities", [...currentAmenities, val]);
-                }
-                input.value = "";
-              }
-            }}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
-          >
-            Add
-          </button>
-        </div>
-      </div>
-
-      {/* Location */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <div className="w-1 h-6 bg-red-500 rounded-full"></div>
-          Location Details
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div><label className="block text-sm font-semibold mb-2">Address Line 1 <span className="text-red-500">*</span></label><input {...register("location.addressLine1", { required: true })} className="w-full px-4 py-3 border border-gray-200 rounded-xl" /></div>
-          <div><label className="block text-sm font-semibold mb-2">Address Line 2</label><input {...register("location.addressLine2")} className="w-full px-4 py-3 border border-gray-200 rounded-xl" /></div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">Country</label>
-            <Controller control={control} name="location.country" render={({ field }) => (
-              <select {...field} className="w-full px-4 py-3 border border-gray-200 rounded-xl" onChange={(e) => { field.onChange(e); setValue("location.state", ""); setValue("location.city", ""); }}>
-                <option value="IN">India</option>
-                {Country.getAllCountries().map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
-              </select>
-            )} />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">State</label>
-            <Controller control={control} name="location.state" render={({ field }) => (
-              <select {...field} disabled={!selectedCountry} className="w-full px-4 py-3 border border-gray-200 rounded-xl" onChange={(e) => { field.onChange(e); setValue("location.city", ""); }}>
-                <option value="">Select State</option>
-                {selectedCountry && State.getStatesOfCountry(selectedCountry).map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-              </select>
-            )} />
-          </div>
-          <div>
-            <label className="block text-sm font-semibold mb-2">City</label>
-            <Controller control={control} name="location.city" render={({ field }) => (
-              <select {...field} disabled={!selectedState} className="w-full px-4 py-3 border border-gray-200 rounded-xl">
-                <option value="">Select City</option>
-                {selectedState && City.getCitiesOfState(selectedCountry, selectedState).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-              </select>
-            )} />
-          </div>
-          <div><label className="block text-sm font-semibold mb-2">Locality <span className="text-red-500">*</span></label><input {...register("location.locality", { required: true })} className="w-full px-4 py-3 border border-gray-200 rounded-xl" /></div>
-          <div><label className="block text-sm font-semibold mb-2">Sub Area</label><input {...register("location.subArea")} className="w-full px-4 py-3 border border-gray-200 rounded-xl" /></div>
-          <div><label className="block text-sm font-semibold mb-2">Pincode <span className="text-red-500">*</span></label><input {...register("location.pincode", { required: true })} className="w-full px-4 py-3 border border-gray-200 rounded-xl" /></div>
-        </div>
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 h-[350px]">
-          {mapPosition && (
-            <MapContainer center={mapPosition} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-              <LocationMarker position={mapPosition} setPosition={setMapPosition} setValue={setValue} />
-              <RecenterMap lat={mapPosition.lat} lng={mapPosition.lng} />
-            </MapContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Media */}
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-        <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <div className="w-1 h-6 bg-orange-500 rounded-full"></div>
-          Property Images
-        </h3>
-        <ImgCrop rotationSlider aspect={4 / 3}>
-          <Upload listType="picture-card" fileList={images.map((f, i) => ({ uid: i, name: f.name, status: "done", url: imagePreviews[i], originFileObj: f }))} onChange={handleImageChange} onPreview={onPreview} multiple accept="image/*" beforeUpload={() => false}>
-            {images.length + existingImages.length < 10 && <div><Plus /><div style={{ marginTop: 8 }}>Upload</div></div>}
-          </Upload>
-        </ImgCrop>
-        {existingImages.length > 0 && (
-          <div className="grid grid-cols-5 gap-4 mt-4">
-            {existingImages.map((img, i) => (
-              <div key={i} className="relative group">
-                <img src={getImageUrl(img.image_url || img)} className="w-full h-full object-cover rounded aspect-square" alt="Prop" />
-                <div onClick={() => removeExistingImage(i)} className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer flex items-center justify-center text-white"><Trash2 /></div>
               </div>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* Property Score Card */}
+        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-6">
+            <div className="relative w-20 h-20 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  strokeWidth="8"
+                  stroke="#f3f4f6"
+                  fill="transparent"
+                />
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="34"
+                  strokeWidth="8"
+                  stroke="#2563eb"
+                  fill="transparent"
+                  strokeDasharray={`${2 * Math.PI * 34}`}
+                  strokeDashoffset={`${2 * Math.PI * 34 * (1 - propertyScore / 100)}`}
+                  className="transition-all duration-1000"
+                />
+              </svg>
+              <span className="absolute text-lg font-bold text-gray-800">{propertyScore}%</span>
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-800">Property Score</h4>
+              <p className="text-xs text-gray-500 leading-tight mt-1">
+                Better your property score,<br />greater your visibility
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-end gap-4">
-        <button type="button" onClick={() => window.history.back()} disabled={loading} className="px-6 py-3 bg-gray-100 rounded">Cancel</button>
-        <button type="submit" disabled={loading} className="px-8 py-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700">{loading ? "Saving..." : "Publish Property"}</button>
-      </div>
-    </form>
+      {/* Main Content Area */}
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 space-y-8">
+        <div className="mb-8 p-1">
+          <h2 className="text-2xl font-bold text-gray-800 mb-1">
+            Welcome back {user?.name || "User"},
+          </h2>
+          <p className="text-gray-500 font-medium">
+            {steps.find(s => s.number === currentStep)?.title === "Basic Details"
+              ? "Fill out basic details"
+              : steps.find(s => s.number === currentStep)?.title
+            }
+          </p>
+        </div>
+
+        {currentStep === 1 && (
+          <div className="space-y-8">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-10">
+              <div>
+                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">I'm looking to</p>
+                <div className="flex flex-wrap gap-4">
+                  {["Sell", "Rent", "PG"].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setValue("basicInfo.category", cat)}
+                      className={`px-8 py-2.5 rounded-full border-2 transition-all font-bold text-sm ${watch("basicInfo.category") === cat
+                        ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100"
+                        : "bg-white text-gray-500 border-gray-100 hover:border-blue-200"
+                        }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">What kind of property do you have?</p>
+                <div className="flex gap-8 mb-6">
+                  {["Residential", "Commercial"].map((type) => (
+                    <label key={type} className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="radio"
+                          {...register("basicInfo.usageType")}
+                          value={type}
+                          className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-full checked:border-blue-600 transition-all"
+                        />
+                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full opacity-0 peer-checked:opacity-100 transition-all absolute"></div>
+                      </div>
+                      <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{type}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  {propertyTypes
+                    .filter(t => t.usageType === watch("basicInfo.usageType"))
+                    .map((type) => (
+                      <button
+                        key={type._id}
+                        type="button"
+                        onClick={() => setValue("basicInfo.propertyType", type.name)}
+                        className={`px-5 py-2 rounded-full border-2 transition-all text-sm font-semibold ${watch("basicInfo.propertyType") === type.name
+                          ? "bg-blue-50 text-blue-600 border-blue-600"
+                          : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
+                          }`}
+                      >
+                        {type.name}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Title <span className="text-red-500">*</span></label>
+                  <input {...register("basicInfo.title", { required: "Title is required" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all" placeholder="e.g. Luxurious 3BHK Villa" />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Description <span className="text-red-500">*</span></label>
+                  <textarea {...register("basicInfo.description", { required: "Description is required" })} rows="4" className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Approval Type</label>
+                  <select {...register("basicInfo.approvalType")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                    <option value="">Select Approval</option>
+                    {approvalTypes.map((type) => (
+                      <option key={type.name || type} value={type.name || type}>{type.name || type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Status</label>
+                  <div className="flex gap-4">
+                    {["Ready to Move", "Under Construction"].map(status => (
+                      <button
+                        key={status}
+                        type="button"
+                        onClick={() => setValue("legal.propertyStatus", status)}
+                        className={`px-4 py-2 rounded-xl border-2 transition-all text-sm font-semibold ${watch("legal.propertyStatus") === status
+                          ? "bg-blue-50 text-blue-600 border-blue-600"
+                          : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
+                          }`}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Address Line 1 <span className="text-red-500">*</span></label>
+                <input {...register("location.addressLine1", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="Street address, P.O. box, etc." />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Address Line 2</label>
+                <input {...register("location.addressLine2")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="Apartment, suite, unit, building, floor, etc." />
+              </div>
+              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Country</label>
+                <Controller control={control} name="location.country" render={({ field }) => (
+                  <select {...field} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" onChange={(e) => { field.onChange(e); setValue("location.state", ""); setValue("location.city", ""); }}>
+                    <option value="IN">India</option>
+                    {Country.getAllCountries().map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
+                  </select>
+                )} />
+              </div>
+              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">State</label>
+                <Controller control={control} name="location.state" render={({ field }) => (
+                  <select {...field} disabled={!selectedCountry} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" onChange={(e) => { field.onChange(e); setValue("location.city", ""); }}>
+                    <option value="">Select State</option>
+                    {selectedCountry && State.getStatesOfCountry(selectedCountry).map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
+                  </select>
+                )} />
+              </div>
+              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">City</label>
+                <Controller control={control} name="location.city" render={({ field }) => (
+                  <select {...field} disabled={!selectedState} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl">
+                    <option value="">Select City</option>
+                    {selectedState && City.getCitiesOfState(selectedCountry, selectedState).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
+                  </select>
+                )} />
+              </div>
+              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Locality <span className="text-red-500">*</span></label><input {...register("location.locality", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
+              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Sub Area</label><input {...register("location.subArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
+              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Pincode <span className="text-red-500">*</span></label><input {...register("location.pincode", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
+            </div>
+            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 h-[400px]">
+              {mapPosition && (
+                <MapContainer center={mapPosition} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%", borderRadius: "1rem" }}>
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <LocationMarker position={mapPosition} setPosition={setMapPosition} setValue={setValue} />
+                  <RecenterMap lat={mapPosition.lat} lng={mapPosition.lng} />
+                </MapContainer>
+              )}
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="space-y-8">
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Pricing Details</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {categoryWatch === "Sell" ? (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Total Price (₹) <span className="text-red-500">*</span></label>
+                      <input type="number" {...register("pricing.sell.price", { required: categoryWatch === "Sell" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Price Per Sqft (₹)</label>
+                      <input type="number" {...register("pricing.sell.pricePerSqft")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Monthly Rent (₹) <span className="text-red-500">*</span></label>
+                      <input type="number" {...register("pricing.rent.monthlyRent", { required: categoryWatch === "Rent" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Security Deposit (₹)</label>
+                      <input type="number" {...register("pricing.rent.securityDeposit")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+              <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Specifications</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-bold mb-2">Total Area (sqft) *</label>
+                  <input type="number" {...register("specifications.area.totalArea", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                </div>
+                {!activeConfig.hasPlot && (
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Built-up Area (sqft)</label>
+                    <input type="number" {...register("specifications.area.builtupArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                  </div>
+                )}
+                {activeConfig.hasRooms && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Bedrooms</label>
+                      <input type="number" {...register("specifications.residential.bedrooms")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Bathrooms</label>
+                      <input type="number" {...register("specifications.residential.bathrooms")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Balconies</label>
+                      <input type="number" {...register("specifications.residential.balconies")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Furnishing</label>
+                      <select {...register("specifications.residential.furnishing")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                        <option value="">Select Furnishing</option>
+                        <option value="Fully Furnished">Fully Furnished</option>
+                        <option value="Semi Furnished">Semi Furnished</option>
+                        <option value="Unfurnished">Unfurnished</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+
+                {activeConfig.hasPlot && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Plot Length (ft)</label>
+                      <input type="number" {...register("specifications.plot.plotLength")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Plot Width (ft)</label>
+                      <input type="number" {...register("specifications.plot.plotWidth")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div className="flex items-center gap-2 mt-4">
+                      <input type="checkbox" {...register("specifications.plot.cornerPlot")} id="cornerPlot" className="w-4 h-4 text-blue-600 border-gray-300 rounded" />
+                      <label htmlFor="cornerPlot" className="text-sm font-semibold text-gray-700">Corner Plot</label>
+                    </div>
+                  </>
+                )}
+
+                {activeConfig.hasCommercial && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Cabins</label>
+                      <input type="number" {...register("specifications.commercial.cabins")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Workstations</label>
+                      <input type="number" {...register("specifications.commercial.workstations")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="block text-sm font-bold mb-2">Facing</label>
+                  <select {...register("specifications.facing")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                    <option value="">Select Facing</option>
+                    {["North", "East", "West", "South", "North-East", "North-West", "South-East", "South-West"].map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentStep === 4 && (
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Property Media</p>
+            <div className="space-y-6">
+              <ImgCrop rotationSlider aspect={4 / 3}>
+                <Upload
+                  listType="picture-card"
+                  fileList={images.map((f, i) => ({ uid: i, name: f.name, status: "done", url: imagePreviews[i], originFileObj: f }))}
+                  onChange={handleImageChange}
+                  onPreview={onPreview}
+                  multiple accept="image/*"
+                  beforeUpload={() => false}
+                  className="custom-upload"
+                >
+                  {images.length + existingImages.length < 10 && (
+                    <div className="flex flex-col items-center gap-1">
+                      <Plus size={24} />
+                      <div className="text-xs font-bold">Add Photo</div>
+                    </div>
+                  )}
+                </Upload>
+              </ImgCrop>
+              {existingImages.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {existingImages.map((img, i) => (
+                    <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
+                      <img src={getImageUrl(img)} alt={`Property ${i}`} className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeExistingImage(i)} className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {currentStep === 5 && (
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Amenities</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {[...new Set([...amenitiesList, ...(watch("amenities") || [])])].map((amenity) => (
+                <label key={amenity} className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-100 hover:bg-blue-50/10 cursor-pointer transition-all">
+                  <input type="checkbox" value={amenity} {...register("amenities")} className="w-5 h-5 rounded-lg border-2 border-gray-300 text-blue-600 focus:ring-blue-500 transition-all" />
+                  <span className="text-sm font-semibold text-gray-700">{amenity}</span>
+                </label>
+              ))}
+            </div>
+
+            {/* Custom Amenity Input */}
+            <div className="mt-8 flex gap-4">
+              <input
+                type="text"
+                id="customAmenity"
+                placeholder="Add custom amenity..."
+                className="flex-1 px-5 py-3 border-2 border-gray-100 rounded-2xl focus:border-blue-600 outline-none transition-all"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = e.target.value.trim();
+                    if (val) {
+                      const currentAmenities = watch("amenities") || [];
+                      if (!currentAmenities.includes(val)) {
+                        setValue("amenities", [...currentAmenities, val]);
+                      }
+                      e.target.value = "";
+                    }
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const input = document.getElementById('customAmenity');
+                  const val = input.value.trim();
+                  if (val) {
+                    const currentAmenities = watch("amenities") || [];
+                    if (!currentAmenities.includes(val)) {
+                      setValue("amenities", [...currentAmenities, val]);
+                    }
+                    input.value = "";
+                  }
+                }}
+                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Form Navigation Buttons */}
+        <div className="flex justify-between items-center pt-8">
+          <button
+            type="button"
+            onClick={prevStep}
+            disabled={currentStep === 1}
+            className={`px-8 py-3 rounded-2xl font-bold text-sm transition-all ${currentStep === 1
+              ? "text-gray-300 cursor-not-allowed"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
+          >
+            Back
+          </button>
+
+          {currentStep < 5 ? (
+            <button
+              type="button"
+              onClick={nextStep}
+              className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all transform hover:scale-[1.02]"
+            >
+              Continue
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-10 py-3 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-green-100 transition-all transform hover:scale-[1.02] flex items-center gap-2"
+            >
+              {loading ? "Saving..." : "Publish Property"}
+            </button>
+          )}
+        </div>
+      </form>
+    </div >
   );
 };
 export default PropertyForm;

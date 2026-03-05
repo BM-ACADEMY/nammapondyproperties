@@ -131,6 +131,7 @@ const AddProperty = () => {
           isSeller={true}
           initialData={initialData}
           isEdit={!!editId}
+          user={user}
         />
       </div>
 
