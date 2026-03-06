@@ -231,36 +231,42 @@ const PropertyTypeList = () => {
 
           {/* Promo Widget - At Bottom */}
           <div className="mt-auto">
-  <div className="bg-[#e6f4ea] rounded-xl p-5 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
-    
-    <div className="relative z-10 w-2/3">
-      <h3 className="font-bold text-[#1E293B] leading-tight mb-1 text-lg">
-        Find the Best Deal for Your Property!
-      </h3>
+            <div className="bg-[#e6f4ea] rounded-xl p-5 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
 
-      <p className="text-sm text-[#475569] mb-4">
-        List your property today
-      </p>
+              <div className="relative z-10 w-2/3">
+                <h3 className="font-bold text-[#1E293B] leading-tight mb-1 text-lg">
+                  Find the Best Deal for Your Property!
+                </h3>
 
-      <button
-        onClick={() => navigate("/post-property")}
-        className="bg-[#0078d7] hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
-      >
-        Post Property – It's FREE
-      </button>
-    </div>
+                <p className="text-sm text-[#475569] mb-4">
+                  List your property today
+                </p>
 
-    {/* Agent Image */}
-    <div
-      className="absolute bottom-0 right-0 w-[38%] h-[95%] bg-contain bg-no-repeat bg-bottom"
-      style={{ backgroundImage: "url(./properties/adsman.png)" }}
-    ></div>
+                <button
+                  onClick={() => navigate("/post-property")}
+                  className="bg-[#0078d7] hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+                >
+                  Post Property – It's FREE
+                </button>
+              </div>
 
-  </div>
-</div>
+              {/* Agent Image */}
+              <div
+                className="absolute bottom-0 right-0 w-[38%] h-[95%] bg-contain bg-no-repeat bg-bottom"
+                style={{ backgroundImage: "url(./properties/adsman.png)" }}
+              ></div>
+
+            </div>
+          </div>
         </div>
 
       </div>
+         <button 
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="fixed bottom-8 right-8 bg-blue-100 hover:bg-blue-200 text-[#0078d7] p-3 rounded-full shadow-md transition z-50 hidden md:flex"
+      >
+        <ArrowUp size={20} />
+      </button>
 
     </section>
   );
