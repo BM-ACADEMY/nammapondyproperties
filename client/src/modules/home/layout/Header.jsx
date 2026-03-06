@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import { getImageUrl } from "@/utils/imageUrl";
@@ -15,8 +15,10 @@ import {
   Headphones,
   Star,
   PhoneCall,
+  Search,
 } from "lucide-react";
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
+import PropertySearchBar from "../components/PropertySearchBar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,12 +26,18 @@ const Header = () => {
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
 
   const { businessTypes, propertyCategories = [] } = useNav();
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const isHomePage = location.pathname === "/";
+  const isPropertiesPage = location.pathname === "/properties";
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -54,6 +62,30 @@ const Header = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const mainContent = document.getElementById("main-content");
+      if (mainContent) {
+        if (mainContent.scrollTop > 300) {
+          setIsScrolled(true);
+        } else {
+          setIsScrolled(false);
+        }
+      }
+    };
+
+    const mainContent = document.getElementById("main-content");
+    if (mainContent) {
+      mainContent.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (mainContent) {
+        mainContent.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [isHomePage]);
 
   const handleLogout = () => {
     logout();
@@ -105,9 +137,16 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-[#1a1a1a] backdrop-blur-md border-b border-gray-800 sticky top-0 z-40 transition-all duration-300">
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${isHomePage
+          ? isScrolled
+            ? "bg-[#1a1a1a] shadow-lg border-b border-gray-800 py-2"
+            : "bg-transparent border-transparent py-4"
+          : "bg-[#1a1a1a] border-b border-gray-800 py-2"
+          }`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-16">
             {/* Logo - Left Side */}
             <Link
               to="/"
@@ -127,11 +166,16 @@ const Header = () => {
             </Link>
 
             {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
-            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-              {/* Desktop Navigation */}
-              <nav className="flex items-center space-x-5 xl:space-x-6">
-                {propertyCategories
-                  .map((category) => {
+            <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
+              {/* Scrolling Search Bar (Reuses PropertySearchBar) */}
+              {(isScrolled && isHomePage) || isPropertiesPage ? (
+                <div className="flex-1 max-w-4xl mx-8">
+                  <PropertySearchBar variant="header" showFilters={false} />
+                </div>
+              ) : (
+                /* Desktop Navigation */
+                <nav className="flex items-center space-x-5 xl:space-x-6">
+                  {propertyCategories.map((category) => {
                     const name = category; // Sell, Rent
                     return (
                       <Link
@@ -144,30 +188,31 @@ const Header = () => {
                     );
                   })}
 
-                {businessTypes.map((type) => {
-                  const id = type._id?.toString() || type.name;
-                  const name =
-                    typeof type.name === "string"
-                      ? type.name
-                      : type.name?.name || "Unknown";
-                  return (
-                    <Link
-                      key={id}
-                      to={`/business-user-list/${id}`}
-                      className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
-                    >
-                      {name}
-                    </Link>
-                  );
-                })}
+                  {businessTypes.map((type) => {
+                    const id = type._id?.toString() || type.name;
+                    const name =
+                      typeof type.name === "string"
+                        ? type.name
+                        : type.name?.name || "Unknown";
+                    return (
+                      <Link
+                        key={id}
+                        to={`/business-user-list/${id}`}
+                        className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
+                      >
+                        {name}
+                      </Link>
+                    );
+                  })}
 
-                <Link
-                  to="/contact"
-                  className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
-                >
-                  Contact
-                </Link>
-              </nav>
+                  <Link
+                    to="/contact"
+                    className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                  >
+                    Contact
+                  </Link>
+                </nav>
+              )}
 
               {/* Divider */}
               <div className="h-6 w-px bg-gray-700 mx-2"></div>
