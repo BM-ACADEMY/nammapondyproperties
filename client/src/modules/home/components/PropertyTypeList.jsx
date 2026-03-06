@@ -261,12 +261,8 @@ const PropertyTypeList = () => {
         </div>
 
       </div>
-         <button 
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-8 right-8 bg-blue-100 hover:bg-blue-200 text-[#0078d7] p-3 rounded-full shadow-md transition z-50 hidden md:flex"
-      >
-        <ArrowUp size={20} />
-      </button>
+
+      
 
     </section>
   );
