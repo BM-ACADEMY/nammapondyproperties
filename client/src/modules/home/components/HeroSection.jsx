@@ -82,7 +82,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
-            className="absolute -bottom-4 left-0 right-0 z-20 flex justify-center px-4"
+            className="absolute -bottom-9 left-0 right-0 z-20 flex justify-center px-4"
           >
             <PropertySearchBar variant="hero" showFilters={true} showKeyword={true} />
           </motion.div>

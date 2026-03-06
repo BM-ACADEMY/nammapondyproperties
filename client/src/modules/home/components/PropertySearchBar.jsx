@@ -93,7 +93,7 @@ const PropertySearchBar = ({
                 initial={isHeader ? { opacity: 0, scale: 0.95 } : { width: "10%", opacity: 0 }}
                 animate={isHeader ? { opacity: 1, scale: 1 } : { width: "100%", opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className={`bg-white p-2 rounded-full shadow-2xl flex flex-row items-center relative z-[100] w-full overflow-visible ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
+                className={`bg-white p-2 rounded-full shadow-2xl flex flex-row items-center relative z-50 w-full overflow-visible ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
                     }`}
             >
                 {/* 1. SEARCH INPUT */}
@@ -132,12 +132,7 @@ const PropertySearchBar = ({
                 {showFilters && (
                     <div className={`flex items-center px-4 gap-1 md:gap-4 flex-shrink-0 ${!showKeyword ? "w-full justify-between" : ""}`}>
                         {/* Location */}
-                        <div
-                            className="relative"
-                            ref={locationRef}
-                            onMouseEnter={() => !isHeader && setIsLocationDropdownOpen(true)}
-                            onMouseLeave={() => !isHeader && setIsLocationDropdownOpen(false)}
-                        >
+                        <div className="relative" ref={locationRef}>
                             <button
                                 onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
@@ -151,7 +146,7 @@ const PropertySearchBar = ({
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[110] left-1/2 -translate-x-1/2"
+                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[60] left-1/2 -translate-x-1/2"
                                     >
                                         <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Location</div>
                                         <button onClick={() => { setLocation(""); setIsLocationDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!location ? "text-blue-600 font-bold" : "text-gray-600"}`}>
@@ -173,12 +168,7 @@ const PropertySearchBar = ({
                         </div>
 
                         {/* Approval */}
-                        <div
-                            className="relative"
-                            ref={approvalRef}
-                            onMouseEnter={() => !isHeader && setIsApprovalDropdownOpen(true)}
-                            onMouseLeave={() => !isHeader && setIsApprovalDropdownOpen(false)}
-                        >
+                        <div className="relative" ref={approvalRef}>
                             <button
                                 onClick={() => setIsApprovalDropdownOpen(!isApprovalDropdownOpen)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
@@ -192,7 +182,7 @@ const PropertySearchBar = ({
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[110] left-1/2 -translate-x-1/2"
+                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[60] left-1/2 -translate-x-1/2"
                                     >
                                         <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Approval</div>
                                         <button onClick={() => { setApproval(""); setIsApprovalDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!approval ? "text-blue-600 font-bold" : "text-gray-600"}`}>
@@ -212,12 +202,7 @@ const PropertySearchBar = ({
                         </div>
 
                         {/* Budget */}
-                        <div
-                            className="relative"
-                            ref={budgetRef}
-                            onMouseEnter={() => !isHeader && setIsBudgetDropdownOpen(true)}
-                            onMouseLeave={() => !isHeader && setIsBudgetDropdownOpen(false)}
-                        >
+                        <div className="relative" ref={budgetRef}>
                             <button
                                 onClick={() => setIsBudgetDropdownOpen(!isBudgetDropdownOpen)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
@@ -231,7 +216,7 @@ const PropertySearchBar = ({
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[110] left-1/2 -translate-x-1/2"
+                                        className="absolute top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[60] left-1/2 -translate-x-1/2"
                                     >
                                         <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Budget</div>
                                         <button onClick={() => { selectBudget({}); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!minPrice && !maxPrice ? "text-blue-600 font-bold" : "text-gray-600"}`}>

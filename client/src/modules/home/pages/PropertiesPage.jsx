@@ -154,7 +154,7 @@ const PropertiesPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen pt-24 pb-8 font-sans">
+    <div className="bg-gray-50 min-h-screen py-8 font-sans">
       <Helmet>
         <title>Properties for Sale in Pondicherry | Verified Listings</title>
         <meta
