@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ArrowUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowUp, Activity } from "lucide-react";
 import { useNav } from "@/context/NavContext";
+import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
+import axios from "axios";
 
 // Import Swiper React components and styles
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -13,6 +15,23 @@ import "swiper/css/navigation";
 const PropertyTypeList = () => {
   const navigate = useNavigate();
   const { propertyTypes, isLoading: loading } = useNav();
+  const { isAuthenticated } = useAuth();
+  const [visitCount, setVisitCount] = useState(0);
+
+  useEffect(() => {
+    // 🏠 Visit Count Tracker (Once per session)
+    const storedCount = parseInt(localStorage.getItem("site_visits")) || 0;
+    const sessionCounted = sessionStorage.getItem("visit_counted");
+
+    if (!sessionCounted) {
+      const newCount = storedCount + 1;
+      localStorage.setItem("site_visits", newCount);
+      sessionStorage.setItem("visit_counted", "true");
+      setVisitCount(newCount);
+    } else {
+      setVisitCount(storedCount);
+    }
+  }, []);
 
   // Matched exactly to the subtle pastels in your second reference image
   const bgColors = [
@@ -77,10 +96,10 @@ const PropertyTypeList = () => {
 
   return (
     <section className="pt-16 pb-10 bg-white font-sans overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1350px] flex flex-col lg:flex-row gap-10">
-        
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1450px] flex flex-col lg:flex-row gap-10">
+
         {/* Left Section: Main Content */}
-        <div className="flex-1 w-full overflow-visible min-w-0"> 
+        <div className="flex-1 w-full overflow-visible min-w-0">
           <div className="mb-6">
             <h2 className="text-[28px] font-bold text-[#1E293B]">Explore Properties</h2>
             <p className="text-[15px] text-[#64748B] mt-1">Discover exceptional properties and landscapes</p>
@@ -104,7 +123,7 @@ const PropertyTypeList = () => {
             </div>
           ) : (
             <div className="relative group/slider w-full">
-              
+
               {/* Custom Navigation */}
               <button className="swiper-prev-btn absolute -left-5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 rounded-full transition hover:scale-105 hover:text-blue-600 disabled:opacity-0 disabled:pointer-events-none hidden md:flex cursor-pointer text-[#475569]">
                 <ChevronLeft className="w-6 h-6 ml-[-2px]" />
@@ -159,7 +178,7 @@ const PropertyTypeList = () => {
                           {item.ctaText}
                         </p>
                       </div>
-                      
+
                       {/* Bottom Image Block (Takes remaining space) */}
                       <div className="flex-1 w-full overflow-hidden bg-gray-100">
                         <img
@@ -182,41 +201,61 @@ const PropertyTypeList = () => {
 
         {/* Right Section: Sidebar */}
         <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-6 lg:mt-[76px]">
-          
-          {/* Activity Widget */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-            <p className="text-xs text-[#64748B] mb-3 font-semibold uppercase tracking-wider">Your Recent Activity</p>
-            
-            <div className="bg-orange-50/70 rounded-lg p-4 mb-4 flex justify-between items-start border border-orange-100">
-              <div>
-                <span className="text-2xl font-bold block text-slate-800">2</span>
-                <span className="text-sm text-slate-600">Viewed</span>
+
+          {/* Activity Widget - Only for guests */}
+          {!isAuthenticated && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <p className="text-xs text-[#64748B] mb-3 font-semibold uppercase tracking-wider">Your Recent Activity</p>
+
+              <div className="bg-orange-50/70 rounded-lg p-4 mb-4 flex justify-between items-start border border-orange-100">
+                <div>
+                  <span className="text-2xl font-bold block text-slate-800">{visitCount}</span>
+                  <span className="text-sm text-slate-600">Viewed</span>
+                </div>
+                <span className="text-orange-400 text-lg leading-none">
+                  <Activity size={18} />
+                </span>
               </div>
-              <span className="text-orange-400 text-lg leading-none">↗</span>
-            </div>
 
-            <button className="w-full bg-[#0078d7] hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm">
-              Login/Register to Save Activity
-            </button>
-            <p className="text-[10px] text-center text-[#64748B] mt-3">
-              & see your activities across browsers & devices...
-            </p>
-          </div>
-
-          {/* Promo Widget */}
-          <div className="bg-[#e6f4ea] rounded-xl p-5 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
-            <div className="relative z-10 w-2/3">
-              <h3 className="font-bold text-[#1E293B] leading-tight mb-1 text-lg">
-                Sell or rent faster at<br />the right price!
-              </h3>
-              <p className="text-sm text-[#475569] mb-4">List your property now</p>
-              <button className="bg-[#0078d7] hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm">
-                Post Property, It's FREE
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full bg-[#0078d7] hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm"
+              >
+                Login/Register to Save Activity
               </button>
+              <p className="text-[10px] text-center text-[#64748B] mt-3">
+                & see your activities across browsers & devices...
+              </p>
             </div>
-            {/* Promo Agent Background Image */}
-            <div className="absolute bottom-0 right-[-10px] w-1/2 h-[90%] bg-cover bg-bottom z-0" 
-                 style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=200&q=80)' }}>
+          )}
+
+          {/* Promo Widget - At Bottom */}
+          <div className="mt-auto">
+            <div className="bg-[#e6f4ea] rounded-xl p-5 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
+
+              <div className="relative z-10 w-2/3">
+                <h3 className="font-bold text-[#1E293B] leading-tight mb-1 text-lg">
+                  Find the Best Deal for Your Property!
+                </h3>
+
+                <p className="text-sm text-[#475569] mb-4">
+                  List your property today
+                </p>
+
+                <button
+                  onClick={() => navigate("/post-property")}
+                  className="bg-[#0078d7] hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+                >
+                  Post Property – It's FREE
+                </button>
+              </div>
+
+              {/* Agent Image */}
+              <div
+                className="absolute bottom-0 right-0 w-[38%] h-[95%] bg-contain bg-no-repeat bg-bottom"
+                style={{ backgroundImage: "url(./properties/adsman.png)" }}
+              ></div>
+
             </div>
           </div>
         </div>
