@@ -11,23 +11,8 @@ const CreateUserModal = ({
   editingUser,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [businessTypes, setBusinessTypes] = useState([]);
   const [form] = Form.useForm();
 
-  // Fetch Business Types
-  useEffect(() => {
-    const fetchBusinessTypes = async () => {
-      try {
-        const response = await api.get("/business-types?status=active");
-        setBusinessTypes(response.data);
-      } catch (error) {
-        console.error("Error fetching business types:", error);
-      }
-    };
-    if (initialRole === "seller") {
-      fetchBusinessTypes();
-    }
-  }, [initialRole]);
 
   // Use effect to populate form when editingUser changes or modal opens
   useEffect(() => {
@@ -37,8 +22,6 @@ const CreateUserModal = ({
           name: editingUser.name,
           email: editingUser.email,
           phone: editingUser.phone,
-          businessType:
-            editingUser.businessType?._id || editingUser.businessType,
           // Password is usually not pre-filled for security
         });
       } else {
@@ -55,7 +38,6 @@ const CreateUserModal = ({
         await api.put(`/users/update-user-by-id/${editingUser._id}`, {
           name: values.name,
           phone: values.phone,
-          businessType: values.businessType,
           // Only send password if it's provided (optional for edit)
           ...(values.password ? { password: values.password } : {}),
         });
@@ -80,7 +62,7 @@ const CreateUserModal = ({
       console.error(error);
       message.error(
         error.response?.data?.error ||
-          `Failed to ${editingUser ? "update" : "create"} ${initialRole}.`,
+        `Failed to ${editingUser ? "update" : "create"} ${initialRole}.`,
       );
     } finally {
       setLoading(false);
@@ -149,23 +131,6 @@ const CreateUserModal = ({
           />
         </Form.Item>
 
-        {initialRole === "seller" && (
-          <Form.Item
-            name="businessType"
-            label="Business Type"
-            rules={[
-              { required: true, message: "Please select a business type" },
-            ]}
-          >
-            <Select placeholder="Select Business Type">
-              {businessTypes.map((type) => (
-                <Select.Option key={type._id} value={type._id}>
-                  {type.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        )}
 
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 mt-4">
           <Button onClick={onClose} className="w-full sm:w-auto">

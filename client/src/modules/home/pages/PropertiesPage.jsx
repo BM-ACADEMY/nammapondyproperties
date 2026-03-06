@@ -119,7 +119,6 @@ const PropertiesPage = () => {
     setSearchQuery(currentSearch);
     setInputValue(currentSearch);
 
-    // setType removed
     setApproval(searchParams.get("approval") || "");
     setLocation(searchParams.get("location") || "");
     setMinPrice(searchParams.get("minPrice") || "");
@@ -129,6 +128,17 @@ const PropertiesPage = () => {
     setType(searchParams.get("type") || "");
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputValue !== (searchParams.get("search") || "")) {
+        setSearchQuery(inputValue);
+        setCurrentPage(1);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputValue, searchParams]);
 
   // --- FETCH PROPERTIES WHEN FILTERS CHANGE ---
   useEffect(() => {

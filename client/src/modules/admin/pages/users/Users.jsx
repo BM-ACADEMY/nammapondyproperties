@@ -113,17 +113,6 @@ const Users = () => {
         record.role_id?.role_name?.toLowerCase() === value,
     },
     {
-      title: "Business Type",
-      dataIndex: "businessType",
-      key: "businessType",
-      render: (businessType) =>
-        businessType ? (
-          <Tag color="cyan">{businessType.name}</Tag>
-        ) : (
-          <span className="text-gray-400">-</span>
-        ),
-    },
-    {
       title: "Status",
       dataIndex: "isVerified",
       key: "status",
@@ -164,7 +153,6 @@ const Users = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [roles, setRoles] = useState([]);
-  const [businessTypes, setBusinessTypes] = useState([]);
   const [form] = Form.useForm();
   // Role ID for "Seller" (to conditionally show Business Type)
   const [sellerRoleId, setSellerRoleId] = useState(null);
@@ -176,20 +164,10 @@ const Users = () => {
 
   const fetchRolesAndTypes = async () => {
     try {
-      const [rolesRes, typesRes] = await Promise.all([
-        api.get("/roles/fetch-all-role"),
-        api.get("/business-types"),
-      ]);
+      const rolesRes = await api.get("/roles/fetch-all-role");
       setRoles(rolesRes.data);
-      setBusinessTypes(typesRes.data);
-
-      // Find seller role ID for logic
-      const sRole = rolesRes.data.find(
-        (r) => r.role_name.toLowerCase() === "seller",
-      );
-      if (sRole) setSellerRoleId(sRole._id);
     } catch (error) {
-      console.error("Error fetching roles/types:", error);
+      console.error("Error fetching roles:", error);
     }
   };
 
@@ -201,7 +179,6 @@ const Users = () => {
       email: record.email,
       phone: record.phone,
       role_id: record.role_id?._id,
-      businessType: record.businessType?._id,
     });
     setIsModalOpen(true);
   };
@@ -328,24 +305,6 @@ const Users = () => {
             </Select>
           </Form.Item>
 
-          {/* Show Business Type if Seller Role is selected */}
-          {selectedRole === sellerRoleId && (
-            <Form.Item
-              name="businessType"
-              label="Business Type"
-              rules={[
-                { required: true, message: "Please select business type" },
-              ]}
-            >
-              <Select>
-                {businessTypes.map((bt) => (
-                  <Select.Option key={bt._id} value={bt._id}>
-                    {bt.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
 
           <div className="flex justify-end gap-2 mt-4">
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>

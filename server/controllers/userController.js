@@ -96,8 +96,7 @@ exports.createUser = async (req, res) => {
 
     // Populate for response
     const populatedUser = await User.findById(user._id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
 
     // Generate token for auto-login
     const token = generateToken(user._id);
@@ -130,13 +129,9 @@ exports.getUsers = async (req, res) => {
       }
     }
 
-    if (req.query.businessType) {
-      query.businessType = req.query.businessType;
-    }
 
     const users = await User.find(query)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -165,8 +160,7 @@ exports.getPublicUsers = async (req, res) => {
     }
 
     const users = await User.find(query)
-      .select("name email phone profile_image businessType role_id isVerified") // Select only public fields
-      .populate("businessType")
+      .select("name email phone profile_image role_id isVerified") // Select only public fields
       .populate("role_id")
       .limit(parseInt(limit) || 20);
 
@@ -179,8 +173,7 @@ exports.getPublicUsers = async (req, res) => {
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name email phone profile_image businessType role_id isVerified") // Select only public fields
-      .populate("businessType")
+      .select("name email phone profile_image role_id isVerified") // Select only public fields
       .populate("role_id");
 
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -194,8 +187,7 @@ exports.getPublicUserById = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -208,10 +200,6 @@ exports.updateUser = async (req, res) => {
     const userId = req.params.id;
     let updateData = req.body;
 
-    // Sanitize businessType if it's an empty string to prevent ObjectId casting error
-    if (updateData.businessType === "") {
-      updateData.businessType = null;
-    }
 
     // Check if image was uploaded
     if (req.file) {
@@ -253,8 +241,7 @@ exports.updateUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     })
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -313,8 +300,7 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ phone })
       .select("+password")
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
 
     if (!user) return res.status(401).json({ error: "User not found" });
 
@@ -349,7 +335,7 @@ exports.googleLogin = async (req, res) => {
 
     let user = await User.findOne({
       $or: [{ googleId }, { email }]
-    }).populate("role_id").populate("businessType");
+    }).populate("role_id");
 
     if (!user) {
       // Find Default Role
@@ -372,7 +358,7 @@ exports.googleLogin = async (req, res) => {
       await user.save();
 
       // Populate for response
-      user = await User.findById(user._id).populate("role_id").populate("businessType");
+      user = await User.findById(user._id).populate("role_id");
     } else {
       // Update googleId if not present (case where email matched)
       if (!user.googleId) {
@@ -424,8 +410,7 @@ exports.resetPassword = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     res.status(200).json({
       success: true,
       user,
@@ -575,16 +560,14 @@ exports.upgradeToSeller = async (req, res) => {
     }
 
     const updateData = {
-      role_id: sellerRole._id,
-      businessType: businessType,
+      role_id: sellerRoleId._id,
     };
 
     if (name) updateData.name = name;
     if (phone) updateData.phone = phone;
 
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true })
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
@@ -612,8 +595,7 @@ exports.upgradeToSeller = async (req, res) => {
 exports.refreshToken = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json({
@@ -623,5 +605,24 @@ exports.refreshToken = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
+  }
+};
+
+exports.getSellersByPropertyBusinessType = async (req, res) => {
+  try {
+    const { businessTypeId } = req.params;
+    const Property = require("../models/Property");
+
+    // Find all properties with the given business type and get unique sellers
+    const sellersIds = await Property.find({ businessType: businessTypeId }).distinct("seller");
+
+    // Fetch the user details for these sellers
+    const sellers = await User.find({ _id: { $in: sellersIds } })
+      .select("name email phone profile_image role_id isVerified")
+      .populate("role_id");
+
+    res.json(sellers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

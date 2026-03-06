@@ -65,11 +65,7 @@ const SellerRequests = () => {
       title: "Business Type",
       dataIndex: "business_type",
       key: "business_type",
-      render: (text, record) => {
-        const type =
-          text && text !== "N/A" ? text : record.seller_id?.businessType?.name;
-        return type || "N/A";
-      },
+      render: (text) => text || "N/A",
     },
     {
       title: "Status",

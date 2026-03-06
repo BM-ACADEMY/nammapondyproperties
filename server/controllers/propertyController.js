@@ -8,6 +8,7 @@ const path = require("path");
 const PropertyType = require("../models/PropertyType");
 const ApprovalType = require("../models/ApprovalType");
 const User = require("../models/User");
+const BusinessType = require("../models/BusinessType");
 
 const parseJSON = (data) => {
   if (typeof data === "string") {
@@ -34,7 +35,7 @@ exports.createProperty = async (req, res) => {
       const propertyCount = await Property.countDocuments({
         seller: req.user._id,
       });
-      if (propertyCount >= 2) {
+      if (propertyCount >= 5) {
         // Delete uploaded files if any, to avoid accumulating garbage
         if (req.files && req.files.length > 0) {
           req.files.forEach((file) => {
@@ -49,7 +50,7 @@ exports.createProperty = async (req, res) => {
         }
         return res
           .status(403)
-          .json({ error: "You can only upload 2 properties." });
+          .json({ error: "You can only upload 5 properties." });
       }
     }
 
@@ -111,7 +112,6 @@ exports.createProperty = async (req, res) => {
         if (sellerRole) {
           await User.findByIdAndUpdate(req.user._id, {
             role_id: sellerRole._id,
-            businessType: req.body.businessType || req.user.businessType, // Add businessType if sent
           });
           console.log(`User ${req.user._id} upgraded to SELLER role`);
         }
@@ -167,13 +167,7 @@ exports.getProperties = async (req, res) => {
 
     // 2. Business Type
     if (businessType) {
-      const sellersWithBizType = await User.find({ businessType }).distinct("_id");
-      queryConditions.push({
-        $or: [
-          { businessType: businessType },
-          { seller: { $in: sellersWithBizType } }
-        ]
-      });
+      queryConditions.push({ businessType: businessType });
     }
 
     // 3. Status / Verification
@@ -216,6 +210,7 @@ exports.getProperties = async (req, res) => {
       const tokens = search.split(/[\s,]+/).filter(t => t.length > 0);
 
       if (tokens.length > 0) {
+        // 1. Create conditions for each individual token (AND logic)
         const tokenConditions = await Promise.all(tokens.map(async (token) => {
           const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const tokenRegex = { $regex: escapedToken, $options: "i" };
@@ -227,6 +222,11 @@ exports.getProperties = async (req, res) => {
               { phone: tokenRegex },
               { email: tokenRegex }
             ]
+          }).distinct("_id");
+
+          // Find business types matching this specific token
+          const matchingBusinessTypes = await BusinessType.find({
+            name: tokenRegex
           }).distinct("_id");
 
           const searchOr = [
@@ -251,8 +251,8 @@ exports.getProperties = async (req, res) => {
             { "amenities": tokenRegex }
           ];
 
-          if (matchingSellers.length > 0) {
-            searchOr.push({ seller: { $in: matchingSellers } });
+          if (matchingBusinessTypes.length > 0) {
+            searchOr.push({ businessType: { $in: matchingBusinessTypes } });
           }
 
           // Smart Numeric Search
@@ -266,7 +266,34 @@ exports.getProperties = async (req, res) => {
           return { $or: searchOr };
         }));
 
-        queryConditions.push({ $and: tokenConditions });
+        // 2. Create a condition for the FULL search string (as-is)
+        const escapedFullSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const fullSearchRegex = { $regex: escapedFullSearch, $options: "i" };
+
+        const matchingBusinessTypesFull = await BusinessType.find({
+          name: fullSearchRegex
+        }).distinct("_id");
+
+        const fullSearchOr = [
+          { "basicInfo.title": fullSearchRegex },
+          { "basicInfo.description": fullSearchRegex },
+          { "location.city": fullSearchRegex },
+          { "location.locality": fullSearchRegex },
+          { "location.subArea": fullSearchRegex },
+          { "amenities": fullSearchRegex }
+        ];
+
+        if (matchingBusinessTypesFull.length > 0) {
+          fullSearchOr.push({ businessType: { $in: matchingBusinessTypesFull } });
+        }
+
+        // Combine: Match the full phrase OR match all tokens
+        queryConditions.push({
+          $or: [
+            { $or: fullSearchOr },
+            { $and: tokenConditions }
+          ]
+        });
       }
     }
 

@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema(
     customId: { type: String, unique: true, sparse: true },
     userId: { type: String, unique: true, sparse: true },
     referralCode: { type: String, unique: true, sparse: true },
-    businessType: { type: mongoose.Schema.Types.ObjectId, ref: "BusinessType" },
     googleId: { type: String, unique: true, sparse: true },
   },
   { timestamps: true },

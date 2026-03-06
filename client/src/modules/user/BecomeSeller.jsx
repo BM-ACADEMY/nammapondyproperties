@@ -8,13 +8,11 @@ const API = import.meta.env.VITE_API_URL;
 
 export default function BecomeSeller() {
   const [loading, setLoading] = useState(false);
-  const [businessTypes, setBusinessTypes] = useState([]);
   const { user, refetchUser } = useAuth(); // Use refetchUser to update context after upgrade
   const navigate = useNavigate();
   const [form] = Form.useForm();
 
   useEffect(() => {
-    fetchBusinessTypes();
     if (user) {
       form.setFieldsValue({
         name: user.name,
@@ -24,21 +22,11 @@ export default function BecomeSeller() {
     }
   }, [user, form]);
 
-  const fetchBusinessTypes = async () => {
-    try {
-      const res = await axios.get(`${API}/business-types?status=active`);
-      setBusinessTypes(res.data);
-    } catch (err) {
-      console.error("Failed to fetch business types", err);
-    }
-  };
-
   const onFinish = async (values) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const payload = {
-        businessType: values.businessType,
         name: values.name,
         phone: values.phone,
         // Email is usually not changeable here or needs verification if changed
@@ -89,21 +77,6 @@ export default function BecomeSeller() {
             <Input size="large" />
           </Form.Item>
 
-          <Form.Item
-            label="Business Type"
-            name="businessType"
-            rules={[
-              { required: true, message: "Please select a business type" },
-            ]}
-          >
-            <Select size="large" placeholder="Select Business Type">
-              {businessTypes.map((type) => (
-                <Select.Option key={type._id} value={type._id}>
-                  {type.name}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
 
           <Form.Item>
             <Button
