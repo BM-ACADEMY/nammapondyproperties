@@ -37,7 +37,7 @@ const PostPropertyCTA = () => {
         {/* Right Side: Image container matching the reference */}
         <div className="w-full md:w-2/5 flex justify-center md:items-end mt-8 md:mt-0 relative h-[300px] md:h-auto">
           <img 
-            src="https://stimg.cardekho.com/images/carexteriorimages/630x420/Jaguar/F-Pace/10644/1755774688332/front-left-side-47.jpg?impolicy=resize&imwidth=480" // Reusing the same image used in PropertyTypeList right sidebar
+            src="/properties/adsman" // Reusing the same image used in PropertyTypeList right sidebar
             alt="Customer showing app" 
             className="h-full object-contain md:absolute md:bottom-0 md:right-10 z-20 pointer-events-none drop-shadow-lg scale-110 origin-bottom"
           />
