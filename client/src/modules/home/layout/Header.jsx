@@ -16,6 +16,7 @@ import {
   Star,
   PhoneCall,
   Search,
+  ChevronRight,
 } from "lucide-react";
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 import PropertySearchBar from "../components/PropertySearchBar";
@@ -28,6 +29,7 @@ const Header = () => {
   const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   const { businessTypes, propertyCategories = [] } = useNav();
 
@@ -64,14 +66,32 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileSearchOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    let lastScrollTop = 0;
     const handleScroll = () => {
       const mainContent = document.getElementById("main-content");
       if (mainContent) {
-        if (mainContent.scrollTop > 300) {
-          setIsScrolled(true);
-        } else {
-          setIsScrolled(false);
-        }
+        const scrollTop = mainContent.scrollTop;
+        const threshold = window.innerWidth < 1024 ? 130 : 170;
+
+        setIsScrolled(prev => {
+          if (scrollTop > threshold && !prev) {
+            return true;
+          } else if (scrollTop <= threshold && prev) {
+            setIsMobileSearchOpen(false);
+            return false;
+          }
+          return prev;
+        });
       }
     };
 
@@ -138,11 +158,11 @@ const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${isHomePage
+        className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ${isHomePage
           ? isScrolled
-            ? "bg-[#1a1a1a] shadow-lg border-b border-gray-800 py-2"
+            ? "bg-[#166aa8] shadow-lg py-2"
             : "bg-transparent border-transparent py-4"
-          : "bg-[#1a1a1a] border-b border-gray-800 py-2"
+          : "bg-[#166aa8] py-2"
           }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -150,7 +170,7 @@ const Header = () => {
             {/* Logo - Left Side */}
             <Link
               to="/"
-              className="flex-shrink-0 flex items-center group"
+              className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
               onClick={() => {
                 const mainContent = document.getElementById("main-content");
                 if (mainContent) {
@@ -159,7 +179,7 @@ const Header = () => {
               }}
             >
               <img
-                src="/Logo/logo.png"
+                src="/Logo/logo1.png"
                 alt="NammaPondy Logo"
                 className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
               />
@@ -181,7 +201,7 @@ const Header = () => {
                       <Link
                         key={name}
                         to={`/properties?category=${encodeURIComponent(name)}`}
-                        className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                       >
                         For {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
@@ -198,7 +218,7 @@ const Header = () => {
                       <Link
                         key={id}
                         to={`/business-user-list/${id}`}
-                        className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
+                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
                       >
                         {name}
                       </Link>
@@ -207,7 +227,7 @@ const Header = () => {
 
                   <Link
                     to="/contact"
-                    className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                    className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                   >
                     Contact
                   </Link>
@@ -215,7 +235,7 @@ const Header = () => {
               )}
 
               {/* Divider */}
-              <div className="h-6 w-px bg-gray-700 mx-2"></div>
+              <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
               {/* Actions */}
               <div className="flex items-center space-x-4 lg:space-x-5">
@@ -317,7 +337,7 @@ const Header = () => {
                           )}
                         </div>
                         {/* Red Notification Dot */}
-                        <div className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-[#1a1a1a] rounded-full"></div>
+                        <div className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-[#166aa8] rounded-full"></div>
                       </div>
                       <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors ml-1" />
                     </button>
@@ -487,22 +507,50 @@ const Header = () => {
             </div>
 
             {/* Mobile Menu Toggle - Visible below lg */}
-            <div className="lg:hidden flex items-center space-x-3">
-              {/* Mobile Contact Button */}
-              <button
-                onClick={() => setIsCallbackModalOpen(true)}
-                className="text-gray-300 p-2 hover:text-white transition-colors focus:outline-none"
-              >
-                <Headphones className="h-6 w-6" />
-              </button>
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="text-gray-300 hover:text-white hover:bg-gray-800 p-2 rounded-lg focus:outline-none transition-colors"
-              >
-                <Menu className="h-7 w-7" />
-              </button>
+            <div className={`lg:hidden flex items-center ${isMobileSearchOpen ? "flex-1 ml-2" : "space-x-3"}`}>
+              {isMobileSearchOpen ? (
+                <div className="flex items-center w-full gap-2 transition-all duration-300">
+                  <div className="flex-1">
+                    <PropertySearchBar variant="header" showFilters={false} />
+                  </div>
+                  <button
+                    onClick={() => setIsMobileSearchOpen(false)}
+                    className="text-white p-2 hover:text-yellow-300 transition-colors focus:outline-none shrink-0"
+                  >
+                    <X className="h-7 w-7" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile Contact/Search Button */}
+                  <button
+                    onClick={() => {
+                      if (isScrolled) {
+                        setIsMobileSearchOpen(true); // Open full search
+                      } else {
+                        setIsCallbackModalOpen(true);
+                      }
+                    }}
+                    className="text-white p-2 hover:text-yellow-300 transition-colors focus:outline-none"
+                  >
+                    {isScrolled ? (
+                      <Search className="h-6 w-6" />
+                    ) : (
+                      <Headphones className="h-6 w-6" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setIsMenuOpen(true)}
+                    className="text-white hover:text-yellow-300 hover:bg-[#115b94] p-2 rounded-lg focus:outline-none transition-colors"
+                  >
+                    <Menu className="h-7 w-7" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
+
+          {/* Legacy Mobile Search Bar Expansion - Removed as it's now integrated in the header line */}
         </div>
       </header>
 
@@ -516,154 +564,131 @@ const Header = () => {
               animate="visible"
               exit="exit"
               onClick={() => setIsMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1001] lg:hidden"
             />
             <motion.div
               variants={sidebarVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[#1a1a1a] border-l border-gray-800 shadow-2xl z-50 lg:hidden flex flex-col overflow-hidden"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white shadow-2xl z-[1001] lg:hidden flex flex-col overflow-hidden"
             >
-              <div className="flex items-center justify-between p-5 border-b border-gray-800 bg-[#1a1a1a]">
-                <Link
-                  to="/"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    const mainContent = document.getElementById("main-content");
-                    if (mainContent) {
-                      mainContent.scrollTo({ top: 0, behavior: "smooth" });
-                    }
-                  }}
-                >
-                  <img src="/Logo/logo.png" alt="Logo" className="h-12 w-auto" />
-                </Link>
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-slate-50">
+                {!isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/login");
+                    }}
+                    className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase"
+                  >
+                    <User className="h-6 w-6 mr-2 text-slate-700" />
+                    LOGIN / REGISTER
+                  </button>
+                ) : (
+                  <div className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase truncate">
+                    <User className="h-6 w-6 mr-2 text-slate-700 shrink-0" />
+                    <span className="truncate">{user?.name || "PROFILE"}</span>
+                  </div>
+                )}
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-2 rounded-full hover:bg-[#333333] text-gray-400 hover:text-white transition-colors"
+                  className="p-2 rounded-full hover:bg-gray-200 text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                {isAuthenticated ? (
-                  <div className="bg-[#242424] rounded-xl p-4 border border-gray-700">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-[#1a1a1a] shadow-sm ring-2 ring-gray-700">
-                        {user?.profile_image ? (
-                          <img
-                            src={getImageUrl(user.profile_image)}
-                            alt={user.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center bg-gray-700 text-white font-bold text-lg">
-                            {user?.name?.[0]?.toUpperCase() || "U"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="overflow-hidden">
-                        <p className="font-bold text-white truncate">
-                          {user?.name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {user?.email}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
-                        user?.role?.name?.toUpperCase() === "ADMIN" ? (
+
+              <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+                {/* Banner Card */}
+                <div className="bg-[#e6f4ea] rounded-xl p-4 relative overflow-hidden flex flex-col justify-center min-h-[140px]">
+                  <div className="relative z-10 w-[60%]">
+                    <h3 className="font-bold text-[#1E293B] leading-tight mb-3 text-[15px]">
+                      Sell or rent faster at the right price!
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        navigate("/post-property");
+                      }}
+                      className="bg-[#0078d7] hover:bg-[#005bb5] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+                    >
+                      Post Property
+                    </button>
+                  </div>
+                  <div
+                    className="absolute bottom-0 right-0 w-[50%] h-full bg-contain bg-no-repeat bg-bottom"
+                    style={{ backgroundImage: "url(/properties/adsman.png)" }}
+                  ></div>
+                </div>
+
+                {/* Authentication Links */}
+                {isAuthenticated && (
+                   <div className="space-y-1">
+                     {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
+                      user?.role?.name?.toUpperCase() === "ADMIN" ? (
                         <Link
                           to="/admin/dashboard"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors col-span-2 shadow-sm"
+                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                         >
-                          Dashboard
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
                         </Link>
-                      ) : user?.role_id?.role_name?.toUpperCase() ===
-                        "SELLER" ||
+                      ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
                         user?.role?.name?.toUpperCase() === "SELLER" ? (
                         <Link
                           to="/seller/dashboard"
                           onClick={() => setIsMenuOpen(false)}
-                          className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors col-span-2 shadow-sm"
+                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                         >
-                          Dashboard
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
                         </Link>
                       ) : (
                         <>
                           <Link
                             to="/user/profile"
                             onClick={() => setIsMenuOpen(false)}
-                            className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors shadow-sm"
+                            className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                           >
-                            Profile
+                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Profile
                           </Link>
                           <Link
                             to="/user/reviews"
                             onClick={() => setIsMenuOpen(false)}
-                            className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors shadow-sm"
+                            className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                           >
-                            Reviews
+                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Reviews
                           </Link>
                         </>
                       )}
                       <button
                         onClick={handleLogout}
-                        className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors col-span-2 shadow-sm mt-1"
+                        className="flex items-center w-full px-2 py-3 text-red-500 hover:bg-red-50 transition-colors rounded-lg text-[15px]"
                       >
-                        Logout
+                         <ChevronRight className="w-4 h-4 mr-2 text-red-400" /> Logout
                       </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate("/login");
-                      }}
-                      className="flex justify-center px-4 py-3 bg-white text-gray-900 hover:bg-gray-200 transition-colors rounded-xl text-sm font-semibold shadow-md"
-                    >
-                      Login / Register
-                    </button>
-                  </div>
+                   </div>
                 )}
+
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-200 uppercase tracking-wider mb-3 ml-1">
-                    Menu
+                  <p className="text-[15px] font-medium text-slate-800 mb-2">
+                    Explore our Services
                   </p>
+                  <div className="border-t border-gray-100 mb-2"></div>
 
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      navigate("/post-property");
-                    }}
-                    className="flex items-center w-full px-4 py-3 bg-white text-[#003366] hover:bg-gray-100 transition-colors rounded-xl font-bold mb-2 shadow-sm"
-                  >
-                    <span className="flex-1 text-left text-[14px]">
-                      Post Properties
-                    </span>
-                    <span className="bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded">
-                      FREE
-                    </span>
-                  </button>
-
-                  {propertyCategories
-                    .map((category) => {
-                      const name = category;
-                      return (
-                        <Link
-                          key={name}
-                          to={`/properties?category=${encodeURIComponent(name)}`}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium"
-                        >
-                          For {name.charAt(0).toUpperCase() + name.slice(1)}
-                        </Link>
-                      );
-                    })}
+                  {propertyCategories.map((category) => {
+                    const name = category;
+                    return (
+                      <Link
+                        key={name}
+                        to={`/properties?category=${encodeURIComponent(name)}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                      >
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> For {name.charAt(0).toUpperCase() + name.slice(1)}
+                      </Link>
+                    );
+                  })}
 
                   {businessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
@@ -676,19 +701,21 @@ const Header = () => {
                         key={id}
                         to={`/business-user-list/${id}`}
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium capitalize"
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px] capitalize"
                       >
-                        {name}
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name}
                       </Link>
                     );
                   })}
+                  
+                  <div className="border-t border-gray-100 my-2"></div>
 
                   <Link
                     to="/contact"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium"
+                    className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                   >
-                    Contact
+                    <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Contact
                   </Link>
                 </div>
               </div>

@@ -47,37 +47,14 @@ const PropertyTypeList = () => {
     const lowerType = typeName.toLowerCase();
 
     const details = {
-      image:
-        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      image:"/dummyimg/dummy.png",
       description: "Discover exceptional properties that match your vision.",
       ctaText: `Explore ${typeName}`,
     };
 
-    if (lowerType.includes("plot") || lowerType.includes("land")) {
-      details.image = "/properties/plot.png";
-      details.description = "Curated landscapes to build your bespoke dream home.";
-      details.ctaText = "Explore Plots";
-    } else if (lowerType.includes("villa") || lowerType.includes("house")) {
-      details.image = "/properties/villa.png";
-      details.description = "Experience unparalleled elegance and premium living.";
-      details.ctaText = "Explore Villas";
-    } else if (lowerType.includes("apartment") || lowerType.includes("flat")) {
-      details.image = "/properties/apartment.png";
-      details.description = "Elevated urban living spaces tailored for your lifestyle.";
-      details.ctaText = "Explore Apartments";
-    } else if (
-      lowerType.includes("commercial") ||
-      lowerType.includes("shop") ||
-      lowerType.includes("office")
-    ) {
-      details.image = "/properties/commercial.png";
-      details.description = "Distinguished locations to establish and grow your business.";
-      details.ctaText = "Explore Commercial";
-    }
-
-    // If dynamic image exists in the object, use it
-    if (typeof type === "object" && type.image_url) {
-      details.image = getImageUrl(type.image_url);
+    // Priority: 1. Backend imageUrl, 2. Default Unsplash placeholder
+    if (typeof type === "object" && type.imageUrl) {
+      details.image = getImageUrl(type.imageUrl);
     }
 
     return details;
@@ -187,7 +164,7 @@ const PropertyTypeList = () => {
                           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-out"
                           // Fallback to prevent broken image icons if local asset is missing
                           onError={(e) => {
-                            e.target.src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                            e.target.src = "/dummyimg/dummy.png";
                           }}
                         />
                       </div>
@@ -219,7 +196,7 @@ const PropertyTypeList = () => {
 
               <button
                 onClick={() => navigate("/login")}
-                className="w-full bg-[#0078d7] hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm"
+                className="w-full bg-[#166aa8] hover:bg-[#0078d7] text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm"
               >
                 Login/Register to Save Activity
               </button>
@@ -244,7 +221,7 @@ const PropertyTypeList = () => {
 
                 <button
                   onClick={() => navigate("/post-property")}
-                  className="bg-[#0078d7] hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+                  className="bg-[#166aa8] hover:bg-[#0078d7] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
                 >
                   Post Property – It's FREE
                 </button>

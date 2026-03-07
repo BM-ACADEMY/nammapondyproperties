@@ -1,8 +1,16 @@
 const PropertyType = require("../models/PropertyType");
+const fs = require("fs");
+const path = require("path");
 
 exports.createPropertyType = async (req, res) => {
     try {
-        const propertyType = new PropertyType(req.body);
+        const typeData = { ...req.body };
+        
+        if (req.file) {
+            typeData.imageUrl = `/uploads/propertyTypes/${req.file.filename}`;
+        }
+
+        const propertyType = new PropertyType(typeData);
         await propertyType.save();
         res.status(201).json(propertyType);
     } catch (error) {
@@ -39,8 +47,23 @@ exports.getPropertyTypeById = async (req, res) => {
 
 exports.updatePropertyType = async (req, res) => {
     try {
-        const propertyType = await PropertyType.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        let propertyType = await PropertyType.findById(req.params.id);
         if (!propertyType) return res.status(404).json({ error: "Property type not found" });
+
+        const updateData = { ...req.body };
+
+        if (req.file) {
+            // Delete old image if it exists
+            if (propertyType.imageUrl) {
+                const oldImagePath = path.join(__dirname, "..", propertyType.imageUrl);
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+            updateData.imageUrl = `/uploads/propertyTypes/${req.file.filename}`;
+        }
+
+        propertyType = await PropertyType.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
         res.json(propertyType);
     } catch (error) {
         if (error.code === 11000) {
@@ -52,8 +75,18 @@ exports.updatePropertyType = async (req, res) => {
 
 exports.deletePropertyType = async (req, res) => {
     try {
-        const propertyType = await PropertyType.findByIdAndDelete(req.params.id);
+        const propertyType = await PropertyType.findById(req.params.id);
         if (!propertyType) return res.status(404).json({ error: "Property type not found" });
+
+        // Delete image file if it exists
+        if (propertyType.imageUrl) {
+            const imagePath = path.join(__dirname, "..", propertyType.imageUrl);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+        }
+
+        await PropertyType.findByIdAndDelete(req.params.id);
         res.json({ message: "Property type deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });

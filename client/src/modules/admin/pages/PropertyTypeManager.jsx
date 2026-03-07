@@ -13,8 +13,13 @@ import {
     Square,
     Bed,
     Layers,
+    Image as ImageIcon,
+    Upload,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+
+const API_URL = import.meta.env.VITE_API_URL.replace("/api", "");
+
 
 const PropertyTypeManager = () => {
     const [types, setTypes] = useState([]);
@@ -31,7 +36,10 @@ const PropertyTypeManager = () => {
         hasPlot: false,
         hasCommercial: false,
         status: "active",
+        image: null,
     });
+    const [imagePreview, setImagePreview] = useState(null);
+
 
     const fetchTypes = async () => {
         setIsLoading(true);
@@ -50,21 +58,46 @@ const PropertyTypeManager = () => {
     }, []);
 
     const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === "checkbox" ? checked : value,
-        }));
+        const { name, value, type, checked, files } = e.target;
+        if (type === "file") {
+            const file = files[0];
+            setFormData((prev) => ({ ...prev, [name]: file }));
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setImagePreview(reader.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: type === "checkbox" ? checked : value,
+            }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const data = new FormData();
+        Object.keys(formData).forEach((key) => {
+            if (key === "image" && formData[key]) {
+                data.append("image", formData[key]);
+            } else if (key !== "image") {
+                data.append(key, formData[key]);
+            }
+        });
+
         try {
             if (editingType) {
-                await api.put(`/property-types/${editingType._id}`, formData);
+                await api.put(`/property-types/${editingType._id}`, data, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
                 toast.success("Property type updated successfully");
             } else {
-                await api.post("/property-types", formData);
+                await api.post("/property-types", data, {
+                    headers: { "Content-Type": "multipart/form-data" },
+                });
                 toast.success("Property type created successfully");
             }
             setIsModalOpen(false);
@@ -77,7 +110,9 @@ const PropertyTypeManager = () => {
                 hasPlot: false,
                 hasCommercial: false,
                 status: "active",
+                image: null,
             });
+            setImagePreview(null);
             fetchTypes();
         } catch (error) {
             toast.error(error.response?.data?.error || "Something went wrong");
@@ -94,7 +129,9 @@ const PropertyTypeManager = () => {
             hasPlot: type.hasPlot,
             hasCommercial: type.hasCommercial,
             status: type.status,
+            image: null,
         });
+        setImagePreview(type.imageUrl ? `${API_URL}${type.imageUrl}` : null);
         setIsModalOpen(true);
     };
 
@@ -134,7 +171,9 @@ const PropertyTypeManager = () => {
                                 hasPlot: false,
                                 hasCommercial: false,
                                 status: "active",
+                                image: null,
                             });
+                            setImagePreview(null);
                             setIsModalOpen(true);
                         }}
                         className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
@@ -185,8 +224,18 @@ const PropertyTypeManager = () => {
                                 </div>
 
                                 <div className="flex items-center gap-4 mb-4">
-                                    <div className={`p-3 rounded-lg ${type.usageType === "Residential" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
-                                        {type.usageType === "Residential" ? <Home className="w-6 h-6" /> : <Building2 className="w-6 h-6" />}
+                                    <div className="relative">
+                                        <div className={`p-3 rounded-lg ${type.usageType === "Residential" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
+                                            {type.imageUrl ? (
+                                                <img 
+                                                    src={`${API_URL}${type.imageUrl}`} 
+                                                    alt={type.name} 
+                                                    className="w-8 h-8 object-cover rounded"
+                                                />
+                                            ) : (
+                                                type.usageType === "Residential" ? <Home className="w-6 h-6" /> : <Building2 className="w-6 h-6" />
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-gray-900">{type.name}</h3>
@@ -303,6 +352,39 @@ const PropertyTypeManager = () => {
                                         <option value="Residential">Residential</option>
                                         <option value="Commercial">Commercial</option>
                                     </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Type Image
+                                    </label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-16 h-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                                            {imagePreview ? (
+                                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <ImageIcon className="w-6 h-6 text-gray-300" />
+                                            )}
+                                        </div>
+                                        <label className="flex-1">
+                                            <div className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                                <Upload className="w-4 h-4 text-gray-400" />
+                                                <span className="text-sm font-medium text-gray-600">
+                                                    {formData.image ? formData.image.name : "Upload Image"}
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="file"
+                                                name="image"
+                                                accept="image/*"
+                                                onChange={handleInputChange}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+                                    <p className="mt-1.5 text-[11px] text-gray-500">
+                                        Recommended: SVG or small PNG/JPG, max 5MB
+                                    </p>
                                 </div>
 
                                 <div className="space-y-4">

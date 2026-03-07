@@ -33,6 +33,10 @@ const propertyTypeSchema = new mongoose.Schema(
             type: String,
             enum: ["active", "inactive"],
             default: "active"
+        },
+        imageUrl: {
+            type: String,
+            required: false
         }
     },
     { timestamps: true }

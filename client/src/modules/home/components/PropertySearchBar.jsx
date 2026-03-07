@@ -98,7 +98,7 @@ const PropertySearchBar = ({
             >
                 {/* 1. SEARCH INPUT */}
                 {showKeyword && (
-                    <div className={`flex-grow flex items-center ${isHeader ? "pl-4 pr-1" : "pl-4 pr-2 md:px-6"} h-full min-w-0 relative ${showFilters ? "md:border-r border-gray-100" : ""}`}>
+                    <div className={`flex-grow flex items-center ${isHeader ? "pl-4 pr-1" : "pl-4 pr-2 md:px-6"} h-full min-w-0 relative ${showFilters ? "lg:border-r border-gray-100" : ""}`}>
                         <Search className={`${isHeader ? "w-4 h-4" : "w-5 h-5"} text-gray-400 mr-2 flex-shrink-0`} />
 
                         <div className="relative w-full h-full flex items-center overflow-hidden">
@@ -130,7 +130,7 @@ const PropertySearchBar = ({
 
                 {/* 2. FILTERS CONTAINER */}
                 {showFilters && (
-                    <div className={`flex items-center px-4 gap-1 md:gap-4 flex-shrink-0 ${!showKeyword ? "w-full justify-between" : ""}`}>
+                    <div className={`hidden lg:flex items-center px-4 gap-1 md:gap-4 flex-shrink-0 ${!showKeyword ? "w-full justify-between" : ""}`}>
                         {/* Location */}
                         <div className="relative" ref={locationRef}>
                             <button
@@ -146,7 +146,7 @@ const PropertySearchBar = ({
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[60] left-1/2 -translate-x-1/2"
+                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[1000] left-1/2 -translate-x-1/2"
                                     >
                                         <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Location</div>
                                         <button onClick={() => { setLocation(""); setIsLocationDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!location ? "text-blue-600 font-bold" : "text-gray-600"}`}>
@@ -182,20 +182,22 @@ const PropertySearchBar = ({
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[60] left-1/2 -translate-x-1/2"
+                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[1000] left-1/2 -translate-x-1/2"
                                     >
                                         <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Approval</div>
                                         <button onClick={() => { setApproval(""); setIsApprovalDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!approval ? "text-blue-600 font-bold" : "text-gray-600"}`}>
                                             Any {!approval && <Check className="w-3 h-3" />}
                                         </button>
-                                        {approvalTypes.map((app) => {
-                                            const name = typeof app === "string" ? app : app?.name || "Unknown";
-                                            return (
-                                                <button key={name} onClick={() => { setApproval(name); setIsApprovalDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${approval === name ? "text-blue-600 font-bold" : "text-gray-600"}`}>
-                                                    {name} {approval === name && <Check className="w-3 h-3" />}
-                                                </button>
-                                            );
-                                        })}
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {approvalTypes.map((app) => {
+                                                const name = typeof app === "string" ? app : app?.name || "Unknown";
+                                                return (
+                                                    <button key={name} onClick={() => { setApproval(name); setIsApprovalDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${approval === name ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                                        {name} {approval === name && <Check className="w-3 h-3" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
@@ -216,17 +218,19 @@ const PropertySearchBar = ({
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        className="absolute top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[60] left-1/2 -translate-x-1/2"
+                                        className="absolute top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[1000] left-1/2 -translate-x-1/2"
                                     >
                                         <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Budget</div>
                                         <button onClick={() => { selectBudget({}); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!minPrice && !maxPrice ? "text-blue-600 font-bold" : "text-gray-600"}`}>
                                             Any Budget {!minPrice && !maxPrice && <Check className="w-3 h-3" />}
                                         </button>
-                                        {priceRanges.map((range) => (
-                                            <button key={range.label} onClick={() => { selectBudget(range); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${String(minPrice) === String(range.min) && String(maxPrice) === String(range.max) ? "text-blue-600 font-bold" : "text-gray-600"}`}>
-                                                {range.label} {String(minPrice) === String(range.min) && String(maxPrice) === String(range.max) && <Check className="w-3 h-3" />}
-                                            </button>
-                                        ))}
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {priceRanges.map((range) => (
+                                                <button key={range.label} onClick={() => { selectBudget(range); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${String(minPrice) === String(range.min) && String(maxPrice) === String(range.max) ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                                    {range.label} {String(minPrice) === String(range.min) && String(maxPrice) === String(range.max) && <Check className="w-3 h-3" />}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </motion.div>
                                 )}
                             </AnimatePresence>
