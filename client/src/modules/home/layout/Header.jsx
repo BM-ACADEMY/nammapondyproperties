@@ -158,11 +158,15 @@ const Header = () => {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 ${isHomePage
-          ? isScrolled
-            ? "bg-[#166aa8] shadow-lg py-2"
-            : "bg-transparent border-transparent py-4"
-          : "bg-[#166aa8] py-2"
+        className={`z-[1000] transition-all duration-500 
+          ${isHomePage 
+            ? "lg:fixed lg:top-0 lg:left-0 lg:right-0 relative" 
+            : "fixed top-0 left-0 right-0"} 
+          ${isHomePage
+            ? isScrolled
+              ? "bg-[#166aa8] shadow-lg py-2"
+              : "bg-[white] lg:bg-transparent lg:border-transparent py-2 lg:py-4"
+            : "bg-[#166aa8] py-2"
           }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -247,7 +251,7 @@ const Header = () => {
                   className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
                 >
                   <span className="text-[14px]">Post property</span>
-                  <span className="ml-2 bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded">
+                  <span className="relative overflow-hidden ml-2 bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded before:absolute before:inset-0 before:-translate-x-full before:animate-[shine_3s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent">
                     FREE
                   </span>
                 </button>
@@ -515,7 +519,11 @@ const Header = () => {
                   </div>
                   <button
                     onClick={() => setIsMobileSearchOpen(false)}
-                    className="text-white p-2 hover:text-yellow-300 transition-colors focus:outline-none shrink-0"
+                    className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${
+                      isHomePage && !isScrolled 
+                        ? "text-slate-800 hover:bg-slate-100" 
+                        : "text-white hover:text-yellow-300"
+                    }`}
                   >
                     <X className="h-7 w-7" />
                   </button>
@@ -531,7 +539,11 @@ const Header = () => {
                         setIsCallbackModalOpen(true);
                       }
                     }}
-                    className="text-white p-2 hover:text-yellow-300 transition-colors focus:outline-none"
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${
+                      isHomePage && !isScrolled 
+                        ? "text-slate-800 hover:bg-slate-100" 
+                        : "text-white hover:text-yellow-300"
+                    }`}
                   >
                     {isScrolled ? (
                       <Search className="h-6 w-6" />
@@ -541,7 +553,11 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => setIsMenuOpen(true)}
-                    className="text-white hover:text-yellow-300 hover:bg-[#115b94] p-2 rounded-lg focus:outline-none transition-colors"
+                    className={`p-2 rounded-lg focus:outline-none transition-colors ${
+                      isHomePage && !isScrolled 
+                        ? "text-slate-800 hover:bg-slate-100" 
+                        : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
+                    }`}
                   >
                     <Menu className="h-7 w-7" />
                   </button>

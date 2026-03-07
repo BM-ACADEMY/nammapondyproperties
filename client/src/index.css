@@ -4,3 +4,15 @@
 .leaflet-control-attribution{
     display: none;
 }
+
+@theme {
+  --animate-shine: shine 3s infinite;
+  @keyframes shine {
+    0% {
+      transform: translateX(-200%);
+    }
+    100% {
+      transform: translateX(200%);
+    }
+  }
+}

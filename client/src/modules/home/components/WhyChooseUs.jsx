@@ -51,10 +51,10 @@ const WhyChooseUs = () => {
     return (
         <section className="relative py-20 overflow-hidden bg-slate-50">
             {/* Subtle background decoration */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+            {/* <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
                 <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-100 rounded-full mix-blend-multiply filter blur-[80px] opacity-70"></div>
                 <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-blue-50 rounded-full mix-blend-multiply filter blur-[80px] opacity-70"></div>
-            </div>
+            </div> */}
 
             <div className="container mx-auto px-4 max-w-7xl relative z-10">
                 

@@ -89,6 +89,18 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => handleMenuClick("/admin/enquiries"),
     },
     {
+      key: "/admin/marketing-plans",
+      icon: <Megaphone size={20} />,
+      label: "Marketing Plans",
+      onClick: () => handleMenuClick("/admin/marketing-plans"),
+    },
+    {
+      key: "/admin/marketing-requests",
+      icon: <MessageSquare size={20} />,
+      label: "Marketing Leads",
+      onClick: () => handleMenuClick("/admin/marketing-requests"),
+    },
+    {
       key: "settings-sub",
       icon: <Settings size={20} />,
       label: "Settings",

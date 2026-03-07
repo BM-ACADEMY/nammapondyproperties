@@ -72,12 +72,12 @@ const PropertyTypeList = () => {
   });
 
   return (
-    <section className="pt-16 pb-10 bg-white font-sans overflow-hidden">
+    <section className="pt-24 md:pt-16 pb-10 bg-white font-sans overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1450px] flex flex-col lg:flex-row gap-10">
 
         {/* Left Section: Main Content */}
         <div className="flex-1 w-full overflow-visible min-w-0">
-          <div className="mb-6">
+          <div className="mb-6 md:pt-15 pt-1">
             <h2 className="text-[28px] font-bold text-[#1E293B]">Explore Properties</h2>
             <p className="text-[15px] text-[#64748B] mt-1">Discover exceptional properties and landscapes</p>
           </div>

@@ -190,9 +190,18 @@ exports.getProperties = async (req, res) => {
     }
 
     // 4. Property Specifications
-    if (type) queryConditions.push({ "basicInfo.propertyType": type });
-    if (approval) queryConditions.push({ "basicInfo.approvalType": approval });
-    if (category) queryConditions.push({ "basicInfo.category": category });
+    if (type) {
+      const typeArray = type.split(',').map(t => t.trim());
+      queryConditions.push({ "basicInfo.propertyType": { $in: typeArray } });
+    }
+    if (approval) {
+      const approvalArray = approval.split(',').map(a => a.trim());
+      queryConditions.push({ "basicInfo.approvalType": { $in: approvalArray } });
+    }
+    if (category) {
+      const categoryArray = category.split(',').map(c => c.trim());
+      queryConditions.push({ "basicInfo.category": { $in: categoryArray } });
+    }
 
     if (location) {
       queryConditions.push({

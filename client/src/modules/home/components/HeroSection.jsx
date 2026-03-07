@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import PropertySearchBar from "./PropertySearchBar";
 
 const HeroSection = () => {
-  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
 
   // Scroll detection to hide hero search
@@ -27,19 +25,8 @@ const HeroSection = () => {
     };
   }, []);
 
-  // Animation Variants for blur reveal
-  const blurFadeIn = {
-    hidden: { opacity: 0, filter: "blur(10px)", y: 20 },
-    visible: {
-      opacity: 1,
-      filter: "blur(0px)",
-      y: 0,
-      transition: { duration: 0.8, ease: "easeOut" },
-    },
-  };
-
   return (
-    <div className="relative h-[400px] flex items-center justify-center font-sans">
+    <div className="relative h-[380px] lg:h-[420px] flex items-end justify-center font-sans">
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
@@ -50,38 +37,14 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-black/50"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl px-4 flex flex-col items-center">
-        {/* Headlines */}
-        {/* <motion.h1
-          variants={blurFadeIn}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="text-4xl md:text-6xl font-medium text-white mb-6 text-center tracking-tight drop-shadow-lg"
-        >
-          Find Your Dream Property
-        </motion.h1>
-
-        <motion.p
-          variants={blurFadeIn}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="text-lg md:text-xl text-white mb-20 text-center leading-relaxed max-w-2xl drop-shadow-md"
-        >
-          Search for verified plots, villas, and apartments in Pondicherry effortlessly.
-        </motion.p> */}
-      </div>
-
-      {/* --- SEARCH BAR (Bottom Overlap) --- */}
+      {/* --- SEARCH BAR --- */}
       <AnimatePresence>
         {!isScrolled && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="absolute top-[80%] -translate-y-1/2 lg:top-auto lg:translate-y-0 lg:-bottom-9 left-0 right-0 z-50 flex justify-center px-4"
+            className="absolute top-[60%] lg:top-[100%] -translate-y-1/2 left-0 right-0 z-50 flex justify-center px-4"
           >
             <PropertySearchBar variant="hero" showFilters={true} showKeyword={true} />
           </motion.div>

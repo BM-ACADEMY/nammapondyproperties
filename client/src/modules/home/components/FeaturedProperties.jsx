@@ -94,7 +94,7 @@ const FeaturedProperties = () => {
     );
 
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16">
       <div className=" mx-auto max-w-7xl px-4">
         <div className="flex justify-between items-end mb-8">
           <div>
