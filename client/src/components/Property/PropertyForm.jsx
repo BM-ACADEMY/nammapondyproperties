@@ -138,6 +138,8 @@ const PropertyForm = ({
     },
     legal: {
       propertyStatus: data?.legal?.propertyStatus || "Ready to Move",
+      ageOfProperty: data?.legal?.ageOfProperty || "",
+      expectedCompletionYear: data?.legal?.expectedCompletionYear || "",
     },
     location: {
       addressLine1: data?.location?.addressLine1 || data?.location?.address_line_1 || "",
@@ -590,6 +592,43 @@ const PropertyForm = ({
                     ))}
                   </div>
                 </div>
+
+                {/* Conditional Fields based on Property Status */}
+                {watch("legal.propertyStatus") === "Ready to Move" && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Age of Property</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["0-1 years", "1-5 years", "5-10 years", "10+ years"].map(age => (
+                        <button
+                          key={age}
+                          type="button"
+                          onClick={() => setValue("legal.ageOfProperty", age)}
+                          className={`px-4 py-2 rounded-xl border-2 transition-all text-sm font-semibold ${watch("legal.ageOfProperty") === age
+                            ? "bg-blue-50 text-blue-600 border-blue-600"
+                            : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
+                            }`}
+                        >
+                          {age}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {watch("legal.propertyStatus") === "Under Construction" && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Expected Completion Year</label>
+                    <select
+                      {...register("legal.expectedCompletionYear")}
+                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
+                    >
+                      <option value="">Select Year</option>
+                      {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() + i).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -158,10 +158,10 @@ const Header = () => {
   return (
     <>
       <header
-        className={`z-[1000] transition-all duration-500 
-          ${isHomePage 
-            ? "lg:fixed lg:top-0 lg:left-0 lg:right-0 relative" 
-            : "fixed top-0 left-0 right-0"} 
+        className={`z-[1000] transition-all duration-500
+          ${isHomePage
+            ? "lg:fixed lg:top-0 lg:left-0 lg:right-0 relative"
+            : "fixed top-0 left-0 right-0"}
           ${isHomePage
             ? isScrolled
               ? "bg-[#166aa8] shadow-lg py-2"
@@ -310,13 +310,13 @@ const Header = () => {
                 </div>
 
                 {/* Favorites icon is commented out as requested */}
-                {/* 
+                {/*
                 <Link
                   to="/favorites"
                   className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm"
                 >
                   <Heart className="h-5 w-5" />
-                </Link> 
+                </Link>
                 */}
 
                 {/* USER PROFILE DROPDOWN (NEW LIGHT DESIGN) */}
@@ -519,11 +519,10 @@ const Header = () => {
                   </div>
                   <button
                     onClick={() => setIsMobileSearchOpen(false)}
-                    className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${
-                      isHomePage && !isScrolled 
-                        ? "text-slate-800 hover:bg-slate-100" 
+                    className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300"
-                    }`}
+                      }`}
                   >
                     <X className="h-7 w-7" />
                   </button>
@@ -539,11 +538,10 @@ const Header = () => {
                         setIsCallbackModalOpen(true);
                       }
                     }}
-                    className={`p-2 transition-colors focus:outline-none rounded-lg ${
-                      isHomePage && !isScrolled 
-                        ? "text-slate-800 hover:bg-slate-100" 
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300"
-                    }`}
+                      }`}
                   >
                     {isScrolled ? (
                       <Search className="h-6 w-6" />
@@ -553,11 +551,10 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => setIsMenuOpen(true)}
-                    className={`p-2 rounded-lg focus:outline-none transition-colors ${
-                      isHomePage && !isScrolled 
-                        ? "text-slate-800 hover:bg-slate-100" 
+                    className={`p-2 rounded-lg focus:outline-none transition-colors ${isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
-                    }`}
+                      }`}
                   >
                     <Menu className="h-7 w-7" />
                   </button>
@@ -640,50 +637,50 @@ const Header = () => {
 
                 {/* Authentication Links */}
                 {isAuthenticated && (
-                   <div className="space-y-1">
-                     {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
+                  <div className="space-y-1">
+                    {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
                       user?.role?.name?.toUpperCase() === "ADMIN" ? (
-                        <Link
-                          to="/admin/dashboard"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
-                        >
-                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
-                        </Link>
-                      ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
-                        user?.role?.name?.toUpperCase() === "SELLER" ? (
-                        <Link
-                          to="/seller/dashboard"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
-                        >
-                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
-                        </Link>
-                      ) : (
-                        <>
-                          <Link
-                            to="/user/profile"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
-                          >
-                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Profile
-                          </Link>
-                          <Link
-                            to="/user/reviews"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
-                          >
-                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Reviews
-                          </Link>
-                        </>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="flex items-center w-full px-2 py-3 text-red-500 hover:bg-red-50 transition-colors rounded-lg text-[15px]"
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                       >
-                         <ChevronRight className="w-4 h-4 mr-2 text-red-400" /> Logout
-                      </button>
-                   </div>
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
+                      </Link>
+                    ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
+                      user?.role?.name?.toUpperCase() === "SELLER" ? (
+                      <Link
+                        to="/seller/dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                      >
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to="/user/profile"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                        >
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Profile
+                        </Link>
+                        <Link
+                          to="/user/reviews"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                        >
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Reviews
+                        </Link>
+                      </>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-2 py-3 text-red-500 hover:bg-red-50 transition-colors rounded-lg text-[15px]"
+                    >
+                      <ChevronRight className="w-4 h-4 mr-2 text-red-400" /> Logout
+                    </button>
+                  </div>
                 )}
 
                 <div className="space-y-1">
@@ -723,7 +720,7 @@ const Header = () => {
                       </Link>
                     );
                   })}
-                  
+
                   <div className="border-t border-gray-100 my-2"></div>
 
                   <Link

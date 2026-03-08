@@ -185,7 +185,9 @@ const propertySchema = new mongoose.Schema(
       propertyStatus: {
         type: String,
         enum: ["Ready to Move", "Under Construction"]
-      }
+      },
+      ageOfProperty: String, // e.g., "0-1 years", "1-5 years", etc.
+      expectedCompletionYear: Number // e.g., 2026
     },
 
     // =====================================================

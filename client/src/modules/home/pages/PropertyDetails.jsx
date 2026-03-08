@@ -303,10 +303,10 @@ const PropertyDetails = () => {
                   {/* item */}
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Calendar size={12} /> Status
+                      <Layers size={12} /> Usage
                     </span>
                     <span className="text-lg font-bold text-gray-900">
-                      {property.legal?.propertyStatus || (property.status === "Ready to Move" ? "Immediate" : "Ready")}
+                      {property.basicInfo?.usageType || "Residential"}
                     </span>
                   </div>
                   {/* item */}
@@ -394,10 +394,32 @@ const PropertyDetails = () => {
                     </div>
                   )}
                   {/* item */}
+                  {property.legal?.propertyStatus === "Ready to Move" && property.legal?.ageOfProperty && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Age of Property
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.legal.ageOfProperty}
+                      </span>
+                    </div>
+                  )}
+                  {/* item */}
+                  {property.legal?.propertyStatus === "Under Construction" && property.legal?.expectedCompletionYear && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Expected Possession
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.legal.expectedCompletionYear}
+                      </span>
+                    </div>
+                  )}
+                  {/* item */}
                   {property.legal?.propertyStatus && (
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <ShieldCheck size={12} /> Status
+                        <ShieldCheck size={12} /> Construction Status
                       </span>
                       <span className="text-lg font-bold text-blue-600">
                         {property.legal.propertyStatus}
