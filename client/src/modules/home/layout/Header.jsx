@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
+import { useLocation as useAppLocation } from "@/context/LocationContext";
 import { getImageUrl } from "@/utils/imageUrl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,6 +18,8 @@ import {
   PhoneCall,
   Search,
   ChevronRight,
+  MapPin,
+  LocateFixed
 } from "lucide-react";
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 import PropertySearchBar from "../components/PropertySearchBar";
@@ -37,6 +40,8 @@ const Header = () => {
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { city, detectLocation, loading: locationLoading } = useAppLocation();
 
   const isHomePage = location.pathname === "/";
   const isPropertiesPage = location.pathname === "/properties";
@@ -191,6 +196,20 @@ const Header = () => {
 
             {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
             <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
+              {/* Location Picker */}
+              <div className="flex items-center mr-4">
+                <button
+                  onClick={detectLocation}
+                  disabled={locationLoading}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${isHomePage && !isScrolled ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                >
+                  <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
+                  <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
+                    {locationLoading ? "Locating..." : city}
+                  </span>
+                </button>
+              </div>
+
               {/* Scrolling Search Bar (Reuses PropertySearchBar) */}
               {(isScrolled && isHomePage) || isPropertiesPage ? (
                 <div className="flex-1 max-w-4xl mx-8">
@@ -520,8 +539,8 @@ const Header = () => {
                   <button
                     onClick={() => setIsMobileSearchOpen(false)}
                     className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${isHomePage && !isScrolled
-                        ? "text-slate-800 hover:bg-slate-100"
-                        : "text-white hover:text-yellow-300"
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300"
                       }`}
                   >
                     <X className="h-7 w-7" />
@@ -529,6 +548,17 @@ const Header = () => {
                 </div>
               ) : (
                 <>
+                  {/* Mobile Location Picker */}
+                  <button
+                    onClick={detectLocation}
+                    disabled={locationLoading}
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300"
+                      }`}
+                  >
+                    <MapPin className={`h-6 w-6 ${locationLoading ? "animate-pulse" : ""}`} />
+                  </button>
                   {/* Mobile Contact/Search Button */}
                   <button
                     onClick={() => {
@@ -539,8 +569,8 @@ const Header = () => {
                       }
                     }}
                     className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
-                        ? "text-slate-800 hover:bg-slate-100"
-                        : "text-white hover:text-yellow-300"
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300"
                       }`}
                   >
                     {isScrolled ? (
@@ -552,8 +582,8 @@ const Header = () => {
                   <button
                     onClick={() => setIsMenuOpen(true)}
                     className={`p-2 rounded-lg focus:outline-none transition-colors ${isHomePage && !isScrolled
-                        ? "text-slate-800 hover:bg-slate-100"
-                        : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
                       }`}
                   >
                     <Menu className="h-7 w-7" />

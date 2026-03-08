@@ -794,12 +794,13 @@ const PropertyDetails = () => {
           </div>
         </div>
 
-        {/* More From Developer */}
+        {/* Nearby Properties */}
         {moreProperties.length > 0 && (
           <div className="mt-24">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">
-                Recommended Properties
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <MapPin className="text-blue-600" />
+                Recommendations in {property.location?.locality || property.location?.city || "this area"}
               </h2>
               <Link
                 to="/properties"

@@ -9,6 +9,7 @@ import WhyChooseUs from "../components/WhyChooseUs";
 import Testimonials from "../components/Testimonials";
 import MapComponent from "../components/MapComponent";
 import PostPropertyCTA from "../components/PostPropertyCTA";
+import RecommendedProperties from "../components/RecommendedProperties";
 
 const HomePage = () => {
   const [mapProperties, setMapProperties] = useState([]);
@@ -44,6 +45,7 @@ const HomePage = () => {
       <HeroSection />
       <PropertyTypeList />
       <FeaturedProperties />
+      <RecommendedProperties />
       <BannerAdSection />
 
       {/* Map Section */}
