@@ -74,19 +74,28 @@ const PropertyDetails = () => {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-slug/${slug}`,
         );
-        setProperty(res.data);
-        if (res.data?.media?.images?.length > 0) {
-          setMainImage(res.data.media.featuredImage || res.data.media.images[0]);
+        const propertyData = res.data;
+        setProperty(propertyData);
+
+        // Set dynamic meta title
+        const title = propertyData.basicInfo?.title || "Property Details";
+        const category = propertyData.basicInfo?.category || "For Sale";
+        const locality = propertyData.location?.locality || "";
+        const city = propertyData.location?.city || "Pondicherry";
+        document.title = `${title} | ${category} in ${locality ? locality + ", " : ""}${city} | Namma Pondy Properties`;
+
+        if (propertyData?.media?.images?.length > 0) {
+          setMainImage(propertyData.media.featuredImage || propertyData.media.images[0]);
         }
 
         const relatedRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${res.data._id}`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${propertyData._id}`,
         );
         if (Array.isArray(relatedRes.data)) {
           setMoreProperties(relatedRes.data);
         }
 
-        const viewResult = await recordPropertyView(res.data._id);
+        const viewResult = await recordPropertyView(propertyData._id);
         if (viewResult && viewResult.success && !viewResult.alreadyViewed) {
           setProperty(prev => ({
             ...prev,
@@ -802,9 +811,11 @@ const PropertyDetails = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {moreProperties.map((prop) => (
-                <div
+                <Link
                   key={prop._id}
-                  onClick={() => navigate(`/properties/${prop.slug || prop._id}`)}
+                  to={`/properties/${prop.slug || prop._id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="relative h-[500px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100"
                 >
                   {/* Background Image */}
@@ -888,7 +899,7 @@ const PropertyDetails = () => {
                       </button>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

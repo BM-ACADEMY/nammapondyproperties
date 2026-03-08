@@ -82,6 +82,8 @@ const MapComponent = ({ properties }) => {
                 <div className="min-w-[200px]">
                   <Link
                     to={`/properties/${property.slug || property._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="block group"
                   >
                     <div className="relative h-32 w-full mb-2 rounded-md overflow-hidden">

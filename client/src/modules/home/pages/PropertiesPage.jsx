@@ -2,7 +2,7 @@ import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
-import PropertyCard from "@/modules/home/components/PropertyCard";
+import HorizontalPropertyCard from "@/modules/home/components/HorizontalPropertyCard";
 import MapComponent from "../components/MapComponent";
 import Loader from "../../../components/Common/Loader";
 import { useAuth } from "../../../context/AuthContext";
@@ -23,6 +23,7 @@ const PropertiesPage = () => {
 
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // --- FILTER STATE (Synced with URL) ---
   const getParamArray = (key) => {
@@ -154,7 +155,7 @@ const PropertiesPage = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen py-8 font-sans">
+    <div className="bg-gray-50 min-h-screen pt-24 pb-12 font-sans">
       <Helmet>
         <title>Properties for Sale in Pondicherry | Verified Listings</title>
         <meta
@@ -162,10 +163,21 @@ const PropertiesPage = () => {
           content="Browse verified residential and commercial properties in Pondicherry. Transparent pricing and expert guidance for buyers."
         />
       </Helmet>
-      <div className="container mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
+          {/* Mobile Filter Toggle */}
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 py-3 rounded-xl font-bold text-gray-700 shadow-sm"
+            >
+              <FilterIcon className="w-5 h-5" />
+              {showMobileFilters ? "Hide Filters" : "Show Filters"}
+            </button>
+          </div>
+
           {/* Sidebar Filter */}
-          <aside className="w-full lg:w-1/4">
+          <aside className={`w-full lg:w-1/4 ${showMobileFilters ? "block" : "hidden lg:block"}`}>
             <PropertySidebarFilter
               filters={filters}
               onFilterChange={handleFilterChange}
@@ -178,10 +190,10 @@ const PropertiesPage = () => {
             {loading ? (
               <Loader />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6 relative z-0">
+              <div className="flex flex-col gap-6 relative z-0">
                 {properties.length > 0 ? (
                   properties.map((property) => (
-                    <PropertyCard
+                    <HorizontalPropertyCard
                       key={property._id}
                       property={property}
                       onWhatsAppClick={handleWhatsAppClick}
@@ -246,6 +258,12 @@ const PropertiesPage = () => {
     </div>
   );
 };
+
+const FilterIcon = ({ className }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+  </svg>
+);
 
 const SearchIcon = ({ className }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
