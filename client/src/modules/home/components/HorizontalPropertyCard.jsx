@@ -128,7 +128,6 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 </div>
             </div>
         </div>
-        </div >
     );
 };
 
