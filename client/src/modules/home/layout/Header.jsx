@@ -238,12 +238,12 @@ const Header = () => {
                     );
                   })}
 
-                  <Link
+                  {/* <Link
                     to="/contact"
                     className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                   >
                     Contact
-                  </Link>
+                  </Link> */}
                 </nav>
               )}
 
@@ -743,13 +743,13 @@ const Header = () => {
 
                   <div className="border-t border-gray-100 my-2"></div>
 
-                  <Link
+                  {/* <Link
                     to="/contact"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                   >
                     <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Contact
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
             </motion.div>

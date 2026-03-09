@@ -26,7 +26,7 @@ export default function About() {
         <MeetFounder />
         <WhyChooseUs />
         <OurVision />
-        <PropertyCTA />
+        {/* <PropertyCTA /> */}
         {/* Next sections will go here */}
       </div>
     </>
