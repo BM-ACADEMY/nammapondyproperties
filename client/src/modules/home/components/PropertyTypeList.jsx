@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ArrowUp, Activity } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
 import { useNav } from "@/context/NavContext";
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
-import axios from "axios";
 
 // Import Swiper React components and styles
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -44,15 +43,14 @@ const PropertyTypeList = () => {
   // Helper function to get details and images based on type name
   const getCardDetails = (type) => {
     const typeName = typeof type === "string" ? type : type.name || "";
-    const lowerType = typeName.toLowerCase();
 
     const details = {
-      image:"/dummyimg/dummy.png",
+      image: "/dummyimg/dummy.png",
       description: "Discover exceptional properties that match your vision.",
       ctaText: `Explore ${typeName}`,
     };
 
-    // Priority: 1. Backend imageUrl, 2. Default Unsplash placeholder
+    // Priority: 1. Backend imageUrl, 2. Default placeholder
     if (typeof type === "object" && type.imageUrl) {
       details.image = getImageUrl(type.imageUrl);
     }
@@ -74,7 +72,7 @@ const PropertyTypeList = () => {
   return (
     <section className="pt-24 md:pt-16 pb-10 bg-white font-sans overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1450px] flex flex-col lg:flex-row gap-10">
-
+        
         {/* Left Section: Main Content */}
         <div className="flex-1 w-full overflow-visible min-w-0">
           <div className="mb-6 md:pt-15 pt-1">
@@ -100,7 +98,7 @@ const PropertyTypeList = () => {
             </div>
           ) : (
             <div className="relative group/slider w-full">
-
+              
               {/* Custom Navigation */}
               <button className="swiper-prev-btn absolute -left-5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 rounded-full transition hover:scale-105 hover:text-blue-600 disabled:opacity-0 disabled:pointer-events-none hidden md:flex cursor-pointer text-[#475569]">
                 <ChevronLeft className="w-6 h-6 ml-[-2px]" />
@@ -123,46 +121,40 @@ const PropertyTypeList = () => {
                   disableOnInteraction: false,
                   pauseOnMouseEnter: true,
                 }}
-                watchOverflow={true} // Prevents Swiper from breaking if there are too few cards
+                watchOverflow={true}
                 breakpoints={{
-                  540: { slidesPerView: 2, spaceBetween: 20 },
-                  768: { slidesPerView: 3, spaceBetween: 24 },
-                  1024: { slidesPerView: 2, spaceBetween: 24 }, // Shrinks to 2 to make room for sidebar
-                  1280: { slidesPerView: 3, spaceBetween: 24 },
+                  540: { slidesPerView: 2, spaceBetween: 24 },
+                  768: { slidesPerView: 2, spaceBetween: 24 },
+                  1024: { slidesPerView: 2, spaceBetween: 30 },
+                  1280: { slidesPerView: 3, spaceBetween: 30 },
                 }}
-                className="py-4 px-2"
+                className="py-6 px-1"
               >
                 {types.map((item, index) => (
                   <SwiperSlide key={index}>
-                    {/* NEW CARD LAYOUT: 
-                      Using a strict flex-col to stack the text block and the image block. 
-                      No more absolute positioning! 
-                    */}
                     <div
                       onClick={() =>
                         navigate(
                           `/properties?type=${encodeURIComponent(item.originalType)}`
                         )
                       }
-                      className="flex flex-col h-[300px] rounded-[16px] overflow-hidden cursor-pointer group shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-xl transition-all duration-300 border border-slate-100 bg-white"
+                      // ⬇️ FIXED: Responsive height so it doesn't stay stuck at 400px on small screens
+                      className={`flex flex-col h-[300px] sm:h-[350px] lg:h-[400px] rounded-[24px] overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-blue-100 ${item.bgColor}`}
                     >
-                      {/* Top Text Block (Fixed Height) */}
-                      <div className={`p-5 h-[110px] flex flex-col justify-center ${item.bgColor}`}>
-                        <h3 className="text-[20px] font-bold text-[#1E293B] leading-tight mb-1 group-hover:text-[#2563EB] transition-colors truncate">
+                      {/* Top Content (Text) */}
+                      <div className="p-8 pb-0">
+                        <h3 className="text-[21px] font-bold text-[#1E293B] leading-[1.2] mb-0 group-hover:text-[#166aa8] transition-colors">
                           {item.title}
                         </h3>
-                        <p className="text-[14px] text-[#64748B] font-medium">
-                          {item.ctaText}
-                        </p>
                       </div>
 
-                      {/* Bottom Image Block (Takes remaining space) */}
-                      <div className="flex-1 w-full overflow-hidden bg-gray-100">
+                      {/* Bottom Content (Image) */}
+                      <div className="mt-auto relative w-full h-[65%] overflow-hidden">
                         <img
                           src={item.image}
                           alt={item.title}
-                          className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-out"
-                          // Fallback to prevent broken image icons if local asset is missing
+                          // ⬇️ FIXED: Changed to object-center so the image scales proportionally and crops from the middle instead of the bottom edge
+                          className="w-full h-full object-cover object-bottom"
                           onError={(e) => {
                             e.target.src = "/dummyimg/dummy.png";
                           }}
@@ -178,7 +170,7 @@ const PropertyTypeList = () => {
 
         {/* Right Section: Sidebar */}
         <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-6 lg:mt-[76px]">
-
+          
           {/* Activity Widget - Only for guests */}
           {!isAuthenticated && (
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -209,16 +201,13 @@ const PropertyTypeList = () => {
           {/* Promo Widget - At Bottom */}
           <div className="mt-auto">
             <div className="bg-[#e6f4ea] rounded-xl p-5 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
-
               <div className="relative z-10 w-2/3">
                 <h3 className="font-bold text-[#1E293B] leading-tight mb-1 text-lg">
                   Find the Best Deal for Your Property!
                 </h3>
-
                 <p className="text-sm text-[#475569] mb-4">
                   List your property today
                 </p>
-
                 <button
                   onClick={() => navigate("/post-property")}
                   className="bg-[#166aa8] hover:bg-[#0078d7] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
@@ -229,18 +218,15 @@ const PropertyTypeList = () => {
 
               {/* Agent Image */}
               <div
-                className="absolute bottom-0 right-0 w-[38%] h-[95%] bg-contain bg-no-repeat bg-bottom"
+                // ⬇️ FIXED: Added responsive minimum widths so the agent image never disappears completely
+                className="absolute bottom-0 right-0 w-[40%] min-w-[100px] sm:min-w-[120px] h-[95%] bg-contain bg-no-repeat bg-bottom"
                 style={{ backgroundImage: "url(./properties/adsman.png)" }}
               ></div>
-
             </div>
           </div>
+
         </div>
-
       </div>
-
-      
-
     </section>
   );
 };
