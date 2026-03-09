@@ -7,6 +7,12 @@ import { useAuth } from "../../../context/AuthContext";
 import { useLocation as useAppLocation } from "../../../context/LocationContext";
 import PropertyCard from "./PropertyCard";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const RecommendedProperties = () => {
     const [properties, setProperties] = useState([]);
@@ -23,18 +29,18 @@ const RecommendedProperties = () => {
         const fetchProperties = async () => {
             setLoading(true);
             try {
-                // 1. Try with location
-                let url = `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=6`;
-                if (city && city !== "Pondicherry") {
+                // 1. Try with location - removed "city !== Pondicherry" check to ensure filtering
+                let url = `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`;
+                if (city) {
                     url += `&location=${encodeURIComponent(city)}`;
                 }
 
                 const res = await axios.get(url);
                 let fetched = res.data.properties || res.data || [];
 
-                // 2. Fallback: If empty and we used a location, try without location
-                if (fetched.length === 0 && city && city !== "Pondicherry") {
-                    const fallbackRes = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=6`);
+                // 2. Fallback: If empty and we had a city, try without location (Recommended for You)
+                if (fetched.length === 0 && city) {
+                    const fallbackRes = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`);
                     fetched = fallbackRes.data.properties || fallbackRes.data || [];
                 }
 
@@ -128,43 +134,81 @@ const RecommendedProperties = () => {
                         <div className="mb-6">
                             <h2 className="text-[28px] font-bold text-[#1E293B]">
                                 {hasNoLocalMatches ? "Recommended for You" : (
-                                <>Recommended In <span className="text-[#166aa8] font-semibold">{city}</span></>
-                            )}
+                                    <>Recommended In <span className="text-[#166aa8] font-semibold">{city}</span></>
+                                )}
                             </h2>
                             <p className="text-[15px] text-[#64748B] mt-1">
                                 {hasNoLocalMatches
-                                ? "Handpicked properties for you since we couldn't find matches in your exact area."
-                                : `Explore the best deals currently available in ${city}.`
-                            }
+                                    ? "Handpicked properties for you since we couldn't find matches in your exact area."
+                                    : `Explore the best deals currently available in ${city}.`
+                                }
                             </p>
                         </div>
+                        
                     </div>
-                    <Link
-                        to={`/properties?location=${encodeURIComponent(city)}`}
-                        className="hidden md:flex items-center text-gray-900 font-semibold hover:text-blue-600 transition"
-                    >
-                        View All in {city} <ArrowRight className="w-5 h-5 ml-1" />
-                    </Link>
+                    
+
+                    {/* Navigation Buttons for Desktop */}
+                    <div className="hidden md:flex items-center gap-3 mb-8">
+                        <button className="rec-prev w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 hover:text-blue-600 transition-all disabled:opacity-30">
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button className="rec-next w-10 h-10 flex items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm hover:bg-gray-50 hover:text-blue-600 transition-all disabled:opacity-30">
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {properties.map((property) => (
-                        <PropertyCard
-                            key={property._id}
-                            property={property}
-                            onWhatsAppClick={handleWhatsAppClick}
-                        />
-                    ))}
+                <div className="relative">
+                    <Swiper
+                        modules={[Navigation, Pagination, Autoplay]}
+                        spaceBetween={20}
+                        slidesPerView={1}
+                        navigation={{
+                            prevEl: ".rec-prev",
+                            nextEl: ".rec-next",
+                        }}
+                        pagination={{
+                            clickable: true,
+                            dynamicBullets: true,
+                            el: ".rec-pagination"
+                        }}
+                        autoplay={{
+                            delay: 5000,
+                            disableOnInteraction: false,
+                        }}
+                        breakpoints={{
+                            640: { slidesPerView: 2, spaceBetween: 20 },
+                            1024: { slidesPerView: 3, spaceBetween: 24 },
+                            1280: { slidesPerView: 4, spaceBetween: 24 },
+                        }}
+                        className="recommended-swiper !pb-12"
+                    >
+                        {properties.map((property) => (
+                            <SwiperSlide key={property._id}>
+                                <div className="h-full">
+                                    <PropertyCard
+                                        property={property}
+                                        onWhatsAppClick={handleWhatsAppClick}
+                                    />
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+
+                    {/* Mobile/Tablet Pagination Container */}
+                    {/* <div className="rec-pagination flex justify-center mt-4"></div> */}
                 </div>
 
-                <div className="mt-8 text-center md:hidden">
+                {/* <div className="mt-8 text-center flex justify-center">
                     <Link
-                        to={`/properties?location=${encodeURIComponent(city)}`}
-                        className="inline-flex items-center text-gray-900 font-semibold hover:text-blue-600"
+                        to={`/properties?location=${encodeURIComponent(city || "Pondicherry")}`}
+                        className="hidden md:flex items-center text-gray-900 font-semibold hover:text-[#166aa8] transition"
                     >
-                        View All in {city} <ArrowRight className="w-5 h-5 ml-1" />
+                        View All in {city || "Pondicherry"}
+                        <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Link>
-                </div>
+                </div> */}
             </div>
             <PhoneUpdateModal
                 isOpen={showPhoneModal}

@@ -81,24 +81,34 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
+    let lastScrollTop = 0;
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const threshold = window.innerWidth < 1024 ? 130 : 170;
+      const mainContent = document.getElementById("main-content");
+      if (mainContent) {
+        const scrollTop = mainContent.scrollTop;
+        const threshold = window.innerWidth < 1024 ? 130 : 170;
 
-      setIsScrolled(prev => {
-        if (scrollTop > threshold && !prev) {
-          return true;
-        } else if (scrollTop <= threshold && prev) {
-          setIsMobileSearchOpen(false);
-          return false;
-        }
-        return prev;
-      });
+        setIsScrolled(prev => {
+          if (scrollTop > threshold && !prev) {
+            return true;
+          } else if (scrollTop <= threshold && prev) {
+            setIsMobileSearchOpen(false);
+            return false;
+          }
+          return prev;
+        });
+      }
     };
 
-    window.addEventListener("scroll", handleScroll);
+    const mainContent = document.getElementById("main-content");
+    if (mainContent) {
+      mainContent.addEventListener("scroll", handleScroll);
+    }
+
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      if (mainContent) {
+        mainContent.removeEventListener("scroll", handleScroll);
+      }
     };
   }, [isHomePage]);
 
@@ -172,7 +182,10 @@ const Header = () => {
                 to="/"
                 className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
                 onClick={() => {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  const mainContent = document.getElementById("main-content");
+                  if (mainContent) {
+                    mainContent.scrollTo({ top: 0, behavior: "smooth" });
+                  }
                 }}
               >
                 <img

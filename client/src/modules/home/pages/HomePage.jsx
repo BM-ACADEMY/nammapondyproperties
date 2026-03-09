@@ -10,6 +10,7 @@ import Testimonials from "../components/Testimonials";
 import MapComponent from "../components/MapComponent";
 import PostPropertyCTA from "../components/PostPropertyCTA";
 import RecommendedProperties from "../components/RecommendedProperties";
+import AdvertiserTypeSection from "../components/AdvertiserTypeSection";
 
 const HomePage = () => {
   const [mapProperties, setMapProperties] = useState([]);
@@ -47,6 +48,7 @@ const HomePage = () => {
       <FeaturedProperties />
       <BannerAdSection />
       <RecommendedProperties />
+      <AdvertiserTypeSection />
 
       {/* Map Section */}
       {/* <section className="py-16 bg-[#f9fafb] relative overflow-hidden">
