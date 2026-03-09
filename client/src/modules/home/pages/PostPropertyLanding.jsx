@@ -58,10 +58,10 @@ const PostPropertyLanding = () => {
     }, [isAuthenticated, user, navigate]);
 
     const benefits = [
-        "Advertise for FREE",
-        "Get unlimited enquiries",
-        "Get shortlisted buyers and tenants *",
-        "Assistance in co-ordinating site visits *"
+        "Post your property listing for free",
+        "Reach genuine buyers and tenants quickly",
+        "Get shortlisted buyers and tenants",
+        "Assistance in co-ordinating site visits"
     ];
 
     const handleStartNow = () => {
@@ -91,7 +91,7 @@ const PostPropertyLanding = () => {
     return (
         <div id="post-property-landing" className="mt-12 min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative bg-[#f1f7ff] pt-12 pb-24 px-4 border-b border-gray-100">
+            <div className="relative bg-[#f1f7ff] pt-19 pb-24 px-4 border-b border-gray-100">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
 
                     {/* Left Side: Content */}
@@ -101,7 +101,7 @@ const PostPropertyLanding = () => {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6 }}
                         >
-                            <h1 className="text-4xl lg:text-5xl font-bold text-[#333333] leading-tight">
+                            <h1 className="text-4xl lg:text-4xl font-bold text-[#333333] leading-tight">
                                 Sell or Rent Property <br />
                                 <span className="text-[#0056b3]">online faster with NammaPondy</span>
                             </h1>
@@ -230,17 +230,17 @@ const PostPropertyLanding = () => {
                             </div>
 
                             {/* CTA */}
-                            <button
+                            {/* <button
                                 onClick={handleStartNow}
                                 className="w-full py-4 bg-[#0056b3] hover:bg-[#004494] text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                             >
                                 Start now
-                            </button>
+                            </button> */}
                         </div>
-
+{/* 
                         <p className="mt-6 text-center text-[11px] text-[#999999] px-4">
                             * Available with Owner Assist Plans. By clicking Start now, you agree to our Terms & Conditions.
-                        </p>
+                        </p> */}
                     </motion.div>
                 </div>
 

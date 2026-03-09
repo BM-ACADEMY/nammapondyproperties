@@ -53,7 +53,7 @@ const AdvertiserTypeSection = () => {
                             Properties <br /> posted by
                         </h2>
                         <p className="text-[#64748B] text-base font-medium">
-                            Choose type of advertiser
+                            Choose type of lister
                         </p>
                     </div>
 
@@ -65,10 +65,10 @@ const AdvertiserTypeSection = () => {
                             
                             <div className="mb-8">
                                 <h3 className="text-2xl font-bold text-[#0B1727] mb-1">
-                                    Choose type of advertiser
+                                   Choose type of property lister
                                 </h3>
                                 <p className="text-[15px] text-[#64748B]">
-                                    Browse your choice of listing
+                                   Browse your listing category
                                 </p>
                             </div>
 

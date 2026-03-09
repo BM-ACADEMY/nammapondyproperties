@@ -42,7 +42,7 @@ const Testimonials = () => {
         name: user?.user?.name || user?.name || "User",
         role: "User",
       });
-      message.success("Review submitted");
+      message.success("Review submitted for approval");
       setIsModalOpen(false);
     } catch (error) {
       console.error("Submission error:", error);
@@ -59,7 +59,6 @@ const Testimonials = () => {
   const renderCard = (item, index) => (
     <div
       key={`${item._id}-${index}`}
-      // CHANGED: Replaced border-[0.5px] with standard 'border' (1px thick) for better visibility
       className="bg-white border-2 border-slate-200 hover:border-slate-300 rounded-2xl p-6 shrink-0 w-[350px] transition-colors duration-300"
     >
       <div className="flex mb-4">
@@ -103,20 +102,15 @@ const Testimonials = () => {
           .animate-scroll-reverse {
             animation: scrollReverse 25s linear infinite;
           }
-          .animate-scroll:hover, .animate-scroll-reverse:hover {
-             animation-play-state: paused;
-          }
+         
         `}
       </style>
 
       <section className="bg-slate-50 py-20 px-4 overflow-hidden relative">
         <div className="max-w-7xl mx-auto relative z-10">
-          
-          {/* Header Section */}
+
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
             <div className="text-center md:text-left">
-              
-              
               <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">
                 What people are saying
               </h2>
@@ -137,7 +131,6 @@ const Testimonials = () => {
             )}
           </div>
 
-          {/* Testimonials Marquee Section */}
           {loading ? (
             <div className="text-center py-12 text-slate-500 animate-pulse">
               Loading amazing reviews...
@@ -150,7 +143,7 @@ const Testimonials = () => {
               )}
             </div>
           ) : (
-            <div 
+            <div
               className="space-y-8 relative"
               style={{
                 maskImage: 'linear-gradient(to right, transparent, black 5%, black 95%, transparent)',
@@ -176,7 +169,6 @@ const Testimonials = () => {
           )}
         </div>
 
-        {/* Modal Logic */}
         <Modal
           title={<span className="text-slate-800 font-medium text-lg">Write a Review</span>}
           open={isModalOpen}
@@ -185,10 +177,9 @@ const Testimonials = () => {
           width={500}
         >
           <Form layout="vertical" onFinish={handleCreateReview} className="mt-4">
-            {/* CHANGED: Reverted to standard 'border' here as well */}
             <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-inner"
                   style={{ backgroundColor: brandBlue }}
                 >
@@ -212,7 +203,7 @@ const Testimonials = () => {
             >
               <Rate style={{ color: brandYellow }} />
             </Form.Item>
-            
+
             <Form.Item
               name="content"
               label={<span className="text-slate-700 font-medium">Review</span>}
@@ -226,14 +217,14 @@ const Testimonials = () => {
                 className="rounded-lg hover:border-[#1a65a4] focus:border-[#1a65a4]"
               />
             </Form.Item>
-            
+
             <div className="flex gap-3 justify-end mt-8">
               <Button onClick={() => setIsModalOpen(false)} className="rounded-md h-10 px-6">
                 Cancel
               </Button>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 loading={submitLoading}
                 className="rounded-md h-10 px-6 border-none text-slate-900 hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: brandYellow }}
