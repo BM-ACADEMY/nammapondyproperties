@@ -30,7 +30,7 @@ const AdditionalBenefitsInfo = () => {
     ];
 
     return (
-        <section className="min-h-screen bg-[#f1f7ff] pt-12 pb-20 px-4 font-sans">
+        <section className="bg-white py-20 px-4 font-sans border-t border-slate-50">
             <div className="max-w-7xl mx-auto">
 
                 {/* Informative Header with Restored Brand Colors */}
@@ -45,7 +45,10 @@ const AdditionalBenefitsInfo = () => {
                     </div>
 
                     {/* Restored Blue CTA Button */}
-                    <button className="bg-[#0078D7] hover:bg-[#0066B8] text-white text-[15px] font-semibold py-3.5 px-8 rounded-lg transition-colors duration-200 w-fit shadow-sm">
+                    <button
+                        onClick={() => document.getElementById('post-property-landing')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="bg-[#0078D7] hover:bg-[#0066B8] text-white text-[15px] font-semibold py-3.5 px-8 rounded-lg transition-colors duration-200 w-fit shadow-sm"
+                    >
                         List My Property
                     </button>
                 </div>

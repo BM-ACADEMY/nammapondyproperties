@@ -89,7 +89,7 @@ const PostPropertyLanding = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div id="post-property-landing" className="mt-12 min-h-screen bg-white">
             {/* Hero Section */}
             <div className="relative bg-[#f1f7ff] pt-12 pb-24 px-4 border-b border-gray-100">
                 <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
@@ -118,27 +118,19 @@ const PostPropertyLanding = () => {
                             </ul>
                         </motion.div>
 
-                        {/* Illustration Placeholder/Image */}
+                        {/* UPDATED: Illustration Image with Animation */}
                         <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8, delay: 0.2 }}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                             className="relative hidden lg:block"
                         >
-                            <img
-                                src="https://static.99acres.com/universalapp/img/Desktop_Animation_compress.gif"
+                            <motion.img
+                                src="/post/post1.png"
                                 alt="Post Property Illustration"
-                                className="rounded-3xl shadow-2xl max-w-lg"
+                                className="max-w-lg object-contain mix-blend-multiply"
+
                             />
-                            <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-2xl shadow-xl flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[#0056b3] rounded-full flex items-center justify-center text-white font-bold text-xl">
-                                    1M+
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-[#333333]">Active Users</p>
-                                    <p className="text-xs text-[#777777]">Join our growing community</p>
-                                </div>
-                            </div>
                         </motion.div>
                     </div>
 
@@ -252,7 +244,7 @@ const PostPropertyLanding = () => {
                     </motion.div>
                 </div>
 
-                {/* Know More Button - Positioned exactly on the boundary */}
+                {/* Know More Button */}
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-20">
                     <motion.button
                         initial={{ opacity: 0, y: -10 }}
@@ -277,7 +269,6 @@ const PostPropertyLanding = () => {
             <div ref={nextSectionRef} className="relative z-10 w-full">
                 <PostPropertyRoute />
             </div>
-
 
         </div>
     );

@@ -51,7 +51,7 @@ const PostPropertySteps = () => {
     ];
 
     return (
-        <section className="min-h-screen bg-[white] pt-12 pb-20 px-4 font-sans">
+        <section className="bg-white py-20 px-4 font-sans">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header Section */}
@@ -88,7 +88,10 @@ const PostPropertySteps = () => {
 
                 {/* Call to Action Button */}
                 <div className="flex justify-center">
-                    <button className="bg-[#0078D7] hover:bg-[#0066B8] text-white text-[15px] font-semibold py-3.5 px-8 rounded-[4px] transition-colors duration-200 shadow-sm">
+                    <button
+                        onClick={() => document.getElementById('post-property-landing')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="bg-[#0078D7] hover:bg-[#0066B8] text-white text-[15px] font-semibold py-3.5 px-8 rounded-[4px] transition-colors duration-200 shadow-sm"
+                    >
                         Begin to Post your Property
                     </button>
                 </div>

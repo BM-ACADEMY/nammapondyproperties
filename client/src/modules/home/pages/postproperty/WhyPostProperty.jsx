@@ -11,7 +11,7 @@ const WhyPostProperty = () => {
     ];
 
     return (
-        <section className="min-h-screen bg-[#f1f7ff] pt-12 pb-20 px-4 font-sans">
+        <section className="bg-white py-20 px-4 font-sans border-t border-slate-50">
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
 
                 {/* Left Column: Text Content & CTA */}
@@ -29,7 +29,10 @@ const WhyPostProperty = () => {
                         Our platform helps property owners, agents, and builders showcase listings with maximum visibility and receive verified enquiries.
                     </p>
 
-                    <button className="bg-[#0078D7] hover:bg-[#0066B8] text-white text-[16px] font-semibold py-4 px-8 rounded-lg transition-colors duration-300 shadow-md hover:shadow-lg w-full sm:w-auto">
+                    <button
+                        onClick={() => document.getElementById('post-property-landing')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="bg-[#0078D7] hover:bg-[#0066B8] text-white text-[16px] font-semibold py-4 px-8 rounded-lg transition-colors duration-300 shadow-md hover:shadow-lg w-full sm:w-auto"
+                    >
                         Post Your Property Now
                     </button>
                 </div>

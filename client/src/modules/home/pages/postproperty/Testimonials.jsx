@@ -46,7 +46,7 @@ const Testimonials = () => {
     ];
 
     return (
-        <section className="min-h-screen bg-[#f1f7ff] pt-12 pb-20 px-4 font-sans" style={{ fontFamily: "'Open Sans', sans-serif" }}>
+        <section className="bg-white py-20 px-4 font-sans border-t border-slate-50" style={{ fontFamily: "'Open Sans', sans-serif" }}>
             <div className="max-w-7xl mx-auto">
 
                 {/* Header Section */}

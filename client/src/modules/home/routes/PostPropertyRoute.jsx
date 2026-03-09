@@ -8,12 +8,12 @@ import FAQSection from '../pages/postproperty/FAQSection'
 export const PostPropertyRoute = () => {
   return (
     <>
-    <PostPropertySteps />
-    <WhyPostProperty />
-    <AdditionalBenefits />
-    <Testimonials />
-    {/* <FinalCTA /> */}
-    <FAQSection />
+      <PostPropertySteps />
+      <WhyPostProperty />
+      <AdditionalBenefits />
+      <Testimonials />
+      {/* <FinalCTA /> */}
+      <FAQSection />
     </>
   )
 }
