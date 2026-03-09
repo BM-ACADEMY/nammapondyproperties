@@ -101,12 +101,12 @@ const FeaturedProperties = () => {
     );
 
   return (
-    <section className="py-16">
+    <section className="py-10">
       <div className=" mx-auto max-w-[1400px] px-4">
         <div className="flex justify-between items-end mb-8">
           <div>
 
-            <div className="pt-15"></div>
+            <div className="pt-0"></div>
             <div className="mb-6">
             <h2 className="text-[28px] font-bold text-[#1E293B]">New Properties</h2>
             <p className="text-[15px] text-[#64748B] mt-1">Check out our latest verified and premium listings.</p>

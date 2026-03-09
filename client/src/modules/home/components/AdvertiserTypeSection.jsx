@@ -11,9 +11,9 @@ const AdvertiserTypeSection = () => {
     const getAvatarIcon = (name) => {
         const lowerName = name.toLowerCase();
         if (lowerName.includes("dealer") || lowerName.includes("agent")) {
-            return <Users className="w-8 h-8 text-[#0066FF] mt-2" />;
+            return <Users className="w-8 h-8 text-[#166aa8] mt-2" />;
         }
-        return <User className="w-8 h-8 text-[#0066FF] mt-2" />;
+        return <User className="w-8 h-8 text-[#166aa8] mt-2" />;
     };
 
     const displayTypes = businessTypes.slice(0, 4);
@@ -21,12 +21,13 @@ const AdvertiserTypeSection = () => {
     if (displayTypes.length === 0) return null;
 
     return (
-        <section className="py-1 px-4 bg-white">
+        <section className="py-15 px-4 bg-white">
             {/* 
               Changed 'container mx-auto' to 'w-full max-w-5xl mr-auto lg:ml-12' 
               This forces the block to align to the left side of the page 
             */}
             <div className="w-full max-w-5xl mr-auto lg:ml-62">
+            {/* <div className="w-full max-w-5xl mx-auto"> */}
                 
                 {/* Main Beige Card Container */}
                 <div className="bg-[#FFF8EC] rounded-[24px] flex flex-col lg:flex-row items-center p-8 lg:p-0 lg:pl-16 relative mb-12 lg:mb-16">
@@ -41,7 +42,7 @@ const AdvertiserTypeSection = () => {
                             {/* Yellow Bar */}
                             <div className="w-5 h-10 bg-[#FEF08A] rounded-sm"></div>
                             {/* Blue Solid House */}
-                            <div className="ml-1 text-[#0066FF]">
+                            <div className="ml-1 text-[#166aa8]">
                                 <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                                 </svg>
@@ -100,7 +101,7 @@ const AdvertiserTypeSection = () => {
                                                 </div>
 
                                                 <div>
-                                                    <h4 className="text-[17px] font-bold text-[#0B1727] group-hover:text-[#0066FF] transition-colors capitalize">
+                                                    <h4 className="text-[17px] font-bold text-[#0B1727] group-hover:text-[#166aa8] transition-colors capitalize">
                                                         {name}
                                                     </h4>
                                                     {/* <p className="text-sm text-[#94A3B8] font-medium">
@@ -110,7 +111,7 @@ const AdvertiserTypeSection = () => {
                                             </div>
 
                                             {/* Arrow Icon */}
-                                            <div className="text-[#0B1727] group-hover:text-[#0066FF] transition-transform transform group-hover:translate-x-1">
+                                            <div className="text-[#0B1727] group-hover:text-[#166aa8] transition-transform transform group-hover:translate-x-1">
                                                 <ArrowRight className="w-5 h-5 stroke-[2.5]" />
                                             </div>
                                         </div>
