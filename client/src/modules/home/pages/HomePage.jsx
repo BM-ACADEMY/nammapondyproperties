@@ -10,6 +10,7 @@ import Testimonials from "../components/Testimonials";
 import MapComponent from "../components/MapComponent";
 import PostPropertyCTA from "../components/PostPropertyCTA";
 import RecommendedProperties from "../components/RecommendedProperties";
+import MeetKamar from "./MeetKamar";
 import AdvertiserTypeSection from "../components/AdvertiserTypeSection";
 
 const HomePage = () => {
@@ -48,6 +49,7 @@ const HomePage = () => {
       <FeaturedProperties />
       <BannerAdSection />
       <RecommendedProperties />
+      <MeetKamar />
       <AdvertiserTypeSection />
 
       {/* Map Section */}
