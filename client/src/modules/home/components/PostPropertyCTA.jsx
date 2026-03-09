@@ -6,7 +6,7 @@ const PostPropertyCTA = () => {
 
   return (
     <section className="bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[900px] mx-auto rounded-3xl bg-[#eef7f0] relative flex flex-col md:flex-row items-stretch font-sans shadow-sm border border-[#e2efe4] min-h-[300px]">
+      <div className="max-w-[1000px] mx-auto rounded-3xl bg-[#eef7f0] relative flex flex-col md:flex-row items-stretch font-sans shadow-sm border border-[#e2efe4] min-h-[300px]">
 
         {/* Left Side: Text and Actions */}
         <div className="flex-1 p-10 md:p-16 z-10 flex flex-col justify-center">
