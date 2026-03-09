@@ -31,7 +31,7 @@ const BannerAdSection = () => {
     }, []);
 
     if (loading) return (
-        <section className="py-12 bg-[#f9fafb]">
+        <section className="py-12">
             <div className="container mx-auto px-4 max-w-7xl">
                 <div className="w-full aspect-[21/6] md:aspect-[21/5] lg:aspect-[21/4] bg-gray-200 animate-pulse rounded-[24px]"></div>
             </div>
@@ -41,8 +41,8 @@ const BannerAdSection = () => {
     if (activeAds.length === 0) return null;
 
     return (
-        <section className="py-12 bg-[#f9fafb]">
-            <div className="container mx-auto px-4 max-w-7xl">
+        <section className="py-12">
+            <div className="container mx-auto px-4 max-w-[1400px]">
                 <Swiper
                     modules={[Autoplay, Pagination]}
                     spaceBetween={0}
@@ -83,7 +83,7 @@ const AdContent = ({ ad }) => (
         <img
             src={getImageUrl(ad.imageUrl)}
             alt={ad.title}
-            className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700"
         />
     </div>
 );

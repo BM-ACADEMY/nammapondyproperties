@@ -18,7 +18,7 @@ const PropertyCard = ({ property }) => {
   const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
   const locality = property.location?.locality || property.location?.city || "Pondicherry";
   const city = property.location?.city || "";
-  const role = property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
+  const posterType = property.businessType?.name || property.businessType || property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
   const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
   // Price formatting for the badge
@@ -76,7 +76,7 @@ const PropertyCard = ({ property }) => {
 
         {/* Footer Meta */}
         <div className="mt-auto flex items-center justify-between text-gray-500 text-sm">
-          <span>Posted by {role}</span>
+          <span>Posted by {posterType}</span>
           <span>{timeAgo}</span>
         </div>
       </div>

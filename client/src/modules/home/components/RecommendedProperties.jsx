@@ -121,24 +121,23 @@ const RecommendedProperties = () => {
     );
 
     return (
-        <section className="py-16 bg-gray-50/50">
-            <div className="mx-auto max-w-7xl px-4">
+        <section className="py-16">
+            <div className="mx-auto max-w-[1400px] px-4">
                 <div className="flex justify-between items-end mb-8">
                     <div>
-                        <div className="flex items-center gap-2 mb-2">
-                            <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full uppercase tracking-wider">Local Picks</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight flex items-center gap-3">
-                            {hasNoLocalMatches ? "Recommended for You" : (
-                                <>Recommended In <span className="text-blue-600 font-semibold">{city}</span></>
+                        <div className="mb-6">
+                            <h2 className="text-[28px] font-bold text-[#1E293B]">
+                                {hasNoLocalMatches ? "Recommended for You" : (
+                                <>Recommended In <span className="text-[#166aa8] font-semibold">{city}</span></>
                             )}
-                        </h2>
-                        <p className="text-lg text-slate-500 mt-4 leading-relaxed">
-                            {hasNoLocalMatches
+                            </h2>
+                            <p className="text-[15px] text-[#64748B] mt-1">
+                                {hasNoLocalMatches
                                 ? "Handpicked properties for you since we couldn't find matches in your exact area."
                                 : `Explore the best deals currently available in ${city}.`
                             }
-                        </p>
+                            </p>
+                        </div>
                     </div>
                     <Link
                         to={`/properties?location=${encodeURIComponent(city)}`}

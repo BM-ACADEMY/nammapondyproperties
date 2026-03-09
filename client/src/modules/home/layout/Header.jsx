@@ -81,34 +81,24 @@ const Header = () => {
   }, []);
 
   useEffect(() => {
-    let lastScrollTop = 0;
     const handleScroll = () => {
-      const mainContent = document.getElementById("main-content");
-      if (mainContent) {
-        const scrollTop = mainContent.scrollTop;
-        const threshold = window.innerWidth < 1024 ? 130 : 170;
+      const scrollTop = window.scrollY;
+      const threshold = window.innerWidth < 1024 ? 130 : 170;
 
-        setIsScrolled(prev => {
-          if (scrollTop > threshold && !prev) {
-            return true;
-          } else if (scrollTop <= threshold && prev) {
-            setIsMobileSearchOpen(false);
-            return false;
-          }
-          return prev;
-        });
-      }
+      setIsScrolled(prev => {
+        if (scrollTop > threshold && !prev) {
+          return true;
+        } else if (scrollTop <= threshold && prev) {
+          setIsMobileSearchOpen(false);
+          return false;
+        }
+        return prev;
+      });
     };
 
-    const mainContent = document.getElementById("main-content");
-    if (mainContent) {
-      mainContent.addEventListener("scroll", handleScroll);
-    }
-
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      if (mainContent) {
-        mainContent.removeEventListener("scroll", handleScroll);
-      }
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [isHomePage]);
 
@@ -176,32 +166,28 @@ const Header = () => {
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo - Left Side */}
-            <Link
-              to="/"
-              className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
-              onClick={() => {
-                const mainContent = document.getElementById("main-content");
-                if (mainContent) {
-                  mainContent.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              }}
-            >
-              <img
-                src="/Logo/logo1.png"
-                alt="NammaPondy Logo"
-                className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-            </Link>
+            <div className="flex items-center space-x-4">
+              {/* Logo - Left Side */}
+              <Link
+                to="/"
+                className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <img
+                  src="/Logo/logo1.png"
+                  alt="NammaPondy Logo"
+                  className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </Link>
 
-            {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
-            <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
-              {/* Location Picker */}
-              <div className="flex items-center mr-4">
+              {/* Location Picker - Moved next to Logo */}
+              <div className="hidden lg:flex items-center">
                 <button
                   onClick={detectLocation}
                   disabled={locationLoading}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${isHomePage && !isScrolled ? "bg-white/10 border-white/20 text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
                 >
                   <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
                   <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
@@ -209,6 +195,10 @@ const Header = () => {
                   </span>
                 </button>
               </div>
+            </div>
+
+            {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
+            <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
 
               {/* Scrolling Search Bar (Reuses PropertySearchBar) */}
               {(isScrolled && isHomePage) || isPropertiesPage ? (

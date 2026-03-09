@@ -45,8 +45,8 @@ const HomePage = () => {
       <HeroSection />
       <PropertyTypeList />
       <FeaturedProperties />
-      <RecommendedProperties />
       <BannerAdSection />
+      <RecommendedProperties />
 
       {/* Map Section */}
       {/* <section className="py-16 bg-[#f9fafb] relative overflow-hidden">

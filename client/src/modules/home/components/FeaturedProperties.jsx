@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { MapPin, ArrowRight, Eye } from "lucide-react";
+import { MapPin, ArrowRight, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "./PropertyCard";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
+
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 const FeaturedProperties = () => {
   const [properties, setProperties] = useState([]);
@@ -18,9 +25,9 @@ const FeaturedProperties = () => {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        // Fetch only verified properties, limited to 6
+        // Fetch only verified properties, limited to 12 for carousel
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=6`,
+          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`,
         );
         if (Array.isArray(res.data.properties)) {
           setProperties(res.data.properties);
@@ -95,45 +102,83 @@ const FeaturedProperties = () => {
 
   return (
     <section className="py-16">
-      <div className=" mx-auto max-w-7xl px-4">
+      <div className=" mx-auto max-w-[1400px] px-4">
         <div className="flex justify-between items-end mb-8">
           <div>
 
             <div className="pt-15"></div>
-
-            {/* Elegant Typography Heading */}
-            <h2 className="text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
-              Featured Properties
-            </h2>
-
-            <p className="text-lg text-slate-500 mt-4 leading-relaxed">
-              Check out our latest verified and premium listings.
-            </p>
+            <div className="mb-6">
+            <h2 className="text-[28px] font-bold text-[#1E293B]">New Properties</h2>
+            <p className="text-[15px] text-[#64748B] mt-1">Check out our latest verified and premium listings.</p>
+          </div>
 
           </div>
           <Link
             to="/properties"
-            className="hidden md:flex items-center text-gray-900 font-semibold hover:text-blue-600 transition"
+            className="hidden md:flex items-center text-gray-900 font-semibold hover:text-[#166aa8] transition"
           >
             View All Properties <ArrowRight className="w-5 h-5 ml-1" />
           </Link>
         </div>
 
-        {/* Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {properties.map((property) => (
-            <PropertyCard
-              key={property._id}
-              property={property}
-              onWhatsAppClick={handleWhatsAppClick}
-            />
-          ))}
+        {/* Carousel Layout */}
+        <div className="relative group/carousel">
+          <Swiper
+            modules={[Autoplay, Navigation, Pagination]}
+            spaceBetween={24}
+            slidesPerView={1}
+            navigation={{
+              prevEl: ".prev-property",
+              nextEl: ".next-property",
+            }}
+            pagination={{
+              clickable: true,
+              dynamicBullets: true,
+            }}
+            autoplay={{
+              delay: 5000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true
+            }}
+            breakpoints={{
+              640: {
+                slidesPerView: 2,
+                spaceBetween: 24,
+              },
+              1024: {
+                slidesPerView: 3,
+                spaceBetween: 30,
+              },
+              1280: {
+                slidesPerView: 4,
+                spaceBetween: 30,
+              },
+            }}
+            className="pb-14 !px-1"
+          >
+            {properties.map((property) => (
+              <SwiperSlide key={property._id} className="h-auto">
+                <PropertyCard
+                  property={property}
+                  onWhatsAppClick={handleWhatsAppClick}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+
+          {/* Custom Navigation Buttons */}
+          <button className="prev-property absolute left-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all opacity-0 group-hover/carousel:opacity-100 hidden xl:flex">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button className="next-property absolute right-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all opacity-0 group-hover/carousel:opacity-100 hidden xl:flex">
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
 
         <div className="mt-8 text-center font-serif md:hidden">
           <Link
             to="/properties"
-            className="inline-flex items-center text-gray-900 font-semibold hover:text-blue-600"
+            className="inline-flex items-center text-gray-900 font-semibold hover:text-[#166aa8]"
           >
             View All Properties <ArrowRight className="w-5 h-5 ml-1" />
           </Link>

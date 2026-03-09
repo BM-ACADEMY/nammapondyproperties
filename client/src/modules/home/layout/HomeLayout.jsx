@@ -6,16 +6,13 @@ import { useAuth } from "@/context/AuthContext";
 const HomeLayout = () => {
   const { isLoginModalOpen, setLoginModalOpen } = useAuth();
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-white">
+    <div className="flex flex-col min-h-screen bg-white">
       <Header />
       <LoginModal
         open={isLoginModalOpen}
         onCancel={() => setLoginModalOpen(false)}
       />
-      <main
-        id="main-content"
-        className="flex-grow overflow-y-auto scroll-smooth"
-      >
+      <main id="main-content" className="flex-grow">
         <div className="min-h-full flex flex-col">
           <div className="flex-grow">
             <Outlet />
