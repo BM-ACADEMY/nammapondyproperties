@@ -69,7 +69,7 @@ const HomePage = () => {
         </div>
       </section> */}
 
-      <WhyChooseUs />
+      {/* <WhyChooseUs /> */}
       <Testimonials />
       <PostPropertyCTA />
     </div>
