@@ -1,36 +1,39 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const MeetKamar = () => {
     return (
         <section className="bg-white py-12 px-4 sm:px-6 lg:px-8 mt-8">
-            {/* Main Container: 
-                - Removed overflow-hidden so the image can escape the bounds and sit in front.
-            */}
-            <div className="max-w-[1100px] mx-auto relative flex flex-col md:flex-row items-stretch min-h-[520px]">
-
-                {/* 
-                   Background Layer: 
-                   This dedicated div handles the gradient, rounded corners, and overflow. 
-                   Because it's isolated, it won't clip the image!
-                */}
-                <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#f8faf9] via-[#f1f7f5] to-[#e6f2ee] shadow-sm border border-[#e2efe4] overflow-hidden z-0"></div>
+            <Link 
+                to="/about"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="max-w-[1100px] mx-auto relative flex flex-col md:flex-row items-stretch min-h-[520px] cursor-pointer group block"
+            >
+                {/* Background Layer */}
+                <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#f8faf9] via-[#f1f7f5] to-[#e6f2ee] shadow-sm border border-white/40 overflow-hidden z-0 transition-transform duration-300 group-hover:scale-[1.01]"></div>
 
                 {/* Left Side: Text Content */}
-                <div className="flex-1 p-10 md:p-14 lg:p-16 z-10 flex flex-col justify-center relative">
+                <div className="flex-1 p-10 md:p-14 lg:p-16 z-10 flex flex-col justify-center relative pointer-events-none">
                     <h2 className="text-4xl md:text-[50px] font-bold text-[#0f172a] mb-3 tracking-tight">
                         Meet Kamar
                     </h2>
 
                     <h3 className="text-[#b58e45] text-[20px] md:text-[24px] font-semibold mb-8">
-                        The Founder of Namma Pondy Properties
+                        Founder of Namma Pondy Properties
                     </h3>
 
                     <div className="space-y-6 text-[#475569] text-[17px] md:text-[18px] leading-relaxed max-w-[520px]">
                         <p>
-                            Kamar founded Namma Pondy Properties with a vision to make property buying and selling in Pondicherry simple, transparent, and trustworthy.
+                            Kamar started Namma Pondy Properties to make buying and selling property in Pondicherry simple, transparent, and reliable.
                         </p>
                         <p>
-                            With strong local knowledge and real estate experience, he is committed to helping people find the right property for their home, investment, or future. Through technology and genuine listings, he aims to make property search easier for everyone.
+                            With strong local knowledge and real estate experience, he helps people find the right property for their home, investment, or future.
+                            {/* Removed the specific text colors. 
+                                Now it naturally inherits the #475569 color from the paragraph above.
+                            */}
+                            <span className="font-semibold text-[#475569] hover:underline text-[17px] md:text-[18px] tracking-widest ml-2 inline-block pointer-events-auto">
+    read more
+</span>
                         </p>
                     </div>
                 </div>
@@ -40,13 +43,14 @@ const MeetKamar = () => {
                     <img
                         src="kamar1.png"
                         alt="Kamar - Asset Manager"
+                        className="absolute bottom-0 right-0 md:right-8 w-auto h-[100%] md:h-[115%] max-w-none object-contain object-bottom z-20 transition-transform duration-300 pointer-events-none group-hover:scale-[1.02]"
                         className="absolute bottom-0 right-0 md:right-8 w-auto h-[100%] md:h-[115%] max-w-none object-contain object-bottom z-20 transition-transform duration-300 pointer-events-none"
                         onError={(e) => {
                             e.target.src = "/properties/adsman.png";
                         }}
                     />
                 </div>
-            </div>
+            </Link>
         </section>
     );
 };
