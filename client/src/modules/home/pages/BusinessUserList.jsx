@@ -11,39 +11,60 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getImageUrl } from "@/utils/imageUrl";
+import PropertyCard from "@/modules/home/components/PropertyCard";
+import Loader from "@/components/Common/Loader";
 
 const BusinessUserList = () => {
   const { businessTypeId } = useParams();
-  const [users, setUsers] = useState([]);
+  const [sellers, setSellers] = useState([]);
+  const [selectedSeller, setSelectedSeller] = useState(null);
+  const [sellerProperties, setSellerProperties] = useState([]);
   const [businessType, setBusinessType] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [propertiesLoading, setPropertiesLoading] = useState(false);
+
+  const API = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchSellers = async () => {
+      if (!businessTypeId) return;
       setLoading(true);
       try {
-        // Fetch Business Type Details
-        const typeRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/business-types/${businessTypeId}`,
-        );
+        const [typeRes, sellersRes] = await Promise.all([
+          axios.get(`${API}/business-types/${businessTypeId}`),
+          axios.get(`${API}/users/sellers-by-business-type/${businessTypeId}`)
+        ]);
         setBusinessType(typeRes.data);
-
-        // Fetch Users with this Business Type
-        const usersRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/users/public-users?businessType=${businessTypeId}`,
-        );
-        setUsers(usersRes.data);
+        setSellers(sellersRes.data);
+        if (sellersRes.data.length > 0) {
+          setSelectedSeller(sellersRes.data[0]);
+        }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching sellers:", error);
       } finally {
         setLoading(false);
       }
     };
+    fetchSellers();
+  }, [businessTypeId, API]);
 
-    if (businessTypeId) {
-      fetchData();
-    }
-  }, [businessTypeId]);
+  useEffect(() => {
+    const fetchSellerProperties = async () => {
+      if (!selectedSeller || !businessTypeId) return;
+      setPropertiesLoading(true);
+      try {
+        const res = await axios.get(
+          `${API}/properties/fetch-all-property?seller_id=${selectedSeller._id}&businessType=${businessTypeId}`
+        );
+        setSellerProperties(res.data.properties || []);
+      } catch (error) {
+        console.error("Error fetching seller properties:", error);
+      } finally {
+        setPropertiesLoading(false);
+      }
+    };
+    fetchSellerProperties();
+  }, [selectedSeller, businessTypeId, API]);
 
   if (loading) {
     return (
@@ -76,7 +97,7 @@ const BusinessUserList = () => {
             </p>
 
             <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest cursor-default">
-              Showing {users.length} Verified Professionals
+              Showing {sellers.length} Verified Professionals
             </div>
           </div>
 
@@ -89,119 +110,110 @@ const BusinessUserList = () => {
           </div>
         </div>
 
-        {/* --- CONTENT SECTION --- */}
-        {users.length === 0 ? (
+        {/* --- CONTENT SECTION (Two Columns) --- */}
+        {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
               <User className="w-8 h-8 text-[#3b5998]" />
             </div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">
-              No professionals found
+              No sellers found
             </h3>
             <p className="text-slate-500 max-w-sm mx-auto">
-              There are currently no{" "}
-              {businessType?.name?.toLowerCase() || "professional"}s registered.
+              There are currently no sellers who have posted properties with this business type.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {users.map((user, index) => (
-              <motion.div
-                key={user._id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                {/* --- ENTIRE CARD IS NOW CLICKABLE --- */}
-                <Link
-                  to={`/properties/user/${user._id}`}
-                  className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all duration-300 flex h-[180px] sm:h-[200px] overflow-hidden border border-gray-100 cursor-pointer block group"
-                >
-                  {/* Left Panel: Deep Blue Background + Image */}
-                  <div className="w-[120px] sm:w-[150px] shrink-0 relative bg-[#0a2342] flex justify-center items-end overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-white opacity-5 rounded-bl-[100px] pointer-events-none"></div>
-                    <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-[#d4af37] rounded-full blur-2xl opacity-30 pointer-events-none"></div>
-
-                    {user.profile_image ? (
-                      <img
-                        src={getImageUrl(user.profile_image)}
-                        alt={user.name}
-                        className="relative z-10 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="relative z-10 h-full w-full flex items-center justify-center bg-gradient-to-t from-[#0a2342] to-[#174685] text-white/40 font-light text-5xl">
-                        {user.name.charAt(0).toUpperCase()}
+          <div className="flex flex-col lg:flex-row gap-8 min-h-[600px]">
+            {/* Left Sidebar: Sellers List */}
+            <div className="lg:w-1/3 xl:w-1/4 h-fit sticky top-24">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-4 border-b border-gray-50 bg-slate-50/50">
+                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+                    {businessType?.name || "Professional"}s ({sellers.length})
+                  </h3>
+                </div>
+                <div className="max-h-[70vh] overflow-y-auto">
+                  {sellers.map((user) => (
+                    <div
+                      key={user._id}
+                      onClick={() => setSelectedSeller(user)}
+                      className={`p-4 flex items-center gap-4 cursor-pointer transition-all border-b border-gray-50 last:border-0 hover:bg-slate-50 ${selectedSeller?._id === user._id
+                        ? "bg-slate-100 border-l-4 border-l-[#174685] pl-3"
+                        : "bg-white"
+                        }`}
+                    >
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                        {user.profile_image ? (
+                          <img
+                            src={getImageUrl(user.profile_image)}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold">
+                            {user.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Right Panel: Agent Details */}
-                  <div className="flex-1 p-4 sm:p-5 flex flex-col bg-white relative">
-                    {/* Top Right Verified Shield */}
-                    <div className="absolute top-4 right-4 text-[#d4af37] bg-yellow-50/50 p-1.5 rounded-lg border border-yellow-100/50 hidden sm:block">
-                      <ShieldCheck className="w-5 h-5" strokeWidth={2} />
-                    </div>
-
-                    {/* Name & Role */}
-                    <div className="mb-3">
-                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-0.5 truncate pr-8 group-hover:text-[black] transition-colors">
-                        {user.name}
-                      </h3>
-                      <p className="text-xs sm:text-sm text-slate-500 underline decoration-slate-200 underline-offset-4 font-medium truncate">
-                        {user.businessType?.name ||
-                          businessType?.name ||
-                          "Professional"}
-                      </p>
-                    </div>
-
-                    {/* "VERIFIED" & Rating Badges */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <div className="bg-[#174685] text-white text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded flex items-center gap-1.5 uppercase tracking-wide">
-                        <Star className="w-3 h-3 text-[#d4af37] fill-current" />{" "}
-                        VERIFIED
+                      <div className="flex-1 min-w-0">
+                        <h4 className={`text-sm font-bold truncate ${selectedSeller?._id === user._id ? "text-[#174685]" : "text-slate-900"
+                          }`}>
+                          {user.name}
+                        </h4>
+                        <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <Star className="w-3 h-3 text-amber-500 fill-current" /> 5.0 Rated
+                        </p>
                       </div>
-                      <div className="bg-slate-50 border border-slate-100 text-slate-700 text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded flex items-center gap-1.5">
-                        <Star className="w-3 h-3 text-[#d4af37] fill-current" />{" "}
-                        5.0
-                      </div>
+                      <ArrowRight className={`w-4 h-4 transition-transform ${selectedSeller?._id === user._id ? "translate-x-1 text-[#174685]" : "text-slate-300"
+                        }`} />
                     </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-                    {/* Actions Row (Pills) */}
-                    <div className="mt-auto flex flex-wrap gap-2">
-                      {user.phone ? (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation(); // Prevents clicking the card link
-                            window.open(
-                              `https://wa.me/${user.phone}`,
-                              "_blank",
-                            );
-                          }}
-                          className="bg-[#f0f5ff] text-[#174685] text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 hover:bg-[#e5efff] transition-colors border border-blue-100/50 relative z-20"
-                        >
-                          <Phone className="w-3 h-3" /> WhatsApp
-                        </button>
-                      ) : (
-                        <button
-                          disabled
-                          className="bg-slate-50 text-slate-400 text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-slate-100 cursor-not-allowed relative z-20"
-                        >
-                          <Phone className="w-3 h-3" /> No Phone
-                        </button>
-                      )}
+            {/* Right Main Column: Property Grid */}
+            <div className="flex-1">
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    Properties by {selectedSeller?.name}
+                  </h2>
+                  <p className="text-slate-500 text-sm">
+                    Showing all {businessType?.name.toLowerCase()} properties posted by this verified professional.
+                  </p>
+                </div>
 
-                      <div className="bg-[#f0f5ff] text-[#174685] text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-md flex items-center gap-1.5 border border-blue-100/50 group-hover:bg-[#174685] group-hover:text-white transition-colors">
-                        Profile <ArrowRight className="w-3 h-3" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                {selectedSeller?.phone && (
+                  <button
+                    onClick={() => window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-full text-sm font-bold hover:bg-[#128C7E] transition-all shadow-md active:scale-95"
+                  >
+                    <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
+                  </button>
+                )}
+              </div>
+
+              {propertiesLoading ? (
+                <div className="py-20 flex justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]"></div>
+                </div>
+              ) : sellerProperties.length === 0 ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
+                  <Building2 className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                  <p className="text-slate-500">No properties found for this category from this seller.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
+                  {sellerProperties.map((property) => (
+                    <PropertyCard key={property._id} property={property} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        )}</div>
     </div>
   );
 };

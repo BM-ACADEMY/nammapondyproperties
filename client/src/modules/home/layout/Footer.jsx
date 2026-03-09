@@ -16,7 +16,7 @@ import {
 
 const Footer = () => {
   const [socialLinks, setSocialLinks] = useState([]);
-  const { businessTypes, propertyTypes } = useNav();
+  const { businessTypes, propertyTypes = [] } = useNav();
 
   useEffect(() => {
     const fetchSocialLinks = async () => {
@@ -74,12 +74,12 @@ const Footer = () => {
               }}
             >
               <img
-                src="/Logo/logo.png"
+                src="/Logo/logo1.png"
                 alt="NammaPondy Logo"
                 className="h-10 w-auto object-contain"
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.src = "/Logo/logo.png";
+                  e.target.src = "/Logo/logo1.png";
                 }}
               />
             </Link>

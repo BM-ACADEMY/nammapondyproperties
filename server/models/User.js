@@ -10,9 +10,9 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     name: { type: String, required: false },
-    email: { type: String, unique: true, required: false, sparse: true },
-    password: { type: String },
-    phone: { type: String },
+    email: { type: String, required: false }, // Optional and no longer unique for auth
+    password: { type: String, required: false },
+    phone: { type: String, required: true, unique: true },
     status: { type: String, default: "active" },
     otp: { type: String },
     otpExpires: { type: Date },
@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema(
     customId: { type: String, unique: true, sparse: true },
     userId: { type: String, unique: true, sparse: true },
     referralCode: { type: String, unique: true, sparse: true },
-    businessType: { type: mongoose.Schema.Types.ObjectId, ref: "BusinessType" },
     googleId: { type: String, unique: true, sparse: true },
   },
   { timestamps: true },
@@ -37,7 +36,7 @@ userSchema.pre("save", async function () {
       const salt = await bcrypt.genSalt(10);
       this.password = await bcrypt.hash(this.password, salt);
     } catch (error) {
-      return next(error);
+      throw error;
     }
   }
 

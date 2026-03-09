@@ -4,27 +4,31 @@ import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NavProvider } from "./context/NavContext";
 import { SocketProvider } from "./context/SocketContext";
+import { LocationProvider } from "./context/LocationContext";
 import { Toaster } from "react-hot-toast";
 
 import ScrollToTop from "./components/Common/ScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <div>
         <Toaster position="top-center" reverseOrder={false} />
         <AuthProvider>
-          <SocketProvider>
-            <NavProvider>
-              <BrowserRouter>
-                <ScrollToTop />
-                <AppRoutes />
-              </BrowserRouter>
-            </NavProvider>
-          </SocketProvider>
+          <LocationProvider>
+            <SocketProvider>
+              <NavProvider>
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <AppRoutes />
+                </BrowserRouter>
+              </NavProvider>
+            </SocketProvider>
+          </LocationProvider>
         </AuthProvider>
       </div>
-    </>
+    </HelmetProvider>
   );
 }
 

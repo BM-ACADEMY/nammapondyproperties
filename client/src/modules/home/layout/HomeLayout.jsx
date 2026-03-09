@@ -1,11 +1,17 @@
 import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
-
+import LoginModal from "@/components/Auth/LoginModal";
+import { useAuth } from "@/context/AuthContext";
 const HomeLayout = () => {
+  const { isLoginModalOpen, setLoginModalOpen } = useAuth();
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-white">
       <Header />
+      <LoginModal
+        open={isLoginModalOpen}
+        onCancel={() => setLoginModalOpen(false)}
+      />
       <main
         id="main-content"
         className="flex-grow overflow-y-auto scroll-smooth"

@@ -48,7 +48,7 @@ const RequestLimit = () => {
           Request Limit Increase
         </Title>
         <Paragraph className="mb-6 text-gray-500">
-          You have reached the limit of 2 properties. To upload more properties,
+          You have reached the limit of 5 properties. To upload more properties,
           simply submit this request and our admin team will reach out to you
           shortly.
         </Paragraph>

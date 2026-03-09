@@ -3,133 +3,92 @@ const fs = require("fs");
 const path = require("path");
 
 exports.createPropertyType = async (req, res) => {
-  try {
-    const { name, status, visible_to_seller, key_attributes } = req.body;
-
-    // Case-insensitive uniqueness check
-    const existingType = await PropertyType.findOne({
-      name: { $regex: new RegExp(`^${name}$`, "i") },
-    });
-
-    if (existingType) {
-      if (req.file) {
-        // Delete uploaded file if duplicate is found
-        const filePath = path.join(__dirname, "..", "uploads", "propertyTypes", req.file.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
+    try {
+        const typeData = { ...req.body };
+        
+        if (req.file) {
+            typeData.imageUrl = `/uploads/propertyTypes/${req.file.filename}`;
         }
-      }
-      return res.status(400).json({ error: "Property Type with this name already exists" });
-    }
 
-    let image_url = "";
-    if (req.file) {
-      image_url = `/uploads/propertyTypes/${req.file.filename}`;
+        const propertyType = new PropertyType(typeData);
+        await propertyType.save();
+        res.status(201).json(propertyType);
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ error: "A property type with this name already exists." });
+        }
+        res.status(400).json({ error: error.message });
     }
-
-    const propertyType = new PropertyType({
-      name,
-      status,
-      visible_to_seller,
-      key_attributes,
-      image_url,
-    });
-    await propertyType.save();
-    res.status(201).json(propertyType);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
 };
 
 exports.getPropertyTypes = async (req, res) => {
-  try {
-    const { status, visible_to_seller } = req.query;
-    const query = {};
-    if (status) query.status = status;
-    if (visible_to_seller !== undefined)
-      query.visible_to_seller = visible_to_seller === "true";
+    try {
+        const { status, usageType } = req.query;
+        const query = {};
+        if (status) query.status = status;
+        if (usageType) query.usageType = usageType;
 
-    const propertyTypes = await PropertyType.find(query);
-    res.json(propertyTypes);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+        const propertyTypes = await PropertyType.find(query).sort({ name: 1 });
+        res.json(propertyTypes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
 exports.getPropertyTypeById = async (req, res) => {
-  try {
-    const propertyType = await PropertyType.findById(req.params.id);
-    if (!propertyType)
-      return res.status(404).json({ error: "Property Type not found" });
-    res.json(propertyType);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    try {
+        const propertyType = await PropertyType.findById(req.params.id);
+        if (!propertyType) return res.status(404).json({ error: "Property type not found" });
+        res.json(propertyType);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
 exports.updatePropertyType = async (req, res) => {
-  try {
-    const propertyType = await PropertyType.findById(req.params.id);
-    if (!propertyType)
-      return res.status(404).json({ error: "Property Type not found" });
+    try {
+        let propertyType = await PropertyType.findById(req.params.id);
+        if (!propertyType) return res.status(404).json({ error: "Property type not found" });
 
-    const { name } = req.body;
-    if (name && name !== propertyType.name) {
-      // Case-insensitive uniqueness check
-      const existingType = await PropertyType.findOne({
-        name: { $regex: new RegExp(`^${name}$`, "i") },
-        _id: { $ne: req.params.id },
-      });
+        const updateData = { ...req.body };
 
-      if (existingType) {
         if (req.file) {
-          // Delete uploaded file if duplicate is found
-          const filePath = path.join(__dirname, "..", "uploads", "propertyTypes", req.file.filename);
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
+            // Delete old image if it exists
+            if (propertyType.imageUrl) {
+                const oldImagePath = path.join(__dirname, "..", propertyType.imageUrl);
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+            updateData.imageUrl = `/uploads/propertyTypes/${req.file.filename}`;
         }
-        return res.status(400).json({ error: "Property Type with this name already exists" });
-      }
-    }
 
-    // Handle Image Update
-    if (req.file) {
-      // Delete old image if exists
-      if (propertyType.image_url) {
-        const oldPath = path.join(__dirname, "..", propertyType.image_url);
-        if (fs.existsSync(oldPath)) {
-          fs.unlinkSync(oldPath);
+        propertyType = await PropertyType.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
+        res.json(propertyType);
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ error: "A property type with this name already exists." });
         }
-      }
-      req.body.image_url = `/uploads/propertyTypes/${req.file.filename}`;
+        res.status(400).json({ error: error.message });
     }
-
-    Object.assign(propertyType, req.body);
-    await propertyType.save();
-    res.json(propertyType);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
 };
 
 exports.deletePropertyType = async (req, res) => {
-  try {
-    const propertyType = await PropertyType.findById(req.params.id);
-    if (!propertyType)
-      return res.status(404).json({ error: "Property Type not found" });
+    try {
+        const propertyType = await PropertyType.findById(req.params.id);
+        if (!propertyType) return res.status(404).json({ error: "Property type not found" });
 
-    // Delete image if exists
-    if (propertyType.image_url) {
-      const imagePath = path.join(__dirname, "..", propertyType.image_url);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
+        // Delete image file if it exists
+        if (propertyType.imageUrl) {
+            const imagePath = path.join(__dirname, "..", propertyType.imageUrl);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+        }
+
+        await PropertyType.findByIdAndDelete(req.params.id);
+        res.json({ message: "Property type deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    await PropertyType.findByIdAndDelete(req.params.id);
-    res.json({ message: "Property Type deleted" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };

@@ -1,9 +1,9 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 // Ensure upload directory exists
-const uploadDir = 'uploads/propertyTypes/';
+const uploadDir = "uploads/propertyTypes/";
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -14,10 +14,13 @@ const storage = multer.diskStorage({
         cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
-        // Generate unique filename: fieldname-timestamp-random.ext
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
+        // Generate unique filename: type-timestamp-random.ext
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(
+            null,
+            "type-" + uniqueSuffix + path.extname(file.originalname)
+        );
+    },
 });
 
 // Check file type
@@ -32,7 +35,7 @@ function checkFileType(file, cb) {
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb('Error: Images Only!');
+        cb(new Error("Error: Images Only!"));
     }
 }
 
@@ -42,7 +45,7 @@ const upload = multer({
     limits: { fileSize: 5000000 }, // 5MB limit
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
-    }
+    },
 });
 
 module.exports = upload;

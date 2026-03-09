@@ -1,6 +1,8 @@
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
 import { useNav } from "@/context/NavContext";
+import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
 
 // Import Swiper React components and styles
@@ -12,184 +14,218 @@ import "swiper/css/navigation";
 const PropertyTypeList = () => {
   const navigate = useNavigate();
   const { propertyTypes, isLoading: loading } = useNav();
+  const { isAuthenticated } = useAuth();
+  const [visitCount, setVisitCount] = useState(0);
+
+  useEffect(() => {
+    // 🏠 Visit Count Tracker (Once per session)
+    const storedCount = parseInt(localStorage.getItem("site_visits")) || 0;
+    const sessionCounted = sessionStorage.getItem("visit_counted");
+
+    if (!sessionCounted) {
+      const newCount = storedCount + 1;
+      localStorage.setItem("site_visits", newCount);
+      sessionStorage.setItem("visit_counted", "true");
+      setVisitCount(newCount);
+    } else {
+      setVisitCount(storedCount);
+    }
+  }, []);
+
+  // Matched exactly to the subtle pastels in your second reference image
+  const bgColors = [
+    "bg-[#F0FDF4]", // Subtle Mint (like Builder Floor)
+    "bg-[#FFFBEB]", // Subtle Cream (like Commercial Other)
+    "bg-[#FAF5FF]", // Subtle Lilac (like Commercial Plot)
+    "bg-[#F0F9FF]", // Subtle Sky Blue
+  ];
 
   // Helper function to get details and images based on type name
   const getCardDetails = (type) => {
     const typeName = typeof type === "string" ? type : type.name || "";
-    const lowerType = typeName.toLowerCase();
 
     const details = {
-      image:
-        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      image: "/dummyimg/dummy.png",
       description: "Discover exceptional properties that match your vision.",
       ctaText: `Explore ${typeName}`,
     };
 
-    if (lowerType.includes("plot") || lowerType.includes("land")) {
-      details.image = "/properties/plot.png";
-      details.description =
-        "Curated landscapes to build your bespoke dream home.";
-      details.ctaText = "Explore Plots";
-    } else if (lowerType.includes("villa") || lowerType.includes("house")) {
-      details.image = "/properties/villa.png";
-      details.description =
-        "Experience unparalleled elegance and premium living.";
-      details.ctaText = "Explore Villas";
-    } else if (lowerType.includes("apartment") || lowerType.includes("flat")) {
-      details.image = "/properties/apartment.png";
-      details.description =
-        "Elevated urban living spaces tailored for your lifestyle.";
-      details.ctaText = "Explore Apartments";
-    } else if (
-      lowerType.includes("commercial") ||
-      lowerType.includes("shop") ||
-      lowerType.includes("office")
-    ) {
-      details.image = "/properties/commercial.png";
-      details.description =
-        "Distinguished locations to establish and grow your business.";
-      details.ctaText = "Explore Commercial";
-    }
-
-    // If dynamic image exists in the object, use it
-    if (typeof type === "object" && type.image_url) {
-      details.image = getImageUrl(type.image_url);
+    // Priority: 1. Backend imageUrl, 2. Default placeholder
+    if (typeof type === "object" && type.imageUrl) {
+      details.image = getImageUrl(type.imageUrl);
     }
 
     return details;
   };
 
-  // Map property types from NavContext
-  const types = (propertyTypes || []).map((type) => {
+  // Map property types from NavContext and assign a background color
+  const types = (propertyTypes || []).map((type, index) => {
     const name = typeof type === "string" ? type : type.name || "";
     return {
       originalType: name,
       title: name,
+      bgColor: bgColors[index % bgColors.length],
       ...getCardDetails(type),
     };
   });
 
   return (
-    <section className="pt-18 pb-10 bg-[#FAFAFA] font-sans overflow-hidden">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative">
-        {/* Premium Header */}
-        <div className="text-center mb-10 flex flex-col items-center">
-          <h2 className="text-4xl md:text-5xl font-light font-serif text-gray-900">
-            Explore Properties
-          </h2>
-          <div className="w-16 h-[3px] bg-amber-700 mt-6 opacity-60"></div>
-        </div>
-
-        {/* Loading State */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="bg-gray-200 rounded-xl flex h-[320px] animate-pulse overflow-hidden"
-              ></div>
-            ))}
+    <section className="pt-24 md:pt-16 pb-10 bg-white font-sans overflow-hidden">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1450px] flex flex-col lg:flex-row gap-10">
+        
+        {/* Left Section: Main Content */}
+        <div className="flex-1 w-full overflow-visible min-w-0">
+          <div className="mb-6 md:pt-15 pt-1">
+            <h2 className="text-[28px] font-bold text-[#1E293B]">Explore Properties</h2>
+            <p className="text-[15px] text-[#64748B] mt-1">Discover exceptional properties and landscapes</p>
           </div>
-        ) : types.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-gray-500 text-lg font-light">
-              No property types found at this moment.
-            </p>
-          </div>
-        ) : (
-          <div className="relative group/slider">
-            {/* Custom Navigation */}
-            <button className="swiper-prev-btn absolute left-0 lg:-left-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white text-gray-800 p-2.5 rounded-full shadow-xl border border-gray-100 transition-all hover:scale-110 active:scale-95 group focus:outline-none hidden md:flex items-center justify-center cursor-pointer disabled:opacity-0 disabled:pointer-events-none">
-              <ArrowLeft className="w-5 h-5 group-hover:text-amber-700 transition-colors" />
-            </button>
-            <button className="swiper-next-btn absolute right-0 lg:-right-6 top-1/2 -translate-y-1/2 z-30 bg-white/90 hover:bg-white text-gray-800 p-2.5 rounded-full shadow-xl border border-gray-100 transition-all hover:scale-110 active:scale-95 group focus:outline-none hidden md:flex items-center justify-center cursor-pointer disabled:opacity-0 disabled:pointer-events-none">
-              <ArrowRight className="w-5 h-5 group-hover:text-amber-700 transition-colors" />
-            </button>
 
-            <Swiper
-              modules={[Navigation, Autoplay]}
-              spaceBetween={20}
-              slidesPerView={1}
-              navigation={{
-                prevEl: ".swiper-prev-btn",
-                nextEl: ".swiper-next-btn",
-              }}
-              autoplay={{
-                delay: 4000,
-                disableOnInteraction: false,
-                pauseOnMouseEnter: true,
-              }}
-              loop={types.length > 1}
-              breakpoints={{
-                540: {
-                  slidesPerView: 2,
-                  spaceBetween: 20,
-                },
-                768: {
-                  slidesPerView: 3,
-                  spaceBetween: 24,
-                },
-                1024: {
-                  slidesPerView: 4,
-                  spaceBetween: 30,
-                },
-                1440: {
-                  slidesPerView: 4,
-                  spaceBetween: 40,
-                },
-              }}
-              className="py-6"
-            >
-              {types.map((item, index) => (
-                <SwiperSlide key={index}>
-                  <div
-                    onClick={() =>
-                      navigate(
-                        `/properties?type=${encodeURIComponent(
-                          item.originalType,
-                        )}`,
-                      )
-                    }
-                    className="group relative h-[320px] rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all duration-500"
-                  >
-                    {/* Background Image */}
-                    <div className="absolute inset-0 w-full h-full">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out"
-                      />
-                    </div>
+          {/* Loading State */}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-4">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-gray-100 rounded-2xl flex h-[300px] animate-pulse overflow-hidden"
+                ></div>
+              ))}
+            </div>
+          ) : types.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg font-light">
+                No property types found at this moment.
+              </p>
+            </div>
+          ) : (
+            <div className="relative group/slider w-full">
+              
+              {/* Custom Navigation */}
+              <button className="swiper-prev-btn absolute -left-5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 rounded-full transition hover:scale-105 hover:text-blue-600 disabled:opacity-0 disabled:pointer-events-none hidden md:flex cursor-pointer text-[#475569]">
+                <ChevronLeft className="w-6 h-6 ml-[-2px]" />
+              </button>
+              <button className="swiper-next-btn absolute -right-5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 rounded-full transition hover:scale-105 hover:text-blue-600 disabled:opacity-0 disabled:pointer-events-none hidden md:flex cursor-pointer text-[#475569]">
+                <ChevronRight className="w-6 h-6 mr-[-2px]" />
+              </button>
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500"></div>
-
-                    {/* Content Box */}
-                    <div className="absolute inset-0 p-6 flex flex-col justify-end z-10">
-                      <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500 ease-out">
-                        <h3 className="font-serif text-2xl text-white mb-2 font-medium tracking-wide">
+              {/* Swiper Implementation */}
+              <Swiper
+                modules={[Navigation, Autoplay]}
+                spaceBetween={24}
+                slidesPerView={1}
+                navigation={{
+                  prevEl: ".swiper-prev-btn",
+                  nextEl: ".swiper-next-btn",
+                }}
+                autoplay={{
+                  delay: 4000,
+                  disableOnInteraction: false,
+                  pauseOnMouseEnter: true,
+                }}
+                watchOverflow={true}
+                breakpoints={{
+                  540: { slidesPerView: 2, spaceBetween: 24 },
+                  768: { slidesPerView: 2, spaceBetween: 24 },
+                  1024: { slidesPerView: 2, spaceBetween: 30 },
+                  1280: { slidesPerView: 3, spaceBetween: 30 },
+                }}
+                className="py-6 px-1"
+              >
+                {types.map((item, index) => (
+                  <SwiperSlide key={index}>
+                    <div
+                      onClick={() =>
+                        navigate(
+                          `/properties?type=${encodeURIComponent(item.originalType)}`
+                        )
+                      }
+                      // ⬇️ FIXED: Responsive height so it doesn't stay stuck at 400px on small screens
+                      className={`flex flex-col h-[300px] sm:h-[350px] lg:h-[400px] rounded-[24px] overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-blue-100 ${item.bgColor}`}
+                    >
+                      {/* Top Content (Text) */}
+                      <div className="p-8 pb-0">
+                        <h3 className="text-[21px] font-bold text-[#1E293B] leading-[1.2] mb-0 group-hover:text-[#166aa8] transition-colors">
                           {item.title}
                         </h3>
+                      </div>
 
-                        <p className="text-gray-300 text-sm leading-relaxed mb-5 transition-opacity duration-500 delay-100 line-clamp-2">
-                          {item.description}
-                        </p>
-
-                        <div className="flex items-center text-amber-400 font-medium text-xs tracking-wider uppercase mt-auto w-max group-hover:text-amber-300 transition-colors">
-                          <span className="relative overflow-hidden pb-1">
-                            {item.ctaText}
-                            <span className="absolute bottom-0 left-0 w-full h-[1px] bg-amber-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 ease-out"></span>
-                          </span>
-                          <ArrowRight className="ml-2 w-4 h-4 transform group-hover:translate-x-1.5 transition-all duration-500 ease-out" />
-                        </div>
+                      {/* Bottom Content (Image) */}
+                      <div className="mt-auto relative w-full h-[65%] overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          // ⬇️ FIXED: Changed to object-center so the image scales proportionally and crops from the middle instead of the bottom edge
+                          className="w-full h-full object-cover object-bottom"
+                          onError={(e) => {
+                            e.target.src = "/dummyimg/dummy.png";
+                          }}
+                        />
                       </div>
                     </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          )}
+        </div>
+
+        {/* Right Section: Sidebar */}
+        <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-6 lg:mt-[76px]">
+          
+          {/* Activity Widget - Only for guests */}
+          {!isAuthenticated && (
+            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+              <p className="text-xs text-[#64748B] mb-3 font-semibold uppercase tracking-wider">Your Recent Activity</p>
+
+              <div className="bg-orange-50/70 rounded-lg p-4 mb-4 flex justify-between items-start border border-orange-100">
+                <div>
+                  <span className="text-2xl font-bold block text-slate-800">{visitCount}</span>
+                  <span className="text-sm text-slate-600">Viewed</span>
+                </div>
+                <span className="text-orange-400 text-lg leading-none">
+                  <Activity size={18} />
+                </span>
+              </div>
+
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full bg-[#166aa8] hover:bg-[#0078d7] text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm"
+              >
+                Login/Register to Save Activity
+              </button>
+              <p className="text-[10px] text-center text-[#64748B] mt-3">
+                & see your activities across browsers & devices...
+              </p>
+            </div>
+          )}
+
+          {/* Promo Widget - At Bottom */}
+          <div className="mt-auto">
+            <div className="bg-[#e6f4ea] rounded-xl p-5 relative overflow-hidden flex flex-col justify-center min-h-[160px]">
+              <div className="relative z-10 w-2/3">
+                <h3 className="font-bold text-[#1E293B] leading-tight mb-1 text-lg">
+                  Find the Best Deal for Your Property!
+                </h3>
+                <p className="text-sm text-[#475569] mb-4">
+                  List your property today
+                </p>
+                <button
+                  onClick={() => navigate("/post-property")}
+                  className="bg-[#166aa8] hover:bg-[#0078d7] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+                >
+                  Post Property – It's FREE
+                </button>
+              </div>
+
+              {/* Agent Image */}
+              <div
+                // ⬇️ FIXED: Added responsive minimum widths so the agent image never disappears completely
+                className="absolute bottom-0 right-0 w-[40%] min-w-[100px] sm:min-w-[120px] h-[95%] bg-contain bg-no-repeat bg-bottom"
+                style={{ backgroundImage: "url(./properties/adsman.png)" }}
+              ></div>
+            </div>
           </div>
-        )}
+
+        </div>
       </div>
     </section>
   );

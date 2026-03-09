@@ -1,0 +1,393 @@
+import { useState, useEffect, useRef } from "react";
+import { Search, ChevronDown, Check, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNav } from "@/context/NavContext";
+
+/**
+ * Reusable Property Search Bar
+ * @param {string} variant - 'hero' or 'header'
+ * @param {boolean} showFilters - Whether to show Location/Approval/Budget dropdowns
+ * @param {boolean} showKeyword - Whether to show the keyword search input
+ */
+const PropertySearchBar = ({
+    variant = "hero",
+    showFilters = true,
+    showKeyword = true
+}) => {
+    const navigate = useNavigate();
+    const { locations, approvalTypes, priceRanges, propertyTypes } = useNav();
+
+    // --- STATE MANAGEMENT ---
+    const [searchQuery, setSearchQuery] = useState("");
+    const [location, setLocation] = useState("");
+    const [approval, setApproval] = useState("");
+    const [minPrice, setMinPrice] = useState("");
+    const [maxPrice, setMaxPrice] = useState("");
+
+    // Property Type Selector State
+    const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+    const [activeUsageTab, setActiveUsageTab] = useState("Residential");
+    const [selectedTypes, setSelectedTypes] = useState([]); // array of type names
+
+    // Dropdown UI State
+    const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+    const [isApprovalDropdownOpen, setIsApprovalDropdownOpen] = useState(false);
+    const [isBudgetDropdownOpen, setIsBudgetDropdownOpen] = useState(false);
+
+    // Refs for click-outside
+    const locationRef = useRef(null);
+    const approvalRef = useRef(null);
+    const budgetRef = useRef(null);
+    const typeRef = useRef(null);
+
+    // Animated Placeholder State
+    const searchPlaceholders = [
+        "Search by title...",
+        "Search by description...",
+        "Search by area...",
+    ];
+    const [placeholderIdx, setPlaceholderIdx] = useState(0);
+
+    // Derived: available usage tabs from propertyTypes
+    const usageTabs = [...new Set((propertyTypes || []).map(t => t.usageType).filter(Boolean))];
+    const filteredSubtypes = (propertyTypes || []).filter(t => t.usageType === activeUsageTab);
+
+    // --- EFFECTS ---
+    useEffect(() => {
+        const placeholderInterval = setInterval(() => {
+            setPlaceholderIdx((prev) => (prev + 1) % searchPlaceholders.length);
+        }, 3000);
+
+        const handleClickOutside = (event) => {
+            if (locationRef.current && !locationRef.current.contains(event.target)) setIsLocationDropdownOpen(false);
+            if (approvalRef.current && !approvalRef.current.contains(event.target)) setIsApprovalDropdownOpen(false);
+            if (budgetRef.current && !budgetRef.current.contains(event.target)) setIsBudgetDropdownOpen(false);
+            if (typeRef.current && !typeRef.current.contains(event.target)) setIsTypeDropdownOpen(false);
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            clearInterval(placeholderInterval);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [searchPlaceholders.length]);
+
+    // --- HANDLERS ---
+    const handleSearch = () => {
+        const params = new URLSearchParams();
+        if (searchQuery) params.append("search", searchQuery);
+        if (location) params.append("location", location);
+        if (approval) params.append("approval", approval);
+        if (minPrice) params.append("minPrice", minPrice);
+        if (maxPrice) params.append("maxPrice", maxPrice);
+        if (selectedTypes.length > 0) params.append("type", selectedTypes.join(","));
+        navigate(`/properties?${params.toString()}`);
+    };
+
+    const selectBudget = (range) => {
+        setMinPrice(range.min || "");
+        setMaxPrice(range.max || "");
+        setIsBudgetDropdownOpen(false);
+    };
+
+    const getBudgetLabel = () => {
+        if (!minPrice && !maxPrice) return "Budget";
+        const selected = priceRanges.find(r => String(r.min) === String(minPrice) && String(r.max) === String(maxPrice));
+        return selected ? selected.label : `${minPrice} - ${maxPrice}`;
+    };
+
+    const toggleTypeSelection = (typeName) => {
+        setSelectedTypes(prev =>
+            prev.includes(typeName)
+                ? prev.filter(t => t !== typeName)
+                : [...prev, typeName]
+        );
+    };
+
+    const getTypeSelectorLabel = () => {
+        if (selectedTypes.length === 0) return "All Properties";
+        // Determine usage tab of selected types
+        const firstType = (propertyTypes || []).find(t => t.name === selectedTypes[0]);
+        const usageLabel = firstType?.usageType || "Properties";
+        if (selectedTypes.length === 1) return selectedTypes[0];
+        return `${usageLabel} (${selectedTypes.length})`;
+    };
+
+    const isHeader = variant === "header";
+
+    return (
+        <div className={`w-full ${isHeader ? "max-w-4xl" : "max-w-6xl"} flex justify-center`}>
+            <motion.div
+                initial={isHeader ? { opacity: 0, scale: 0.95 } : { width: "10%", opacity: 0 }}
+                animate={isHeader ? { opacity: 1, scale: 1 } : { width: "100%", opacity: 1 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className={`bg-white p-2 rounded-full lg:rounded-2xl shadow-2xl flex flex-row items-center relative z-50 w-full overflow-visible ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
+                    }`}
+            >
+
+
+                {/* 1. SEARCH INPUT */}
+                {showKeyword && (
+                    <div className={`flex-grow flex items-center ${isHeader ? "pl-3 pr-1" : "pl-4 pr-2 md:px-6"} h-full min-w-0 relative ${showFilters ? "lg:border-r border-gray-100" : ""}`}>
+                        <Search className={`${isHeader ? "w-4 h-4" : "w-5 h-5"} text-gray-400 mr-2 flex-shrink-0`} />
+
+                        <div className="relative w-full h-full flex items-center overflow-hidden">
+                            {!searchQuery && (
+                                <AnimatePresence mode="popLayout">
+                                    <motion.span
+                                        key={placeholderIdx}
+                                        initial={{ y: 20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: -20, opacity: 0 }}
+                                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                                        className={`absolute left-0 text-gray-400 ${isHeader ? "text-xs" : "text-sm md:text-base"} pointer-events-none whitespace-nowrap`}
+                                    >
+                                        {searchPlaceholders[placeholderIdx]}
+                                    </motion.span>
+                                </AnimatePresence>
+                            )}
+
+                            <input
+                                type="text"
+                                className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* 2. FILTERS CONTAINER */}
+                {showFilters && (
+                    <>
+                        {/* 0. PROPERTY TYPE SELECTOR */}
+                        <div className="relative flex-shrink-0 hidden lg:block" ref={typeRef}>
+                            <button
+                                onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
+                                className={`flex items-center gap-1.5 rounded-l-2xl hover:bg-gray-50 font-semibold text-gray-700 transition border-r border-gray-200 h-full px-4 py-2 text-sm`}
+                            >
+                                <span className="max-w-[100px] truncate whitespace-nowrap">{getTypeSelectorLabel()}</span>
+                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isTypeDropdownOpen ? "rotate-180" : ""}`} />
+                            </button>
+
+                            <AnimatePresence>
+                                {isTypeDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full mt-3 w-[480px] bg-white rounded-2xl shadow-2xl border border-gray-100 z-[1000] left-0 overflow-hidden"
+                                    >
+                                        {/* Usage Tabs */}
+                                        <div className="flex border-b border-gray-100 bg-gray-50">
+                                            {usageTabs.length > 0 ? usageTabs.map(tab => (
+                                                <button
+                                                    key={tab}
+                                                    onClick={() => setActiveUsageTab(tab)}
+                                                    className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeUsageTab === tab
+                                                        ? "bg-white text-red-500 border-b-2 border-red-500"
+                                                        : "text-gray-500 hover:text-gray-700"
+                                                        }`}
+                                                >
+                                                    {tab}
+                                                </button>
+                                            )) : (
+                                                <>
+                                                    <button
+                                                        onClick={() => setActiveUsageTab("Residential")}
+                                                        className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeUsageTab === "Residential" ? "bg-white text-red-500 border-b-2 border-red-500" : "text-gray-500"}`}
+                                                    >
+                                                        Residential
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setActiveUsageTab("Commercial")}
+                                                        className={`flex-1 py-3 text-sm font-semibold transition-colors ${activeUsageTab === "Commercial" ? "bg-white text-red-500 border-b-2 border-red-500" : "text-gray-500"}`}
+                                                    >
+                                                        Commercial
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Property Type Checkboxes */}
+                                        <div className="p-4">
+                                            {filteredSubtypes.length > 0 ? (
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {filteredSubtypes.map(type => {
+                                                        const isChecked = selectedTypes.includes(type.name);
+                                                        return (
+                                                            <button
+                                                                key={type._id || type.name}
+                                                                onClick={() => toggleTypeSelection(type.name)}
+                                                                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-left transition-colors ${isChecked ? "bg-red-50 text-red-600" : "hover:bg-gray-50 text-gray-700"}`}
+                                                            >
+                                                                <span className={`w-4 h-4 rounded flex-shrink-0 border flex items-center justify-center transition-colors ${isChecked ? "bg-red-500 border-red-500" : "border-gray-300"}`}>
+                                                                    {isChecked && <Check className="w-2.5 h-2.5 text-white" />}
+                                                                </span>
+                                                                <span className="font-medium truncate">{type.name}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <p className="text-sm text-gray-400 text-center py-4">No property types found for {activeUsageTab}</p>
+                                            )}
+
+                                            {/* Switch tab hint */}
+                                            {usageTabs.length > 1 && (
+                                                <div className="mt-3 pt-3 border-t border-gray-100">
+                                                    <button
+                                                        onClick={() => setActiveUsageTab(usageTabs.find(t => t !== activeUsageTab) || usageTabs[0])}
+                                                        className="text-xs text-blue-500 hover:text-blue-600 font-medium flex items-center gap-1"
+                                                    >
+                                                        Looking for {usageTabs.find(t => t !== activeUsageTab)} properties?
+                                                        <ChevronRight className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Footer actions */}
+                                        <div className="px-4 pb-4 flex items-center justify-between">
+                                            <button
+                                                onClick={() => setSelectedTypes([])}
+                                                className="text-xs text-gray-400 hover:text-gray-600 font-medium"
+                                            >
+                                                Clear selection
+                                            </button>
+                                            <button
+                                                onClick={() => setIsTypeDropdownOpen(false)}
+                                                className="text-xs text-white bg-red-500 hover:bg-red-600 px-4 py-1.5 rounded-full font-medium transition-colors"
+                                            >
+                                                Done
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    <div className={`hidden lg:flex items-center px-4 gap-1 md:gap-4 flex-shrink-0 ${!showKeyword ? "w-full justify-between" : ""}`}>
+                        {/* Location */}
+                        <div className="relative" ref={locationRef}>
+                            <button
+                                onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                            >
+                                <span className="max-w-[80px] truncate">{location || "Location"}</span>
+                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isLocationDropdownOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            <AnimatePresence>
+                                {isLocationDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[1000] left-1/2 -translate-x-1/2"
+                                    >
+                                        <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Location</div>
+                                        <button onClick={() => { setLocation(""); setIsLocationDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!location ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                            Anywhere {!location && <Check className="w-3 h-3" />}
+                                        </button>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {locations.map((loc) => {
+                                                const name = typeof loc === "string" ? loc : loc?.name || "Unknown";
+                                                return (
+                                                    <button key={name} onClick={() => { setLocation(name); setIsLocationDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${location === name ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                                        {name} {location === name && <Check className="w-3 h-3" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Approval */}
+                        <div className="relative" ref={approvalRef}>
+                            <button
+                                onClick={() => setIsApprovalDropdownOpen(!isApprovalDropdownOpen)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                            >
+                                <span className="max-w-[80px] truncate">{approval || "Approval"}</span>
+                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isApprovalDropdownOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            <AnimatePresence>
+                                {isApprovalDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[1000] left-1/2 -translate-x-1/2"
+                                    >
+                                        <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Approval</div>
+                                        <button onClick={() => { setApproval(""); setIsApprovalDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!approval ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                            Any {!approval && <Check className="w-3 h-3" />}
+                                        </button>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {approvalTypes.map((app) => {
+                                                const name = typeof app === "string" ? app : app?.name || "Unknown";
+                                                return (
+                                                    <button key={name} onClick={() => { setApproval(name); setIsApprovalDropdownOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${approval === name ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                                        {name} {approval === name && <Check className="w-3 h-3" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Budget */}
+                        <div className="relative" ref={budgetRef}>
+                            <button
+                                onClick={() => setIsBudgetDropdownOpen(!isBudgetDropdownOpen)}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                            >
+                                <span className="max-w-[100px] truncate">{getBudgetLabel()}</span>
+                                <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isBudgetDropdownOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            <AnimatePresence>
+                                {isBudgetDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="absolute top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-3 z-[1000] left-1/2 -translate-x-1/2"
+                                    >
+                                        <div className="px-4 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-50">Select Budget</div>
+                                        <button onClick={() => { selectBudget({}); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${!minPrice && !maxPrice ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                            Any Budget {!minPrice && !maxPrice && <Check className="w-3 h-3" />}
+                                        </button>
+                                        <div className="max-h-60 overflow-y-auto">
+                                            {priceRanges.map((range) => (
+                                                <button key={range.label} onClick={() => { selectBudget(range); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between ${String(minPrice) === String(range.min) && String(maxPrice) === String(range.max) ? "text-blue-600 font-bold" : "text-gray-600"}`}>
+                                                    {range.label} {String(minPrice) === String(range.min) && String(maxPrice) === String(range.max) && <Check className="w-3 h-3" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                  </>
+                )}
+
+                {/* 3. SEARCH BUTTON */}
+                <button
+                    onClick={handleSearch}
+                    className={`bg-red-500 cursor-pointer hover:bg-red-600 text-white font-medium h-full rounded-full lg:rounded-xl transition-colors duration-300 shadow-md flex items-center justify-center whitespace-nowrap flex-shrink-0 z-10 ${isHeader ? "px-4 md:px-6 text-xs" : "px-5 md:px-10 text-sm md:text-base"
+                        }`}
+                >
+                    Search
+                </button>
+            </motion.div>
+        </div>
+    );
+};
+
+export default PropertySearchBar;

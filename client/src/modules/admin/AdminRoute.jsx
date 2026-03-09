@@ -18,6 +18,9 @@ import TestimonialManager from "./pages/TestimonialManager";
 import GeneralSettings from "./pages/settings/GeneralSettings";
 import SellerRequests from "./pages/SellerRequests";
 import SocialMediaManager from "./pages/SocialMediaManager";
+import AdminBannerAds from "./pages/AdminBannerAds";
+import ViewCountManager from "./pages/properties/ViewCountManager";
+
 
 const AdminRoute = () => {
   return (
@@ -46,6 +49,9 @@ const AdminRoute = () => {
         <Route path="marketing-plans" element={<MarketingPlanManager />} />
         <Route path="marketing-requests" element={<MarketingRequests />} />
         <Route path="social-media" element={<SocialMediaManager />} />
+        <Route path="banner-ads" element={<AdminBannerAds />} />
+        <Route path="view-count-manager" element={<ViewCountManager />} />
+
         {/* Settings route can be placeholder too if needed */}
       </Route>
     </Routes>

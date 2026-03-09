@@ -5,6 +5,8 @@ import PropertiesPage from "../pages/PropertiesPage";
 import PropertyDetails from "../pages/PropertyDetails";
 import NotFound from "../../common-pages/NotFound";
 import UserPropertiesPage from "../pages/UserPropertiesPage";
+import PostPropertyLanding from "../pages/PostPropertyLanding";
+import BusinessUserList from "../pages/BusinessUserList";
 
 const HomePageRoute = () => {
   return (
@@ -13,7 +15,9 @@ const HomePageRoute = () => {
         <Route index element={<HomePage />} />
         <Route path="home" element={<HomePage />} />
         <Route path="properties" element={<PropertiesPage />} />
-        <Route path="properties/:id" element={<PropertyDetails />} />
+        <Route path="business-user-list/:businessTypeId" element={<BusinessUserList />} />
+        <Route path="properties/:slug" element={<PropertyDetails />} />
+        <Route path="post-property" element={<PostPropertyLanding />} />
 
         {/* Dynamic Routes for User Properties */}
         <Route

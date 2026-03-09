@@ -11,7 +11,7 @@ exports.getAdvertisedProperties = async (req, res) => {
             advertiseOnSocialMedia: true,
         })
             .populate({
-                path: "seller_id",
+                path: "seller",
                 select: "name email phone business_type customId",
             })
             .sort({ createdAt: -1 }); // Most recent first

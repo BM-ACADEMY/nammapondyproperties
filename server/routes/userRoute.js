@@ -10,13 +10,14 @@ router.post("/create-user", userController.createUser); // Legacy support
 router.post("/login", userController.login);
 router.post("/google-login", userController.googleLogin);
 router.get("/me", protect, userController.getMe);
-router.post("/send-otp", userController.sendOtp);
-router.post("/verify-otp", userController.verifyOtp);
+// router.post("/send-otp", userController.sendOtp); // Disabled
+// router.post("/verify-otp", userController.verifyOtp); // Disabled
 router.post("/reset-password", userController.resetPassword);
 router.get("/refresh-token", protect, userController.refreshToken);
 
 // Public Routes
 router.get("/public-users", userController.getPublicUsers);
+router.get("/sellers-by-business-type/:businessTypeId", userController.getSellersByPropertyBusinessType);
 router.get("/public-user/:id", userController.getPublicUserById);
 
 // User Management Routes (Protected)

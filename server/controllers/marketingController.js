@@ -74,7 +74,7 @@ exports.createRequest = async (req, res) => {
         .json({ success: false, error: "Property not found" });
 
     if (
-      property.seller_id.toString() !== req.user._id.toString() &&
+      property.seller.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res.status(403).json({ success: false, error: "Unauthorized" });
@@ -84,7 +84,7 @@ exports.createRequest = async (req, res) => {
     const existingRequest = await MarketingRequest.findOne({
       property_id,
       plan_id,
-      seller_id: req.user._id,
+      seller: req.user._id,
       status: "pending",
     });
 
@@ -98,7 +98,7 @@ exports.createRequest = async (req, res) => {
     }
 
     const request = await MarketingRequest.create({
-      seller_id: req.user._id,
+      seller: req.user._id,
       property_id,
       plan_id,
       notes,
@@ -112,7 +112,7 @@ exports.createRequest = async (req, res) => {
 
 exports.getSellerRequests = async (req, res) => {
   try {
-    const requests = await MarketingRequest.find({ seller_id: req.user._id })
+    const requests = await MarketingRequest.find({ seller: req.user._id })
       .populate("property_id", "title images price")
       .populate("plan_id", "name price")
       .sort({ createdAt: -1 });
@@ -127,7 +127,7 @@ exports.getSellerRequests = async (req, res) => {
 exports.getAdminRequests = async (req, res) => {
   try {
     const requests = await MarketingRequest.find()
-      .populate("seller_id", "name email phone customId")
+      .populate("seller", "name email phone customId")
       .populate("property_id", "title images price location")
       .populate("plan_id", "name price")
       .sort({ createdAt: -1 });

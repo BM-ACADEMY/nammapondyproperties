@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
+import { useLocation as useAppLocation } from "@/context/LocationContext";
 import { getImageUrl } from "@/utils/imageUrl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,18 +15,36 @@ import {
   ChevronDown,
   Headphones,
   Star,
+  PhoneCall,
+  Search,
+  ChevronRight,
+  MapPin,
+  LocateFixed
 } from "lucide-react";
+import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
+import PropertySearchBar from "../components/PropertySearchBar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
+  const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
+  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
-  const { businessTypes, propertyTypes } = useNav();
+  const { businessTypes, propertyCategories = [] } = useNav();
 
   const userMenuRef = useRef(null);
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const { city, detectLocation, loading: locationLoading } = useAppLocation();
+
+  const isHomePage = location.pathname === "/";
+  const isPropertiesPage = location.pathname === "/properties";
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -51,9 +70,50 @@ const Header = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileSearchOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    let lastScrollTop = 0;
+    const handleScroll = () => {
+      const mainContent = document.getElementById("main-content");
+      if (mainContent) {
+        const scrollTop = mainContent.scrollTop;
+        const threshold = window.innerWidth < 1024 ? 130 : 170;
+
+        setIsScrolled(prev => {
+          if (scrollTop > threshold && !prev) {
+            return true;
+          } else if (scrollTop <= threshold && prev) {
+            setIsMobileSearchOpen(false);
+            return false;
+          }
+          return prev;
+        });
+      }
+    };
+
+    const mainContent = document.getElementById("main-content");
+    if (mainContent) {
+      mainContent.addEventListener("scroll", handleScroll);
+    }
+
+    return () => {
+      if (mainContent) {
+        mainContent.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, [isHomePage]);
+
   const handleLogout = () => {
     logout();
-    navigate("/login");
     setIsMenuOpen(false);
   };
 
@@ -102,116 +162,184 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-[#1a1a1a] backdrop-blur-md border-b border-gray-800 sticky top-0 z-40 transition-all duration-300">
+      <header
+        className={`z-[1000] transition-all duration-500
+          ${isHomePage
+            ? "lg:fixed lg:top-0 lg:left-0 lg:right-0 relative"
+            : "fixed top-0 left-0 right-0"}
+          ${isHomePage
+            ? isScrolled
+              ? "bg-[#166aa8] shadow-lg py-2"
+              : "bg-[white] lg:bg-transparent lg:border-transparent py-2 lg:py-4"
+            : "bg-[#166aa8] py-2"
+          }`}
+      >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo - Left Side */}
-            <Link
-              to="/"
-              className="flex-shrink-0 flex items-center group"
-              onClick={() => {
-                const mainContent = document.getElementById("main-content");
-                if (mainContent) {
-                  mainContent.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              }}
-            >
-              <img
-                src="/Logo/logo.png"
-                alt="NammaPondy Logo"
-                className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-              />
-            </Link>
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
+              {/* Logo - Left Side */}
+              <Link
+                to="/"
+                className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
+                onClick={() => {
+                  const mainContent = document.getElementById("main-content");
+                  if (mainContent) {
+                    mainContent.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
+              >
+                <img
+                  src="/Logo/logo1.png"
+                  alt="NammaPondy Logo"
+                  className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                />
+              </Link>
+
+              {/* Location Picker - Moved next to Logo */}
+              <div className="hidden lg:flex items-center">
+                <button
+                  onClick={detectLocation}
+                  disabled={locationLoading}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                >
+                  <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
+                  <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
+                    {locationLoading ? "Locating..." : city}
+                  </span>
+                </button>
+              </div>
+            </div>
 
             {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
-            <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-              {/* Desktop Navigation */}
-              <nav className="flex items-center space-x-5 xl:space-x-6">
-                {propertyTypes
-                  .filter((type) => {
-                    const name = typeof type === "string" ? type : type?.name;
-                    return (
-                      name &&
-                      typeof name === "string" &&
-                      ["buy", "rent"].includes(name.toLowerCase())
-                    );
-                  })
-                  .map((type) => {
-                    const name = typeof type === "string" ? type : type.name;
+            <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
+
+              {/* Scrolling Search Bar (Reuses PropertySearchBar) */}
+              {(isScrolled && isHomePage) || isPropertiesPage ? (
+                <div className="flex-1 max-w-4xl mx-8">
+                  <PropertySearchBar variant="header" showFilters={false} />
+                </div>
+              ) : (
+                /* Desktop Navigation */
+                <nav className="flex items-center space-x-5 xl:space-x-6">
+                  {propertyCategories.map((category) => {
+                    const name = category; // Sell, Rent
                     return (
                       <Link
                         key={name}
-                        to={`/properties?type=${encodeURIComponent(name)}`}
-                        className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                        to={`/properties?category=${encodeURIComponent(name)}`}
+                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                       >
                         For {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
                     );
                   })}
 
-                {businessTypes.map((type) => {
-                  const id = type._id?.toString() || type.name;
-                  const name =
-                    typeof type.name === "string"
-                      ? type.name
-                      : type.name?.name || "Unknown";
-                  return (
-                    <Link
-                      key={id}
-                      to={`/properties?businessType=${id}`}
-                      className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
-                    >
-                      {name}
-                    </Link>
-                  );
-                })}
+                  {businessTypes.map((type) => {
+                    const id = type._id?.toString() || type.name;
+                    const name =
+                      typeof type.name === "string"
+                        ? type.name
+                        : type.name?.name || "Unknown";
+                    return (
+                      <Link
+                        key={id}
+                        to={`/business-user-list/${id}`}
+                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
+                      >
+                        {name}
+                      </Link>
+                    );
+                  })}
 
-                <Link
-                  to="/contact"
-                  className="text-gray-300 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
-                >
-                  Contact
-                </Link>
-              </nav>
+                  {/* <Link
+                    to="/contact"
+                    className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                  >
+                    Contact
+                  </Link> */}
+                </nav>
+              )}
 
               {/* Divider */}
-              <div className="h-6 w-px bg-gray-700 mx-2"></div>
+              <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
               {/* Actions */}
               <div className="flex items-center space-x-4 lg:space-x-5">
                 {/* Post Property Button */}
                 <button
                   onClick={() => {
-                    if (isAuthenticated) {
-                      const role =
-                        user?.role_id?.role_name?.toUpperCase() ||
-                        user?.role?.name?.toUpperCase();
-                      if (role === "ADMIN") {
-                        navigate("/admin/properties/add");
-                      } else if (role === "SELLER") {
-                        navigate("/seller/add-property");
-                      } else {
-                        navigate("/add-property");
-                      }
-                    } else {
-                      navigate("/login", { state: { from: "/add-property" } });
-                    }
+                    navigate("/post-property");
                   }}
                   className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
                 >
                   <span className="text-[14px]">Post property</span>
-                  <span className="ml-2 bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded">
+                  <span className="relative overflow-hidden ml-2 bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded before:absolute before:inset-0 before:-translate-x-full before:animate-[shine_3s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent">
                     FREE
                   </span>
                 </button>
 
-                {/* Support/Headphones Icon */}
+                {/* Support/Headphones Icon Dropdown */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => setIsContactMenuOpen(true)}
+                  onMouseLeave={() => setIsContactMenuOpen(false)}
+                >
+                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none">
+                    <Headphones className="h-5 w-5" />
+                  </button>
+
+                  <AnimatePresence>
+                    {isContactMenuOpen && (
+                      <motion.div
+                        variants={dropdownVariants}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-6 px-6 z-50 overflow-hidden cursor-default"
+                      >
+                        <h3 className="text-[#003366] font-bold text-[13px] tracking-wide mb-6">
+                          CONTACT US
+                        </h3>
+
+                        <div className="flex items-start mb-6">
+                          <PhoneCall className="h-5 w-5 text-[#4A5568] mt-1 mr-4 shrink-0" />
+                          <div>
+                            <p className="text-[#A0AEC0] text-[13px] font-medium tracking-wide">
+                              Toll Free | 9:30 AM to 6:30 PM
+                            </p>
+                            <p className="text-[#A0AEC0] text-[13px] font-medium tracking-wide">
+                              (Mon-Sun)
+                            </p>
+                            <p className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide">
+                              1800-41-99099
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setIsContactMenuOpen(false);
+                            setIsCallbackModalOpen(true);
+                          }}
+                          className="w-full border-2 border-[#0056b3] text-[#0056b3] hover:bg-[#0056b3] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
+                        >
+                          <PhoneCall className="h-4 w-4" />
+                          <span>Request a Call Back</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Favorites icon is commented out as requested */}
+                {/*
                 <Link
                   to="/favorites"
                   className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm"
                 >
                   <Heart className="h-5 w-5" />
                 </Link>
+                */}
 
                 {/* USER PROFILE DROPDOWN (NEW LIGHT DESIGN) */}
                 {isAuthenticated ? (
@@ -235,7 +363,7 @@ const Header = () => {
                           )}
                         </div>
                         {/* Red Notification Dot */}
-                        <div className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-[#1a1a1a] rounded-full"></div>
+                        <div className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-[#166aa8] rounded-full"></div>
                       </div>
                       <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors ml-1" />
                     </button>
@@ -327,7 +455,7 @@ const Header = () => {
                                     My Reviews
                                   </span>
                                 </Link>
-                                <Link
+                                {/* <Link
                                   to="/favorites"
                                   onClick={() => setIsUserMenuOpen(false)}
                                   className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
@@ -336,7 +464,7 @@ const Header = () => {
                                   <span className="group-hover:translate-x-1 transition-transform">
                                     Favorites
                                   </span>
-                                </Link>
+                                </Link> */}
                               </>
                             )}
                           </div>
@@ -383,15 +511,18 @@ const Header = () => {
                           className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 z-50 border border-gray-100 overflow-hidden"
                         >
                           <div className="px-2">
-                            <Link
-                              to="/login"
-                              className="flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
+                            <button
+                              onClick={() => {
+                                setIsLoginMenuOpen(false);
+                                navigate("/login");
+                              }}
+                              className="w-full flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
                             >
                               <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
                               <span className="group-hover:translate-x-1 transition-transform">
-                                Login / Register
+                                Login
                               </span>
-                            </Link>
+                            </button>
                           </div>
                         </motion.div>
                       )}
@@ -402,21 +533,70 @@ const Header = () => {
             </div>
 
             {/* Mobile Menu Toggle - Visible below lg */}
-            <div className="lg:hidden flex items-center space-x-3">
-              <Link
-                to="/favorites"
-                className="text-gray-300 p-2 hover:text-white transition-colors"
-              >
-                <Heart className="h-6 w-6" />
-              </Link>
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="text-gray-300 hover:text-white hover:bg-gray-800 p-2 rounded-lg focus:outline-none transition-colors"
-              >
-                <Menu className="h-7 w-7" />
-              </button>
+            <div className={`lg:hidden flex items-center ${isMobileSearchOpen ? "flex-1 ml-2" : "space-x-3"}`}>
+              {isMobileSearchOpen ? (
+                <div className="flex items-center w-full gap-2 transition-all duration-300">
+                  <div className="flex-1">
+                    <PropertySearchBar variant="header" showFilters={false} />
+                  </div>
+                  <button
+                    onClick={() => setIsMobileSearchOpen(false)}
+                    className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${isHomePage && !isScrolled
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300"
+                      }`}
+                  >
+                    <X className="h-7 w-7" />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Mobile Location Picker */}
+                  <button
+                    onClick={detectLocation}
+                    disabled={locationLoading}
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300"
+                      }`}
+                  >
+                    <MapPin className={`h-6 w-6 ${locationLoading ? "animate-pulse" : ""}`} />
+                  </button>
+                  {/* Mobile Contact/Search Button */}
+                  <button
+                    onClick={() => {
+                      if (isScrolled) {
+                        setIsMobileSearchOpen(true); // Open full search
+                      } else {
+                        setIsCallbackModalOpen(true);
+                      }
+                    }}
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300"
+                      }`}
+                  >
+                    {isScrolled ? (
+                      <Search className="h-6 w-6" />
+                    ) : (
+                      <Headphones className="h-6 w-6" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setIsMenuOpen(true)}
+                    className={`p-2 rounded-lg focus:outline-none transition-colors ${isHomePage && !isScrolled
+                      ? "text-slate-800 hover:bg-slate-100"
+                      : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
+                      }`}
+                  >
+                    <Menu className="h-7 w-7" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
+
+          {/* Legacy Mobile Search Bar Expansion - Removed as it's now integrated in the header line */}
         </div>
       </header>
 
@@ -430,175 +610,131 @@ const Header = () => {
               animate="visible"
               exit="exit"
               onClick={() => setIsMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[1001] lg:hidden"
             />
             <motion.div
               variants={sidebarVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[#1a1a1a] border-l border-gray-800 shadow-2xl z-50 lg:hidden flex flex-col overflow-hidden"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white shadow-2xl z-[1001] lg:hidden flex flex-col overflow-hidden"
             >
-              <div className="flex items-center justify-between p-5 border-b border-gray-800 bg-[#1a1a1a]">
-                <Link
-                  to="/"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    const mainContent = document.getElementById("main-content");
-                    if (mainContent) {
-                      mainContent.scrollTo({ top: 0, behavior: "smooth" });
-                    }
-                  }}
-                >
-                  <img src="/Logo/logo.png" alt="Logo" className="h-12 w-auto" />
-                </Link>
+              <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-slate-50">
+                {!isAuthenticated ? (
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/login");
+                    }}
+                    className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase"
+                  >
+                    <User className="h-6 w-6 mr-2 text-slate-700" />
+                    LOGIN / REGISTER
+                  </button>
+                ) : (
+                  <div className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase truncate">
+                    <User className="h-6 w-6 mr-2 text-slate-700 shrink-0" />
+                    <span className="truncate">{user?.name || "PROFILE"}</span>
+                  </div>
+                )}
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-2 rounded-full hover:bg-[#333333] text-gray-400 hover:text-white transition-colors"
+                  className="p-2 rounded-full hover:bg-gray-200 text-slate-500 hover:text-slate-800 transition-colors"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                {isAuthenticated ? (
-                  <div className="bg-[#242424] rounded-xl p-4 border border-gray-700">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-[#1a1a1a] shadow-sm ring-2 ring-gray-700">
-                        {user?.profile_image ? (
-                          <img
-                            src={getImageUrl(user.profile_image)}
-                            alt={user.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center bg-gray-700 text-white font-bold text-lg">
-                            {user?.name?.[0]?.toUpperCase() || "U"}
-                          </div>
-                        )}
-                      </div>
-                      <div className="overflow-hidden">
-                        <p className="font-bold text-white truncate">
-                          {user?.name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {user?.email}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
-                        user?.role?.name?.toUpperCase() === "ADMIN" ? (
-                        <Link
-                          to="/admin/dashboard"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors col-span-2 shadow-sm"
-                        >
-                          Dashboard
-                        </Link>
-                      ) : user?.role_id?.role_name?.toUpperCase() ===
-                        "SELLER" ||
-                        user?.role?.name?.toUpperCase() === "SELLER" ? (
-                        <Link
-                          to="/seller/dashboard"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors col-span-2 shadow-sm"
-                        >
-                          Dashboard
-                        </Link>
-                      ) : (
-                        <>
-                          <Link
-                            to="/user/profile"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors shadow-sm"
-                          >
-                            Profile
-                          </Link>
-                          <Link
-                            to="/user/reviews"
-                            onClick={() => setIsMenuOpen(false)}
-                            className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-gray-200 hover:text-white hover:bg-[#404040] transition-colors shadow-sm"
-                          >
-                            Reviews
-                          </Link>
-                        </>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="flex justify-center py-2 bg-[#333333] rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors col-span-2 shadow-sm mt-1"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-3">
-                    <Link
-                      to="/login"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="flex justify-center px-4 py-3 bg-white text-gray-900 hover:bg-gray-200 transition-colors rounded-xl text-sm font-semibold shadow-md"
+
+              <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+                {/* Banner Card */}
+                <div className="bg-[#e6f4ea] rounded-xl p-4 relative overflow-hidden flex flex-col justify-center min-h-[140px]">
+                  <div className="relative z-10 w-[60%]">
+                    <h3 className="font-bold text-[#1E293B] leading-tight mb-3 text-[15px]">
+                      Sell or rent faster at the right price!
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        navigate("/post-property");
+                      }}
+                      className="bg-[#0078d7] hover:bg-[#005bb5] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
                     >
-                      Login / Register
-                    </Link>
+                      Post Property
+                    </button>
+                  </div>
+                  <div
+                    className="absolute bottom-0 right-0 w-[50%] h-full bg-contain bg-no-repeat bg-bottom"
+                    style={{ backgroundImage: "url(/properties/adsman.png)" }}
+                  ></div>
+                </div>
+
+                {/* Authentication Links */}
+                {isAuthenticated && (
+                  <div className="space-y-1">
+                    {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
+                      user?.role?.name?.toUpperCase() === "ADMIN" ? (
+                      <Link
+                        to="/admin/dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                      >
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
+                      </Link>
+                    ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
+                      user?.role?.name?.toUpperCase() === "SELLER" ? (
+                      <Link
+                        to="/seller/dashboard"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                      >
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
+                      </Link>
+                    ) : (
+                      <>
+                        <Link
+                          to="/user/profile"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                        >
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Profile
+                        </Link>
+                        <Link
+                          to="/user/reviews"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                        >
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Reviews
+                        </Link>
+                      </>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-2 py-3 text-red-500 hover:bg-red-50 transition-colors rounded-lg text-[15px]"
+                    >
+                      <ChevronRight className="w-4 h-4 mr-2 text-red-400" /> Logout
+                    </button>
                   </div>
                 )}
+
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-gray-200 uppercase tracking-wider mb-3 ml-1">
-                    Menu
+                  <p className="text-[15px] font-medium text-slate-800 mb-2">
+                    Explore our Services
                   </p>
+                  <div className="border-t border-gray-100 mb-2"></div>
 
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      if (isAuthenticated) {
-                        const role =
-                          user?.role_id?.role_name?.toUpperCase() ||
-                          user?.role?.name?.toUpperCase();
-                        if (role === "ADMIN") {
-                          navigate("/admin/properties/add");
-                        } else if (role === "SELLER") {
-                          navigate("/seller/add-property");
-                        } else {
-                          navigate("/add-property");
-                        }
-                      } else {
-                        navigate("/login", {
-                          state: { from: "/add-property" },
-                        });
-                      }
-                    }}
-                    className="flex items-center w-full px-4 py-3 bg-white text-[#003366] hover:bg-gray-100 transition-colors rounded-xl font-bold mb-2 shadow-sm"
-                  >
-                    <span className="flex-1 text-left text-[14px]">
-                      Post Properties
-                    </span>
-                    <span className="bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded">
-                      FREE
-                    </span>
-                  </button>
-
-                  {propertyTypes
-                    .filter((type) => {
-                      const name = typeof type === "string" ? type : type?.name;
-                      return (
-                        name &&
-                        typeof name === "string" &&
-                        ["buy", "rent"].includes(name.toLowerCase())
-                      );
-                    })
-                    .map((type) => {
-                      const name = typeof type === "string" ? type : type.name;
-                      return (
-                        <Link
-                          key={name}
-                          to={`/properties?type=${encodeURIComponent(name)}`}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium"
-                        >
-                          For {name.charAt(0).toUpperCase() + name.slice(1)}
-                        </Link>
-                      );
-                    })}
+                  {propertyCategories.map((category) => {
+                    const name = category;
+                    return (
+                      <Link
+                        key={name}
+                        to={`/properties?category=${encodeURIComponent(name)}`}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
+                      >
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> For {name.charAt(0).toUpperCase() + name.slice(1)}
+                      </Link>
+                    );
+                  })}
 
                   {businessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
@@ -609,28 +745,35 @@ const Header = () => {
                     return (
                       <Link
                         key={id}
-                        to={`/properties?businessType=${id}`}
+                        to={`/business-user-list/${id}`}
                         onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium capitalize"
+                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px] capitalize"
                       >
-                        {name}
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name}
                       </Link>
                     );
                   })}
 
-                  <Link
+                  <div className="border-t border-gray-100 my-2"></div>
+
+                  {/* <Link
                     to="/contact"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center px-4 py-3 text-gray-300 hover:bg-[#242424] hover:text-white transition-colors rounded-xl font-medium"
+                    className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                   >
-                    Contact
-                  </Link>
+                    <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Contact
+                  </Link> */}
                 </div>
               </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+
+      <RequestCallBackModal
+        isOpen={isCallbackModalOpen}
+        onClose={() => setIsCallbackModalOpen(false)}
+      />
     </>
   );
 };

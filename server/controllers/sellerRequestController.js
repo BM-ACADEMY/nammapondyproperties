@@ -30,11 +30,7 @@ exports.getAllRequests = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate({
         path: "seller_id",
-        select: "name email businessType",
-        populate: {
-          path: "businessType",
-          select: "name",
-        },
+        select: "name email phone profile_image",
       });
     res.json(requests);
   } catch (error) {

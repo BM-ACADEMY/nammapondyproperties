@@ -58,6 +58,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Add Property",
           onClick: () => handleMenuClick("/admin/properties/add"),
         },
+        {
+          key: "/admin/view-count-manager",
+          label: "View Count Manager",
+          onClick: () => handleMenuClick("/admin/view-count-manager"),
+        },
       ],
     },
     {
@@ -130,6 +135,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Approval Types",
           onClick: () => handleMenuClick("/admin/approval-types"),
         },
+        {
+          key: "/admin/banner-ads",
+          label: "Banner Ads",
+          onClick: () => handleMenuClick("/admin/banner-ads"),
+        },
       ],
     },
   ];
@@ -181,6 +191,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         open={!collapsed}
         styles={{ body: { padding: 0, background: "#001529" } }}
         width={250}
+        size="default"
       >
         {SidebarContent}
       </Drawer>

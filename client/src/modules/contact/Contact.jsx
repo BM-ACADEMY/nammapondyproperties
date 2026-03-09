@@ -6,7 +6,7 @@ import {
   LikeOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 
 const { TextArea } = Input;
 
@@ -129,7 +129,7 @@ export default function ContactHeroLayout() {
             </Col>
 
             {/* --- RIGHT SIDE: WHITE FLOATING CARD --- */}
-            <Col xs={24} lg={11}>
+            <Col xs={24} lg={11} className="mt-8 lg:mt-16">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden transform hover:-translate-y-1 transition-transform duration-500">
                 {/* Gold Top Bar */}
                 <div className="h-2 w-full bg-[#D4AF37]"></div>

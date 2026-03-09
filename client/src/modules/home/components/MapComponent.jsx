@@ -25,14 +25,14 @@ const UpdateMapCenter = ({ properties }) => {
   useEffect(() => {
     if (properties.length > 0) {
       const validProperties = properties.filter(
-        (p) => p.location?.latitude && p.location?.longitude,
+        (p) => p.location?.coordinates?.lat && p.location?.coordinates?.lng,
       );
 
       if (validProperties.length > 0) {
         const bounds = L.latLngBounds(
           validProperties.map((p) => [
-            p.location.latitude,
-            p.location.longitude,
+            p.location.coordinates.lat,
+            p.location.coordinates.lng,
           ]),
         );
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
@@ -67,38 +67,40 @@ const MapComponent = ({ properties }) => {
 
         {properties.map((property) => {
           // Skip if no valid coordinates
-          if (!property.location?.latitude || !property.location?.longitude)
+          if (!property.location?.coordinates?.lat || !property.location?.coordinates?.lng)
             return null;
 
           return (
             <Marker
               key={property._id}
               position={[
-                property.location.latitude,
-                property.location.longitude,
+                property.location.coordinates.lat,
+                property.location.coordinates.lng,
               ]}
             >
               <Popup>
                 <div className="min-w-[200px]">
                   <Link
-                    to={`/properties/${property._id}`}
+                    to={`/properties/${property.slug || property._id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="block group"
                   >
                     <div className="relative h-32 w-full mb-2 rounded-md overflow-hidden">
                       <img
-                        src={getImageUrl(property.images?.[0]?.image_url)}
-                        alt={property.title}
+                        src={getImageUrl(property.media?.featuredImage || property.media?.images?.[0])}
+                        alt={property.basicInfo?.title || "Property"}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                     <h3 className="font-bold text-gray-900 text-sm mb-1 leading-tight">
-                      {property.title}
+                      {property.basicInfo?.title || "Untitled Property"}
                     </h3>
                     <p className="text-xs text-gray-600 mb-1 truncate">
                       {property.location?.city || "Unknown City"}
                     </p>
                     <p className="text-sm font-semibold text-blue-600">
-                      {formatIndianPrice(property.price)}
+                      {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
                     </p>
                   </Link>
                 </div>

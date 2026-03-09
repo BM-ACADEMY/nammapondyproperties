@@ -41,18 +41,18 @@ exports.createUser = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
 
-    if (!email && !phone) {
-      return res.status(400).json({ error: "Email or Phone is required" });
+    if (!phone) {
+      return res.status(400).json({ error: "Phone number is required" });
+    }
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
-    });
+    const existingUser = await User.findOne({ phone });
 
     if (existingUser) {
-      const field = existingUser.email === email ? "Email" : "Phone";
-      return res.status(400).json({ error: `${field} already in use` });
+      return res.status(400).json({ error: "Phone number already in use" });
     }
 
     // Get Role
@@ -67,6 +67,7 @@ exports.createUser = async (req, res) => {
     }
 
     const userRole = await Role.findOne({ role_name: roleName });
+    let role_id;
     if (!userRole) {
       const defaultRole = await Role.findOne({ role_name: "user" });
       if (!defaultRole)
@@ -81,17 +82,21 @@ exports.createUser = async (req, res) => {
 
     const user = new User({
       name: name || "User",
-      email,
+      email, // Optional now
       phone,
       password,
-      role_id: userRole._id,
+      role_id: role_id,
       businessType: req.body.businessType || null,
-      isVerified: true, // Auto-verify for immediate login
+      isVerified: true, // Auto-verify as we are not using OTP/Email verification anymore
       customId,
       referralCode,
     });
 
     await user.save();
+
+    // Populate for response
+    const populatedUser = await User.findById(user._id)
+      .populate("role_id");
 
     // Generate token for auto-login
     const token = generateToken(user._id);
@@ -99,7 +104,7 @@ exports.createUser = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Account created successfully",
-      user: { ...user.toObject(), password: undefined },
+      user: { ...populatedUser.toObject(), password: undefined },
       token,
     });
   } catch (error) {
@@ -124,13 +129,9 @@ exports.getUsers = async (req, res) => {
       }
     }
 
-    if (req.query.businessType) {
-      query.businessType = req.query.businessType;
-    }
 
     const users = await User.find(query)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -159,8 +160,7 @@ exports.getPublicUsers = async (req, res) => {
     }
 
     const users = await User.find(query)
-      .select("name email phone profile_image businessType role_id isVerified") // Select only public fields
-      .populate("businessType")
+      .select("name email phone profile_image role_id isVerified") // Select only public fields
       .populate("role_id")
       .limit(parseInt(limit) || 20);
 
@@ -173,8 +173,7 @@ exports.getPublicUsers = async (req, res) => {
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name email phone profile_image businessType role_id isVerified") // Select only public fields
-      .populate("businessType")
+      .select("name email phone profile_image role_id isVerified") // Select only public fields
       .populate("role_id");
 
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -188,8 +187,7 @@ exports.getPublicUserById = async (req, res) => {
 exports.getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -202,10 +200,6 @@ exports.updateUser = async (req, res) => {
     const userId = req.params.id;
     let updateData = req.body;
 
-    // Sanitize businessType if it's an empty string to prevent ObjectId casting error
-    if (updateData.businessType === "") {
-      updateData.businessType = null;
-    }
 
     // Check if image was uploaded
     if (req.file) {
@@ -247,8 +241,7 @@ exports.updateUser = async (req, res) => {
     const user = await User.findByIdAndUpdate(userId, updateData, {
       new: true,
     })
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -290,93 +283,28 @@ exports.deleteUser = async (req, res) => {
 };
 
 exports.sendOtp = async (req, res) => {
-  const { email, phone, otpEmail } = req.body;
-  const identifier = email || phone;
-  try {
-    const user = await User.findOne({
-      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    // Use otpEmail if provided, otherwise fallback to user's registered email
-    const targetEmail = otpEmail || user.email;
-    if (!targetEmail) {
-      return res.status(400).json({
-        error: "No email provided for OTP",
-        requiresEmail: true,
-      });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit numeric OTP
-    user.otp = otp;
-    user.otpExpires = Date.now() + 10 * 60 * 1000; // 10 min expiry
-    await user.save();
-
-    await sendEmail(
-      targetEmail,
-      "Your OTP Code",
-      `Your OTP is ${otp}. It expires in 10 minutes.`,
-    );
-    res.json({
-      message: "OTP sent to email",
-      email: targetEmail,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  res.status(410).json({ error: "OTP service is deprecated. Use password login." });
 };
 
 exports.verifyOtp = async (req, res) => {
-  const { email, phone, otp } = req.body;
-  try {
-    const user = await User.findOne({
-      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
-    });
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    if (user.otp !== otp || user.otpExpires < Date.now()) {
-      return res.status(400).json({ error: "Invalid or expired OTP" });
-    }
-
-    // Persist recovery email if user doesn't have one
-    if (!user.email && email) {
-      user.email = email;
-    }
-
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-
-    res.json({ message: "OTP verified successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  res.status(410).json({ error: "OTP service is deprecated. Use password login." });
 };
 
 exports.login = async (req, res) => {
-  const { email, phone, password, verifiedViaOtp } = req.body;
-  const loginIdentifier = email || phone;
+  const { phone, password } = req.body;
 
   try {
-    const user = await User.findOne({
-      $or: [{ email: loginIdentifier }, { phone: loginIdentifier }],
-    })
-      .select("+password")
-      .populate("role_id")
-      .populate("businessType");
-    if (!user) return res.status(401).json({ error: "User not found" });
-    if (!user.isVerified)
-      return res.status(403).json({ error: "Account not verified" });
-
-    let authenticated = false;
-
-    if (verifiedViaOtp === true) {
-      // Came from OTP flow → already verified in verifyOtp
-      authenticated = true;
-    } else if (password) {
-      authenticated = await user.comparePassword(password);
+    if (!phone || !password) {
+      return res.status(400).json({ error: "Phone and password are required" });
     }
+
+    const user = await User.findOne({ phone })
+      .select("+password")
+      .populate("role_id");
+
+    if (!user) return res.status(401).json({ error: "User not found" });
+
+    const authenticated = await user.comparePassword(password);
 
     if (!authenticated) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -395,65 +323,60 @@ exports.login = async (req, res) => {
 };
 
 exports.googleLogin = async (req, res) => {
-  const { credential } = req.body;
+  const { tokenId } = req.body;
 
   try {
     const ticket = await client.verifyIdToken({
-      idToken: credential,
+      idToken: tokenId,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const payload = ticket.getPayload();
-    const { email, name, picture, sub: googleId } = payload;
+    const { name, email, picture, sub: googleId } = ticket.getPayload();
 
-    let user = await User.findOne({ email })
-      .populate("role_id")
-      .populate("businessType");
+    let user = await User.findOne({
+      $or: [{ googleId }, { email }]
+    }).populate("role_id");
 
     if (!user) {
-      // Get default "user" role
+      // Find Default Role
       const userRole = await Role.findOne({ role_name: "user" });
-      if (!userRole) {
-        return res.status(500).json({ error: "Default user role not found" });
-      }
 
-      // Create new user if not exists
+      const customId = `USER-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
+      const referralCode = `REF-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+
       user = new User({
         name,
         email,
-        isVerified: true,
-        role_id: userRole._id,
         googleId,
         profile_image: picture,
+        role_id: userRole?._id,
+        isVerified: true,
+        customId,
+        referralCode,
+        // No password or phone initially for Google users
       });
       await user.save();
+
+      // Populate for response
       user = await User.findById(user._id).populate("role_id");
     } else {
-      // Sync profile image if missing and provided by Google
-      let updated = false;
-      if (!user.profile_image && picture) {
-        user.profile_image = picture;
-        updated = true;
-      }
-      // Sync googleId if missing
+      // Update googleId if not present (case where email matched)
       if (!user.googleId) {
         user.googleId = googleId;
-        updated = true;
-      }
-      if (updated) {
+        if (!user.profile_image) user.profile_image = picture;
         await user.save();
       }
     }
 
+    const token = generateToken(user._id);
     res.json({
       success: true,
-      message: "Google login successful",
+      token,
       user: { ...user.toObject(), password: undefined },
-      token: generateToken(user._id),
     });
   } catch (error) {
     console.error("Google Login Error:", error);
-    res.status(400).json({ error: "Google authentication failed" });
+    res.status(500).json({ error: "Google Authentication failed" });
   }
 };
 
@@ -461,26 +384,17 @@ exports.googleLogin = async (req, res) => {
 // controllers/userController.js → resetPassword
 
 exports.resetPassword = async (req, res) => {
-  const { email, phone, newPassword } = req.body;
+  const { phone, newPassword } = req.body;
 
   try {
-    const user = await User.findOne({
-      $or: [...(email ? [{ email }] : []), ...(phone ? [{ phone }] : [])],
-    });
+    if (!phone || !newPassword) {
+      return res.status(400).json({ error: "Phone and new password are required" });
+    }
+
+    const user = await User.findOne({ phone });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
-    }
-
-    // Persist recovery email if user doesn't have one
-    if (!user.email && email) {
-      user.email = email;
-    }
-
-    if (!user.isVerified) {
-      return res
-        .status(403)
-        .json({ error: "Account not verified. Please verify first." });
     }
 
     user.password = newPassword;
@@ -496,8 +410,7 @@ exports.resetPassword = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     res.status(200).json({
       success: true,
       user,
@@ -647,16 +560,14 @@ exports.upgradeToSeller = async (req, res) => {
     }
 
     const updateData = {
-      role_id: sellerRole._id,
-      businessType: businessType,
+      role_id: sellerRoleId._id,
     };
 
     if (name) updateData.name = name;
     if (phone) updateData.phone = phone;
 
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true })
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
 
     if (!user) return res.status(404).json({ error: "User not found" });
 
@@ -684,8 +595,7 @@ exports.upgradeToSeller = async (req, res) => {
 exports.refreshToken = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate("role_id")
-      .populate("businessType");
+      .populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json({
@@ -695,5 +605,24 @@ exports.refreshToken = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
+  }
+};
+
+exports.getSellersByPropertyBusinessType = async (req, res) => {
+  try {
+    const { businessTypeId } = req.params;
+    const Property = require("../models/Property");
+
+    // Find all properties with the given business type and get unique sellers
+    const sellersIds = await Property.find({ businessType: businessTypeId }).distinct("seller");
+
+    // Fetch the user details for these sellers
+    const sellers = await User.find({ _id: { $in: sellersIds } })
+      .select("name email phone profile_image role_id isVerified")
+      .populate("role_id");
+
+    res.json(sellers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

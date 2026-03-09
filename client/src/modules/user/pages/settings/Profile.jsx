@@ -23,9 +23,7 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    businessType: "",
   });
-  const [businessTypes, setBusinessTypes] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -34,31 +32,10 @@ const Profile = () => {
       setFormData({
         name: user.name || "",
         phone: user.phone || "",
-        businessType: user.businessType?._id || user.businessType || "",
       });
     }
   }, [user]);
 
-  useEffect(() => {
-    const fetchBusinessTypes = async () => {
-      try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/business-types?status=active`,
-        );
-        setBusinessTypes(response.data);
-      } catch (error) {
-        console.error("Error fetching business types:", error);
-      }
-    };
-    if (
-      user &&
-      (user.role?.name === "SELLER" ||
-        user.role?.name === "AGENT" ||
-        user.role?.name === "BUILDER")
-    ) {
-      fetchBusinessTypes();
-    }
-  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -133,11 +110,10 @@ const Profile = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 px-6 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 backdrop-blur-md border ${
-                message.type === "success"
+              className={`fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 px-6 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 backdrop-blur-md border ${message.type === "success"
                   ? "bg-green-500/90 text-white border-green-400"
                   : "bg-red-500/90 text-white border-red-400"
-              }`}
+                }`}
             >
               {message.type === "success" ? (
                 <CheckCircle size={18} />
@@ -349,47 +325,6 @@ const Profile = () => {
                   </div>
                 </div>
 
-                {/* Business Type Selection */}
-                {(user.role?.name === "SELLER" ||
-                  user.role?.name === "AGENT" ||
-                  user.role?.name === "BUILDER") && (
-                  <div className="group">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                      Business Type
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <Briefcase size={18} />
-                      </div>
-                      {isEditing ? (
-                        <select
-                          name="businessType"
-                          value={formData.businessType}
-                          onChange={handleInputChange}
-                          className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900 appearance-none"
-                        >
-                          <option value="">Select Business Type</option>
-                          {businessTypes.map((type) => {
-                            const id = type._id?.toString() || type.name;
-                            const name =
-                              typeof type.name === "string"
-                                ? type.name
-                                : type.name?.name || "Unknown";
-                            return (
-                              <option key={id} value={id}>
-                                {name}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      ) : (
-                        <div className="block w-full pl-10 pr-3 py-2.5 text-gray-700 bg-white border border-transparent border-b-gray-100">
-                          {user.businessType?.name || "Not Selected"}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </motion.div>
