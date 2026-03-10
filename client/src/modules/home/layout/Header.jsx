@@ -321,7 +321,7 @@ const Header = () => {
                             setIsContactMenuOpen(false);
                             setIsCallbackModalOpen(true);
                           }}
-                          className="w-full border-2 border-[#0056b3] text-[#0056b3] hover:bg-[#0056b3] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
+                          className="w-full border-2 border-[#3070fc] text-[#0056b3] hover:bg-[#3070fc] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
                         >
                           <PhoneCall className="h-4 w-4" />
                           <span>Request a Call Back</span>
@@ -455,18 +455,19 @@ const Header = () => {
                                     My Reviews
                                   </span>
                                 </Link>
-                                {/* <Link
-                                  to="/favorites"
-                                  onClick={() => setIsUserMenuOpen(false)}
-                                  className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
-                                >
-                                  <Heart className="h-4 w-4 mr-3 text-gray-400 group-hover:text-pink-500 transition-colors" />
-                                  <span className="group-hover:translate-x-1 transition-transform">
-                                    Favorites
-                                  </span>
-                                </Link> */}
                               </>
                             )}
+
+                            <Link
+                              to="/favorites"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center px-4 py-2.5 mx-1 text-sm font-medium text-gray-600 hover:bg-blue-50/50 hover:text-blue-600 rounded-xl transition-all group"
+                            >
+                              <Heart className="h-4 w-4 mr-3 text-gray-400 group-hover:text-pink-500 transition-colors" />
+                              <span className="group-hover:translate-x-1 transition-transform">
+                                My Wishlist
+                              </span>
+                            </Link>
                           </div>
 
                           {/* Action - Sign out */}
