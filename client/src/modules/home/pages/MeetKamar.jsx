@@ -44,7 +44,6 @@ const MeetKamar = () => {
                         src="kamar1.png"
                         alt="Kamar - Asset Manager"
                         className="absolute bottom-0 right-0 md:right-8 w-auto h-[100%] md:h-[115%] max-w-none object-contain object-bottom z-20 transition-transform duration-300 pointer-events-none group-hover:scale-[1.02]"
-                        className="absolute bottom-0 right-0 md:right-8 w-auto h-[100%] md:h-[115%] max-w-none object-contain object-bottom z-20 transition-transform duration-300 pointer-events-none"
                         onError={(e) => {
                             e.target.src = "/properties/adsman.png";
                         }}
