@@ -10,7 +10,7 @@ const MeetKamar = () => {
                 className="max-w-[1100px] mx-auto relative flex flex-col md:flex-row items-stretch min-h-[520px] cursor-pointer group block"
             >
                 {/* Background Layer */}
-                <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#f8faf9] via-[#f1f7f5] to-[#e6f2ee] shadow-sm border border-white/40 overflow-hidden z-0 transition-transform duration-300 group-hover:scale-[1.01]"></div>
+                <div className="absolute inset-0 rounded-[2rem] bg-[#d7f2e3] shadow-sm border border-white/40 overflow-hidden z-0 transition-transform duration-300 group-hover:scale-[1.01]"></div>
 
                 {/* Left Side: Text Content */}
                 <div className="flex-1 p-10 md:p-14 lg:p-16 z-10 flex flex-col justify-center relative pointer-events-none">

@@ -23,6 +23,8 @@ import {
   Wifi,
   Car,
   ShieldCheck,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -37,6 +39,13 @@ import { formatNumber } from "../../../utils/formatNumber";
 import Loader from "../../../components/Common/Loader";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 import { getImageUrl } from "../../../utils/imageUrl";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import PropertyCard from "../components/PropertyCard";
 
 // Fix for default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
@@ -61,6 +70,7 @@ const PropertyDetails = () => {
   const location = useLocation();
 
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedEnquiryProperty, setSelectedEnquiryProperty] = useState(null);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -112,8 +122,10 @@ const PropertyDetails = () => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  const handleWhatsAppClick = () => {
-    if (!property || !property.seller) {
+  const handleWhatsAppClick = (e = null, clickedProp = null) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const targetProp = clickedProp || property;
+    if (!targetProp || !targetProp.seller) {
       toast.error("Seller information missing");
       return;
     }
@@ -121,28 +133,29 @@ const PropertyDetails = () => {
       toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
     } else if (!user.phone) {
+      setSelectedEnquiryProperty(targetProp);
       setShowPhoneModal(true);
     } else {
-      submitEnquiry(user.name, user.email, user.phone);
+      submitEnquiry(user.name, user.email, user.phone, targetProp);
     }
   };
 
-  const submitEnquiry = async (name, email, phone) => {
-    if (!property || !property.seller) return;
+  const submitEnquiry = async (name, email, phone, targetProp = selectedEnquiryProperty || property) => {
+    if (!targetProp || !targetProp.seller) return;
     setEnquiryLoading(true);
 
-    const sellerPhone = property.seller.phone || "919000000000";
+    const sellerPhone = targetProp.seller.phone || "919000000000";
     const locationStr =
-      typeof property.location === "string"
-        ? property.location
-        : `${property.location?.city || ""}, ${property.location?.state || ""}`;
-    const message = `Hi, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${locationStr}. Please provide more details.`;
+      typeof targetProp.location === "string"
+        ? targetProp.location
+        : `${targetProp.location?.city || ""}, ${targetProp.location?.state || ""}`;
+    const message = `Hi, I am interested in your property: ${targetProp.basicInfo?.title || "Untitled"} located at ${locationStr}. Please provide more details.`;
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {
       await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
-        property_id: property._id,
-        seller_id: property.seller._id || property.seller,
+        property_id: targetProp._id,
+        seller_id: targetProp.seller._id || targetProp.seller,
         message: message,
         name,
         email,
@@ -797,111 +810,63 @@ const PropertyDetails = () => {
         {/* Nearby Properties */}
         {moreProperties.length > 0 && (
           <div className="mt-24">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <MapPin className="text-blue-600" />
-                Recommendations in {property.location?.locality || property.location?.city || "this area"}
-              </h2>
-              <Link
-                to="/properties"
-                className="text-blue-600 font-bold hover:underline"
-              >
-                View All
-              </Link>
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="text-[28px] font-bold text-[#1E293B]">
+                  Recommended in <span className="text-[#166aa8] font-semibold">{property.location?.locality || property.location?.city || "this area"}</span>
+                </h2>
+              </div>
+
+              {/* Navigation Buttons for Desktop */}
+              <div className="hidden md:flex items-center gap-3 mb-8">
+                <button className="rec-prev w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 hover:text-blue-600 transition-all disabled:opacity-30">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button className="rec-next w-10 h-10 flex items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm hover:bg-gray-50 hover:text-blue-600 transition-all disabled:opacity-30">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {moreProperties.map((prop) => (
-                <Link
-                  key={prop._id}
-                  to={`/properties/${prop.slug || prop._id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative h-[500px] rounded-2xl overflow-hidden group cursor-pointer shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100"
-                >
-                  {/* Background Image */}
-                  <img
-                    src={getImageUrl(prop.media?.featuredImage || prop.media?.images?.[0])}
-                    alt={prop.basicInfo?.title || "Property"}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-
-                  {/* Dark Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent opacity-90" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
-
-                  {/* Top Left Badges */}
-                  <div className="absolute top-5 left-5 flex flex-col gap-2 items-start z-10">
-                    <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/20 flex items-center gap-1">
-                      <Eye className="w-3 h-3" /> {prop.view_count || 0}
-                    </span>
-                    <span className="bg-white/10 backdrop-blur-md text-white text-[10px] font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider border border-white/20">
-                      Negotiable
-                    </span>
-                  </div>
-
-                  {/* Wishlist Button - Top Right */}
-                  <div className="absolute top-5 right-5 z-20">
-                    <WishlistButton propertyId={prop._id} />
-                  </div>
-
-                  {/* Bottom Content Area */}
-                  <div className="absolute bottom-0 left-0 w-full p-6 text-white z-10 flex flex-col justify-end h-full pointer-events-none">
-                    <div className="mt-auto pointer-events-auto">
-                      {/* Developer/Type Badge */}
-                      <div className="bg-white text-gray-900 text-[10px] font-bold px-2 py-1 inline-block rounded-sm mb-3 capitalize tracking-widest">
-                        {prop.businessType?.name || prop.basicInfo?.propertyType || "DEVELOPER"}
-                      </div>
-
-                      {/* Title */}
-                      <h3 className="text-xl font-bold mb-2 leading-tight text-white drop-shadow-md line-clamp-2">
-                        {prop.basicInfo?.title || "Untitled Property"}
-                      </h3>
-
-                      {/* Location */}
-                      <div className="flex items-center text-gray-300 text-xs mb-4 font-medium tracking-wide">
-                        <MapPin className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
-                        <span className="truncate uppercase">
-                          {typeof prop.location === "string"
-                            ? prop.location
-                            : `${prop.location?.city || ""}, ${prop.location?.state || ""}`}
-                        </span>
-                      </div>
-
-                      {/* Attributes Divider */}
-                      <div className="w-full h-px bg-white/20 mb-4" />
-
-                      {/* Price Section */}
-                      <div className="mb-5">
-                        <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
-                          Launch Price
-                        </p>
-                        <p className="text-2xl font-bold text-white tracking-tight">
-                          {formatIndianPrice(prop.pricing?.sell?.price || prop.pricing?.rent?.monthlyRent || 0)}
-                        </p>
-                      </div>
-
-                      {/* Action Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleWhatsAppClick(e, prop); // Re-using existing handler if adapted or creating new inline
-                        }}
-                        className="w-full bg-white hover:bg-[#e7e5f4] text-gray-900 font-bold py-3 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-lg active:scale-[0.98] opacity-90 group-hover:opacity-100 duration-300"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="w-5 h-5 text-[#25D366]"
-                        >
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                        </svg>
-                        WhatsApp
-                      </button>
+            <div className="relative">
+              <Swiper
+                modules={[Navigation, Pagination, Autoplay]}
+                spaceBetween={20}
+                slidesPerView={1}
+                navigation={{
+                  prevEl: ".rec-prev",
+                  nextEl: ".rec-next",
+                }}
+                pagination={{
+                  clickable: true,
+                  dynamicBullets: true,
+                  el: ".rec-pagination"
+                }}
+                autoplay={{
+                  delay: 5000,
+                  disableOnInteraction: false,
+                }}
+                breakpoints={{
+                  640: { slidesPerView: 2, spaceBetween: 20 },
+                  1024: { slidesPerView: 3, spaceBetween: 24 },
+                  1280: { slidesPerView: 4, spaceBetween: 24 },
+                }}
+                className="recommended-swiper !pb-12"
+              >
+                {moreProperties.map((prop) => (
+                  <SwiperSlide key={prop._id}>
+                    <div className="h-full">
+                      <PropertyCard
+                        property={prop}
+                        onWhatsAppClick={handleWhatsAppClick}
+                      />
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+
+              {/* Mobile/Tablet Pagination Container */}
+              {/* <div className="rec-pagination flex justify-center mt-4"></div> */}
             </div>
           </div>
         )}
@@ -911,7 +876,7 @@ const PropertyDetails = () => {
         onClose={() => setShowPhoneModal(false)}
         onSuccess={(updatedPhone) => {
           if (user) {
-            submitEnquiry(user.name, user.email, updatedPhone);
+            submitEnquiry(user.name, user.email, updatedPhone, selectedEnquiryProperty || property);
           }
         }}
       />
