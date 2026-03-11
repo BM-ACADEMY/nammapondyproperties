@@ -18,7 +18,7 @@ const PropertyCard = ({ property }) => {
   const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
   const locality = property.location?.locality || property.location?.city || "Pondicherry";
   const city = property.location?.city || "";
-  const posterType = property.businessType?.name || property.businessType || property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
+  const posterType = property.businessType?.name || (typeof property.businessType === 'string' && property.businessType !== "" ? property.businessType : null) || "Owner";
   const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
   // Price formatting for the badge

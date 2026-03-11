@@ -33,7 +33,7 @@ const FAQSection = () => {
 
     return (
         <section className="bg-white py-12 px-4 font-sans">
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-7xl mx-auto">
                 {/* Heading aligned left to match your reference image */}
                 <h2 className="text-2xl md:text-3xl font-bold text-[#1E293B] mb-8">
                     Frequently asked questions

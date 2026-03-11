@@ -33,7 +33,7 @@ const BannerAdSection = () => {
     if (loading) return (
         <section className="py-12">
             <div className="container mx-auto px-4 max-w-7xl">
-                <div className="w-full aspect-[21/6] md:aspect-[21/5] lg:aspect-[21/4] bg-gray-200 animate-pulse rounded-[24px]"></div>
+                <div className="w-full aspect-[21/6] md:aspect-[21/4] lg:aspect-[21/4] bg-gray-200 animate-pulse rounded-[24px]"></div>
             </div>
         </section>
     );
@@ -79,7 +79,7 @@ const BannerAdSection = () => {
 };
 
 const AdContent = ({ ad }) => (
-    <div className="relative w-full aspect-[21/6] md:aspect-[21/5] lg:aspect-[21/4] overflow-hidden">
+    <div className="relative w-full aspect-[21/6] md:aspect-[21/4] lg:aspect-[21/4] overflow-hidden">
         <img
             src={getImageUrl(ad.imageUrl)}
             alt={ad.title}

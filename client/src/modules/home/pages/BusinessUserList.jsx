@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import {
   User,
@@ -8,11 +8,13 @@ import {
   Phone,
   ShieldCheck,
   Star,
+  Users,
+  X,
+  ChevronRight,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getImageUrl } from "@/utils/imageUrl";
 import PropertyCard from "@/modules/home/components/PropertyCard";
-import Loader from "@/components/Common/Loader";
 
 const BusinessUserList = () => {
   const { businessTypeId } = useParams();
@@ -23,7 +25,21 @@ const BusinessUserList = () => {
   const [loading, setLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
 
+  // Mobile drawer state
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const API = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    const fontLinkId = "google-font-poppins";
+    if (!document.getElementById(fontLinkId)) {
+      const link = document.createElement("link");
+      link.id = fontLinkId;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSellers = async () => {
@@ -32,7 +48,7 @@ const BusinessUserList = () => {
       try {
         const [typeRes, sellersRes] = await Promise.all([
           axios.get(`${API}/business-types/${businessTypeId}`),
-          axios.get(`${API}/users/sellers-by-business-type/${businessTypeId}`)
+          axios.get(`${API}/users/sellers-by-business-type/${businessTypeId}`),
         ]);
         setBusinessType(typeRes.data);
         setSellers(sellersRes.data);
@@ -66,129 +82,222 @@ const BusinessUserList = () => {
     fetchSellerProperties();
   }, [selectedSeller, businessTypeId, API]);
 
+  // Close drawer when screen becomes large
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setIsDrawerOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Prevent body scroll when drawer open
+  useEffect(() => {
+    document.body.style.overflow = isDrawerOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isDrawerOpen]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#174685]"></div>
       </div>
     );
   }
 
-  // CHANGED: Background is now #f9fafb (Tailwind's bg-gray-50)
-  return (
-    <div className="min-h-screen bg-gray-50 font-sans pb-20 pt-10 relative overflow-hidden">
-      {/* Subtle background glow */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-60 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* --- HERO SECTION (Wrapped in a single white card) --- */}
-        <div className="bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 border border-gray-100">
-          <div className="md:w-1/2">
-            <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">
-              Find Your {businessType?.name || "Agent"}
-            </h1>
-
-            <p className="text-lg text-slate-500 mb-8 leading-relaxed max-w-xl">
-              Connect with the most responsive professionals with{" "}
-              <span className="font-bold italic text-slate-900">
-                up-to-date expertise
-              </span>{" "}
-              and top accuracy on the properties you are looking for.
-            </p>
-
-            <div className="inline-block border border-[#d4af37]/60 text-[#b58900] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest cursor-default">
-              Showing {sellers.length} Verified Professionals
+  // Shared sellers list content
+  const SellersList = ({ onSelect, compact = false }) => (
+    <div className="overflow-y-auto">
+      {sellers.map((user) => {
+        const isActive = selectedSeller?._id === user._id;
+        return (
+          <div
+            key={user._id}
+            onClick={() => {
+              setSelectedSeller(user);
+              onSelect?.();
+            }}
+            className={`group flex items-center cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-0
+              ${compact ? "gap-3 px-4 py-3" : "gap-4 px-5 py-4"}
+              ${isActive
+                ? "bg-[#174685]/8 border-l-[3px] border-l-[#174685]"
+                : "bg-white hover:bg-slate-50 border-l-[3px] border-l-transparent"
+              }`}
+          >
+            {/* Avatar */}
+            <div className={`relative shrink-0 ${compact ? "w-12 h-12" : "w-16 h-16"}`}>
+              <div className={`overflow-hidden border-2 transition-all duration-200 absolute top-1 left-1
+                ${compact ? "w-10 h-10 rounded-full" : "w-14 h-14 rounded-xl"}
+                ${isActive ? "border-[#174685] shadow-sm shadow-[#174685]/30" : "border-gray-100"}`}>
+                {user.profile_image ? (
+                  <img src={getImageUrl(user.profile_image)} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center font-bold
+                    ${compact ? "text-sm" : "text-xl"}
+                    ${isActive ? "bg-[#174685] text-white" : "bg-slate-100 text-slate-500"}`}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              {/* Green online dot */}
+              <span className={`absolute border-2 border-white rounded-full bg-green-400 z-10
+                ${compact ? "bottom-0.5 right-0.5 w-2.5 h-2.5" : "bottom-1 right-1 w-3 h-3"}`}></span>
+              {/* Active check badge */}
+              {isActive && (
+                <div className={`absolute bg-[#174685] rounded-full flex items-center justify-center border-2 border-white z-10
+                  ${compact ? "-top-0.5 -left-0.5 w-4 h-4" : "-top-0.5 -left-0.5 w-5 h-5"}`}>
+                  <svg width={compact ? 8 : 9} height={compact ? 8 : 9} viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4L3.5 7L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+              )}
             </div>
-          </div>
 
-          <div className="md:w-1/2 flex justify-end">
-            <img
-              src="/agent.png"
-              alt="Professionals"
-              className="w-full max-w-lg object-contain"
-            />
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h4 className={`truncate leading-tight transition-colors
+                ${compact ? "text-[13px]" : "text-[14px]"}
+                ${isActive ? "text-[#174685] font-bold" : "text-slate-800 font-semibold group-hover:text-[#174685]"}`}>
+                {user.name}
+              </h4>
+              {!compact && (
+                <p className="text-[11px] text-slate-400 capitalize mt-0.5 truncate">
+                  {businessType?.name || "Professional"}
+                </p>
+              )}
+              <div className="flex items-center gap-1 mt-0.5">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`text-amber-400 fill-current ${compact ? "w-2.5 h-2.5" : "w-3 h-3"}`} />
+                  ))}
+                </div>
+                <span className="text-[10px] text-slate-400 font-medium">5.0</span>
+              </div>
+            </div>
+
+            {/* Arrow */}
+            <ArrowRight className={`shrink-0 transition-all duration-200
+              ${compact ? "w-3.5 h-3.5" : "w-4 h-4"}
+              ${isActive ? "text-[#174685]" : "text-slate-200 group-hover:text-slate-400"}`} />
           </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50 font-['Poppins',_sans-serif] pb-20 pt-10 relative overflow-x-hidden">
+      {/* Background glow */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-60 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ─── MOBILE: Floating side tab button ─── */}
+      {sellers.length > 0 && (
+        <div className="lg:hidden fixed left-0 top-24 z-[400]">
+          <button
+            onClick={() => setIsDrawerOpen(true)}
+            className="flex flex-col items-center justify-center gap-2 bg-[#174685] text-white py-4 px-2.5 rounded-r-2xl shadow-xl active:scale-95 transition-transform"
+          >
+            <Users className="w-5 h-5" />
+            <span className="w-px h-5 bg-white/30 block" />
+            <span
+              className="text-[9px] font-bold uppercase tracking-widest"
+              style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
+            >
+              {sellers.length}
+            </span>
+          </button>
         </div>
+      )}
 
-        {/* --- CONTENT SECTION (Two Columns) --- */}
+      {/* ─── MOBILE: Slide-in Drawer ─── */}
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="drawer-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setIsDrawerOpen(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[450] lg:hidden"
+            />
+
+            {/* Drawer Panel */}
+            <motion.div
+              key="drawer-panel"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="fixed top-0 left-0 h-full w-[80%] max-w-sm bg-white z-[460] shadow-2xl flex flex-col lg:hidden"
+            >
+              {/* Drawer Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-slate-50">
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+                    {businessType?.name || "Professional"}s
+                  </h3>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{sellers.length} verified professionals</p>
+                </div>
+                <button
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-200 text-slate-500 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Sellers List */}
+              <div className="flex-1 overflow-y-auto">
+                <SellersList compact onSelect={() => setIsDrawerOpen(false)} />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ─── MAIN CONTENT ─── */}
+      <div className="mt-20 max-w-7xl mx-auto pl-14 pr-4 sm:pl-16 sm:pr-6 lg:px-8 relative z-10">
         {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-              <User className="w-8 h-8 text-[#3b5998]" />
+              <User className="w-8 h-8 text-[#174685]" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">
-              No sellers found
-            </h3>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">No sellers found</h3>
             <p className="text-slate-500 max-w-sm mx-auto">
               There are currently no sellers who have posted properties with this business type.
             </p>
           </div>
         ) : (
           <div className="flex flex-col lg:flex-row gap-8 min-h-[600px]">
-            {/* Left Sidebar: Sellers List */}
-            <div className="lg:w-1/3 xl:w-1/4 h-fit sticky top-24">
+            {/* ─── DESKTOP: Left Sidebar ─── */}
+            <div className="hidden lg:block lg:w-72 xl:w-80 h-fit sticky top-24">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-4 border-b border-gray-50 bg-slate-50/50">
-                  <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
-                    {businessType?.name || "Professional"}s ({sellers.length})
-                  </h3>
-                </div>
-                <div className="max-h-[70vh] overflow-y-auto">
-                  {sellers.map((user) => (
-                    <div
-                      key={user._id}
-                      onClick={() => setSelectedSeller(user)}
-                      className={`p-4 flex items-center gap-4 cursor-pointer transition-all border-b border-gray-50 last:border-0 hover:bg-slate-50 ${selectedSeller?._id === user._id
-                        ? "bg-slate-100 border-l-4 border-l-[#174685] pl-3"
-                        : "bg-white"
-                        }`}
-                    >
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
-                        {user.profile_image ? (
-                          <img
-                            src={getImageUrl(user.profile_image)}
-                            alt={user.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold">
-                            {user.name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className={`text-sm font-bold truncate ${selectedSeller?._id === user._id ? "text-[#174685]" : "text-slate-900"
-                          }`}>
-                          {user.name}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 flex items-center gap-1">
-                          <Star className="w-3 h-3 text-amber-500 fill-current" /> 5.0 Rated
-                        </p>
-                      </div>
-                      <ArrowRight className={`w-4 h-4 transition-transform ${selectedSeller?._id === user._id ? "translate-x-1 text-[#174685]" : "text-slate-300"
-                        }`} />
-                    </div>
-                  ))}
-                </div>
+                <SellersList />
               </div>
             </div>
 
-            {/* Right Main Column: Property Grid */}
-            <div className="flex-1">
-              <div className="mb-6 flex items-center justify-between">
+            {/* ─── Properties ─── */}
+            <div className="flex-1 min-h-[600px]">
+
+              <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900">
                     Properties by {selectedSeller?.name}
                   </h2>
                   <p className="text-slate-500 text-sm">
-                    Showing all {businessType?.name.toLowerCase()} properties posted by this verified professional.
+                    Showing all {businessType?.name?.toLowerCase()} properties posted by this verified professional.
                   </p>
                 </div>
 
                 {selectedSeller?.phone && (
                   <button
-                    onClick={() => window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-full text-sm font-bold hover:bg-[#128C7E] transition-all shadow-md active:scale-95"
+                    onClick={() =>
+                      window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
+                    }
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1aa554] text-white rounded-full text-sm font-bold hover:bg-[#158a45] transition-all shadow-md active:scale-95"
                   >
                     <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
                   </button>
@@ -197,15 +306,17 @@ const BusinessUserList = () => {
 
               {propertiesLoading ? (
                 <div className="py-20 flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]" />
                 </div>
               ) : sellerProperties.length === 0 ? (
                 <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
                   <Building2 className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                  <p className="text-slate-500">No properties found for this category from this seller.</p>
+                  <p className="text-slate-500">
+                    No properties found for this category from this seller.
+                  </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
                   {sellerProperties.map((property) => (
                     <PropertyCard key={property._id} property={property} />
                   ))}
@@ -213,9 +324,11 @@ const BusinessUserList = () => {
               )}
             </div>
           </div>
-        )}</div>
+        )}
+      </div>
     </div>
   );
 };
 
 export default BusinessUserList;
+

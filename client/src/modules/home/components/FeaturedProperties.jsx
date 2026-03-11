@@ -10,10 +10,10 @@ import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
 // Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Autoplay, Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import "swiper/css/pagination";
+
 
 const FeaturedProperties = () => {
   const [properties, setProperties] = useState([]);
@@ -124,17 +124,14 @@ const FeaturedProperties = () => {
         {/* Carousel Layout */}
         <div className="relative group/carousel">
           <Swiper
-            modules={[Autoplay, Navigation, Pagination]}
+            modules={[Autoplay, Navigation]}
             spaceBetween={24}
             slidesPerView={1}
             navigation={{
               prevEl: ".prev-property",
               nextEl: ".next-property",
             }}
-            pagination={{
-              clickable: true,
-              dynamicBullets: true,
-            }}
+
             autoplay={{
               delay: 5000,
               disableOnInteraction: false,
@@ -154,7 +151,7 @@ const FeaturedProperties = () => {
                 spaceBetween: 30,
               },
             }}
-            className="pb-14 !px-1"
+            className="!px-1"
           >
             {properties.map((property) => (
               <SwiperSlide key={property._id} className="h-auto">
