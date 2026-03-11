@@ -92,9 +92,9 @@ const BusinessUserList = () => {
       {/* Subtle background glow */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-60 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="mt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* --- HERO SECTION --- */}
-        <div className="mt-12 bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 border border-gray-100">
+        {/* <div className="mt-12 bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 border border-gray-100">
           <div className="md:w-1/2">
             <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 mb-4 tracking-tight">
               Find Your {businessType?.name || "Agent"}
@@ -120,7 +120,7 @@ const BusinessUserList = () => {
               className="w-full max-w-lg object-contain"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* --- CONTENT SECTION --- */}
         {sellers.length === 0 ? (

@@ -321,7 +321,7 @@ const Header = () => {
                             setIsContactMenuOpen(false);
                             setIsCallbackModalOpen(true);
                           }}
-                          className="w-full border-2 border-[#3070fc] text-[#0056b3] hover:bg-[#3070fc] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
+                          className="w-full border-2 border-[#3070fc] text-[#3070fc] hover:bg-[#3070fc] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
                         >
                           <PhoneCall className="h-4 w-4" />
                           <span>Request a Call Back</span>
