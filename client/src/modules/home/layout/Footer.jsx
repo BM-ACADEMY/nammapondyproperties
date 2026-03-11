@@ -55,53 +55,31 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-[#1a1a1a] text-gray-300 pt-20 pb-10 relative font-sans border-t border-gray-800">
+    <footer className="bg-[#151c22] text-gray-300 pt-20 pb-10 relative font-sans border-t border-gray-800">
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-12 mb-16 text-center md:text-left">
 
-          {/* Brand & About */}
-          <div className="space-y-6 flex flex-col items-center md:items-start">
-            <Link
-              to="/"
-              className="inline-block"
-              onClick={() => {
-                const mainContent = document.getElementById("main-content");
-                if (mainContent) {
-                  mainContent.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              }}
-            >
-              <img
-                src="/Logo/logo1.png"
-                alt="NammaPondy Logo"
-                className="h-10 w-auto object-contain"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = "/Logo/logo1.png";
-                }}
-              />
-            </Link>
-            <p className="text-gray-400 text-sm leading-relaxed pr-4 max-w-xs md:max-w-none">
-              Pondicherry's most trusted real estate platform. Whether you're buying, selling, or renting, we ensure a seamless and verified experience from start to finish.
-            </p>
+          {/* Column 2: Useful Links */}
+          <div>
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Useful Links</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link to="/" className="text-gray-400 hover:text-white transition-colors">Home</Link></li>
+              <li><Link to="/properties" className="text-gray-400 hover:text-white transition-colors">All Properties</Link></li>
+              <li><Link to="/favorites" className="text-gray-400 hover:text-white transition-colors">My Favorites</Link></li>
+              <li><Link to="/properties?businessType=67cf90f898393e83b487d605" className="text-gray-400 hover:text-white transition-colors">Meet Kamar</Link></li>
+            </ul>
           </div>
 
-          {/* Property Types */}
+          {/* Column 3: Properties */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-yellow-300 hover:after:w-full after:transition-all after:duration-300 cursor-default">
-              Properties
-            </h4>
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Properties</h4>
             <ul className="space-y-3 text-sm">
               {propertyTypes
                 .filter((type) => {
                   const name = typeof type === "string" ? type : type?.name;
-                  return (
-                    name &&
-                    typeof name === "string" &&
-                    ["buy", "rent"].includes(name.toLowerCase())
-                  );
+                  return name && ["buy", "rent"].includes(name.toLowerCase());
                 })
                 .map((type) => {
                   const name = typeof type === "string" ? type : type.name;
@@ -109,158 +87,88 @@ const Footer = () => {
                     <li key={name}>
                       <Link
                         to={`/properties?type=${encodeURIComponent(name)}`}
-                        className="text-gray-400 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                        className="text-gray-400 hover:text-white transition-colors capitalize"
                       >
-                        For {name.charAt(0).toUpperCase() + name.slice(1)}
+                        For {name}
                       </Link>
                     </li>
                   );
                 })}
-              <li>
-                <Link
-                  to="/properties"
-                  className="text-gray-400 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
-                >
-                  All Properties
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Business Types */}
-          <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-yellow-300 hover:after:w-full after:transition-all after:duration-300 cursor-default">
-              Categories
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {businessTypes.map((type) => {
-                const id = type._id?.toString() || type.name;
-                const name =
-                  typeof type.name === "string"
-                    ? type.name
-                    : type.name?.name || "Unknown";
-                return (
-                  <li key={id}>
-                    <Link
-                      to={`/properties?businessType=${id}`}
-                      className="text-gray-400 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
-                    >
-                      {name}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {/* Explore Links */}
-          <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-yellow-300 hover:after:w-full after:transition-all after:duration-300 cursor-default">
-              Explore
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {['Home', 'About', 'Contact'].map((item) => (
-                <li key={item}>
+              {businessTypes.slice(0, 3).map((type) => (
+                <li key={type._id}>
                   <Link
-                    to={item === 'Home' ? '/' : `/${item.toLowerCase().replace(' ', '-')}`}
-                    onClick={() => {
-                      if (item === 'Home') {
-                        const mainContent = document.getElementById("main-content");
-                        if (mainContent) {
-                          mainContent.scrollTo({ top: 0, behavior: "smooth" });
-                        }
-                      }
-                    }}
-                    className="text-gray-400 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                    to={`/properties?businessType=${type._id}`}
+                    className="text-gray-400 hover:text-white transition-colors capitalize"
                   >
-                    {item}
+                    {type.name}
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link
-                  to="/favorites"
-                  className="text-gray-400 hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
-                >
-                  My Favorites
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Contact & Socials */}
-          <div className="space-y-8">
-            <div>
-              <h4 className="text-white text-lg font-bold mb-6 tracking-wide relative inline-block after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-8 after:h-1 after:bg-yellow-300 hover:after:w-full after:transition-all after:duration-300 cursor-default">
-                Contact
-              </h4>
-              <ul className="space-y-4 text-sm text-gray-400 font-medium tracking-wide">
-                <li className="flex items-start justify-center md:justify-start gap-3">
-                  <MapPin className="w-5 h-5 text-gray-500 shrink-0 mt-0.5" />
-                  <span>123, Anna Salai,<br />Pondicherry - 605001</span>
-                </li>
-                <li className="flex items-center justify-center md:justify-start gap-3">
-                  <Phone className="w-5 h-5 text-gray-500 shrink-0" />
-                  <span>+91 98765 43210</span>
-                </li>
-                <li className="flex items-center justify-center md:justify-start gap-3">
-                  <Mail className="w-5 h-5 text-gray-500 shrink-0" />
-                  <span>info@nammapondy.com</span>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                {socialLinks?.length > 0 ? (
-                  socialLinks.map((link) => (
-                    <a
-                      key={link._id}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2.5 rounded-lg bg-[#242424] border border-gray-800 text-gray-400 hover:bg-white hover:text-gray-900 hover:-translate-y-1 transition-all duration-300 shadow-sm"
-                      title={link.platform}
-                    >
-                      {getIcon(link.icon || link.platform)}
-                    </a>
-                  ))
-                ) : (
-                  <span className="text-sm text-gray-600">No socials connected</span>
-                )}
-              </div>
-            </div>
+          {/* Column 4: Company */}
+          <div>
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Company</h4>
+            <ul className="space-y-3 text-sm">
+              <li><Link to="/contact" className="text-gray-400 hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link to="/privacy-policy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms-and-condition" className="text-gray-400 hover:text-white transition-colors">Terms & Conditions</Link></li>
+              <li><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
+            </ul>
           </div>
 
+          {/* Column 5: Get in Touch */}
+          <div>
+            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Get in Touch</h4>
+            <ul className="space-y-4 text-sm text-gray-400">
+              <li className="flex items-start justify-center md:justify-start gap-3">
+                <MapPin className="w-5 h-5 text-gray-500 shrink-0 mt-0.5" />
+                <span>123, Anna Salai, Pondicherry - 605001</span>
+              </li>
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <Phone className="w-5 h-5 text-gray-500 shrink-0" />
+                <span>+91 98765 43210</span>
+              </li>
+              <li className="flex items-center justify-center md:justify-start gap-3">
+                <Mail className="w-5 h-5 text-gray-500 shrink-0" />
+                <span>info@nammapondy.com</span>
+              </li>
+            </ul>
+             <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-8">
+              {socialLinks.map((link) => (
+                <a
+                  key={link._id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-lg bg-[#242424] border border-gray-800 text-gray-400 hover:bg-white hover:text-gray-900 transition-all duration-300 shadow-sm"
+                  title={link.platform}
+                >
+                  {getIcon(link.icon || link.platform)}
+                </a>
+              ))}
+            </div>
+          </div>
+          
         </div>
 
         {/* Footer Bottom */}
-        <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 font-medium">
+        <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
           <p>
-            &copy; {new Date().getFullYear()} NammaPondy Properties. All rights reserved. | Designed by{" "}
+            &copy; {new Date().getFullYear()} NammaPondy Properties. All rights reserved.
+          </p>
+          <p>
+            Designed by{" "}
             <a
               href="https://bmtechx.in"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-yellow-300 transition-colors font-medium"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               BM TechX
             </a>
           </p>
-          <div className="flex items-center gap-6">
-            <Link
-              to="/terms-and-condition"
-              className="text-gray-500 hover:text-yellow-300 transition-colors"
-            >
-              Terms & Conditions
-            </Link>
-            <Link
-              to="/privacy-policy"
-              className="text-gray-500 hover:text-yellow-300 transition-colors"
-            >
-              Privacy Policy
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

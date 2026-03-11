@@ -128,7 +128,7 @@ const PostPropertyLanding = () => {
                             <motion.img
                                 src="/post/post1.png"
                                 alt="Post Property Illustration"
-                                className="max-w-lg object-contain mix-blend-multiply"
+                                className="max-w-lg object-contain"
 
                             />
                         </motion.div>
@@ -142,14 +142,14 @@ const PostPropertyLanding = () => {
                         className="lg:w-[450px] bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-8 border border-gray-100"
                     >
                         <h2 className="text-2xl font-bold text-[#333333] mb-2">
-                            Start posting your property, <span className="text-[#0056b3] text-lg font-medium italic">it's free</span>
+                            Start posting your property, <span className="text-[#0056b3] text-lg font-medium">it's free</span>
                         </h2>
                         <p className="text-sm text-[#777777] mb-8">Add Basic Details</p>
 
                         <div className="space-y-8">
                             {/* Looking to select */}
                             <div>
-                                <p className="text-sm font-semibold text-[#555555] mb-4">You're looking to ...</p>
+                                <p className="text-sm font-semibold text-[#555555] mb-4">What would you like to do?</p>
                                 <div className="flex flex-wrap gap-3">
                                     {propertyCategories.map((cat) => (
                                         <button
@@ -168,7 +168,7 @@ const PostPropertyLanding = () => {
 
                             {/* Property Type selection */}
                             <div>
-                                <p className="text-sm font-semibold text-[#555555] mb-4">And it's a ...</p>
+                                <p className="text-sm font-semibold text-[#555555] mb-4">Select Property Category</p>
                                 <div className="flex flex-wrap gap-3 mb-6">
                                     {usageTypes.map((type) => (
                                         <button
@@ -197,11 +197,11 @@ const PostPropertyLanding = () => {
                                             {sub.name}
                                         </button>
                                     ))}
-                                    {filteredSubtypes.length > 5 && (
+                                    {/* {filteredSubtypes.length > 5 && (
                                         <button className="px-4 py-1.5 rounded-full border border-gray-200 text-[#0056b3] text-[13px] font-medium hover:bg-blue-50 transition-colors">
                                             + more
                                         </button>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
 
