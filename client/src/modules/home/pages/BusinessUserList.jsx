@@ -25,6 +25,18 @@ const BusinessUserList = () => {
 
   const API = import.meta.env.VITE_API_URL;
 
+  // --- NEW: Dynamically load the Poppins font ---
+  useEffect(() => {
+    const fontLinkId = "google-font-poppins";
+    if (!document.getElementById(fontLinkId)) {
+      const link = document.createElement("link");
+      link.id = fontLinkId;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchSellers = async () => {
       if (!businessTypeId) return;
@@ -74,17 +86,17 @@ const BusinessUserList = () => {
     );
   }
 
-  // CHANGED: Background is now #f9fafb (Tailwind's bg-gray-50)
   return (
-    <div className="min-h-screen bg-gray-50 font-sans pb-20 pt-10 relative overflow-hidden">
+    // CHANGED: Using Tailwind's arbitrary value syntax for the font
+    <div className="min-h-screen bg-gray-50 font-['Poppins',_sans-serif] pb-20 pt-10 relative overflow-hidden">
       {/* Subtle background glow */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-60 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* --- HERO SECTION (Wrapped in a single white card) --- */}
-        <div className="bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 border border-gray-100">
+        {/* --- HERO SECTION --- */}
+        <div className="mt-12 bg-white rounded-[24px] shadow-sm p-8 lg:p-12 mb-16 flex flex-col md:flex-row items-center justify-between gap-8 border border-gray-100">
           <div className="md:w-1/2">
-            <h1 className="text-4xl md:text-5xl font-light text-slate-900 mb-4 tracking-tight">
+            <h1 className="text-4xl md:text-5xl font-semibold text-slate-900 mb-4 tracking-tight">
               Find Your {businessType?.name || "Agent"}
             </h1>
 
@@ -110,7 +122,7 @@ const BusinessUserList = () => {
           </div>
         </div>
 
-        {/* --- CONTENT SECTION (Two Columns) --- */}
+        {/* --- CONTENT SECTION --- */}
         {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
@@ -138,10 +150,11 @@ const BusinessUserList = () => {
                     <div
                       key={user._id}
                       onClick={() => setSelectedSeller(user)}
-                      className={`p-4 flex items-center gap-4 cursor-pointer transition-all border-b border-gray-50 last:border-0 hover:bg-slate-50 ${selectedSeller?._id === user._id
-                        ? "bg-slate-100 border-l-4 border-l-[#174685] pl-3"
-                        : "bg-white"
-                        }`}
+                      className={`p-4 flex items-center gap-4 cursor-pointer transition-all border-b border-gray-50 last:border-0 hover:bg-slate-50 ${
+                        selectedSeller?._id === user._id
+                          ? "bg-slate-100 border-l-4 border-l-[#174685] pl-3"
+                          : "bg-white"
+                      }`}
                     >
                       <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-slate-200">
                         {user.profile_image ? (
@@ -157,16 +170,26 @@ const BusinessUserList = () => {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className={`text-sm font-bold truncate ${selectedSeller?._id === user._id ? "text-[#174685]" : "text-slate-900"
-                          }`}>
+                        <h4
+                          className={`text-sm font-bold truncate ${
+                            selectedSeller?._id === user._id
+                              ? "text-[#174685]"
+                              : "text-slate-900"
+                          }`}
+                        >
                           {user.name}
                         </h4>
                         <p className="text-[10px] text-slate-500 flex items-center gap-1">
                           <Star className="w-3 h-3 text-amber-500 fill-current" /> 5.0 Rated
                         </p>
                       </div>
-                      <ArrowRight className={`w-4 h-4 transition-transform ${selectedSeller?._id === user._id ? "translate-x-1 text-[#174685]" : "text-slate-300"
-                        }`} />
+                      <ArrowRight
+                        className={`w-4 h-4 transition-transform ${
+                          selectedSeller?._id === user._id
+                            ? "translate-x-1 text-[#174685]"
+                            : "text-slate-300"
+                        }`}
+                      />
                     </div>
                   ))}
                 </div>
@@ -187,7 +210,9 @@ const BusinessUserList = () => {
 
                 {selectedSeller?.phone && (
                   <button
-                    onClick={() => window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")}
+                    onClick={() =>
+                      window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
+                    }
                     className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white rounded-full text-sm font-bold hover:bg-[#128C7E] transition-all shadow-md active:scale-95"
                   >
                     <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
@@ -202,7 +227,9 @@ const BusinessUserList = () => {
               ) : sellerProperties.length === 0 ? (
                 <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
                   <Building2 className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                  <p className="text-slate-500">No properties found for this category from this seller.</p>
+                  <p className="text-slate-500">
+                    No properties found for this category from this seller.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
@@ -213,7 +240,8 @@ const BusinessUserList = () => {
               )}
             </div>
           </div>
-        )}</div>
+        )}
+      </div>
     </div>
   );
 };
