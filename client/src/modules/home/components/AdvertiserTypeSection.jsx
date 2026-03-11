@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, User, Users } from "lucide-react";
+import { ArrowRight, User } from "lucide-react";
 import { useNav } from "../../../context/NavContext";
 
 const AdvertiserTypeSection = () => {
@@ -19,16 +19,9 @@ const AdvertiserTypeSection = () => {
         }
     }, []);
 
-    // Determine the main avatar icon based on name
-    const getAvatarIcon = (name) => {
-        const lowerName = name.toLowerCase();
-        if (lowerName.includes("dealer") || lowerName.includes("agent")) {
-            // CHANGED: Blue icon to Gold
-            return <Users className="w-8 h-8 text-[#c19b48] mt-2" />;
-        }
-        // CHANGED: Blue icon to Gold
-        return <User className="w-8 h-8 text-[#c19b48] mt-2" />;
-    };
+    const getAvatarIcon = () => (
+        <User className="w-8 h-8 text-[#c19b48] mt-2" />
+    );
 
     const displayTypes = businessTypes.slice(0, 4);
 
@@ -39,14 +32,14 @@ const AdvertiserTypeSection = () => {
         <section className="py-15 px-4 bg-white font-['Outfit',_sans-serif]">
             {/* <div className="w-full max-w-5xl mr-auto lg:ml-62"> */}
             <div className="w-full max-w-5xl mx-auto">
-                
+
                 {/* Main Card Container */}
                 {/* CHANGED: Background updated from Beige to the theme's soft light gray/cyan (#f6f9fa) */}
-                <div className="bg-[#d7f2e3] rounded-[24px] flex flex-col lg:flex-row items-center p-8 lg:p-0 lg:pl-16 relative mb-12 lg:mb-16">
-                    
+                <div className="bg-[#fdfbf7] rounded-[24px] flex flex-col lg:flex-row items-center p-8 lg:p-0 lg:pl-16 relative mb-12 lg:mb-16">
+
                     {/* Left Side: Branding / Title */}
                     <div className="lg:w-1/2 py-8 lg:py-20 w-full flex flex-col items-start text-left">
-                        
+
                         {/* Graphic: Bars + House */}
                         <div className="flex items-end gap-2 mb-8">
                             {/* CHANGED: Orange Bar to Navy */}
@@ -73,18 +66,18 @@ const AdvertiserTypeSection = () => {
 
                     {/* Right Side: Information Card */}
                     <div className="lg:w-1/2 w-full flex justify-center lg:justify-end lg:pr-8">
-                        
+
                         {/* Overlapping White Card */}
                         <div className="bg-white rounded-[20px] shadow-[0_12px_40px_rgb(14,24,43,0.06)] p-8 lg:p-10 w-full max-w-[480px] border border-gray-100/50 transform lg:translate-y-12 lg:translate-x-4 mt-8 lg:mt-0">
-                            
+
                             <div className="mb-8">
                                 {/* CHANGED: Title color to Deep Navy */}
                                 <h3 className="text-2xl font-bold text-[#0e182b] mb-1">
-                                   Choose type of property lister
+                                    Choose type of property lister
                                 </h3>
                                 {/* CHANGED: Subtitle color to Slate Blue */}
                                 <p className="text-[15px] text-[#38526e]">
-                                   Browse your listing category
+                                    Browse your listing category
                                 </p>
                             </div>
 
@@ -106,7 +99,7 @@ const AdvertiserTypeSection = () => {
                                                     <div className="w-12 h-12 overflow-hidden flex items-start justify-center bg-[#f6f9fa] rounded-full border border-gray-100">
                                                         {getAvatarIcon(name)}
                                                     </div>
-                                                    
+
                                                     {/* Tiny Badge */}
                                                     {/* CHANGED: Background and Icon colors updated to fit the Navy/Gold theme */}
                                                     <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#0e182b] rounded-full flex items-center justify-center border-[1.5px] border-white z-10">
