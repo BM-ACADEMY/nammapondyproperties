@@ -37,7 +37,8 @@ const AdvertiserTypeSection = () => {
     return (
         // CHANGED: Added font-['Outfit',_sans-serif] to the wrapper
         <section className="py-15 px-4 bg-white font-['Outfit',_sans-serif]">
-            <div className="w-full max-w-5xl mr-auto lg:ml-62">
+            {/* <div className="w-full max-w-5xl mr-auto lg:ml-62"> */}
+            <div className="w-full max-w-5xl mx-auto">
                 
                 {/* Main Card Container */}
                 {/* CHANGED: Background updated from Beige to the theme's soft light gray/cyan (#f6f9fa) */}

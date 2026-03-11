@@ -500,7 +500,7 @@ const PropertyForm = ({
               <div>
                 <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">I'm looking to</p>
                 <div className="flex flex-wrap gap-4">
-                  {["Sell", "Rent", "PG"].map((cat) => (
+                  {["Sell", "Rent"].map((cat) => (
                     <button
                       key={cat}
                       type="button"

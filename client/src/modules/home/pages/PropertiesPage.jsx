@@ -38,6 +38,7 @@ const PropertiesPage = () => {
     location: getParamArray("location"),
     approval: getParamArray("approval"),
     bedrooms: getParamArray("bedrooms"),
+    category: getParamArray("category"), // Added category
   });
 
   // SYNC FROM URL
@@ -50,6 +51,7 @@ const PropertiesPage = () => {
       location: getParamArray("location"),
       approval: getParamArray("approval"),
       bedrooms: getParamArray("bedrooms"),
+      category: getParamArray("category"), // Added category
     });
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
@@ -70,6 +72,7 @@ const PropertiesPage = () => {
       if (filters.location.length) params.append("location", filters.location.join(","));
       if (filters.approval.length) params.append("approval", filters.approval.join(","));
       if (filters.bedrooms.length) params.append("bedrooms", filters.bedrooms.join(","));
+      if (filters.category.length) params.append("category", filters.category.join(",")); // Added category
       params.append("page", currentPage);
 
       const res = await axios.get(

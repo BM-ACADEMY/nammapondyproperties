@@ -7,11 +7,12 @@ const PropertySidebarFilter = ({
     onFilterChange,
     onClearFilters
 }) => {
-    const { locations, approvalTypes, priceRanges } = useNav();
+    const { locations, approvalTypes, priceRanges, propertyCategories } = useNav();
     const [openSections, setOpenSections] = useState({
         budget: true,
         location: true,
         approval: true,
+        category: true,
     });
 
     const toggleSection = (section) => {
@@ -90,8 +91,8 @@ const PropertySidebarFilter = ({
                                         key={name}
                                         onClick={() => handleChipClick("location", name)}
                                         className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.location || []).includes(name)
-                                                ? "bg-blue-50 border-blue-600 text-blue-700"
-                                                : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                                            ? "bg-blue-50 border-blue-600 text-blue-700"
+                                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                                             }`}
                                     >
                                         + {name}
@@ -122,11 +123,43 @@ const PropertySidebarFilter = ({
                                         key={name}
                                         onClick={() => handleChipClick("approval", name)}
                                         className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.approval || []).includes(name)
-                                                ? "bg-blue-50 border-blue-600 text-blue-700"
-                                                : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                                            ? "bg-blue-50 border-blue-600 text-blue-700"
+                                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                                             }`}
                                     >
                                         + {name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <hr className="border-gray-100" />
+
+                {/* Property Category */}
+                <div className="space-y-4">
+                    <button
+                        onClick={() => toggleSection("category")}
+                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                    >
+                        <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Property Category</span>
+                        {openSections.category ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    {openSections.category && (
+                        <div className="flex flex-wrap gap-2">
+                            {propertyCategories.map((cat) => {
+                                const name = typeof cat === "string" ? cat : cat?.name || "Unknown";
+                                return (
+                                    <button
+                                        key={name}
+                                        onClick={() => handleChipClick("category", name)}
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.category || []).includes(name)
+                                            ? "bg-blue-50 border-blue-600 text-blue-700"
+                                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                                            }`}
+                                    >
+                                        + {name.charAt(0).toUpperCase() + name.slice(1)}
                                     </button>
                                 );
                             })}
