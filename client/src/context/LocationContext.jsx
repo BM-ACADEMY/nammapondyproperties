@@ -10,7 +10,7 @@ export const LocationProvider = ({ children }) => {
         locality: "", // Added locality
         display: "Pondicherry",
         coordinates: null,
-        loading: false
+        loading: true
     });
 
     const detectLocation = () => {

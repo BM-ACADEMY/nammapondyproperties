@@ -575,6 +575,16 @@ const PropertyForm = ({
                   </select>
                 </div>
                 <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Business Type <span className="text-red-500">*</span></label>
+                  <select {...register("businessType", { required: "Business Type is required" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white focus:border-blue-600 outline-none transition-all">
+                    <option value="">Select Business Type</option>
+                    {businessTypes.map((type) => (
+                      <option key={type._id} value={type._id}>{type.name}</option>
+                    ))}
+                  </select>
+                  {errors.businessType && <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>}
+                </div>
+                <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Status</label>
                   <div className="flex gap-4">
                     {["Ready to Move", "Under Construction"].map(status => (

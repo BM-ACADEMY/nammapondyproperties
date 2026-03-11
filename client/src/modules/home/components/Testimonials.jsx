@@ -433,7 +433,7 @@ const Testimonials = () => {
           )}
 
           {/* ── Section Header ── */}
-          {/* <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
             <div className="text-center md:text-left">
               <h2 className="text-4xl md:text-5xl font-light text-slate-900 mb-4">
                 What people are saying
@@ -442,10 +442,10 @@ const Testimonials = () => {
                 Real feedback from happy homeowners and property buyers who found their perfect match in Pondicherry.
               </p>
             </div>
-          </div> */}
+          </div>
 
           {/* ── Scrolling Cards ── */}
-          {/* {loading ? (
+          {loading ? (
             <div className="text-center py-12 text-slate-500 animate-pulse">
               Loading amazing reviews...
             </div>
@@ -475,7 +475,7 @@ const Testimonials = () => {
                 </div>
               )}
             </div>
-          )} */}
+          )}
         </div>
       </section>
     </>
