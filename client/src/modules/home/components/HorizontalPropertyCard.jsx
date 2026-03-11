@@ -10,7 +10,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
     const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
     const locality = property.location?.locality || property.location?.city || "Pondicherry";
     const city = property.location?.city || "";
-    const role = property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
+    const posterType = property.businessType?.name || (typeof property.businessType === 'string' ? property.businessType : null) || property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
     const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
     const bedrooms = property.specifications?.residential?.bedrooms || 0;
@@ -111,7 +111,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <div className="mt-auto flex flex-wrap items-center justify-between pt-4 border-t border-gray-50 gap-4">
                     <div className="flex flex-col">
                         <span className="text-[11px] text-gray-400 font-medium">{timeAgo}</span>
-                        <span className="text-sm font-bold text-gray-700">{role}</span>
+                        <span className="text-sm font-bold text-gray-700">{posterType}</span>
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">

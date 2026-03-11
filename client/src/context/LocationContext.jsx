@@ -7,6 +7,7 @@ export const LocationProvider = ({ children }) => {
     const [location, setLocation] = useState({
         city: "Pondicherry",
         state: "Puducherry",
+        locality: "", // Added locality
         display: "Pondicherry",
         coordinates: null,
         loading: false
@@ -29,13 +30,15 @@ export const LocationProvider = ({ children }) => {
                         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`
                     );
                     const data = res.data;
-                    const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.county || "Detected Location";
+                    const city = data.address.city || data.address.town || data.address.village || data.address.county || "Detected Location";
+                    const locality = data.address.suburb || data.address.neighbourhood || data.address.residential || data.address.subdistrict || "";
                     const state = data.address.state || "";
 
                     const newLocation = {
                         city,
+                        locality,
                         state,
-                        display: city,
+                        display: locality || city,
                         coordinates: { lat: latitude, lng: longitude },
                         loading: false
                     };

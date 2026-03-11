@@ -18,7 +18,7 @@ const RecommendedProperties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
-    const { city, loading: locationLoading } = useAppLocation();
+    const { city, locality, loading: locationLoading } = useAppLocation();
     const [showPhoneModal, setShowPhoneModal] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
 
@@ -29,19 +29,23 @@ const RecommendedProperties = () => {
         const fetchProperties = async () => {
             setLoading(true);
             try {
-                // 1. Try with location - removed "city !== Pondicherry" check to ensure filtering
-                let url = `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`;
-                if (city) {
-                    url += `&location=${encodeURIComponent(city)}`;
+                // 1. Try with locality first (most granular)
+                let fetched = [];
+                if (locality) {
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12&location=${encodeURIComponent(locality)}`);
+                    fetched = res.data.properties || res.data || [];
                 }
 
-                const res = await axios.get(url);
-                let fetched = res.data.properties || res.data || [];
-
-                // 2. Fallback: If empty and we had a city, try without location (Recommended for You)
+                // 2. Fallback to city if locality results are empty
                 if (fetched.length === 0 && city) {
-                    const fallbackRes = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`);
-                    fetched = fallbackRes.data.properties || fallbackRes.data || [];
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12&location=${encodeURIComponent(city)}`);
+                    fetched = res.data.properties || res.data || [];
+                }
+
+                // 3. Last fallback: Try without location if still empty
+                if (fetched.length === 0) {
+                    const res = await axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`);
+                    fetched = res.data.properties || res.data || [];
                 }
 
                 setProperties(fetched);
@@ -55,7 +59,7 @@ const RecommendedProperties = () => {
         if (!locationLoading) {
             fetchProperties();
         }
-    }, [city, locationLoading]);
+    }, [city, locality, locationLoading]);
 
     const handleWhatsAppClick = (e, property) => {
         e.stopPropagation();
@@ -121,9 +125,10 @@ const RecommendedProperties = () => {
         return null;
     }
 
-    const hasNoLocalMatches = city && !properties.some(p =>
-        (p.location?.city?.toLowerCase().includes(city.toLowerCase())) ||
-        (p.location?.locality?.toLowerCase().includes(city.toLowerCase()))
+    const searchLocation = locality || city;
+    const hasNoLocalMatches = searchLocation && !properties.some(p =>
+        (p.location?.city?.toLowerCase().includes(searchLocation.toLowerCase())) ||
+        (p.location?.locality?.toLowerCase().includes(searchLocation.toLowerCase()))
     );
 
     return (
@@ -134,19 +139,19 @@ const RecommendedProperties = () => {
                         <div className="mb-6">
                             <h2 className="text-[28px] font-bold text-[#1E293B]">
                                 {hasNoLocalMatches ? "Recommended for You" : (
-                                    <>Recommended In <span className="text-[#166aa8] font-semibold">{city}</span></>
+                                    <>Recommended In <span className="text-[#166aa8] font-semibold">{searchLocation}</span></>
                                 )}
                             </h2>
                             <p className="text-[15px] text-[#64748B] mt-1">
                                 {hasNoLocalMatches
                                     ? "Handpicked properties for you since we couldn't find matches in your exact area."
-                                    : `Explore the best deals currently available in ${city}.`
+                                    : `Explore the best deals currently available in ${searchLocation}.`
                                 }
                             </p>
                         </div>
-                        
+
                     </div>
-                    
+
 
                     {/* Navigation Buttons for Desktop */}
                     <div className="hidden md:flex items-center gap-3 mb-8">
