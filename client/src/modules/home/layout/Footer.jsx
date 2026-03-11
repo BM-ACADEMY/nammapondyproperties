@@ -59,7 +59,7 @@ const Footer = () => {
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-12 mb-16 text-center md:text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-12 mb-16 text-left">
 
           {/* Column 2: Useful Links */}
           <div>
@@ -122,20 +122,20 @@ const Footer = () => {
           <div>
             <h4 className="text-white text-lg font-bold mb-6 tracking-wide">Get in Touch</h4>
             <ul className="space-y-4 text-sm text-gray-400">
-              <li className="flex items-start justify-center md:justify-start gap-3">
+              <li className="flex items-start justify-start gap-3">
                 <MapPin className="w-5 h-5 text-gray-500 shrink-0 mt-0.5" />
                 <span>123, Anna Salai, Pondicherry - 605001</span>
               </li>
-              <li className="flex items-center justify-center md:justify-start gap-3">
+              <li className="flex items-center justify-start gap-3">
                 <Phone className="w-5 h-5 text-gray-500 shrink-0" />
                 <span>+91 98765 43210</span>
               </li>
-              <li className="flex items-center justify-center md:justify-start gap-3">
+              <li className="flex items-center justify-start gap-3">
                 <Mail className="w-5 h-5 text-gray-500 shrink-0" />
                 <span>info@nammapondy.com</span>
               </li>
             </ul>
-             <div className="flex flex-wrap justify-center md:justify-start gap-3 pt-8">
+             <div className="flex flex-wrap justify-start gap-3 pt-8">
               {socialLinks.map((link) => (
                 <a
                   key={link._id}

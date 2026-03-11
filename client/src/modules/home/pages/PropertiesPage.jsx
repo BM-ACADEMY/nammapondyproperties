@@ -10,6 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 import PropertySidebarFilter from "../components/PropertySidebarFilter";
+import { Filter, X } from "lucide-react";
 
 const PropertiesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +24,7 @@ const PropertiesPage = () => {
 
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // --- FILTER STATE (Synced with URL) ---
   const getParamArray = (key) => {
@@ -59,6 +61,7 @@ const PropertiesPage = () => {
   // FETCH PROPERTIES
   useEffect(() => {
     fetchProperties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filters]);
 
   const fetchProperties = async () => {
@@ -165,16 +168,81 @@ const PropertiesPage = () => {
           content="Browse verified residential and commercial properties in Pondicherry. Transparent pricing and expert guidance for buyers."
         />
       </Helmet>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Filter */}
-          <aside className="w-full lg:w-1/4">
+
+          {/* Mobile Filter Button - Floating Fixed Right */}
+          <button
+            onClick={() => setIsFilterOpen(true)}
+            className="lg:hidden fixed bottom-6 -right-2 z-50 flex items-center gap-2 bg-[#166aa8] text-white px-4 py-3 rounded-md shadow-2xl hover:bg-[#145a8d] transition-all transform hover:scale-105 active:scale-95 border border-white/20"
+          >
+            <Filter className="w-5 h-5 text-white" />
+            <span className="font-bold text-sm pr-1">Filters</span>
+          </button>
+
+          {/* Sidebar Filter (Desktop) */}
+          <aside className="hidden lg:block lg:w-1/4">
             <PropertySidebarFilter
               filters={filters}
               onFilterChange={handleFilterChange}
               onClearFilters={clearFilters}
             />
           </aside>
+
+          {/* Off-canvas Filter (Mobile/Tablet) */}
+          <div
+            className={`fixed top-19 inset-0 z-[100] lg:hidden transition-opacity duration-300 ${
+              isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+          >
+            {/* Backdrop */}
+            <div
+              className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+                isFilterOpen ? "opacity-100" : "opacity-0"
+              }`}
+              onClick={() => setIsFilterOpen(false)}
+            />
+
+            {/* Drawer Content */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 h-full w-[280px] sm:w-[320px] bg-white shadow-2xl transition-transform duration-300 transform ${
+                isFilterOpen ? "translate-x-0" : "-translate-x-full"
+              } flex flex-col`}
+            >
+              {/* Header */}
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Scrollable Content Area - FIX APPLIED HERE */}
+              {/* [&>*]:!mt-0 and [&>*]:!pt-0 forcefully strips top spacing from the child component */}
+              {/* [&>*]:!border-none removes the extra border from the desktop version to make it look cleaner on mobile */}
+              <div className="flex-1 overflow-y-auto px-2 py-0 [&>*]:!mt-0 [&>*]:!pt-2 [&>*]:!border-none [&>*]:!shadow-none">
+                <PropertySidebarFilter
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onClearFilters={clearFilters}
+                />
+              </div>
+
+              {/* Footer Apply Button */}
+              <div className="p-4 border-t border-gray-100 bg-white shrink-0">
+                <button
+                  onClick={() => setIsFilterOpen(false)}
+                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+                >
+                  Show Results
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Properties Content */}
           <main className="w-full lg:w-3/4">

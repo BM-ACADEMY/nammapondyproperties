@@ -35,7 +35,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <img
                     src={imgUrl}
                     alt={property.basicInfo?.title || "Property"}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-500 "
                 />
                 <div className="absolute top-3 right-3 z-20">
                     <WishlistButton propertyId={property._id} />
@@ -63,7 +63,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4 py-4 border-y border-gray-50 my-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4 py-4 border-b border-gray-100 my-4">
                     <div className="flex flex-col">
                         <span className="text-xl font-bold text-gray-900 tracking-tight">
                             {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
@@ -80,9 +80,9 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                             {property.specifications?.area?.totalArea ? "Total Area" : "Built Area"}
                         </span>
                     </div>
-                    <div className="flex flex-col sm:pl-4 col-span-2 sm:col-span-1 border-t sm:border-t-0 pt-4 sm:pt-0">
+                    <div className="flex flex-col sm:pl-4 col-span-2 sm:col-span-1 sm:border-t-0 pt-4 sm:pt-0">
                         <span className="text-lg font-bold text-gray-900 tracking-tight">
-                            {bedrooms} BHK <span className="text-sm font-medium text-gray-500">({bathrooms} Bath)</span>
+                            Status
                         </span>
                         <span className="text-[11px] text-gray-400 font-medium">
                             {property.legal?.propertyStatus || "Ready To Move"}
@@ -100,7 +100,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 )}
 
                 {/* Excerpt */}
-                <div className="mb-6 relative group/excerpt hidden sm:block">
+                <div className="mb-6 relative group/excerpt">
                     <p className="text-sm text-gray-500 line-clamp-1 pr-6 leading-relaxed">
                         Located in {locality}, {city}, this {bedrooms} BHK {property.basicInfo?.propertyType?.toLowerCase()}...
                     </p>
@@ -108,19 +108,16 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 </div>
 
                 {/* Footer Bar */}
-                <div className="mt-auto flex flex-wrap items-center justify-between pt-4 border-t border-gray-50 gap-4">
+                <div className="mt-auto flex flex-wrap items-center justify-between pt-4 border-t border-gray-100 gap-4">
                     <div className="flex flex-col">
                         <span className="text-[11px] text-gray-400 font-medium">{timeAgo}</span>
                         <span className="text-sm font-bold text-gray-700">{posterType}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-                        <button className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl border-2 border-blue-600 text-blue-600 font-bold text-xs sm:text-sm tracking-wide hover:bg-blue-50 transition-colors whitespace-nowrap">
-                            View Number
-                        </button>
+                    <div className="flex items-center gap-2 sm:gap-3 w-fit ml-auto">
                         <button
                             onClick={(e) => onWhatsAppClick && onWhatsAppClick(e, property)}
-                            className="flex-1 sm:flex-none px-5 sm:px-6 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs sm:text-sm tracking-wide flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 whitespace-nowrap"
+                            className="flex-none px-6 py-2.5 rounded-xl bg-[#166aa8] text-white font-bold text-xs sm:text-[13px] tracking-wide flex items-center justify-center gap-2 hover:bg-[#145a8d] transition-colors shadow-lg shadow-blue-600/20 whitespace-nowrap"
                         >
                             <Phone className="w-4 h-4 fill-white" /> Contact
                         </button>
