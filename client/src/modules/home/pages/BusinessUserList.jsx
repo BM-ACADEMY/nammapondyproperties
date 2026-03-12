@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { getImageUrl } from "@/utils/imageUrl";
-import PropertyCard from "@/modules/home/components/PropertyCard";
+import HorizontalPropertyCard from "@/modules/home/components/HorizontalPropertyCard";
 
 const BusinessUserList = () => {
   const { businessTypeId } = useParams();
@@ -120,15 +120,15 @@ const BusinessUserList = () => {
             className={`group flex items-center cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-0
               ${compact ? "gap-3 px-4 py-3" : "gap-4 px-5 py-4"}
               ${isActive
-                ? "bg-[#174685]/8 border-l-[3px] border-l-[#174685]"
+                ? "bg-[#174685]/8"
                 : "bg-white hover:bg-slate-50 border-l-[3px] border-l-transparent"
               }`}
           >
             {/* Avatar */}
             <div className={`relative shrink-0 ${compact ? "w-12 h-12" : "w-16 h-16"}`}>
-              <div className={`overflow-hidden border-2 transition-all duration-200 absolute top-1 left-1
+              <div className={`overflow-hidden transition-all duration-200 absolute top-1 left-1
                 ${compact ? "w-10 h-10 rounded-full" : "w-14 h-14 rounded-xl"}
-                ${isActive ? "border-[#174685] shadow-sm shadow-[#174685]/30" : "border-gray-100"}`}>
+                `}>
                 {user.profile_image ? (
                   <img src={getImageUrl(user.profile_image)} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
@@ -140,8 +140,8 @@ const BusinessUserList = () => {
                 )}
               </div>
               {/* Green online dot */}
-              <span className={`absolute border-2 border-white rounded-full bg-green-400 z-10
-                ${compact ? "bottom-0.5 right-0.5 w-2.5 h-2.5" : "bottom-1 right-1 w-3 h-3"}`}></span>
+              {/* <span className={`absolute border-2 border-white rounded-full bg-green-400 z-10
+                ${compact ? "bottom-0.5 right-0.5 w-2.5 h-2.5" : "bottom-1 right-1 w-3 h-3"}`}></span> */}
               {/* Active check badge */}
               {isActive && (
                 <div className={`absolute bg-[#174685] rounded-full flex items-center justify-center border-2 border-white z-10
@@ -259,7 +259,7 @@ const BusinessUserList = () => {
       </AnimatePresence>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="mt-20 max-w-7xl mx-auto pl-14 pr-4 sm:pl-16 sm:pr-6 lg:px-8 relative z-10">
+      <div className="mt-20 max-w-[1400px] mx-auto pl-14 pr-4 sm:pl-16 sm:pr-6 lg:px-8 relative z-10">
         {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
@@ -316,9 +316,16 @@ const BusinessUserList = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+                <div className="flex flex-col gap-0 pb-10">
                   {sellerProperties.map((property) => (
-                    <PropertyCard key={property._id} property={property} />
+                    <HorizontalPropertyCard 
+                      key={property._id} 
+                      property={{...property, businessType: property.businessType || businessType}} 
+                      onWhatsAppClick={(e, prop) => {
+                        const phone = prop.seller?.phone || selectedSeller?.phone;
+                        if (phone) window.open(`https://wa.me/${phone}`, "_blank");
+                      }}
+                    />
                   ))}
                 </div>
               )}

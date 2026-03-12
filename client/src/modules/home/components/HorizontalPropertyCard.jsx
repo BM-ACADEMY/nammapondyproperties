@@ -14,7 +14,6 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
     const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
     const bedrooms = property.specifications?.residential?.bedrooms || 0;
-    const bathrooms = property.specifications?.residential?.bathrooms || 0;
     const area = property.specifications?.area?.totalArea || property.specifications?.area?.builtupArea || 0;
     const areaUnit = property.specifications?.area?.unit || "sqft";
 
@@ -23,9 +22,9 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
         : "";
 
     return (
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row group relative">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row group relative mb-6">
             {/* Left: Image Section */}
-            <div className="md:w-72 lg:w-80 h-64 md:h-auto relative shrink-0 overflow-hidden">
+            <div className="md:w-64 lg:w-72 h-48 md:h-auto relative shrink-0 overflow-hidden">
                 <Link
                     to={`/properties/${property.slug || property._id}`}
                     target="_blank"
@@ -35,93 +34,91 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <img
                     src={imgUrl}
                     alt={property.basicInfo?.title || "Property"}
-                    className="w-full h-full object-cover transition-transform duration-500 "
+                    className="w-full h-full object-cover transition-transform duration-500"
                 />
                 <div className="absolute top-3 right-3 z-20">
                     <WishlistButton propertyId={property._id} />
                 </div>
-                <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-2 py-1 rounded text-white text-[10px] font-medium flex items-center gap-1">
+                <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
                     1/{property.media?.images?.length || 1}
                 </div>
             </div>
 
             {/* Right: Content Section */}
-            <div className="flex-1 p-5 md:p-6 flex flex-col">
+            <div className="flex-1 p-4 md:p-6 flex flex-col">
                 {/* Header: Title & Tag */}
-                <div className="flex justify-between items-start mb-2">
-                    <div className="flex flex-col">
-                        <h3 className="text-lg font-bold text-gray-900 line-clamp-1">
+                <div className="flex justify-between items-start">
+                    <div className="flex flex-col flex-1">
+                        <h3 className="text-lg md:text-xl font-bold text-slate-800 line-clamp-1">
                             {locality}{city ? `, ${city}` : ""}
                         </h3>
-                        <p className="text-sm text-gray-500 font-medium">
-                            {bedrooms} BHK {property.basicInfo?.propertyType || "Property"} in {locality}
+                        <p className="text-sm text-slate-500 font-medium">
+                            {bedrooms > 0 ? `${bedrooms} BHK ` : ""}{property.basicInfo?.propertyType || "Property"} in {locality}
                         </p>
                     </div>
-                    <span className="bg-gray-100 text-[10px] font-bold px-2 py-1 rounded text-gray-600 uppercase tracking-widest">
+                    <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0 ml-2">
                         {property.basicInfo?.category === "Rent" ? "FOR RENT" : "RESALE"}
                     </span>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4 py-4 border-b border-gray-100 my-4">
-                    <div className="flex flex-col">
-                        <span className="text-xl font-bold text-gray-900 tracking-tight">
+                <div className="flex items-center gap-0 py-4 my-2">
+                    <div className="flex-1 flex flex-col">
+                        <span className="text-lg md:text-xl font-bold text-slate-800">
                             {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
                         </span>
-                        <span className="text-[11px] text-gray-400 font-medium">
+                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
                             {property.pricing?.sell?.pricePerSqft ? `₹${property.pricing.sell.pricePerSqft.toLocaleString()}/sqft` : "Price"}
                         </span>
                     </div>
-                    <div className="flex flex-col sm:border-x border-gray-100 sm:px-4">
-                        <span className="text-lg font-bold text-gray-900 tracking-tight">
+
+                    <div className="h-10 w-px bg-gray-100 mx-4" />
+
+                    <div className="flex-1 flex flex-col">
+                        <span className="text-lg md:text-xl font-bold text-slate-800">
                             {area.toLocaleString()} {areaUnit}
                         </span>
-                        <span className="text-[11px] text-gray-400 font-medium whitespace-nowrap">
+                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
                             {property.specifications?.area?.totalArea ? "Total Area" : "Built Area"}
                         </span>
                     </div>
-                    <div className="flex flex-col sm:pl-4 col-span-2 sm:col-span-1 sm:border-t-0 pt-4 sm:pt-0">
-                        <span className="text-lg font-bold text-gray-900 tracking-tight">
+
+                    <div className="h-10 w-px bg-gray-100 mx-4" />
+
+                    <div className="flex-1 flex flex-col">
+                        <span className="text-lg md:text-xl font-bold text-slate-800">
                             Status
                         </span>
-                        <span className="text-[11px] text-gray-400 font-medium">
-                            {property.legal?.propertyStatus || "Ready To Move"}
+                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
+                            {property.legal?.propertyStatus || "Ready to Move"}
                         </span>
                     </div>
                 </div>
 
-                {/* Floor Info Tag */}
-                {floorInfo && (
-                    <div className="mb-4">
-                        <span className="bg-blue-50 text-blue-600 text-[10px] sm:text-[11px] font-bold px-3 py-1.5 rounded-lg border border-blue-100/50 uppercase tracking-wide">
-                            {floorInfo}
-                        </span>
-                    </div>
-                )}
+                <div className="h-px w-full bg-slate-50 mb-4" />
 
                 {/* Excerpt */}
-                <div className="mb-6 relative group/excerpt">
-                    <p className="text-sm text-gray-500 line-clamp-1 pr-6 leading-relaxed">
-                        Located in {locality}, {city}, this {bedrooms} BHK {property.basicInfo?.propertyType?.toLowerCase()}...
+                <div className="mb-4 relative group/excerpt">
+                    <p className="text-sm text-slate-500 line-clamp-1 pr-6 leading-relaxed italic">
+                        Located in {locality}, {city}, this {bedrooms > 0 ? `${bedrooms} BHK ` : ""}{property.basicInfo?.propertyType?.toLowerCase()}...
                     </p>
-                    <ChevronRight className="w-4 h-4 text-gray-300 absolute right-0 top-1/2 -translate-y-1/2" />
+                    <ChevronRight className="w-4 h-4 text-slate-300 absolute right-0 top-1/2 -translate-y-1/2" />
                 </div>
 
                 {/* Footer Bar */}
-                <div className="mt-auto flex flex-wrap items-center justify-between pt-4 border-t border-gray-100 gap-4">
+                <div className="mt-auto flex items-end justify-between pt-2">
                     <div className="flex flex-col">
-                        <span className="text-[11px] text-gray-400 font-medium">{timeAgo}</span>
-                        <span className="text-sm font-bold text-gray-700">{posterType}</span>
+                        <span className="text-[11px] text-slate-400 font-medium">{timeAgo}</span>
+                        <span className="text-[13px] font-bold text-slate-700 capitalize">{posterType}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 sm:gap-3 w-fit ml-auto">
-                        <button
-                            onClick={(e) => onWhatsAppClick && onWhatsAppClick(e, property)}
-                            className="flex-none px-6 py-2.5 rounded-xl bg-[#166aa8] text-white font-bold text-xs sm:text-[13px] tracking-wide flex items-center justify-center gap-2 hover:bg-[#145a8d] transition-colors shadow-lg shadow-blue-600/20 whitespace-nowrap"
-                        >
-                            <Phone className="w-4 h-4 fill-white" /> Contact
-                        </button>
-                    </div>
+                    <button
+                        onClick={(e) => onWhatsAppClick && onWhatsAppClick(e, property)}
+                        className="px-6 py-2 rounded-xl bg-[#166aa8] text-white font-bold text-[13px] tracking-wide flex items-center gap-2 hover:bg-[#125a8e] transition-all shadow-md active:scale-95"
+                    >
+                        <Phone className="w-4 h-4" />
+                        <span>Contact</span>
+                    </button>
                 </div>
             </div>
         </div>

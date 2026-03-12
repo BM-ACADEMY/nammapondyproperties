@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
+  Phone,
 } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -181,32 +182,33 @@ const PropertyDetails = () => {
 
   // Removed local getImageUrl as we use the one from utils
 
+  const maskPhoneNumber = (phone) => {
+    if (!phone) return "**********";
+    const phoneStr = phone.toString();
+    if (phoneStr.length < 10) return phoneStr;
+    return phoneStr.substring(0, 5) + "*****";
+  };
+
   return (
     <div className="bg-white min-h-screen py-8 font-sans text-gray-900">
-      <div className="container mx-auto px-4 max-w-7xl">
+      <div className="container mx-auto px-4 pt-19 max-w-7xl">
         {/* Breadcrumb */}
-        <div className="text-sm text-gray-500 mb-8 flex items-center">
-          <Link to="/" className="hover:text-black transition-colors">
-            Home
-          </Link>
-          <span className="mx-2 text-gray-300">/</span>
-          <Link to="/properties" className="hover:text-black transition-colors">
-            Properties
-          </Link>
-          <span className="mx-2 text-gray-300">/</span>
-          <span className="text-gray-900 font-medium truncate">
-            {property.basicInfo?.title || "Property"}
-          </span>
-        </div>
+         <div className="text-[11px] md:text-xs text-blue-600 font-medium flex-wrap flex items-center gap-2 mb-4">
+            <Link to="/" className="hover:text-blue-800">Home</Link>
+            <span className="text-gray-400">›</span>
+            <Link to="/properties" className="hover:text-blue-800">Property in {property.location?.city || "City"}</Link>
+            <span className="text-gray-400">›</span>
+            <span className="text-gray-500 truncate max-w-[200px] md:max-w-md">
+              {property.basicInfo?.propertyType || "Property"} in {property.location?.locality || property.location?.city || "Unknown"} {(property.specifications?.plot?.plotLength || property.specifications?.plot?.plotWidth) && `${Number(property.specifications.plot.plotLength || 0) * Number(property.specifications.plot.plotWidth || 0)} Sq.ft.`}
+            </span>
+          </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* LEFT COLUMN: Premium New Look */}
           <div className="lg:col-span-8 space-y-12">
-            {/* 1. Header & Price */}
-            <div className="space-y-4">
-              {/* Property Badge/Tag */}
+            {/* <div className="space-y-4">
 
-              <h1 className="text-3xl md:text-4xl font-bold capitalize tracking-tight text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-3xl font-bold capitalize tracking-tight text-gray-900 leading-tight">
                 {property.basicInfo?.title || "Untitled Property"}
               </h1>
 
@@ -246,31 +248,59 @@ const PropertyDetails = () => {
                   </>
                 )}
               </div>
-              <div className="flex items-center gap-3 mb-2 pt-5 flex-wrap">
-                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider border border-blue-100 italic">
-                  {property.basicInfo?.category || "For Sale"}
-                </span>
-                <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider border border-indigo-100">
-                  {property.basicInfo?.usageType || "Residential"}
-                </span>
-                <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-bold uppercase tracking-wider border border-purple-100">
-                  {property.basicInfo?.propertyType || "Unknown"}
-                </span>
-                {property.legal?.propertyStatus && (
-                  <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider border border-emerald-100">
-                    {property.legal.propertyStatus}
-                  </span>
-                )}
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${property.status === "Active" || property.status === "available"
-                    ? "bg-green-50 text-green-700 border-green-100"
-                    : "bg-red-50 text-red-700 border-red-100"
-                    }`}
-                >
-                  {property.status || "Active"}
-                </span>
-              </div>
-            </div>
+            </div> */}
+             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+  {/* LEFT SECTION */}
+  <div className="space-y-4"> {/* Increased space-y to separate price row from views */}
+    <div className="flex flex-wrap items-baseline gap-4">
+      <h1 className="text-2xl md:text-3xl font-bold leading-tight">
+        {property.isSold && property.soldPrice ? (
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg md:text-xl text-gray-500 font-medium">Sold Price:</span>
+            <span className="text-red-600">{formatIndianPrice(property.soldPrice)}</span>
+          </div>
+        ) : (
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg md:text-xl text-gray-500 font-medium">
+              {property.isSold ? "Price:" : "Launch Price:"}
+            </span>
+            <span className="text-gray-900">
+              {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+            </span>
+          </div>
+        )}
+      </h1>
+
+      <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
+
+      <div className="flex flex-col">
+        <span className="text-xl md:text-2xl font-semibold text-gray-800">
+          {property.specifications?.residential?.bedrooms || 0} Bedrooms {property.specifications?.residential?.bathrooms || 0} Bath
+        </span>
+        <span className="text-xs text-gray-500 font-medium">
+          {property.basicInfo?.propertyType || "Property"} for {property.basicInfo?.category === "Rent" ? "Rent" : "Sale"} in {property.location?.locality || property.location?.city}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* RIGHT SECTION */}
+  <div className="flex flex-col items-start md:items-end gap-2">
+    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+      Posted on {new Date(property.createdAt).toLocaleDateString()} | <span className="text-blue-600">{property.legal?.propertyStatus || "Ready to Move"}</span>
+    </div>
+    <div className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wide border ${property.legal?.propertyStatus === "Ready to Move" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-orange-50 text-orange-600 border-orange-100"}`}>
+      
+
+    {/* VIEWS SECTION - Now placed on the left */}
+    <div className="flex items-center gap-1.5 rounded-full border border-gray-100 w-fit">
+      <Eye size={16} className="text-blue-500" />
+      <span className="font-semibold text-gray-700">{formatNumber(property.view_count || 0)}</span>
+      <span className="text-gray-500">Views</span>
+    </div>
+    </div>
+  </div>
+</div>
 
             {/* 2. Image Gallery - Clean & Sharp */}
             <div className="space-y-4">
@@ -285,7 +315,7 @@ const PropertyDetails = () => {
                 <img
                   src={getImageUrl(mainImage)}
                   alt={property.basicInfo?.title || "Property"}
-                  className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${property.isSold ? "grayscale-[0.8]" : ""}`}
+                  className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
                 />
                 <div className="absolute top-4 right-4 z-10">
                   <WishlistButton propertyId={property._id} />
@@ -426,6 +456,27 @@ const PropertyDetails = () => {
                       </span>
                     </div>
                   )}
+
+                  {property.basicInfo?.category && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Type
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.basicInfo.category}
+                      </span>
+                    </div>
+                  )}
+                  {property.basicInfo?.propertyType && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Property Type
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.basicInfo.propertyType}
+                      </span>
+                    </div>
+                  )}
                   {/* item */}
                   {property.legal?.propertyStatus === "Under Construction" && property.legal?.expectedCompletionYear && (
                     <div className="flex flex-col">
@@ -448,6 +499,8 @@ const PropertyDetails = () => {
                       </span>
                     </div>
                   )}
+
+
                 </div>
               </div>
             </div>
@@ -766,6 +819,20 @@ const PropertyDetails = () => {
                     </h3>
                     <div className="flex items-center text-yellow-500 text-xs font-medium">
                       ★★★★★ <span className="text-gray-400 ml-1">(4.9)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl mb-6">
+                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm">
+                    <Phone size={20} />
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">
+                      Seller Phone
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 tracking-wider">
+                      {maskPhoneNumber(property.seller?.phone)}
                     </div>
                   </div>
                 </div>
