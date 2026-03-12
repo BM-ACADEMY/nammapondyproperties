@@ -5,7 +5,7 @@ const UserLayout = () => {
   return (
     <div className="admin-layout">
       <Header />
-      <div className="content">
+      <div className="content pt-20 lg:pt-24 min-h-screen">
         {/* <Sidebar /> */}
         <main>
           <Outlet />

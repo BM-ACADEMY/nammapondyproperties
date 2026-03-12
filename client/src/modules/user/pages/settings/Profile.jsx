@@ -272,25 +272,6 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
-
-                {/* Email - Read Only */}
-                <div className="group">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative opacity-75">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <Mail size={18} />
-                    </div>
-                    <div className="block w-full pl-10 pr-3 py-2.5 bg-gray-50/50 border border-gray-200 rounded-lg text-gray-500 cursor-not-allowed">
-                      {user.email}
-                      <span className="float-right text-xs text-gray-400 mt-1 italic">
-                        Cannot be changed
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Phone */}
                 <div className="group">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
