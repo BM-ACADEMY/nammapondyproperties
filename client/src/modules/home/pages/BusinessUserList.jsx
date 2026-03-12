@@ -106,6 +106,13 @@ const BusinessUserList = () => {
   }
 
   // Shared sellers list content
+  const maskPhoneNumber = (phone) => {
+    if (!phone) return "**********";
+    const phoneStr = phone.toString();
+    if (phoneStr.length < 10) return phoneStr;
+    return phoneStr.substring(0, 5) + "*****";
+  };
+
   const SellersList = ({ onSelect, compact = false }) => (
     <div className="overflow-y-auto">
       {sellers.map((user) => {
@@ -165,13 +172,8 @@ const BusinessUserList = () => {
                   {businessType?.name || "Professional"}
                 </p>
               )}
-              <div className="flex items-center gap-1 mt-0.5">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`text-amber-400 fill-current ${compact ? "w-2.5 h-2.5" : "w-3 h-3"}`} />
-                  ))}
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium">5.0</span>
+              <div className="text-[11px] text-[#174685] font-bold mt-1">
+                {maskPhoneNumber(user.phone)}
               </div>
             </div>
 
