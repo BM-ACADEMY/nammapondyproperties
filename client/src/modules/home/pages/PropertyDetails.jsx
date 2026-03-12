@@ -72,6 +72,7 @@ const PropertyDetails = () => {
 
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedEnquiryProperty, setSelectedEnquiryProperty] = useState(null);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -329,9 +330,9 @@ const PropertyDetails = () => {
                     <button
                       key={idx}
                       onClick={() => setMainImage(img)}
-                      className={`relative w-28 h-20 rounded-lg overflow-hidden flex-shrink-0 transition-all cursor-pointer ${mainImage === img
-                        ? "ring-2 ring-black opacity-100"
-                        : "opacity-60 hover:opacity-100"
+                      className={`relative w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 cursor-pointer border-2 ${mainImage === img
+                        ? "border-blue-600 opacity-100 shadow-md scale-[1.02]"
+                        : "border-transparent opacity-60 hover:opacity-100"
                         }`}
                     >
                       <img
@@ -508,13 +509,34 @@ const PropertyDetails = () => {
             <hr className="border-gray-100" />
 
             {/* 4. About the Project */}
-            <div>
-              <h3 className="text-xl font-bold text-gray-600 mb-4 flex items-center gap-2">
-                <Layout size={20} className="text-indigo-600" /> Property Overview
-              </h3>
-              <div className="prose prose-lg max-w-none text-gray-600 leading-relaxed bg-indigo-50/30 p-6 rounded-2xl border border-indigo-100/50">
-                <p className="whitespace-pre-line">{property.basicInfo?.description || "No description provided."}</p>
+            <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2 mb-6">
+              <Layout size={20} className="text-blue-600" /> Property Overview
+            </h3>
+            <div className="space-y-6">
+              <div className="relative">
+                <div 
+                  className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? 'max-h-[160px]' : 'max-h-[2000px]'}`}
+                >
+                  <p className="whitespace-pre-line text-slate-700">
+                    {property.basicInfo?.description || "No description provided."}
+                  </p>
+                </div>
+                
+                {!isDescriptionExpanded && (
+                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                )}
               </div>
+
+              {!isDescriptionExpanded && (
+                <div className="flex justify-center pt-2">
+                  <button
+                    onClick={() => setIsDescriptionExpanded(true)}
+                    className="px-10 py-2.5 rounded-full border border-blue-200 text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-colors"
+                  >
+                    Read More
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Detailed Specifications Section */}
@@ -814,29 +836,14 @@ const PropertyDetails = () => {
                     <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mb-1">
                       Listed By
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 leading-none mb-1">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">
                       {property.seller?.name || "Verified Seller"}
                     </h3>
-                    <div className="flex items-center text-yellow-500 text-xs font-medium">
-                      ★★★★★ <span className="text-gray-400 ml-1">(4.9)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl mb-6">
-                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-blue-600 shadow-sm">
-                    <Phone size={20} />
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-gray-400 font-extrabold uppercase tracking-widest">
-                      Seller Phone
-                    </div>
-                    <div className="text-lg font-bold text-gray-900 tracking-wider">
+                    <div className="text-sm font-semibold text-gray-500">
                       {maskPhoneNumber(property.seller?.phone)}
                     </div>
                   </div>
                 </div>
-
                 <div className="space-y-3 mb-6">
                   <div className="text-sm text-gray-600 text-center px-4">
                     Interested in this property? <br /> Connect directly with
