@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { Modal, Form, Input, Rate, Button, message, Popconfirm } from "antd";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
+import React, { useEffect, useState, memo } from "react";
 import {
   Star,
   Edit2,
@@ -10,10 +12,113 @@ import {
   Calendar,
   Award,
 } from "lucide-react";
-import { Modal, Form, Input, Rate, Button, message, Popconfirm } from "antd";
-import { useAuth } from "@/context/AuthContext";
 
 const { TextArea } = Input;
+import axios from "axios";
+
+const ReviewCard = memo(({ testimonial, getStatusBadgeStyles, handleEdit, handleDelete }) => (
+  <motion.div
+    layout
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, scale: 0.95 }}
+    transition={{ duration: 0.3 }}
+    className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 flex flex-col"
+  >
+    {/* Card Header */}
+    <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-white relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
+      <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12"></div>
+
+      {/* Status Badge */}
+      <div className="flex justify-between items-start mb-4">
+        <Award className="w-8 h-8 text-amber-400" />
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm backdrop-blur-sm bg-opacity-90 ${getStatusBadgeStyles(testimonial.status)}`}
+        >
+          {testimonial.status}
+        </span>
+      </div>
+
+      {/* User Info */}
+      <div>
+        <h3 className="text-xl font-bold mb-1">
+          {testimonial.name}
+        </h3>
+        <p className="text-slate-300 text-sm">
+          {testimonial.role || "User"}
+        </p>
+      </div>
+
+      {/* Rating */}
+      <div className="flex gap-1 mt-4">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={`w-5 h-5 ${
+              i < testimonial.rating
+                ? "fill-amber-400 text-amber-400"
+                : "fill-slate-600 text-slate-600"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+
+    {/* Card Content */}
+    <div className="p-6 flex-1 flex flex-col">
+      {/* Review Text */}
+      <div className="relative bg-slate-50 rounded-xl p-4 mb-6 flex-1">
+        <Quote className="absolute top-3 left-3 w-5 h-5 text-slate-300 opacity-50 transform scale-x-[-1]" />
+        <p className="text-slate-600 text-sm italic leading-relaxed pl-4 line-clamp-4">
+          "{testimonial.content}"
+        </p>
+      </div>
+
+      {/* Footer Info & Actions */}
+      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+        <div className="flex items-center text-xs font-medium text-slate-400">
+          <Calendar className="w-3.5 h-3.5 mr-1.5" />
+          {new Date(testimonial.createdAt).toLocaleDateString(
+            undefined,
+            {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            },
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleEdit(testimonial)}
+            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            title="Edit Review"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+
+          <Popconfirm
+            title="Delete Review"
+            description="Are you sure you want to remove this review?"
+            onConfirm={() => handleDelete(testimonial._id)}
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true, size: "small" }}
+            cancelButtonProps={{ size: "small" }}
+          >
+            <button
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors"
+              title="Delete Review"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </Popconfirm>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+));
 
 const Reviews = () => {
   const { user, isAuthenticated } = useAuth();
@@ -207,107 +312,19 @@ const Reviews = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((testimonial) => (
-              <div
-                key={testimonial._id}
-                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 flex flex-col"
-              >
-                {/* Card Header */}
-                <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 text-white relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full -ml-12 -mb-12"></div>
-
-                  {/* Status Badge */}
-                  <div className="flex justify-between items-start mb-4">
-                    <Award className="w-8 h-8 text-amber-400" />
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-sm backdrop-blur-sm bg-opacity-90 ${getStatusBadgeStyles(testimonial.status)}`}
-                    >
-                      {testimonial.status}
-                    </span>
-                  </div>
-
-                  {/* User Info */}
-                  <div>
-                    <h3 className="text-xl font-bold mb-1">
-                      {testimonial.name}
-                    </h3>
-                    <p className="text-slate-300 text-sm">
-                      {testimonial.role || "User"}
-                    </p>
-                  </div>
-
-                  {/* Rating */}
-                  <div className="flex gap-1 mt-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < testimonial.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "fill-slate-600 text-slate-600"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="p-6 flex-1 flex flex-col">
-                  {/* Review Text */}
-                  <div className="relative bg-slate-50 rounded-xl p-4 mb-6 flex-1">
-                    <Quote className="absolute top-3 left-3 w-5 h-5 text-slate-300 opacity-50 transform scale-x-[-1]" />
-                    <p className="text-slate-600 text-sm italic leading-relaxed pl-4 line-clamp-4">
-                      "{testimonial.content}"
-                    </p>
-                  </div>
-
-                  {/* Footer Info & Actions */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                    <div className="flex items-center text-xs font-medium text-slate-400">
-                      <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                      {new Date(testimonial.createdAt).toLocaleDateString(
-                        undefined,
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        },
-                      )}
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEdit(testimonial)}
-                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                        title="Edit Review"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-
-                      <Popconfirm
-                        title="Delete Review"
-                        description="Are you sure you want to remove this review?"
-                        onConfirm={() => handleDelete(testimonial._id)}
-                        okText="Delete"
-                        cancelText="Cancel"
-                        okButtonProps={{ danger: true, size: "small" }}
-                        cancelButtonProps={{ size: "small" }}
-                      >
-                        <button
-                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-colors"
-                          title="Delete Review"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </Popconfirm>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <AnimatePresence mode="popLayout">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {testimonials.map((testimonial) => (
+                <ReviewCard
+                  key={testimonial._id}
+                  testimonial={testimonial}
+                  getStatusBadgeStyles={getStatusBadgeStyles}
+                  handleEdit={handleEdit}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </AnimatePresence>
         )}
       </div>
 
@@ -324,6 +341,17 @@ const Reviews = () => {
         width={600}
         className="rounded-2xl"
         centered
+        destroyOnClose
+        modalRender={(modal) => (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", duration: 0.4, bounce: 0.3 }}
+          >
+            {modal}
+          </motion.div>
+        )}
       >
         <Form
           form={form}
