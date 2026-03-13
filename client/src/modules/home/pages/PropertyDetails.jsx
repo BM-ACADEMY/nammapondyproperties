@@ -305,7 +305,7 @@ const PropertyDetails = () => {
 
             {/* 2. Image Gallery - Clean & Sharp */}
             <div className="space-y-4">
-              <div className="relative h-[350px] md:h-[450px] bg-gray-100 rounded-xl overflow-hidden group">
+              <div className="relative h-[450px] md:h-[550px] bg-gray-100 rounded-xl overflow-hidden group">
                 {property.isSold && (
                   <div className="absolute top-6 left-6 z-20">
                     <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20">
@@ -344,121 +344,164 @@ const PropertyDetails = () => {
                   ))}
                 </div>
               )}
-            </div>            {/* 3. Key Features Section */}
+            </div>
+
+            {/* 3. Key Information - The "Greencrest" Style Grid */}
             <div>
-              <h3 className="text-xl font-bold text-gray-800 mb-6 font-sans">
-                Key Features:
+              <h3 className="text-xl font-bold text-gray-600 mb-6">
+                Key Information
               </h3>
-              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm">
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-800 mb-2 font-sans">Amenities</h4>
-                  <hr className="border-gray-100" />
-                </div>
-                
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-y-10 gap-x-8">
-                  {/* Bed */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <BedDouble size={18} />
-                    </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      {property.specifications?.residential?.bedrooms || 0} Beds
+              <div className="bg-gray-50 rounded-2xl p-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-4">
+                  {/* item */}
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Layers size={12} /> Usage
+                    </span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {property.basicInfo?.usageType || "Residential"}
                     </span>
                   </div>
-
-                  {/* Bath */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Bath size={18} />
-                    </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      {property.specifications?.residential?.bathrooms || 0} Baths
+                  {/* item */}
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <MapPin size={12} /> Locality
+                    </span>
+                    <span className="text-lg font-bold text-gray-900 capitalize truncate">
+                      {property.location?.locality || property.location?.city || "Pondicherry"}
                     </span>
                   </div>
-
-                  {/* Area */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Square size={18} />
-                    </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      {property.specifications?.area?.totalArea ? `${(property.specifications.area.totalArea / 1000).toFixed(0)}k sq ft` : "N/A"}
+                  {/* item */}
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <Square size={12} /> Total Area
+                    </span>
+                    <span className="text-lg font-bold text-gray-900 flex items-center">
+                      {property.specifications?.area?.totalArea ? `${property.specifications.area.totalArea} sqft` : "N/A"}
                     </span>
                   </div>
-
-                  {/* Smoking */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Wind size={18} />
+                  {/* item */}
+                  {property.specifications?.area?.builtupArea && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Layout size={12} /> Built-up
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.specifications.area.builtupArea} sqft
+                      </span>
                     </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      Smocking Area
-                    </span>
-                  </div>
-
-                  {/* Kitchen */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Layout size={18} />
+                  )}
+                  {/* item */}
+                  {property.specifications?.area?.carpetArea && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Layers size={12} /> Carpet Area
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 font-serif">
+                        {property.specifications.area.carpetArea} sqft
+                      </span>
                     </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      Kitchen
-                    </span>
-                  </div>
-
-                  {/* Balcony */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Layers size={18} />
+                  )}
+                  {/* item */}
+                  {property.specifications?.floor?.totalFloor && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                        Total Floors
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.specifications.floor.totalFloor}
+                      </span>
                     </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap capitalize">
-                      balcony
-                    </span>
-                  </div>
-
-                  {/* Wifi */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Wifi size={18} />
+                  )}
+                  {/* item */}
+                  {property.specifications?.floor?.propertyOnFloor && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                        On Floor
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.specifications.floor.propertyOnFloor}
+                      </span>
                     </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      Wifi
-                    </span>
-                  </div>
-
-                  {/* Parking */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                      <Car size={18} />
+                  )}
+                  {/* item */}
+                  {(property.specifications?.facing || property.specifications?.residential?.facing) && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Compass size={12} /> Facing
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.specifications.facing || property.specifications.residential.facing}
+                      </span>
                     </div>
-                    <span className="text-gray-800 font-medium whitespace-nowrap">
-                      Parking Area
-                    </span>
-                  </div>
+                  )}
+                  {/* item */}
+                  {property.specifications?.residential?.furnishing && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
+                        Furnishing
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.specifications.residential.furnishing}
+                      </span>
+                    </div>
+                  )}
+                  {/* item */}
+                  {property.legal?.propertyStatus === "Ready to Move" && property.legal?.ageOfProperty && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Age of Property
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.legal.ageOfProperty}
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Property Status */}
+                  {property.basicInfo?.category && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Type
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.basicInfo.category}
+                      </span>
+                    </div>
+                  )}
+                  {property.basicInfo?.propertyType && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Property Type
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.basicInfo.propertyType}
+                      </span>
+                    </div>
+                  )}
+                  {/* item */}
+                  {property.legal?.propertyStatus === "Under Construction" && property.legal?.expectedCompletionYear && (
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <Calendar size={12} /> Expected Possession
+                      </span>
+                      <span className="text-lg font-bold text-gray-900">
+                        {property.legal.expectedCompletionYear}
+                      </span>
+                    </div>
+                  )}
+                  {/* item */}
                   {property.legal?.propertyStatus && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                        <ShieldCheck size={18} />
-                      </div>
-                      <span className="text-gray-800 font-medium whitespace-nowrap">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
+                        <ShieldCheck size={12} /> Construction Status
+                      </span>
+                      <span className="text-lg font-bold text-blue-600">
                         {property.legal.propertyStatus}
                       </span>
                     </div>
                   )}
 
-                  {/* Facing */}
-                  {(property.specifications?.facing || property.specifications?.residential?.facing) && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                        <Compass size={18} />
-                      </div>
-                      <span className="text-gray-800 font-medium whitespace-nowrap">
-                        {property.specifications.facing || property.specifications.residential.facing} Facing
-                      </span>
-                    </div>
-                  )}
+
                 </div>
               </div>
             </div>
@@ -467,7 +510,7 @@ const PropertyDetails = () => {
 
             {/* 4. About the Project */}
             <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2 mb-6">
-               Property Overview
+              <Layout size={20} className="text-blue-600" /> Property Overview
             </h3>
             <div className="space-y-6">
               <div className="relative">
@@ -500,61 +543,58 @@ const PropertyDetails = () => {
             {(property.specifications?.residential || property.specifications?.commercial || property.specifications?.plot) && (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2">
-                   Property Specifications
+                  <Home size={20} className="text-blue-600" /> Property Specifications
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Residential Specifics */}
                   {property.specifications?.residential && (property.specifications.residential.bedrooms > 0 || property.specifications.residential.bathrooms > 0 || property.specifications.residential.balconies > 0 || property.specifications.residential.hall !== undefined || property.specifications.residential.kitchens !== undefined || property.specifications.residential.facing) && (
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                      <div className="border-b border-gray-100 pb-3">
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 font-sans">
-                          Residential Details
-                        </h4>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
+                        <BedDouble size={16} /> Residential Details
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
                         {property.specifications.residential.bedrooms > 0 && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <BedDouble size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><BedDouble size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Bedrooms</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.residential.bedrooms}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Bedrooms</p>
+                              <p className="font-bold text-gray-900">{property.specifications.residential.bedrooms}</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.residential.bathrooms > 0 && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Bath size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Bath size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Bathrooms</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.residential.bathrooms}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Bathrooms</p>
+                              <p className="font-bold text-gray-900">{property.specifications.residential.bathrooms}</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.residential.balconies > 0 && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Wind size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Wind size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Balconies</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.residential.balconies}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Balconies</p>
+                              <p className="font-bold text-gray-900">{property.specifications.residential.balconies}</p>
                             </div>
                           </div>
                         )}
                         {(property.specifications.residential.hall !== undefined || property.specifications.residential.kitchens !== undefined) && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Home size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Home size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Hall/Kitchen</p>
-                              <p className="font-semibold text-gray-800">
-                                {(property.specifications.residential.hall ?? 0)}H / {(property.specifications.residential.kitchens ?? 0)}K
-                              </p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Hall/Kitchen</p>
+                              <p className="font-bold">{(property.specifications.residential.hall ?? 0)}H / {(property.specifications.residential.kitchens ?? 0)}K</p>
+                            </div>
+                          </div>
+                        )}
+                        {(property.specifications.facing || property.specifications.residential.facing) && (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Compass size={18} /></div>
+                            <div>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Facing</p>
+                              <p className="font-bold text-gray-900">{property.specifications.facing || property.specifications.residential.facing}</p>
                             </div>
                           </div>
                         )}
@@ -564,76 +604,61 @@ const PropertyDetails = () => {
 
                   {/* Commercial Specifics */}
                   {property.specifications?.commercial && (property.specifications.commercial.cabins || property.specifications.commercial.meetingRooms || property.specifications.commercial.workstations || property.specifications.commercial.pantry || property.specifications.commercial.receptionArea || property.specifications.commercial.suitableFor) && (
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                      <div className="border-b border-gray-100 pb-3">
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 font-sans">
-                          Commercial Details
-                        </h4>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
+                        <Layers size={16} /> Commercial Details
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
                         {property.specifications.commercial.cabins !== undefined && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Layers size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Cabins</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.commercial.cabins}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Cabins</p>
+                              <p className="font-bold text-gray-900">{property.specifications.commercial.cabins}</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.commercial.meetingRooms !== undefined && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Layout size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Meeting Rooms</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.commercial.meetingRooms}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Meeting Rooms</p>
+                              <p className="font-bold text-gray-900">{property.specifications.commercial.meetingRooms}</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.commercial.workstations !== undefined && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Square size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Workstations</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.commercial.workstations}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Workstations</p>
+                              <p className="font-bold text-gray-900">{property.specifications.commercial.workstations}</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.commercial.pantry && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Droplet size={18} />
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Pantry</p>
-                              <p className="font-semibold text-gray-800">Available</p>
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-500" />
+                            <p className="text-sm font-medium text-gray-700">Pantry</p>
                           </div>
                         )}
                         {property.specifications.commercial.receptionArea && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <User size={18} />
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Reception</p>
-                              <p className="font-semibold text-gray-800">Available</p>
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-500" />
+                            <p className="text-sm font-medium text-gray-700">Reception Area</p>
                           </div>
                         )}
                         {property.specifications.commercial.suitableFor && (
-                          <div className="flex items-center gap-4 col-span-full">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Home size={18} />
-                            </div>
+                          <div className="flex items-center gap-3 col-span-2">
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Suitable For</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.commercial.suitableFor}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Suitable For</p>
+                              <p className="font-bold text-gray-900">{property.specifications.commercial.suitableFor}</p>
+                            </div>
+                          </div>
+                        )}
+                        {(property.specifications.facing || property.specifications.residential?.facing) && (
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Compass size={18} /></div>
+                            <div>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Facing</p>
+                              <p className="font-bold text-gray-900">{property.specifications.facing || property.specifications.residential?.facing}</p>
                             </div>
                           </div>
                         )}
@@ -643,54 +668,45 @@ const PropertyDetails = () => {
 
                   {/* Plot Specifics */}
                   {property.specifications?.plot && (property.specifications.plot.plotLength || property.specifications.plot.plotWidth || property.specifications.plot.roadWidth || property.specifications.plot.cornerPlot || property.specifications.plot.gatedCommunity) && (
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                      <div className="border-b border-gray-100 pb-3">
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 font-sans">
-                          Plot Details
-                        </h4>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
+                        <Square size={16} /> Plot Details
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
                         {(property.specifications.plot.plotLength || property.specifications.plot.plotWidth) && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Square size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Dimensions</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.plot.plotLength || 'L'} x {property.specifications.plot.plotWidth || 'W'} ft</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Dimensions</p>
+                              <p className="font-bold text-gray-900">{property.specifications.plot.plotLength || 'L'} x {property.specifications.plot.plotWidth || 'W'} ft</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.plot.roadWidth > 0 && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <ArrowRight size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Road Width</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.plot.roadWidth} ft</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Road Width</p>
+                              <p className="font-bold text-gray-900">{property.specifications.plot.roadWidth} ft</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.plot.cornerPlot && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <CheckCircle2 size={18} className="text-green-500" />
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Corner Plot</p>
-                              <p className="font-semibold text-gray-800">Yes</p>
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-500" />
+                            <p className="text-sm font-medium text-gray-700">Corner Plot</p>
                           </div>
                         )}
                         {property.specifications.plot.gatedCommunity && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <ShieldCheck size={18} className="text-blue-500" />
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 size={16} className="text-green-500" />
+                            <p className="text-sm font-medium text-gray-700">Gated Community</p>
+                          </div>
+                        )}
+                        {(property.specifications.facing || property.specifications.residential?.facing) && (
+                          <div className="flex items-center gap-3 col-span-2">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Compass size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Gated Community</p>
-                              <p className="font-semibold text-gray-800">Yes</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Facing</p>
+                              <p className="font-bold text-gray-900">{property.specifications.facing || property.specifications.residential?.facing}</p>
                             </div>
                           </div>
                         )}
@@ -700,32 +716,26 @@ const PropertyDetails = () => {
 
                   {/* Utilities */}
                   {property.specifications?.utilities && (property.specifications.utilities.waterSupply || property.specifications.utilities.powerBackup) && (
-                    <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-                      <div className="border-b border-gray-100 pb-3">
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center gap-2 font-sans">
-                          Utilities
-                        </h4>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
+                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
+                        <Zap size={16} /> Utilities
+                      </h4>
+                      <div className="grid grid-cols-2 gap-4">
                         {property.specifications.utilities.waterSupply && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Droplet size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600"><Droplet size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Water Supply</p>
-                              <p className="font-semibold text-gray-800">{property.specifications.utilities.waterSupply}</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Water Supply</p>
+                              <p className="font-bold text-gray-900">{property.specifications.utilities.waterSupply}</p>
                             </div>
                           </div>
                         )}
                         {property.specifications.utilities.powerBackup && (
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
-                              <Zap size={18} />
-                            </div>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600"><Zap size={18} /></div>
                             <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Power Backup</p>
-                              <p className="font-semibold text-gray-800">Available</p>
+                              <p className="text-xs text-gray-400 font-bold uppercase">Power Backup</p>
+                              <p className="font-bold text-gray-900">Available</p>
                             </div>
                           </div>
                         )}
