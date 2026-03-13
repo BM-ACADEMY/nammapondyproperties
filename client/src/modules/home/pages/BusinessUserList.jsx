@@ -320,9 +320,9 @@ const BusinessUserList = () => {
               ) : (
                 <div className="flex flex-col gap-0 pb-10">
                   {sellerProperties.map((property) => (
-                    <HorizontalPropertyCard 
-                      key={property._id} 
-                      property={{...property, businessType: property.businessType || businessType}} 
+                    <HorizontalPropertyCard
+                      key={property._id}
+                      property={{ ...property, businessType: property.businessType || businessType }}
                       onWhatsAppClick={(e, prop) => {
                         const phone = prop.seller?.phone || selectedSeller?.phone;
                         if (phone) window.open(`https://wa.me/${phone}`, "_blank");
@@ -340,4 +340,3 @@ const BusinessUserList = () => {
 };
 
 export default BusinessUserList;
-

@@ -4,6 +4,7 @@ import { MapPin, ArrowRight, Eye, ChevronLeft, ChevronRight } from "lucide-react
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
+import { useNav } from "../../../context/NavContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "./PropertyCard";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
@@ -19,16 +20,25 @@ const FeaturedProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { businessTypes } = useNav();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
+
+  const builderType = businessTypes?.find(t =>
+    t.name?.toLowerCase().includes("builder") ||
+    t.name?.toLowerCase().includes("promoter")
+  );
 
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        // Fetch only verified properties, limited to 12 for carousel
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`,
-        );
+        let url = `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`;
+
+        if (builderType) {
+          url += `&businessType=${builderType._id}`;
+        }
+
+        const res = await axios.get(url);
         if (Array.isArray(res.data.properties)) {
           setProperties(res.data.properties);
         } else if (Array.isArray(res.data)) {
@@ -40,8 +50,10 @@ const FeaturedProperties = () => {
         setLoading(false);
       }
     };
-    fetchProperties();
-  }, []);
+    if (businessTypes?.length > 0) {
+      fetchProperties();
+    }
+  }, [businessTypes, builderType]);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,6 +112,8 @@ const FeaturedProperties = () => {
       </div>
     );
 
+  const viewAllUrl = builderType ? `/properties?businessType=${builderType._id}` : "/properties";
+
   return (
     <section className="py-10">
       <div className=" mx-auto max-w-[1400px] px-4">
@@ -108,13 +122,13 @@ const FeaturedProperties = () => {
 
             <div className="pt-0"></div>
             <div className="mb-6">
-            <h2 className="text-[28px] font-bold text-[#1E293B]">New Properties</h2>
-            <p className="text-[15px] text-[#64748B] mt-1">Check out our latest verified and premium listings.</p>
-          </div>
+              <h2 className="text-[28px] font-bold text-[#1E293B]">Builder & Promoters</h2>
+              <p className="text-[15px] text-[#64748B] mt-1">Explore exclusive properties from top builders and promoters.</p>
+            </div>
 
           </div>
           <Link
-            to="/properties"
+            to={viewAllUrl}
             className="hidden md:flex items-center text-gray-900 font-semibold hover:text-[#166aa8] transition"
           >
             View All Properties <ArrowRight className="w-5 h-5 ml-1" />
@@ -174,7 +188,7 @@ const FeaturedProperties = () => {
 
         <div className="mt-8 text-center font-serif md:hidden">
           <Link
-            to="/properties"
+            to={viewAllUrl}
             className="inline-flex items-center text-gray-900 font-semibold hover:text-[#166aa8]"
           >
             View All Properties <ArrowRight className="w-5 h-5 ml-1" />

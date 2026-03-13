@@ -41,6 +41,7 @@ const PropertiesPage = () => {
     approval: getParamArray("approval"),
     bedrooms: getParamArray("bedrooms"),
     category: getParamArray("category"), // Added category
+    businessType: getParamArray("businessType"),
   });
 
   // SYNC FROM URL
@@ -54,6 +55,7 @@ const PropertiesPage = () => {
       approval: getParamArray("approval"),
       bedrooms: getParamArray("bedrooms"),
       category: getParamArray("category"), // Added category
+      businessType: getParamArray("businessType"),
     });
     setCurrentPage(Number(searchParams.get("page")) || 1);
   }, [searchParams]);
@@ -76,6 +78,7 @@ const PropertiesPage = () => {
       if (filters.approval.length) params.append("approval", filters.approval.join(","));
       if (filters.bedrooms.length) params.append("bedrooms", filters.bedrooms.join(","));
       if (filters.category.length) params.append("category", filters.category.join(",")); // Added category
+      if (filters.businessType.length) params.append("businessType", filters.businessType.join(","));
       params.append("page", currentPage);
 
       const res = await axios.get(
@@ -168,7 +171,7 @@ const PropertiesPage = () => {
           content="Browse verified residential and commercial properties in Pondicherry. Transparent pricing and expert guidance for buyers."
         />
       </Helmet>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
@@ -192,23 +195,20 @@ const PropertiesPage = () => {
 
           {/* Off-canvas Filter (Mobile/Tablet) */}
           <div
-            className={`fixed top-19 inset-0 z-[100] lg:hidden transition-opacity duration-300 ${
-              isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            }`}
+            className={`fixed top-19 inset-0 z-[100] lg:hidden transition-opacity duration-300 ${isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}
           >
             {/* Backdrop */}
             <div
-              className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
-                isFilterOpen ? "opacity-100" : "opacity-0"
-              }`}
+              className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isFilterOpen ? "opacity-100" : "opacity-0"
+                }`}
               onClick={() => setIsFilterOpen(false)}
             />
 
             {/* Drawer Content */}
             <div
-              className={`absolute left-0 top-0 bottom-0 h-full w-[280px] sm:w-[320px] bg-white shadow-2xl transition-transform duration-300 transform ${
-                isFilterOpen ? "translate-x-0" : "-translate-x-full"
-              } flex flex-col`}
+              className={`absolute left-0 top-0 bottom-0 h-full w-[280px] sm:w-[320px] bg-white shadow-2xl transition-transform duration-300 transform ${isFilterOpen ? "translate-x-0" : "-translate-x-full"
+                } flex flex-col`}
             >
               {/* Header */}
               <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
