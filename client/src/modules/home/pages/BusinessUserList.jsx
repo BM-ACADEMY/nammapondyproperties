@@ -205,34 +205,7 @@ const BusinessUserList = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-['Poppins',_sans-serif] pb-20 relative overflow-x-hidden">
-      {/* Hero Section */}
-      <div className="relative h-[300px] md:h-[450px] w-full overflow-hidden mb-12">
-        <div className="absolute inset-0">
-          <img
-            src="/builder_hero_bg.png"
-            alt="Professional Background"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-[#0f172a]/60 backdrop-blur-[1px]" />
-        </div>
-        <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-4"
-          >
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-2xl">
-              Find your professional to find a home
-            </h1>
-            <p className="text-gray-200 text-lg md:text-xl max-w-2xl mx-auto font-medium drop-shadow-lg">
-              Connect with verified {businessType?.name || "Professional"}s to discover exclusive property listings.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-
+    <div className="min-h-screen pt-30 bg-gray-50 font-['Poppins',_sans-serif] pb-20 pt-8 relative overflow-x-hidden">
       {/* ─── MOBILE: Floating side tab button ─── */}
       {sellers.length > 0 && !isBuilderType && (
         <div className="lg:hidden fixed left-0 top-1/2 -translate-y-1/2 z-[400]">
@@ -393,41 +366,66 @@ const BusinessUserList = () => {
               ) : (
                 /* ─── Properties View ─── */
                 <>
-                  <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-                    <div className="flex items-center gap-4">
+                  <div className="mb-8 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+                    {/* Decorative background shape */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#174685]/5 rounded-bl-[100px] -mr-16 -mt-16 pointer-events-none" />
+                    
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 relative z-10 w-full md:w-auto">
                       {isBuilderType && (
                         <button
                           onClick={() => setSelectedSeller(null)}
-                          className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 text-slate-600 hover:text-[#174685] hover:border-[#174685]/20 transition-all active:scale-95"
+                          className="p-2.5 shrink-0 rounded-full bg-slate-50 border border-gray-200 text-slate-600 hover:text-[#174685] hover:bg-white hover:shadow-md transition-all active:scale-95 sm:self-center"
+                          title="Back to all profiles"
                         >
                           <ChevronRight className="w-5 h-5 rotate-180" />
                         </button>
                       )}
-                      <div>
-                        <h2 className={`text-2xl font-bold text-slate-900`}>
-                          Properties by {selectedSeller?.name}
-                        </h2>
-                        <p className="text-slate-500 text-sm">
-                          Showing all {businessType?.name?.toLowerCase()} listings.
-                        </p>
+                      
+                      <div className="flex items-center gap-5">
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-md shrink-0 border-2 border-white bg-white">
+                          {selectedSeller?.profile_image ? (
+                            <img src={getImageUrl(selectedSeller.profile_image)} alt={selectedSeller?.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-3xl font-bold">
+                              {selectedSeller?.name?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
+                              {selectedSeller?.name}
+                            </h2>
+                            <ShieldCheck className="w-5 h-5 text-[#1aa554]" />
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600 font-medium mt-2">
+                            <div className="flex items-center gap-1.5 bg-blue-50 text-[#174685] px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide">
+                              {businessType?.name}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-gray-100">
+                              <Phone className="w-4 h-4 text-slate-400" />
+                              <span>{selectedSeller?.phone}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-gray-100">
+                              <Building2 className="w-4 h-4 text-slate-400" />
+                              <span>{sellerProperties.length} Properties</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      {isBuilderType && (
-                        <button
-                          onClick={() => setSelectedSeller(null)}
-                          className="hidden md:flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-[#174685] font-semibold text-sm transition-colors"
-                        >
-                          Back to all profiles
-                        </button>
-                      )}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto relative z-10">
                       {selectedSeller?.phone && (
                         <button
                           onClick={() =>
                             window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
                           }
-                          className="flex items-center gap-2 px-5 py-2.5 bg-[#1aa554] text-white rounded-full text-sm font-bold hover:bg-[#158a45] transition-all shadow-md active:scale-95"
+                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#1aa554] text-white rounded-xl text-sm font-bold hover:bg-[#158a45] hover:shadow-lg transition-all active:scale-95"
                         >
                           <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
                         </button>
