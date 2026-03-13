@@ -3,6 +3,7 @@ import axios from "axios";
 import { Helmet } from "react-helmet-async";
 import HeroSection from "../components/HeroSection";
 import PropertyTypeList from "../components/PropertyTypeList";
+import BuilderPromoterProperties from "../components/BuilderPromoterProperties";
 import FeaturedProperties from "../components/FeaturedProperties";
 import BannerAdSection from "../components/BannerAdSection";
 import WhyChooseUs from "../components/WhyChooseUs";
@@ -46,11 +47,12 @@ const HomePage = () => {
       </Helmet>
       <HeroSection />
       <PropertyTypeList />
+      <FeaturedProperties />
       <AdvertiserTypeSection />
 
-      <FeaturedProperties />
-      <BannerAdSection />
       <RecommendedProperties />
+      <BannerAdSection />
+      <BuilderPromoterProperties />
       <MeetKamar />
       {/* <WhyChooseUs /> */}
       <Testimonials />

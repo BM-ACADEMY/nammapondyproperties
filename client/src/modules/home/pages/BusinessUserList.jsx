@@ -50,10 +50,19 @@ const BusinessUserList = () => {
           axios.get(`${API}/business-types/${businessTypeId}`),
           axios.get(`${API}/users/sellers-by-business-type/${businessTypeId}`),
         ]);
-        setBusinessType(typeRes.data);
+        const bType = typeRes.data;
+        setBusinessType(bType);
         setSellers(sellersRes.data);
-        if (sellersRes.data.length > 0) {
+
+        // Check if this is a builder/promoter type
+        const isBuilder = bType?.name?.toLowerCase().includes("builder") ||
+          bType?.name?.toLowerCase().includes("promoter");
+
+        // Only auto-select if NOT a builder type
+        if (sellersRes.data.length > 0 && !isBuilder) {
           setSelectedSeller(sellersRes.data[0]);
+        } else {
+          setSelectedSeller(null);
         }
       } catch (error) {
         console.error("Error fetching sellers:", error);
@@ -66,7 +75,12 @@ const BusinessUserList = () => {
 
   useEffect(() => {
     const fetchSellerProperties = async () => {
-      if (!selectedSeller || !businessTypeId) return;
+      // For non-builder types, selectedSeller is always set if sellers exist
+      // For builder types, it's null until one is clicked
+      if (!selectedSeller || !businessTypeId) {
+        setSellerProperties([]);
+        return;
+      }
       setPropertiesLoading(true);
       try {
         const res = await axios.get(
@@ -96,6 +110,9 @@ const BusinessUserList = () => {
     document.body.style.overflow = isDrawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isDrawerOpen]);
+
+  const isBuilderType = businessType?.name?.toLowerCase().includes("builder") ||
+    businessType?.name?.toLowerCase().includes("promoter");
 
   if (loading) {
     return (
@@ -188,13 +205,37 @@ const BusinessUserList = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 font-['Poppins',_sans-serif] pb-20 pt-10 relative overflow-x-hidden">
-      {/* Background glow */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-white opacity-60 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-gray-50 font-['Poppins',_sans-serif] pb-20 relative overflow-x-hidden">
+      {/* Hero Section */}
+      <div className="relative h-[300px] md:h-[450px] w-full overflow-hidden mb-12">
+        <div className="absolute inset-0">
+          <img
+            src="/builder_hero_bg.png"
+            alt="Professional Background"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-[#0f172a]/60 backdrop-blur-[1px]" />
+        </div>
+        <div className="relative h-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-4"
+          >
+            <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-2xl">
+              Find your professional to find a home
+            </h1>
+            <p className="text-gray-200 text-lg md:text-xl max-w-2xl mx-auto font-medium drop-shadow-lg">
+              Connect with verified {businessType?.name || "Professional"}s to discover exclusive property listings.
+            </p>
+          </motion.div>
+        </div>
+      </div>
 
       {/* ─── MOBILE: Floating side tab button ─── */}
-      {sellers.length > 0 && (
-        <div className="lg:hidden fixed left-0 top-24 z-[400]">
+      {sellers.length > 0 && !isBuilderType && (
+        <div className="lg:hidden fixed left-0 top-1/2 -translate-y-1/2 z-[400]">
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="flex flex-col items-center justify-center gap-2 bg-[#174685] text-white py-4 px-2.5 rounded-r-2xl shadow-xl active:scale-95 transition-transform"
@@ -261,7 +302,7 @@ const BusinessUserList = () => {
       </AnimatePresence>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="mt-20 max-w-[1400px] mx-auto pl-14 pr-4 sm:pl-16 sm:pr-6 lg:px-8 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
@@ -275,61 +316,154 @@ const BusinessUserList = () => {
         ) : (
           <div className="flex flex-col lg:flex-row gap-8 min-h-[600px]">
             {/* ─── DESKTOP: Left Sidebar ─── */}
-            <div className="hidden lg:block lg:w-72 xl:w-80 h-fit sticky top-24">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <SellersList />
+            {!isBuilderType && (
+              <div className="hidden lg:block lg:w-72 xl:w-80 h-fit sticky top-24">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="p-4 border-b border-gray-50 bg-slate-50/50">
+                    <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
+                      {businessType?.name || "Professional"}s
+                    </h3>
+                  </div>
+                  <SellersList />
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* ─── Properties ─── */}
+            {/* ─── Profile Grid / Properties ─── */}
             <div className="flex-1 min-h-[600px]">
-
-              <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+              {isBuilderType && !selectedSeller ? (
+                /* ─── Builder Profile Grid ─── */
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900">
-                    Properties by {selectedSeller?.name}
-                  </h2>
-                  <p className="text-slate-500 text-sm">
-                    Showing all {businessType?.name?.toLowerCase()} properties posted by this verified professional.
-                  </p>
-                </div>
+                  <div className="mb-10">
+                    <h1 className="text-2xl font-bold text-[#1e293b]">
+                      Verified {businessType?.name}s
+                    </h1>
+                    <p className="text-slate-500 mt-1">
+                      Select a professional to view their exclusive property listings.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {sellers.map((user) => (
+                      <motion.div
+                        key={user._id}
+                        whileHover={{ y: -5 }}
+                        onClick={() => setSelectedSeller(user)}
+                        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 cursor-pointer hover:shadow-xl transition-all group relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-[#174685]/5 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-[#174685]/10" />
 
-                {selectedSeller?.phone && (
-                  <button
-                    onClick={() =>
-                      window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
-                    }
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1aa554] text-white rounded-full text-sm font-bold hover:bg-[#158a45] transition-all shadow-md active:scale-95"
-                  >
-                    <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
-                  </button>
-                )}
-              </div>
+                        <div className="flex items-center gap-5 mb-6">
+                          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-md group-hover:scale-105 transition-transform">
+                            {user.profile_image ? (
+                              <img src={getImageUrl(user.profile_image)} alt={user.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-2xl font-bold">
+                                {user.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#174685] transition-colors truncate">
+                              {user.name}
+                            </h3>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <ShieldCheck className="w-4 h-4 text-[#1aa554]" />
+                              <span className="text-[11px] font-bold text-[#1aa554] uppercase tracking-wider">Verified Professional</span>
+                            </div>
+                          </div>
+                        </div>
 
-              {propertiesLoading ? (
-                <div className="py-20 flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]" />
-                </div>
-              ) : sellerProperties.length === 0 ? (
-                <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
-                  <Building2 className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                  <p className="text-slate-500">
-                    No properties found for this category from this seller.
-                  </p>
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-center gap-3 text-slate-600">
+                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
+                              <Phone className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <span className="text-sm font-medium">{maskPhoneNumber(user.phone)}</span>
+                          </div>
+                        </div>
+
+                        <button className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl text-sm font-bold group-hover:bg-[#174685] group-hover:text-white transition-all flex items-center justify-center gap-2">
+                          View Properties
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
                 </div>
               ) : (
-                <div className="flex flex-col gap-0 pb-10">
-                  {sellerProperties.map((property) => (
-                    <HorizontalPropertyCard
-                      key={property._id}
-                      property={{ ...property, businessType: property.businessType || businessType }}
-                      onWhatsAppClick={(e, prop) => {
-                        const phone = prop.seller?.phone || selectedSeller?.phone;
-                        if (phone) window.open(`https://wa.me/${phone}`, "_blank");
-                      }}
-                    />
-                  ))}
-                </div>
+                /* ─── Properties View ─── */
+                <>
+                  <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-4">
+                      {isBuilderType && (
+                        <button
+                          onClick={() => setSelectedSeller(null)}
+                          className="p-2.5 rounded-full bg-white shadow-sm border border-gray-100 text-slate-600 hover:text-[#174685] hover:border-[#174685]/20 transition-all active:scale-95"
+                        >
+                          <ChevronRight className="w-5 h-5 rotate-180" />
+                        </button>
+                      )}
+                      <div>
+                        <h2 className={`text-2xl font-bold text-slate-900`}>
+                          Properties by {selectedSeller?.name}
+                        </h2>
+                        <p className="text-slate-500 text-sm">
+                          Showing all {businessType?.name?.toLowerCase()} listings.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {isBuilderType && (
+                        <button
+                          onClick={() => setSelectedSeller(null)}
+                          className="hidden md:flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-[#174685] font-semibold text-sm transition-colors"
+                        >
+                          Back to all profiles
+                        </button>
+                      )}
+                      {selectedSeller?.phone && (
+                        <button
+                          onClick={() =>
+                            window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
+                          }
+                          className="flex items-center gap-2 px-5 py-2.5 bg-[#1aa554] text-white rounded-full text-sm font-bold hover:bg-[#158a45] transition-all shadow-md active:scale-95"
+                        >
+                          <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {propertiesLoading ? (
+                    <div className="py-20 flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]" />
+                    </div>
+                  ) : sellerProperties.length === 0 ? (
+                    <div className="bg-white rounded-3xl p-16 text-center border border-dashed border-gray-200">
+                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Building2 className="w-10 h-10 text-slate-300" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">No active listings</h3>
+                      <p className="text-slate-500 max-w-xs mx-auto">
+                        This {businessType?.name?.toLowerCase()} hasn't posted any properties yet.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4 pb-10">
+                      {sellerProperties.map((property) => (
+                        <HorizontalPropertyCard
+                          key={property._id}
+                          property={{ ...property, businessType: property.businessType || businessType }}
+                          onWhatsAppClick={(e, prop) => {
+                            const phone = prop.seller?.phone || selectedSeller?.phone;
+                            if (phone) window.open(`https://wa.me/${phone}`, "_blank");
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>

@@ -34,10 +34,6 @@ const FeaturedProperties = () => {
       try {
         let url = `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?isVerified=true&limit=12`;
 
-        if (builderType) {
-          url += `&businessType=${builderType._id}`;
-        }
-
         const res = await axios.get(url);
         if (Array.isArray(res.data.properties)) {
           setProperties(res.data.properties);
@@ -50,10 +46,8 @@ const FeaturedProperties = () => {
         setLoading(false);
       }
     };
-    if (businessTypes?.length > 0) {
-      fetchProperties();
-    }
-  }, [businessTypes, builderType]);
+    fetchProperties();
+  }, []);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -112,7 +106,7 @@ const FeaturedProperties = () => {
       </div>
     );
 
-  const viewAllUrl = builderType ? `/properties?businessType=${builderType._id}` : "/properties";
+  const viewAllUrl = "/properties";
 
   return (
     <section className="py-10">
@@ -122,8 +116,8 @@ const FeaturedProperties = () => {
 
             <div className="pt-0"></div>
             <div className="mb-6">
-              <h2 className="text-[28px] font-bold text-[#1E293B]">Builder & Promoters</h2>
-              <p className="text-[15px] text-[#64748B] mt-1">Explore exclusive properties from top builders and promoters.</p>
+              <h2 className="text-[28px] font-bold text-[#1E293B]">Latest Classifieds</h2>
+              <p className="text-[15px] text-[#64748B] mt-1">Discover the newest properties listed on our marketplace.</p>
             </div>
 
           </div>
@@ -131,7 +125,7 @@ const FeaturedProperties = () => {
             to={viewAllUrl}
             className="hidden md:flex items-center text-gray-900 font-semibold hover:text-[#166aa8] transition"
           >
-            View All Properties <ArrowRight className="w-5 h-5 ml-1" />
+            Explore More <ArrowRight className="w-5 h-5 ml-1" />
           </Link>
         </div>
 

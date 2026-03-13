@@ -167,7 +167,8 @@ exports.getProperties = async (req, res) => {
 
     // 2. Business Type
     if (businessType) {
-      queryConditions.push({ businessType: businessType });
+      const bTypeArray = businessType.split(',').map(id => id.trim());
+      queryConditions.push({ businessType: { $in: bTypeArray } });
     }
 
     // 3. Status / Verification
