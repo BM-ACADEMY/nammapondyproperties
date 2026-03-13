@@ -54,13 +54,13 @@ const FAQSection = () => {
                                     className="w-full flex items-center justify-between text-left focus:outline-none group cursor-pointer"
                                 >
                                     <h3 className={`text-[16px] md:text-[18px] font-medium transition-colors duration-200 pr-4 ${
-                                        isOpen ? "text-[#0078D7]" : "text-[#475569] group-hover:text-[#1E293B]"
+                                        isOpen ? "text-[#1a2b4b]" : "text-[#475569] group-hover:text-[#1E293B]"
                                     }`}>
                                         {faq.question}
                                     </h3>
                                     
                                     <div className={`flex-shrink-0 transition-transform duration-300 ${
-                                        isOpen ? "rotate-45 text-[#0078D7]" : "text-slate-400"
+                                        isOpen ? "rotate-45 text-[#1a2b4b]" : "text-slate-400"
                                     }`}>
                                         <Plus className="w-5 h-5 md:w-6 h-6" />
                                     </div>
