@@ -275,7 +275,7 @@ const BusinessUserList = () => {
       </AnimatePresence>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
@@ -366,72 +366,92 @@ const BusinessUserList = () => {
               ) : (
                 /* ─── Properties View ─── */
                 <>
-                  <div className="mb-8 bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-                    {/* Decorative background shape */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#174685]/5 rounded-bl-[100px] -mr-16 -mt-16 pointer-events-none" />
-                    
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 relative z-10 w-full md:w-auto">
-                      {isBuilderType && (
+                  {isBuilderType ? (
+                    <div className="mb-6 bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                      
+                      <div className="flex items-center gap-4">
+                        {/* Back Button for Mobile */}
                         <button
                           onClick={() => setSelectedSeller(null)}
-                          className="p-2.5 shrink-0 rounded-full bg-slate-50 border border-gray-200 text-slate-600 hover:text-[#174685] hover:bg-white hover:shadow-md transition-all active:scale-95 sm:self-center"
-                          title="Back to all profiles"
+                          className="md:hidden p-2 shrink-0 rounded-full bg-slate-50 border border-gray-200 text-slate-600 hover:text-[#174685] hover:bg-white transition-all"
                         >
                           <ChevronRight className="w-5 h-5 rotate-180" />
                         </button>
-                      )}
-                      
-                      <div className="flex items-center gap-5">
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-md shrink-0 border-2 border-white bg-white">
+                        
+                        {/* Avatar */}
+                        <div className="w-14 h-14 rounded-[14px] overflow-hidden shrink-0 shadow-sm">
                           {selectedSeller?.profile_image ? (
                             <img src={getImageUrl(selectedSeller.profile_image)} alt={selectedSeller?.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-3xl font-bold">
+                            <div className="w-full h-full flex items-center justify-center bg-[#be185d] text-white text-2xl font-bold">
                               {selectedSeller?.name?.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>
                         
+                        {/* Info Header */}
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">
-                              {selectedSeller?.name}
-                            </h2>
-                            <ShieldCheck className="w-5 h-5 text-[#1aa554]" />
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <h2 className="text-lg font-bold text-slate-900 leading-none">{selectedSeller?.name}</h2>
+                            <ShieldCheck className="w-[18px] h-[18px] text-[#1aa554]" />
                           </div>
                           
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600 font-medium mt-2">
-                            <div className="flex items-center gap-1.5 bg-blue-50 text-[#174685] px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wide">
-                              {businessType?.name}
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <div className="bg-[#eff6ff] text-[#2563eb] px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                              {businessType?.name || "AGENT"}
                             </div>
                             
-                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-gray-100">
-                              <Phone className="w-4 h-4 text-slate-400" />
+                            <div className="flex items-center gap-1.5 bg-[#f8fafc] px-2.5 py-0.5 rounded-md text-[11px] text-slate-600 font-medium">
+                              <Phone className="w-3 h-3 text-slate-400" />
                               <span>{selectedSeller?.phone}</span>
                             </div>
                             
-                            <div className="flex items-center gap-2 bg-slate-50 px-3 py-1 rounded-lg border border-gray-100">
-                              <Building2 className="w-4 h-4 text-slate-400" />
+                            <div className="flex items-center gap-1.5 bg-[#f8fafc] px-2.5 py-0.5 rounded-md text-[11px] text-slate-600 font-medium">
+                              <Building2 className="w-3 h-3 text-slate-400" />
                               <span>{sellerProperties.length} Properties</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto relative z-10">
+                      <div className="flex items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
+                        <button
+                          onClick={() => setSelectedSeller(null)}
+                          className="hidden md:block px-4 py-2 hover:bg-slate-50 text-slate-500 font-semibold text-sm rounded-lg transition-colors border border-transparent hover:border-gray-200"
+                        >
+                          Back
+                        </button>
+                        {selectedSeller?.phone && (
+                          <button
+                            onClick={() =>
+                              window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
+                            }
+                            className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2 min-h-[40px] bg-[#1aa554] text-white rounded-[10px] text-sm font-bold hover:bg-[#158a45] transition-all shadow-sm active:scale-95"
+                          >
+                            <Phone className="w-[14px] h-[14px] fill-current" /> Chat on WhatsApp
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div>
+                        <h2 className="text-xl md:text-2xl font-bold text-slate-900">
+                          Properties by {selectedSeller?.name}
+                        </h2>
+                      </div>
                       {selectedSeller?.phone && (
                         <button
                           onClick={() =>
                             window.open(`https://wa.me/${selectedSeller.phone}`, "_blank")
                           }
-                          className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-[#1aa554] text-white rounded-xl text-sm font-bold hover:bg-[#158a45] hover:shadow-lg transition-all active:scale-95"
+                          className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#1aa554] text-white rounded-[10px] text-sm font-bold hover:bg-[#158a45] transition-all shadow-sm"
                         >
-                          <Phone className="w-4 h-4 fill-current" /> Chat on WhatsApp
+                          <Phone className="w-4 h-4 fill-current" /> WhatsApp
                         </button>
                       )}
                     </div>
-                  </div>
+                  )}
 
                   {propertiesLoading ? (
                     <div className="py-20 flex justify-center">
