@@ -89,7 +89,7 @@ const PostPropertyLanding = () => {
     };
 
     return (
-        <div id="post-property-landing" className="mt-12 min-h-screen bg-[#eef7f0]">
+        <div id="post-property-landing" className="mt-12 min-h-screen bg-[#fffbf7]">
             {/* Font Import */}
             <style dangerouslySetInnerHTML={{ __html: `
                 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
@@ -97,7 +97,7 @@ const PostPropertyLanding = () => {
 
             {/* Main Redesigned Section */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-5">
-                <div className="bg-[#eef7f0] rounded-[32px] flex flex-col lg:flex-row items-start p-8 lg:p-0 lg:pl-16 relative">
+                <div className="rounded-[32px] flex flex-col lg:flex-row items-start p-8 lg:p-0 lg:pl-16 relative">
                     
                     {/* Left Side: Content & Branding */}
                     <div className="lg:w-[55%] py-4 lg:py-20 space-y-8 flex flex-col items-start">
