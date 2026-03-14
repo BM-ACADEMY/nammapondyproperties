@@ -48,10 +48,11 @@ const HomePage = () => {
       <HeroSection />
       <PropertyTypeList />
       <FeaturedProperties />
-      <AdvertiserTypeSection />
+          <BannerAdSection />
+
 
       <RecommendedProperties />
-      <BannerAdSection />
+        <AdvertiserTypeSection />
       <BuilderPromoterProperties />
       <MeetKamar />
       {/* <WhyChooseUs /> */}
