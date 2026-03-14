@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import api from '@/services/api';
+import toast from 'react-hot-toast';
 
 const RequestCallBackModal = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
@@ -12,12 +14,25 @@ const RequestCallBackModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // In a real app, this would submit to your backend
-    console.log('Call Back Requested:', formData);
-    // For now, just close it.
-    onClose();
+    try {
+      const response = await api.post('/forms/request-call', formData);
+      if (response.data.success) {
+        toast.success(response.data.message || 'Call Back Requested Successfully!');
+        setFormData({
+          fullName: '',
+          phone: '',
+          email: '',
+          category: '',
+          preferredTime: ''
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error submitting callback request:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit request. Please try again.');
+    }
   };
 
   const handleChange = (e) => {

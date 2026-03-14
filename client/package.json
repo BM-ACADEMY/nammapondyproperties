@@ -37,7 +37,8 @@
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.3",
     "swiper": "^12.1.2",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

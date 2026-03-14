@@ -7,14 +7,25 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import { Helmet } from "react-helmet-async";
+import api from "@/services/api";
+import toast from "react-hot-toast";
 
 const { TextArea } = Input;
 
 export default function ContactHeroLayout() {
   const [form] = Form.useForm();
 
-  const onFinish = (values) => {
-    console.log("Form Values:", values);
+  const onFinish = async (values) => {
+    try {
+      const response = await api.post('/forms/contact', values);
+      if (response.data.success) {
+        toast.success(response.data.message || 'Contact message submitted successfully!');
+        form.resetFields();
+      }
+    } catch (error) {
+      console.error('Error submitting contact message:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit message. Please try again.');
+    }
   };
 
   const goldColor = "#D4AF37";

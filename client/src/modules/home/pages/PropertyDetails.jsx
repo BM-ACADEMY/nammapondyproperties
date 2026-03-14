@@ -275,9 +275,6 @@ const PropertyDetails = () => {
                   <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
 
                   <div className="flex flex-col">
-                    <span className="text-xl md:text-2xl font-semibold text-gray-800">
-                      {property.specifications?.residential?.bedrooms || 0} Bedrooms {property.specifications?.residential?.bathrooms || 0} Bath
-                    </span>
                     <span className="text-xs text-gray-500 font-medium">
                       {property.basicInfo?.propertyType || "Property"} for {property.basicInfo?.category === "Rent" ? "Rent" : "Sale"} in {property.location?.locality || property.location?.city}
                     </span>

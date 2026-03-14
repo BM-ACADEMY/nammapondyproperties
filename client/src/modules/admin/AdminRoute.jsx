@@ -20,8 +20,8 @@ import SellerRequests from "./pages/SellerRequests";
 import SocialMediaManager from "./pages/SocialMediaManager";
 import AdminBannerAds from "./pages/AdminBannerAds";
 import ViewCountManager from "./pages/properties/ViewCountManager";
-
-
+import CallRequests from "./pages/forms/CallRequests";
+import ContactMessages from "./pages/forms/ContactMessages";
 const AdminRoute = () => {
   return (
     <Routes>
@@ -51,6 +51,8 @@ const AdminRoute = () => {
         <Route path="social-media" element={<SocialMediaManager />} />
         <Route path="banner-ads" element={<AdminBannerAds />} />
         <Route path="view-count-manager" element={<ViewCountManager />} />
+        <Route path="forms/call-requests" element={<CallRequests />} />
+        <Route path="forms/contact-messages" element={<ContactMessages />} />
 
         {/* Settings route can be placeholder too if needed */}
       </Route>
