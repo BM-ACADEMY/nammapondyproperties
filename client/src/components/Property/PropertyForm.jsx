@@ -954,6 +954,7 @@ const PropertyForm = ({
         {/* Form Navigation Buttons */}
         <div className="flex justify-between items-center pt-8">
           <button
+            key="back-btn"
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
@@ -967,6 +968,7 @@ const PropertyForm = ({
 
           {currentStep < 5 ? (
             <button
+              key="next-btn"
               type="button"
               onClick={nextStep}
               className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all transform hover:scale-[1.02]"
@@ -975,8 +977,13 @@ const PropertyForm = ({
             </button>
           ) : (
             <button
-              type="submit"
+              key="done-btn"
+              type="button"
               disabled={loading}
+              onClick={() => {
+                // Use type="button" and manual trigger to prevent auto-submission on step transition
+                handleSubmit(handleFormSubmit, handleFormError)();
+              }}
               className="px-10 py-3 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-green-100 transition-all transform hover:scale-[1.02] flex items-center gap-2"
             >
               {loading ? "Saving..." : "Done"}
