@@ -208,7 +208,7 @@ const BusinessUserList = () => {
     <div className="min-h-screen pt-30 bg-gray-50 font-['Poppins',_sans-serif] pb-20 pt-8 relative overflow-x-hidden">
       {/* ─── MOBILE: Floating side tab button ─── */}
       {sellers.length > 0 && !isBuilderType && (
-        <div className="lg:hidden fixed left-0 top-1/2 -translate-y-1/2 z-[400]">
+        <div className="lg:hidden fixed left-0 top-[120px] z-[400]">
           <button
             onClick={() => setIsDrawerOpen(true)}
             className="flex flex-col items-center justify-center gap-2 bg-[#174685] text-white py-4 px-2.5 rounded-r-2xl shadow-xl active:scale-95 transition-transform"
@@ -434,7 +434,7 @@ const BusinessUserList = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pl-12 md:pl-0">
                       <div>
                         <h2 className="text-xl md:text-2xl font-bold text-slate-900">
                           Properties by {selectedSeller?.name}
