@@ -290,7 +290,7 @@ const BusinessUserList = () => {
           <div className="flex flex-col lg:flex-row gap-8 min-h-[600px]">
             {/* ─── DESKTOP: Left Sidebar ─── */}
             {!isBuilderType && (
-              <div className="hidden lg:block lg:w-72 xl:w-80 h-fit sticky top-24">
+              <div className="hidden lg:block lg:w-72 xl:w-80 h-fit sticky top-16">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                   <div className="p-4 border-b border-gray-50 bg-slate-50/50">
                     <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
@@ -364,20 +364,19 @@ const BusinessUserList = () => {
               ) : (
                 /* ─── Properties View ─── */
                 <>
-                  <div className="mb-6">
-                    <button
-                      onClick={() => setSelectedSeller(null)}
-                      className="inline-flex items-center gap-2.5 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
-                    >
-                      <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">
-                        <ChevronRight className="w-5 h-5 rotate-180" />
-                      </div>
-                      <span className="text-sm font-bold tracking-tight">Back to Professionals List</span>
-                    </button>
-                  </div>
-
                   {isBuilderType ? (
                     <div className="space-y-6 mb-10">
+                      <div className="mb-6">
+                        <button
+                          onClick={() => setSelectedSeller(null)}
+                          className="inline-flex items-center gap-2.5 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
+                        >
+                          <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">
+                            <ChevronRight className="w-5 h-5 rotate-180" />
+                          </div>
+                          <span className="text-sm font-bold tracking-tight">Back to Professionals List</span>
+                        </button>
+                      </div>
                       {/* ─── Main Header Card ─── */}
                       <div className="bg-white rounded-[32px] p-6 lg:p-10 shadow-sm border border-slate-100 relative overflow-hidden group">
                         {/* Decorative background element */}
@@ -484,7 +483,7 @@ const BusinessUserList = () => {
 
                     </div>
                   ) : (
-                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 pl-12 md:pl-0">
+                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div>
                         <h2 className="text-xl md:text-2xl font-bold text-slate-900">
                           Properties by {selectedSeller?.name}
