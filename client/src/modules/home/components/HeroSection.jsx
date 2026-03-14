@@ -29,10 +29,17 @@ const HeroSection = () => {
     <div className="relative h-[380px] lg:h-[420px] flex items-end justify-center font-sans">
       {/* Background Image */}
       <div className="absolute inset-0">
+        {/* Desktop Image */}
         <img
           src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
-          alt="Hero Background"
-          className="w-full h-full object-cover object-center"
+          alt="Hero Background Desktop"
+          className="hidden md:block w-full h-full object-cover object-center"
+        />
+        {/* Mobile/Tablet Image */}
+        <img
+          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          alt="Hero Background Mobile"
+          className="block md:hidden w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-black/50"></div>
       </div>

@@ -833,11 +833,11 @@ const PropertyDetails = () => {
                     )}
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mb-1">
-                      Listed By
+                    <div className="text-[10px] text-[#174685] uppercase font-extrabold tracking-widest mb-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
+                      {property.businessType?.name || "LISTED BY"}
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {property.seller?.name || "Verified Seller"}
+                      {property.seller?.name || "Seller"}
                     </h3>
                     <div className="text-sm font-semibold text-gray-500">
                       {maskPhoneNumber(property.seller?.phone)}
