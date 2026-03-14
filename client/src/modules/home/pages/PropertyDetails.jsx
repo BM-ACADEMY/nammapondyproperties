@@ -194,15 +194,15 @@ const PropertyDetails = () => {
     <div className="bg-white min-h-screen py-8 font-sans text-gray-900">
       <div className="container mx-auto px-4 pt-19 max-w-7xl">
         {/* Breadcrumb */}
-         <div className="text-[11px] md:text-xs text-blue-600 font-medium flex-wrap flex items-center gap-2 mb-4">
-            <Link to="/" className="hover:text-blue-800">Home</Link>
-            <span className="text-gray-400">›</span>
-            <Link to="/properties" className="hover:text-blue-800">Property in {property.location?.city || "City"}</Link>
-            <span className="text-gray-400">›</span>
-            <span className="text-gray-500 truncate max-w-[200px] md:max-w-md">
-              {property.basicInfo?.propertyType || "Property"} in {property.location?.locality || property.location?.city || "Unknown"} {(property.specifications?.plot?.plotLength || property.specifications?.plot?.plotWidth) && `${Number(property.specifications.plot.plotLength || 0) * Number(property.specifications.plot.plotWidth || 0)} Sq.ft.`}
-            </span>
-          </div>
+        <div className="text-[11px] md:text-xs text-blue-600 font-medium flex-wrap flex items-center gap-2 mb-4">
+          <Link to="/" className="hover:text-blue-800">Home</Link>
+          <span className="text-gray-400">›</span>
+          <Link to="/properties" className="hover:text-blue-800">Property in {property.location?.city || "City"}</Link>
+          <span className="text-gray-400">›</span>
+          <span className="text-gray-500 truncate max-w-[200px] md:max-w-md">
+            {property.basicInfo?.propertyType || "Property"} in {property.location?.locality || property.location?.city || "Unknown"} {(property.specifications?.plot?.plotLength || property.specifications?.plot?.plotWidth) && `${Number(property.specifications.plot.plotLength || 0) * Number(property.specifications.plot.plotWidth || 0)} Sq.ft.`}
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           {/* LEFT COLUMN: Premium New Look */}
@@ -250,62 +250,58 @@ const PropertyDetails = () => {
                 )}
               </div>
             </div> */}
-             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-  {/* LEFT SECTION */}
-  <div className="space-y-4"> {/* Increased space-y to separate price row from views */}
-    <div className="flex flex-wrap items-baseline gap-4">
-      <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-        {property.isSold && property.soldPrice ? (
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg md:text-xl text-gray-500 font-medium">Sold Price:</span>
-            <span className="text-red-600">{formatIndianPrice(property.soldPrice)}</span>
-          </div>
-        ) : (
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg md:text-xl text-gray-500 font-medium">
-              {property.isSold ? "Price:" : "Launch Price:"}
-            </span>
-            <span className="text-gray-900">
-              {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
-            </span>
-          </div>
-        )}
-      </h1>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+              {/* LEFT SECTION */}
+              <div className="space-y-4"> {/* Increased space-y to separate price row from views */}
+                <div className="flex flex-wrap items-baseline gap-4">
+                  <h1 className="text-2xl md:text-3xl font-bold leading-tight">
+                    {property.isSold && property.soldPrice ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg md:text-xl text-gray-500 font-medium">Sold Price:</span>
+                        <span className="text-red-600">{formatIndianPrice(property.soldPrice)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-lg md:text-xl text-gray-500 font-medium">
+                          {property.isSold ? "Price:" : "Launch Price:"}
+                        </span>
+                        <span className="text-gray-900">
+                          {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+                        </span>
+                      </div>
+                    )}
+                  </h1>
 
-      <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
+                  <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
 
-      <div className="flex flex-col">
-        <span className="text-xl md:text-2xl font-semibold text-gray-800">
-          {property.specifications?.residential?.bedrooms || 0} Bedrooms {property.specifications?.residential?.bathrooms || 0} Bath
-        </span>
-        <span className="text-xs text-gray-500 font-medium">
-          {property.basicInfo?.propertyType || "Property"} for {property.basicInfo?.category === "Rent" ? "Rent" : "Sale"} in {property.location?.locality || property.location?.city}
-        </span>
-      </div>
-    </div>
-  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-medium">
+                      {property.basicInfo?.propertyType || "Property"} for {property.basicInfo?.category === "Rent" ? "Rent" : "Sale"} in {property.location?.locality || property.location?.city}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-  {/* RIGHT SECTION */}
-  <div className="flex flex-col items-start md:items-end gap-2">
-    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-      Posted on {new Date(property.createdAt).toLocaleDateString()} | <span className="text-blue-600">{property.legal?.propertyStatus || "Ready to Move"}</span>
-    </div>
-    <div className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wide border ${property.legal?.propertyStatus === "Ready to Move" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-orange-50 text-orange-600 border-orange-100"}`}>
-      
+              {/* RIGHT SECTION */}
+              <div className="flex flex-col items-start md:items-end gap-2">
+                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                  Posted on {new Date(property.createdAt).toLocaleDateString()} | <span className="text-blue-600">{property.legal?.propertyStatus || "Ready to Move"}</span>
+                </div>
+                <div className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wide border ${property.legal?.propertyStatus === "Ready to Move" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-orange-50 text-orange-600 border-orange-100"}`}>
 
-    {/* VIEWS SECTION - Now placed on the left */}
-    <div className="flex items-center gap-1.5 rounded-full border border-gray-100 w-fit">
-      <Eye size={16} className="text-blue-500" />
-      <span className="font-semibold text-gray-700">{formatNumber(property.view_count || 0)}</span>
-      <span className="text-gray-500">Views</span>
-    </div>
-    </div>
-  </div>
-</div>
+
+                  <div className="flex items-center gap-1.5 rounded-full border border-gray-100 w-fit">
+                    <Eye size={16} className="text-gray-400" />
+                    <span className="font-semibold text-gray-700">{formatNumber(property.view_count || 0)}</span>
+                    <span className="text-gray-500">Views</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* 2. Image Gallery - Clean & Sharp */}
             <div className="space-y-4">
-              <div className="relative h-[450px] md:h-[550px] bg-gray-100 rounded-xl overflow-hidden group">
+              <div className="relative h-[350px] md:h-[450px] bg-gray-100 rounded-xl overflow-hidden group">
                 {property.isSold && (
                   <div className="absolute top-6 left-6 z-20">
                     <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20">
@@ -346,162 +342,230 @@ const PropertyDetails = () => {
               )}
             </div>
 
-            {/* 3. Key Information - The "Greencrest" Style Grid */}
+            {/* 3. Key Information - Clean Style Grid */}
             <div>
-              <h3 className="text-xl font-bold text-gray-600 mb-6">
-                Key Information
+              <h3 className="text-xl font-bold text-gray-900 mb-6">
+                Key Features:
               </h3>
-              <div className="bg-gray-50 rounded-2xl p-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-4">
+              <div className="bg-white border border-gray-100 rounded-[32px] p-8 shadow-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-6">
                   {/* item */}
-                  <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Layers size={12} /> Usage
-                    </span>
-                    <span className="text-lg font-bold text-gray-900">
-                      {property.basicInfo?.usageType || "Residential"}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                      <Layers size={20} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                        Usage
+                      </span>
+                      <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                        {property.basicInfo?.usageType || "Residential"}
+                      </span>
+                    </div>
                   </div>
                   {/* item */}
-                  <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <MapPin size={12} /> Locality
-                    </span>
-                    <span className="text-lg font-bold text-gray-900 capitalize truncate">
-                      {property.location?.locality || property.location?.city || "Pondicherry"}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                      <MapPin size={20} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                        Locality
+                      </span>
+                      <span className="text-[15px] font-medium text-gray-800 leading-tight capitalize truncate max-w-[120px]">
+                        {property.location?.locality || property.location?.city || "Pondicherry"}
+                      </span>
+                    </div>
                   </div>
                   {/* item */}
-                  <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Square size={12} /> Total Area
-                    </span>
-                    <span className="text-lg font-bold text-gray-900 flex items-center">
-                      {property.specifications?.area?.totalArea ? `${property.specifications.area.totalArea} sqft` : "N/A"}
-                    </span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                      <Square size={20} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                        Total Area
+                      </span>
+                      <span className="text-[15px] font-medium text-gray-800 leading-tight whitespace-nowrap">
+                        {property.specifications?.area?.totalArea ? `${property.specifications.area.totalArea} sqft` : "N/A"}
+                      </span>
+                    </div>
                   </div>
                   {/* item */}
                   {property.specifications?.area?.builtupArea && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Layout size={12} /> Built-up
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.specifications.area.builtupArea} sqft
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Layout size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Built-up
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight whitespace-nowrap">
+                          {property.specifications.area.builtupArea} sqft
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.specifications?.area?.carpetArea && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Layers size={12} /> Carpet Area
-                      </span>
-                      <span className="text-lg font-bold text-gray-900 font-serif">
-                        {property.specifications.area.carpetArea} sqft
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Layers size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Carpet Area
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight whitespace-nowrap">
+                          {property.specifications.area.carpetArea} sqft
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.specifications?.floor?.totalFloor && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
-                        Total Floors
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.specifications.floor.totalFloor}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Layers size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Total Floors
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.specifications.floor.totalFloor}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.specifications?.floor?.propertyOnFloor && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
-                        On Floor
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.specifications.floor.propertyOnFloor}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Layers size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          On Floor
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.specifications.floor.propertyOnFloor}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {(property.specifications?.facing || property.specifications?.residential?.facing) && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Compass size={12} /> Facing
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.specifications.facing || property.specifications.residential.facing}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Compass size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Facing
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight capitalize">
+                          {property.specifications.facing || property.specifications.residential.facing}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.specifications?.residential?.furnishing && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">
-                        Furnishing
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.specifications.residential.furnishing}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Layout size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Furnishing
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.specifications.residential.furnishing}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.legal?.propertyStatus === "Ready to Move" && property.legal?.ageOfProperty && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Calendar size={12} /> Age of Property
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.legal.ageOfProperty}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Age of Property
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.legal.ageOfProperty}
+                        </span>
+                      </div>
                     </div>
                   )}
 
                   {property.basicInfo?.category && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Calendar size={12} /> Type
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.basicInfo.category}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Type
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.basicInfo.category}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {property.basicInfo?.propertyType && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Calendar size={12} /> Property Type
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.basicInfo.propertyType}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Property Type
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.basicInfo.propertyType}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.legal?.propertyStatus === "Under Construction" && property.legal?.expectedCompletionYear && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <Calendar size={12} /> Expected Possession
-                      </span>
-                      <span className="text-lg font-bold text-gray-900">
-                        {property.legal.expectedCompletionYear}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Possession
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.legal.expectedCompletionYear}
+                        </span>
+                      </div>
                     </div>
                   )}
                   {/* item */}
                   {property.legal?.propertyStatus && (
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2 flex items-center gap-1">
-                        <ShieldCheck size={12} /> Construction Status
-                      </span>
-                      <span className="text-lg font-bold text-blue-600">
-                        {property.legal.propertyStatus}
-                      </span>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-blue-50/50 rounded-full flex items-center justify-center text-blue-500">
+                        <ShieldCheck size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 whitespace-nowrap">
+                          Status
+                        </span>
+                        <span className="text-[15px] font-semibold text-blue-600 leading-tight">
+                          {property.legal.propertyStatus}
+                        </span>
+                      </div>
                     </div>
                   )}
-
-
                 </div>
               </div>
             </div>
@@ -510,18 +574,18 @@ const PropertyDetails = () => {
 
             {/* 4. About the Project */}
             <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2 mb-6">
-              <Layout size={20} className="text-blue-600" /> Property Overview
+               Property Overview
             </h3>
             <div className="space-y-6">
               <div className="relative">
-                <div 
+                <div
                   className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? 'max-h-[160px]' : 'max-h-[2000px]'}`}
                 >
                   <p className="whitespace-pre-line text-slate-700">
                     {property.basicInfo?.description || "No description provided."}
                   </p>
                 </div>
-                
+
                 {!isDescriptionExpanded && (
                   <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                 )}
@@ -543,58 +607,88 @@ const PropertyDetails = () => {
             {(property.specifications?.residential || property.specifications?.commercial || property.specifications?.plot) && (
               <div className="space-y-6">
                 <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2">
-                  <Home size={20} className="text-blue-600" /> Property Specifications
+                  Property Specifications
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Residential Specifics */}
                   {property.specifications?.residential && (property.specifications.residential.bedrooms > 0 || property.specifications.residential.bathrooms > 0 || property.specifications.residential.balconies > 0 || property.specifications.residential.hall !== undefined || property.specifications.residential.kitchens !== undefined || property.specifications.residential.facing) && (
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
-                        <BedDouble size={16} /> Residential Details
+                    <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
+                      <h4 className="font-bold text-gray-800 border-b border-gray-50 pb-4 flex items-center gap-2 text-sm uppercase tracking-widest">
+                        <BedDouble size={18} className="text-gray-400" /> Residential Details
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                         {property.specifications.residential.bedrooms > 0 && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><BedDouble size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Bedrooms</p>
-                              <p className="font-bold text-gray-900">{property.specifications.residential.bedrooms}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <BedDouble size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Bedrooms
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.residential.bedrooms}
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.residential.bathrooms > 0 && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Bath size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Bathrooms</p>
-                              <p className="font-bold text-gray-900">{property.specifications.residential.bathrooms}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Bath size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Bathrooms
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.residential.bathrooms}
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.residential.balconies > 0 && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Wind size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Balconies</p>
-                              <p className="font-bold text-gray-900">{property.specifications.residential.balconies}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Wind size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Balconies
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.residential.balconies}
+                              </span>
                             </div>
                           </div>
                         )}
                         {(property.specifications.residential.hall !== undefined || property.specifications.residential.kitchens !== undefined) && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Home size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Hall/Kitchen</p>
-                              <p className="font-bold">{(property.specifications.residential.hall ?? 0)}H / {(property.specifications.residential.kitchens ?? 0)}K</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Home size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Hall / Kitchen
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {(property.specifications.residential.hall ?? 0)}H / {(property.specifications.residential.kitchens ?? 0)}K
+                              </span>
                             </div>
                           </div>
                         )}
                         {(property.specifications.facing || property.specifications.residential.facing) && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Compass size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Facing</p>
-                              <p className="font-bold text-gray-900">{property.specifications.facing || property.specifications.residential.facing}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Compass size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Facing
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.facing || property.specifications.residential.facing}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -604,61 +698,113 @@ const PropertyDetails = () => {
 
                   {/* Commercial Specifics */}
                   {property.specifications?.commercial && (property.specifications.commercial.cabins || property.specifications.commercial.meetingRooms || property.specifications.commercial.workstations || property.specifications.commercial.pantry || property.specifications.commercial.receptionArea || property.specifications.commercial.suitableFor) && (
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
-                        <Layers size={16} /> Commercial Details
+                    <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
+                      <h4 className="font-bold text-gray-800 border-b border-gray-50 pb-4 flex items-center gap-2 text-sm uppercase tracking-widest">
+                        <Layers size={18} className="text-gray-400" /> Commercial Details
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                         {property.specifications.commercial.cabins !== undefined && (
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Cabins</p>
-                              <p className="font-bold text-gray-900">{property.specifications.commercial.cabins}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Layers size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Cabins
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.commercial.cabins}
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.commercial.meetingRooms !== undefined && (
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Meeting Rooms</p>
-                              <p className="font-bold text-gray-900">{property.specifications.commercial.meetingRooms}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Layers size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Meeting Rooms
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.commercial.meetingRooms}
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.commercial.workstations !== undefined && (
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Workstations</p>
-                              <p className="font-bold text-gray-900">{property.specifications.commercial.workstations}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Layers size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Workstations
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.commercial.workstations}
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.commercial.pantry && (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-green-500" />
-                            <p className="text-sm font-medium text-gray-700">Pantry</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-green-50 rounded-full flex items-center justify-center text-green-500">
+                              <CheckCircle2 size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Pantry
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                Available
+                              </span>
+                            </div>
                           </div>
                         )}
                         {property.specifications.commercial.receptionArea && (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-green-500" />
-                            <p className="text-sm font-medium text-gray-700">Reception Area</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-green-50 rounded-full flex items-center justify-center text-green-500">
+                              <CheckCircle2 size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Reception
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                Available
+                              </span>
+                            </div>
                           </div>
                         )}
                         {property.specifications.commercial.suitableFor && (
-                          <div className="flex items-center gap-3 col-span-2">
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Suitable For</p>
-                              <p className="font-bold text-gray-900">{property.specifications.commercial.suitableFor}</p>
+                          <div className="flex items-center gap-4 sm:col-span-2">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Layout size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Suitable For
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.commercial.suitableFor}
+                              </span>
                             </div>
                           </div>
                         )}
                         {(property.specifications.facing || property.specifications.residential?.facing) && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Compass size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Facing</p>
-                              <p className="font-bold text-gray-900">{property.specifications.facing || property.specifications.residential?.facing}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Compass size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Facing
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.facing || property.specifications.residential?.facing}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -668,45 +814,83 @@ const PropertyDetails = () => {
 
                   {/* Plot Specifics */}
                   {property.specifications?.plot && (property.specifications.plot.plotLength || property.specifications.plot.plotWidth || property.specifications.plot.roadWidth || property.specifications.plot.cornerPlot || property.specifications.plot.gatedCommunity) && (
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
-                        <Square size={16} /> Plot Details
+                    <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
+                      <h4 className="font-bold text-gray-800 border-b border-gray-50 pb-4 flex items-center gap-2 text-sm uppercase tracking-widest">
+                        <Square size={18} className="text-gray-400" /> Plot Details
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                         {(property.specifications.plot.plotLength || property.specifications.plot.plotWidth) && (
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Dimensions</p>
-                              <p className="font-bold text-gray-900">{property.specifications.plot.plotLength || 'L'} x {property.specifications.plot.plotWidth || 'W'} ft</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Square size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Dimensions
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.plot.plotLength || 'L'} x {property.specifications.plot.plotWidth || 'W'} ft
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.plot.roadWidth > 0 && (
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Road Width</p>
-                              <p className="font-bold text-gray-900">{property.specifications.plot.roadWidth} ft</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Layout size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Road Width
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.plot.roadWidth} ft
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.plot.cornerPlot && (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-green-500" />
-                            <p className="text-sm font-medium text-gray-700">Corner Plot</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <CheckCircle2 size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Corner Plot
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                Yes
+                              </span>
+                            </div>
                           </div>
                         )}
                         {property.specifications.plot.gatedCommunity && (
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 size={16} className="text-green-500" />
-                            <p className="text-sm font-medium text-gray-700">Gated Community</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-green-50 rounded-full flex items-center justify-center text-green-500">
+                              <CheckCircle2 size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Gated Community
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                Yes
+                              </span>
+                            </div>
                           </div>
                         )}
                         {(property.specifications.facing || property.specifications.residential?.facing) && (
-                          <div className="flex items-center gap-3 col-span-2">
-                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Compass size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Facing</p>
-                              <p className="font-bold text-gray-900">{property.specifications.facing || property.specifications.residential?.facing}</p>
+                          <div className="flex items-center gap-4 sm:col-span-2">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Compass size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Facing
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.facing || property.specifications.residential?.facing}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -716,26 +900,38 @@ const PropertyDetails = () => {
 
                   {/* Utilities */}
                   {property.specifications?.utilities && (property.specifications.utilities.waterSupply || property.specifications.utilities.powerBackup) && (
-                    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-4">
-                      <h4 className="font-bold text-gray-800 border-b pb-2 flex items-center gap-2 text-sm uppercase tracking-wide">
-                        <Zap size={16} /> Utilities
+                    <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm space-y-6">
+                      <h4 className="font-bold text-gray-800 border-b border-gray-50 pb-4 flex items-center gap-2 text-sm uppercase tracking-widest">
+                        <Zap size={18} className="text-gray-400" /> Utilities
                       </h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                         {property.specifications.utilities.waterSupply && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-cyan-50 rounded-lg text-cyan-600"><Droplet size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Water Supply</p>
-                              <p className="font-bold text-gray-900">{property.specifications.utilities.waterSupply}</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Droplet size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Water Supply
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                {property.specifications.utilities.waterSupply}
+                              </span>
                             </div>
                           </div>
                         )}
                         {property.specifications.utilities.powerBackup && (
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-yellow-50 rounded-lg text-yellow-600"><Zap size={18} /></div>
-                            <div>
-                              <p className="text-xs text-gray-400 font-bold uppercase">Power Backup</p>
-                              <p className="font-bold text-gray-900">Available</p>
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                              <Zap size={20} />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                                Power Backup
+                              </span>
+                              <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                                Available
+                              </span>
                             </div>
                           </div>
                         )}
@@ -833,11 +1029,11 @@ const PropertyDetails = () => {
                     )}
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-500 uppercase font-extrabold tracking-widest mb-1">
-                      Listed By
+                    <div className="text-[10px] text-[#174685] uppercase font-extrabold tracking-widest mb-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
+                      {property.businessType?.name || "LISTED BY"}
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {property.seller?.name || "Verified Seller"}
+                      {property.seller?.name || "Seller"}
                     </h3>
                     <div className="text-sm font-semibold text-gray-500">
                       {maskPhoneNumber(property.seller?.phone)}

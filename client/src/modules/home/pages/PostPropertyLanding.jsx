@@ -89,27 +89,34 @@ const PostPropertyLanding = () => {
     };
 
     return (
-        <div id="post-property-landing" className="mt-12 min-h-screen bg-white">
-            {/* Hero Section */}
-            <div className="relative bg-[#f1f7ff] pt-19 pb-24 px-4 border-b border-gray-100">
-                <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
+        <div id="post-property-landing" className="mt-12 min-h-screen bg-[#fffbf7]">
+            {/* Font Import */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+            `}} />
 
-                    {/* Left Side: Content */}
-                    <div className="lg:w-1/2 text-left space-y-8">
+            {/* Main Redesigned Section */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 lg:py-5">
+                <div className="rounded-[32px] flex flex-col lg:flex-row items-start p-8 lg:p-0 lg:pl-16 relative">
+                    
+                    {/* Left Side: Content & Branding */}
+                    <div className="lg:w-[55%] py-4 lg:py-20 space-y-8 flex flex-col items-start">
+
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.6 }}
+                            className="space-y-6"
                         >
-                            <h1 className="text-4xl lg:text-4xl font-bold text-[#333333] leading-tight">
+                            <h1 className="text-4xl lg:text-5xl font-bold text-[#0e182b] leading-tight">
                                 Sell or Rent Property <br />
-                                <span className="text-[#0056b3]">online faster with NammaPondy</span>
+                                <span className="text-[#c19b48]">online faster with NammaPondy</span>
                             </h1>
 
-                            <ul className="mt-8 space-y-4">
+                            <ul className="space-y-4">
                                 {benefits.map((benefit, index) => (
-                                    <li key={index} className="flex items-center text-lg text-[#555555]">
-                                        <div className="bg-[#e6f4ea] p-1 rounded-full mr-3 text-[#1aa554]">
+                                    <li key={index} className="flex items-center text-lg text-[#38526e] font-medium">
+                                        <div className="bg-white p-1 rounded-full mr-3 text-[#1aa554] shadow-sm">
                                             <Check className="w-4 h-4" />
                                         </div>
                                         {benefit}
@@ -118,133 +125,121 @@ const PostPropertyLanding = () => {
                             </ul>
                         </motion.div>
 
-                        {/* UPDATED: Illustration Image with Animation */}
+                        {/* Illustration Image */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                            className="relative hidden lg:block"
+                            className="relative hidden lg:block mt-8 w-full max-w-md"
                         >
-                            <motion.img
+                            <img
                                 src="/post/post1.png"
                                 alt="Post Property Illustration"
-                                className="max-w-lg object-contain"
-
+                                className="w-full h-auto object-contain"
                             />
                         </motion.div>
                     </div>
 
-                    {/* Right Side: Posting Card */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="lg:w-[450px] bg-white rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] p-8 border border-gray-100"
-                    >
-                        <h2 className="text-2xl font-bold text-[#333333] mb-2">
-                            Start posting your property, <span className="text-[#0056b3] text-lg font-medium">it's free</span>
-                        </h2>
-                        <p className="text-sm text-[#777777] mb-8">Add Basic Details</p>
-
-                        <div className="space-y-8">
-                            {/* Looking to select */}
-                            <div>
-                                <p className="text-sm font-semibold text-[#555555] mb-4">What would you like to do?</p>
-                                <div className="flex flex-wrap gap-3">
-                                    {propertyCategories.map((cat) => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => setSelectedCategory(cat)}
-                                            className={`px-6 py-2 rounded-full border transition-all text-sm font-medium ${selectedCategory === cat
-                                                ? "bg-[#0056b3] text-white border-[#0056b3] shadow-md"
-                                                : "bg-white text-[#555555] border-gray-200 hover:border-[#0056b3]"
-                                                }`}
-                                        >
-                                            <span className="capitalize">{cat}</span>
-                                        </button>
-                                    ))}
-                                </div>
+                    {/* Right Side: Posting Card (Overlapping) */}
+                    <div className="lg:w-[45%] flex justify-center lg:justify-end lg:pr-12 items-start lg:pt-20">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="bg-white rounded-[24px] shadow-[0_0_50px_0_rgba(14,24,43,0.08)] pt-8 pb-5 px-8 lg:pt-10 lg:pb-6 lg:px-10 w-full max-w-[480px] border border-gray-50 transform lg:translate-x-8 mt-8 lg:mt-0 z-10 h-fit"
+                        >
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-bold text-[#0e182b] mb-2">
+                                    Start posting your property, <span className="text-[#c19b48] font-medium">it's free</span>
+                                </h2>
+                                <p className="text-[#38526e] font-medium">Add Basic Details</p>
                             </div>
 
-                            {/* Property Type selection */}
-                            <div>
-                                <p className="text-sm font-semibold text-[#555555] mb-4">Select Property Category</p>
-                                <div className="flex flex-wrap gap-3 mb-6">
-                                    {usageTypes.map((type) => (
-                                        <button
-                                            key={type}
-                                            onClick={() => setSelectedType(type)}
-                                            className={`px-6 py-2 rounded-xl border transition-all text-sm font-medium ${selectedType === type
-                                                ? "bg-[#0056b3] text-white border-[#0056b3] shadow-md"
-                                                : "bg-white text-[#555555] border-gray-200 hover:border-[#0056b3]"
-                                                }`}
-                                        >
-                                            {type}
-                                        </button>
-                                    ))}
+                            <div className="space-y-6">
+                                {/* Looking to select */}
+                                <div>
+                                    <p className="text-sm font-bold text-[#0e182b] mb-4 uppercase tracking-wider">What would you like to do?</p>
+                                    <div className="flex flex-wrap gap-3">
+                                        {propertyCategories.map((cat) => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => setSelectedCategory(cat)}
+                                                className={`px-6 py-2.5 rounded-full border transition-all text-sm font-bold ${selectedCategory === cat
+                                                    ? "bg-[#0e182b] text-[white] border-[#0e182b] shadow-md"
+                                                    : "bg-white text-[#38526e] border-gray-200 hover:border-[#c19b48]"
+                                                    }`}
+                                            >
+                                                <span className="capitalize">{cat}</span>
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
-                                <div className="flex flex-wrap gap-2">
-                                    {filteredSubtypes.map((sub) => (
-                                        <button
-                                            key={sub._id}
-                                            onClick={() => setSelectedSubtype(sub.name)}
-                                            className={`px-4 py-1.5 rounded-full border transition-all text-[13px] ${selectedSubtype === sub.name
-                                                ? "bg-blue-50 text-[#0056b3] border-[#0056b3] font-medium"
-                                                : "bg-white text-[#555555] border-gray-200 hover:border-gray-300"
-                                                }`}
-                                        >
-                                            {sub.name}
-                                        </button>
-                                    ))}
-                                    {/* {filteredSubtypes.length > 5 && (
-                                        <button className="px-4 py-1.5 rounded-full border border-gray-200 text-[#0056b3] text-[13px] font-medium hover:bg-blue-50 transition-colors">
-                                            + more
-                                        </button>
-                                    )} */}
-                                </div>
-                            </div>
+                                {/* Property Type selection */}
+                                <div>
+                                    <p className="text-sm font-bold text-[#0e182b] mb-4 uppercase tracking-wider">Select Property Category</p>
+                                    <div className="flex flex-wrap gap-3 mb-6">
+                                        {usageTypes.map((type) => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setSelectedType(type)}
+                                                className={`px-6 py-2.5 rounded-xl border transition-all text-sm font-bold ${selectedType === type
+                                                    ? "bg-[#0e182b] text-[white] border-[#0e182b] shadow-md"
+                                                    : "bg-white text-[#38526e] border-gray-200 hover:border-[#c19b48]"
+                                                    }`}
+                                            >
+                                                {type}
+                                            </button>
+                                        ))}
+                                    </div>
 
-                            {/* Contact Details */}
-                            <div>
-                                <p className="text-sm font-semibold text-[#555555] mb-4">Your contact details for the buyer to reach you</p>
-                                <div className="relative group">
-                                    <input
-                                        type="tel"
-                                        placeholder="Phone Number"
-                                        value={isAuthenticated ? user?.phone : phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        onClick={handlePhoneClick}
-                                        readOnly={isAuthenticated}
-                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-[#0056b3] focus:bg-white transition-all text-gray-700 placeholder-gray-400"
-                                    />
+                                    <div className="flex flex-wrap gap-2">
+                                        {filteredSubtypes.map((sub) => (
+                                            <button
+                                                key={sub._id}
+                                                onClick={() => setSelectedSubtype(sub.name)}
+                                                className={`px-4 py-2 rounded-full border transition-all text-[13px] font-medium ${selectedSubtype === sub.name
+                                                    ? "bg-[#f6f9fa] text-[#0e182b] border-[#0e182b]"
+                                                    : "bg-white text-[#38526e] border-gray-100 hover:border-gray-200"
+                                                    }`}
+                                            >
+                                                {sub.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Contact Details */}
+                                <div>
+                                    <p className="text-sm font-bold text-[#0e182b] mb-4 uppercase tracking-wider">Your contact details</p>
+                                    <div className="relative group">
+                                        <input
+                                            type="tel"
+                                            placeholder="Phone Number"
+                                            value={isAuthenticated ? user?.phone : phoneNumber}
+                                            onChange={(e) => setPhoneNumber(e.target.value)}
+                                            onClick={handlePhoneClick}
+                                            readOnly={isAuthenticated}
+                                            className="w-full px-6 py-4 bg-[#f6f9fa] border border-gray-100 rounded-2xl outline-none focus:border-[#c19b48] focus:bg-white transition-all text-[#0e182b] font-medium placeholder-gray-400"
+                                        />
+                                        {!isAuthenticated && (
+                                            <div className="absolute inset-0 cursor-pointer" onClick={handlePhoneClick}></div>
+                                        )}
+                                    </div>
                                     {!isAuthenticated && (
-                                        <div className="absolute inset-0 cursor-pointer" onClick={handlePhoneClick}></div>
+                                        <p className="mt-3 text-xs text-[#38526e] font-medium">
+                                            Are you a registered user? <button onClick={() => setLoginModalOpen(true)} className="text-[#c19b48] font-bold hover:underline">Login</button>
+                                        </p>
                                     )}
                                 </div>
-                                {!isAuthenticated && (
-                                    <p className="mt-3 text-xs text-[#777777]">
-                                        Are you a registered user? <button onClick={() => setLoginModalOpen(true)} className="text-[#0056b3] font-bold hover:underline">Login</button>
-                                    </p>
-                                )}
                             </div>
-
-                            {/* CTA */}
-                            {/* <button
-                                onClick={handleStartNow}
-                                className="w-full py-4 bg-[#0056b3] hover:bg-[#004494] text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
-                            >
-                                Start now
-                            </button> */}
-                        </div>
-{/* 
-                        <p className="mt-6 text-center text-[11px] text-[#999999] px-4">
-                            * Available with Owner Assist Plans. By clicking Start now, you agree to our Terms & Conditions.
-                        </p> */}
-                    </motion.div>
+                        </motion.div>
+                    </div>
                 </div>
+            </div>
 
-                {/* Know More Button */}
+            {/* Know More Button */}
+            <div className="relative h-12">
                 <div className="absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-1/2 z-20">
                     <motion.button
                         initial={{ opacity: 0, y: -10 }}
@@ -269,7 +264,6 @@ const PostPropertyLanding = () => {
             <div ref={nextSectionRef} className="relative z-10 w-full">
                 <PostPropertyRoute />
             </div>
-
         </div>
     );
 };

@@ -68,7 +68,7 @@ const Testimonials = () => {
                     </button>
 
                     {/* Custom Right Navigation Arrow */}
-                    <button className="swiper-button-next-testi absolute right-[-20px] top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center bg-[#0078D7] hover:bg-[#0066B8] text-white rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-0 disabled:pointer-events-none cursor-pointer">
+                    <button className="swiper-button-next-testi absolute right-[-20px] top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center bg-[#1a2b4b] hover:bg-[#1a2b4b] text-white rounded-full shadow-lg transition-transform hover:scale-105 disabled:opacity-0 disabled:pointer-events-none cursor-pointer">
                         <ArrowRight className="w-6 h-6" />
                     </button>
 

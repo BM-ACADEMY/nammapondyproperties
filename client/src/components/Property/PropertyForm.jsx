@@ -166,6 +166,7 @@ const PropertyForm = ({
     setValue,
     reset,
     formState: { errors },
+    trigger,
   } = useForm({
     defaultValues: getFormValues(initialData)
   });
@@ -403,8 +404,38 @@ const PropertyForm = ({
   const selectedType = propertyTypes.find(t => t.name === propertyTypeWatch);
   const activeConfig = selectedType || {};
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 5));
+  const nextStep = async () => {
+    const fieldsToValidate = {
+      1: ["basicInfo.title", "basicInfo.description", "businessType"],
+      2: ["location.addressLine1", "location.locality", "location.pincode"],
+      3: categoryWatch === "Sell" 
+        ? ["pricing.sell.price", "specifications.area.totalArea"] 
+        : ["pricing.rent.monthlyRent", "specifications.area.totalArea"],
+      4: []
+    };
+
+    const currentFields = fieldsToValidate[currentStep];
+    if (currentFields && currentFields.length > 0) {
+      const isValid = await trigger(currentFields);
+      if (!isValid) {
+        toast.error("Please fill all required fields correctly.");
+        return;
+      }
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 5));
+  };
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+  const handleFormError = (errors) => {
+    console.log("Form Errors:", errors);
+    const firstError = Object.values(errors).flat()[0];
+    if (firstError) {
+      const errorMessage = firstError.message || "Please check the form for errors.";
+      toast.error(errorMessage);
+    } else {
+      toast.error("Please fill all required fields correctly.");
+    }
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
@@ -481,7 +512,7 @@ const PropertyForm = ({
       </div>
 
       {/* Main Content Area */}
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="flex-1 space-y-8">
+      <form onSubmit={handleSubmit(handleFormSubmit, handleFormError)} className="flex-1 space-y-8">
         <div className="mb-8 p-1">
           <h2 className="text-2xl font-bold text-gray-800 mb-1">
             Welcome back {user?.name || "User"},
@@ -558,12 +589,15 @@ const PropertyForm = ({
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Title <span className="text-red-500">*</span></label>
-                  <input {...register("basicInfo.title", { required: "Title is required" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all" placeholder="e.g. Luxurious 3BHK Villa" />
+                  <label className="block text-sm font-bold mb-2">Property Title <span className="text-red-500">*</span></label>
+                  <input {...register("basicInfo.title", { required: "Title is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.title ? "border-red-500" : "border-gray-100"}`} placeholder="e.g., Luxury 3BHK Villa in White Town" />
+                  {errors.basicInfo?.title && <p className="text-red-500 text-xs mt-1">{errors.basicInfo.title.message}</p>}
                 </div>
+
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Description <span className="text-red-500">*</span></label>
-                  <textarea {...register("basicInfo.description", { required: "Description is required" })} rows="4" className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl focus:border-blue-600 focus:bg-white outline-none transition-all" />
+                  <label className="block text-sm font-bold mb-2">Description <span className="text-red-500">*</span></label>
+                  <textarea {...register("basicInfo.description", { required: "Description is required" })} rows="4" className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.description ? "border-red-500" : "border-gray-100"}`} placeholder="Describe the property's unique features, neighborhood, and amenities..."></textarea>
+                  {errors.basicInfo?.description && <p className="text-red-500 text-xs mt-1">{errors.basicInfo.description.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Approval Type</label>
@@ -575,10 +609,10 @@ const PropertyForm = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Business Type <span className="text-red-500">*</span></label>
-                  <select {...register("businessType", { required: "Business Type is required" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white focus:border-blue-600 outline-none transition-all">
+                  <label className="block text-sm font-bold mb-2">Business Type <span className="text-red-500">*</span></label>
+                  <select {...register("businessType", { required: "Business type is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}>
                     <option value="">Select Business Type</option>
-                    {businessTypes.map((type) => (
+                    {businessTypes.map(type => (
                       <option key={type._id} value={type._id}>{type.name}</option>
                     ))}
                   </select>
@@ -648,8 +682,9 @@ const PropertyForm = ({
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Address Line 1 <span className="text-red-500">*</span></label>
-                <input {...register("location.addressLine1", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="Street address, P.O. box, etc." />
+                <label className="block text-sm font-bold mb-2">Full Address <span className="text-red-500">*</span></label>
+                <textarea {...register("location.addressLine1", { required: "Address is required" })} rows="2" className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.addressLine1 ? "border-red-500" : "border-gray-100"}`} placeholder="House No, Street Name, Area..."></textarea>
+                {errors.location?.addressLine1 && <p className="text-red-500 text-xs mt-1">{errors.location.addressLine1.message}</p>}
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Address Line 2</label>
@@ -679,9 +714,17 @@ const PropertyForm = ({
                   </select>
                 )} />
               </div>
-              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Locality <span className="text-red-500">*</span></label><input {...register("location.locality", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
+              <div>
+                <label className="block text-sm font-bold mb-2">Locality / Landmark <span className="text-red-500">*</span></label>
+                <input {...register("location.locality", { required: "Locality is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.locality ? "border-red-500" : "border-gray-100"}`} placeholder="e.g., Near Rock Beach" />
+                {errors.location?.locality && <p className="text-red-500 text-xs mt-1">{errors.location.locality.message}</p>}
+              </div>
               <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Sub Area</label><input {...register("location.subArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
-              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Pincode <span className="text-red-500">*</span></label><input {...register("location.pincode", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
+              <div>
+                <label className="block text-sm font-bold mb-2">Pincode <span className="text-red-500">*</span></label>
+                <input {...register("location.pincode", { required: "Pincode is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.pincode ? "border-red-500" : "border-gray-100"}`} placeholder="e.g., 605001" />
+                {errors.location?.pincode && <p className="text-red-500 text-xs mt-1">{errors.location.pincode.message}</p>}
+              </div>
             </div>
             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 h-[400px]">
               {mapPosition && (
@@ -704,7 +747,8 @@ const PropertyForm = ({
                   <>
                     <div>
                       <label className="block text-sm font-bold mb-2">Total Price (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.sell.price", { required: categoryWatch === "Sell" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <input type="number" {...register("pricing.sell.price", { required: "Price is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.price ? "border-red-500" : "border-gray-100"}`} />
+                      {errors.pricing?.sell?.price && <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.price.message}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">Price Per Sqft (₹)</label>
@@ -715,7 +759,8 @@ const PropertyForm = ({
                   <>
                     <div>
                       <label className="block text-sm font-bold mb-2">Monthly Rent (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.rent.monthlyRent", { required: categoryWatch === "Rent" })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <input type="number" {...register("pricing.rent.monthlyRent", { required: "Monthly rent is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.monthlyRent ? "border-red-500" : "border-gray-100"}`} />
+                      {errors.pricing?.rent?.monthlyRent && <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.monthlyRent.message}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">Security Deposit (₹)</label>
@@ -731,7 +776,8 @@ const PropertyForm = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-bold mb-2">Total Area (sqft) *</label>
-                  <input type="number" {...register("specifications.area.totalArea", { required: true })} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                  <input type="number" {...register("specifications.area.totalArea", { required: "Total area is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.specifications?.area?.totalArea ? "border-red-500" : "border-gray-100"}`} />
+                  {errors.specifications?.area?.totalArea && <p className="text-red-500 text-xs mt-1">{errors.specifications.area.totalArea.message}</p>}
                 </div>
                 {!activeConfig.hasPlot && (
                   <div>
@@ -872,7 +918,9 @@ const PropertyForm = ({
                     const val = e.target.value.trim();
                     if (val) {
                       const currentAmenities = watch("amenities") || [];
-                      if (!currentAmenities.includes(val)) {
+                      if (!Array.isArray(currentAmenities)) {
+                         setValue("amenities", [val]);
+                      } else if (!currentAmenities.includes(val)) {
                         setValue("amenities", [...currentAmenities, val]);
                       }
                       e.target.value = "";
@@ -887,7 +935,9 @@ const PropertyForm = ({
                   const val = input.value.trim();
                   if (val) {
                     const currentAmenities = watch("amenities") || [];
-                    if (!currentAmenities.includes(val)) {
+                    if (!Array.isArray(currentAmenities)) {
+                      setValue("amenities", [val]);
+                    } else if (!currentAmenities.includes(val)) {
                       setValue("amenities", [...currentAmenities, val]);
                     }
                     input.value = "";
@@ -929,7 +979,7 @@ const PropertyForm = ({
               disabled={loading}
               className="px-10 py-3 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold text-sm shadow-lg shadow-green-100 transition-all transform hover:scale-[1.02] flex items-center gap-2"
             >
-              {loading ? "Saving..." : "Publish Property"}
+              {loading ? "Saving..." : "Done"}
             </button>
           )}
         </div>

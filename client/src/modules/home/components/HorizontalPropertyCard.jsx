@@ -22,9 +22,9 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
         : "";
 
     return (
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col md:flex-row group relative mb-6">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative h-full">
             {/* Left: Image Section */}
-            <div className="md:w-64 lg:w-72 h-48 md:h-auto relative shrink-0 overflow-hidden">
+            <div className="w-full xl:w-2/5 h-48 xl:h-auto min-h-[192px] relative shrink-0 overflow-hidden">
                 <Link
                     to={`/properties/${property.slug || property._id}`}
                     target="_blank"
@@ -62,9 +62,9 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 </div>
 
                 {/* Stats Grid */}
-                <div className="flex items-center gap-0 py-4 my-2">
-                    <div className="flex-1 flex flex-col">
-                        <span className="text-lg md:text-xl font-bold text-slate-800">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 py-4 my-2">
+                    <div className="flex-1 min-w-[30%] flex flex-col">
+                        <span className="text-lg font-bold text-slate-800">
                             {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
@@ -72,10 +72,10 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                         </span>
                     </div>
 
-                    <div className="h-10 w-px bg-gray-100 mx-4" />
+                    <div className="hidden sm:block h-10 w-px bg-gray-100 shrink-0" />
 
-                    <div className="flex-1 flex flex-col">
-                        <span className="text-lg md:text-xl font-bold text-slate-800">
+                    <div className="flex-1 min-w-[30%] flex flex-col">
+                        <span className="text-lg font-bold text-slate-800 break-words">
                             {area.toLocaleString()} {areaUnit}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
@@ -83,13 +83,13 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                         </span>
                     </div>
 
-                    <div className="h-10 w-px bg-gray-100 mx-4" />
+                    <div className="hidden sm:block h-10 w-px bg-gray-100 shrink-0" />
 
-                    <div className="flex-1 flex flex-col">
-                        <span className="text-lg md:text-xl font-bold text-slate-800">
+                    <div className="flex-1 min-w-[20%] flex flex-col">
+                        <span className="text-lg font-bold text-slate-800">
                             Status
                         </span>
-                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
+                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                             {property.legal?.propertyStatus || "Ready to Move"}
                         </span>
                     </div>

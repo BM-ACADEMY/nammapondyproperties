@@ -7,12 +7,13 @@ const PropertySidebarFilter = ({
     onFilterChange,
     onClearFilters
 }) => {
-    const { locations, approvalTypes, priceRanges, propertyCategories } = useNav();
+    const { locations, approvalTypes, priceRanges, propertyCategories, businessTypes } = useNav();
     const [openSections, setOpenSections] = useState({
         budget: true,
         location: true,
         approval: true,
         category: true,
+        businessType: true,
     });
 
     const toggleSection = (section) => {
@@ -160,6 +161,38 @@ const PropertySidebarFilter = ({
                                             }`}
                                     >
                                         + {name.charAt(0).toUpperCase() + name.slice(1)}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+
+                <hr className="border-gray-100" />
+
+                {/* Business Type */}
+                <div className="space-y-4">
+                    <button
+                        onClick={() => toggleSection("businessType")}
+                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                    >
+                        <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Business Type</span>
+                        {openSections.businessType ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </button>
+                    {openSections.businessType && (
+                        <div className="flex flex-wrap gap-2">
+                            {businessTypes.map((type) => {
+                                const name = typeof type === "string" ? type : type?.name || "Unknown";
+                                return (
+                                    <button
+                                        key={type._id || name}
+                                        onClick={() => handleChipClick("businessType", type._id || name)}
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.businessType || []).includes(type._id || name)
+                                            ? "bg-blue-50 border-blue-600 text-blue-700"
+                                            : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
+                                            }`}
+                                    >
+                                        + {name}
                                     </button>
                                 );
                             })}

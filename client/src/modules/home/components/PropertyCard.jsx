@@ -54,8 +54,8 @@ const PropertyCard = ({ property }) => {
         </div>
 
         {property.isSold && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider">
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 pointer-events-none">
+            <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider pointer-events-auto">
               Sold Out
             </span>
           </div>

@@ -101,6 +101,23 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => handleMenuClick("/admin/marketing-requests"),
     },
     {
+      key: "forms-sub",
+      icon: <MessageSquare size={20} />,
+      label: "Forms Data",
+      children: [
+        {
+          key: "/admin/forms/call-requests",
+          label: "Call Requests",
+          onClick: () => handleMenuClick("/admin/forms/call-requests"),
+        },
+        {
+          key: "/admin/forms/contact-messages",
+          label: "Contact Messages",
+          onClick: () => handleMenuClick("/admin/forms/contact-messages"),
+        },
+      ],
+    },
+    {
       key: "settings-sub",
       icon: <Settings size={20} />,
       label: "Settings",
