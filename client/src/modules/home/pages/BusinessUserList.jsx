@@ -315,50 +315,48 @@ const BusinessUserList = () => {
                       Select a professional to view their exclusive property listings.
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {sellers.map((user) => (
                       <motion.div
                         key={user._id}
-                        whileHover={{ y: -5 }}
+                        whileHover={{ scale: 1.02 }}
                         onClick={() => setSelectedSeller(user)}
-                        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 cursor-pointer hover:shadow-xl transition-all group relative overflow-hidden"
+                        className="flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all group relative overflow-hidden h-auto sm:h-[180px]"
                       >
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-[#174685]/5 rounded-bl-full -mr-12 -mt-12 transition-all group-hover:bg-[#174685]/10" />
+                        {/* Left Section: Image */}
+                        <div className="w-full sm:w-1/3 h-48 sm:h-full shrink-0 overflow-hidden relative">
+                          {user.profile_image ? (
+                            <img 
+                              src={getImageUrl(user.profile_image)} 
+                              alt={user.name} 
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-4xl font-bold">
+                              {user.name?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/5" />
+                        </div>
 
-                        <div className="flex items-center gap-5 mb-6">
-                          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-md group-hover:scale-105 transition-transform">
-                            {user.profile_image ? (
-                              <img src={getImageUrl(user.profile_image)} alt={user.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-2xl font-bold">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#174685] transition-colors truncate">
-                              {user.name}
-                            </h3>
-                            <div className="flex items-center gap-1.5 mt-1">
-                              <ShieldCheck className="w-4 h-4 text-[#1aa554]" />
-                              <span className="text-[11px] font-bold text-[#1aa554] uppercase tracking-wider">Verified Professional</span>
+                        {/* Right Section: Info */}
+                        <div className="flex-1 p-5 flex flex-col justify-start min-w-0">
+                          <h3 className="text-xl font-bold text-[#174685] mb-1 truncate">
+                            {user.name}
+                          </h3>
+                          <p className="text-sm text-slate-500 font-medium mb-3">
+                            {businessType?.name || "Professional"}
+                          </p>
+                          
+                          <div className="flex items-center gap-2">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#0e182b] text-white rounded-md shadow-sm">
+                              <Star size={10} className="fill-current text-white" />
+                              <span className="text-[10px] font-extrabold uppercase tracking-widest">
+                                SUPERAGENT
+                              </span>
                             </div>
                           </div>
                         </div>
-
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-center gap-3 text-slate-600">
-                            <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
-                              <Phone className="w-4 h-4 text-slate-400" />
-                            </div>
-                            <span className="text-sm font-medium">{maskPhoneNumber(user.phone)}</span>
-                          </div>
-                        </div>
-
-                        <button className="w-full py-3 bg-slate-50 text-slate-900 rounded-2xl text-sm font-bold group-hover:bg-[#174685] group-hover:text-white transition-all flex items-center justify-center gap-2">
-                          View Properties
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
                       </motion.div>
                     ))}
                   </div>
