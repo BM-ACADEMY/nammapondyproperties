@@ -304,7 +304,7 @@ const PropertyDetails = () => {
 
             {/* 2. Image Gallery - Clean & Sharp */}
             <div className="space-y-4">
-              <div className="relative h-[450px] md:h-[550px] bg-gray-100 rounded-xl overflow-hidden group">
+              <div className="relative h-[350px] md:h-[450px] bg-gray-100 rounded-xl overflow-hidden group">
                 {property.isSold && (
                   <div className="absolute top-6 left-6 z-20">
                     <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20">
@@ -561,7 +561,7 @@ const PropertyDetails = () => {
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 whitespace-nowrap">
-                          Construction Status
+                          Status
                         </span>
                         <span className="text-[15px] font-semibold text-blue-600 leading-tight">
                           {property.legal.propertyStatus}
