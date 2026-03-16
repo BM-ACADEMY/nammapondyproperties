@@ -31,13 +31,13 @@ const HeroSection = () => {
       <div className="absolute inset-0">
         {/* Desktop Image */}
         <img
-          src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
+          src="/public/banner/banner1.png"
           alt="Hero Background Desktop"
           className="hidden md:block w-full h-full object-cover object-center"
         />
         {/* Mobile/Tablet Image */}
         <img
-          src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+          src="/public/banner/Banner.png"
           alt="Hero Background Mobile"
           className="block md:hidden w-full h-full object-cover object-center"
         />
