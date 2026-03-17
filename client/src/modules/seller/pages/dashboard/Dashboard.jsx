@@ -192,7 +192,7 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <Row gutter={[24, 24]}>
         {statCardsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={4} key={index}>
+          <Col xs={24} sm={12} lg={8} key={index}>
             <Card
               variant="borderless"
               className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"

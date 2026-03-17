@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Input, message, Button, Popconfirm, Tooltip } from "antd";
+import { Table, Tag, Input, message, Button, Popconfirm, Tooltip, Typography, Card } from "antd";
+const { Title, Text } = Typography;
 import {
   Search,
   Download,
@@ -110,26 +111,6 @@ const SellerEnquiries = () => {
       ),
     },
     {
-      title: "Source",
-      dataIndex: "type",
-      key: "type",
-      render: (type) => (
-        <Tag
-          icon={
-            type === "whatsapp_lead" ? (
-              <MessageCircle size={12} className="inline mr-1" />
-            ) : (
-              <Mail size={12} className="inline mr-1" />
-            )
-          }
-          color={type === "whatsapp_lead" ? "green" : "blue"}
-          className="rounded-full px-3"
-        >
-          {type === "whatsapp_lead" ? "WhatsApp" : "Direct"}
-        </Tag>
-      ),
-    },
-    {
       title: "Message",
       dataIndex: "message",
       key: "message",
@@ -139,22 +120,6 @@ const SellerEnquiries = () => {
           <span className="text-gray-600 italic">"{msg}"</span>
         </Tooltip>
       ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status) => {
-        const isNew = !status || status.toLowerCase() === "new";
-        return (
-          <Tag
-            color={isNew ? "processing" : "success"}
-            className="uppercase font-medium text-xs rounded"
-          >
-            {isNew ? "NEW" : status}
-          </Tag>
-        );
-      },
     },
     {
       title: "Actions",
@@ -204,9 +169,7 @@ const SellerEnquiries = () => {
       "Property Title",
       "Enquirer Name",
       "Enquirer Phone",
-      "Source",
       "Message",
-      "Status",
     ];
 
     const rows = filteredEnquiries.map((item) => [
@@ -214,9 +177,7 @@ const SellerEnquiries = () => {
       item.property_id?.title || "Deleted Property",
       item.enquirer_name || "Guest",
       item.enquirer_phone || "N/A",
-      item.type === "whatsapp_lead" ? "WhatsApp" : "Direct",
       `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
-      item.status?.toUpperCase() || "NEW",
     ]);
 
     const csvContent = [
@@ -238,40 +199,50 @@ const SellerEnquiries = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-              Property Enquiries
-            </h1>
-            <p className="text-gray-500 mt-1">
-              Manage and respond to your property leads
-            </p>
-          </div>
-          <Button
-            type="primary"
-            icon={<Download size={18} />}
-            onClick={downloadCSV}
-            className="bg-indigo-600 hover:bg-indigo-700 h-11 px-6 rounded-xl flex items-center gap-2 shadow-sm border-none transition-all"
-          >
-            Export Records
-          </Button>
+    <div className="space-y-6">
+      {/* Header & Export */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <div>
+          <Title level={2} style={{ margin: 0 }}>
+            Property Enquiries
+          </Title>
+          <Text type="secondary">
+            Manage and respond to your property leads
+          </Text>
         </div>
+        <Button
+          type="primary"
+          icon={<Download size={18} />}
+          onClick={downloadCSV}
+          className="bg-blue-600 hover:bg-blue-700 h-10 px-6 rounded-xl flex items-center gap-2 shadow-sm border-none transition-all"
+        >
+          Export Records
+        </Button>
+      </div>
 
-        <div className="mb-6 bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-          <Input
-            prefix={<Search size={20} className="text-gray-400 ml-2" />}
-            placeholder="Search by property, enquirer name, or phone..."
-            onChange={(e) => setSearchText(e.target.value)}
-            className="w-full border-none h-12 text-base focus:ring-0"
-            size="large"
-            allowClear
-          />
-        </div>
+      {/* Search Bar */}
+      <Card
+        variant="borderless"
+        className="shadow-sm rounded-xl overflow-hidden"
+        styles={{ body: { padding: "4px 8px" } }}
+      >
+        <Input
+          prefix={<Search size={18} className="text-gray-400 ml-1" />}
+          placeholder="Search enquiries..."
+          onChange={(e) => setSearchText(e.target.value)}
+          className="w-full border-none h-9 text-sm focus:ring-0"
+          size="middle"
+          allowClear
+        />
+      </Card>
 
         {/* Desktop View */}
-        <div className="hidden lg:block bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <div className="hidden lg:block">
+          <Card
+            variant="borderless"
+            className="shadow-sm rounded-xl overflow-hidden"
+            styles={{ body: { padding: 0 } }}
+          >
           <Table
             columns={columns}
             dataSource={filteredEnquiries}
@@ -291,6 +262,7 @@ const SellerEnquiries = () => {
               ),
             }}
           />
+          </Card>
         </div>
 
         {/* Mobile View */}
@@ -360,31 +332,6 @@ const SellerEnquiries = () => {
                     </Popconfirm>
                   </div>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <Tag
-                      color={
-                        !item.status || item.status === "new" ? "blue" : "green"
-                      }
-                      className="rounded-full px-3 m-0 border-none font-medium"
-                    >
-                      {!item.status || item.status === "new"
-                        ? "NEW"
-                        : item.status.toUpperCase()}
-                    </Tag>
-                    <Tag
-                      color={item.type === "whatsapp_lead" ? "green" : "blue"}
-                      className="rounded-full px-3 m-0 border-none font-medium"
-                      icon={
-                        item.type === "whatsapp_lead" ? (
-                          <MessageCircle size={10} className="inline mr-1" />
-                        ) : (
-                          <Mail size={10} className="inline mr-1" />
-                        )
-                      }
-                    >
-                      {item.type === "whatsapp_lead" ? "WhatsApp" : "Direct"}
-                    </Tag>
-                  </div>
 
                   <div className="bg-gray-50 rounded-2xl p-4 border border-gray-50">
                     <div className="flex flex-col gap-2 mb-3 pb-3 border-b border-gray-200/60">
@@ -416,7 +363,6 @@ const SellerEnquiries = () => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };
