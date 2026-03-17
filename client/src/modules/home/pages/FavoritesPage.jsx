@@ -3,7 +3,7 @@ import axios from "axios";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MapPin, Heart, ArrowRight, Store, Eye } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
-import { formatIndianPrice } from "../../../utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "../../../utils/formatPrice";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { getImageUrl } from "@/utils/imageUrl";
 
@@ -194,7 +194,7 @@ const FavoritesPage = () => {
     <div className="mt-20 min-h-[calc(100vh-80px)] bg-[#f6f9fa] font-['Outfit',_sans-serif] flex flex-col">
       {/* ── Page Header ── */}
       <div className="bg-transparent">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-4">
           <div className="flex items-end justify-between gap-4">
             <div>
               {/* CHANGED: Applied the gold color to the top accent text */}
@@ -217,7 +217,7 @@ const FavoritesPage = () => {
       </div>
 
       {/* ── Property Cards or Empty State ── */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2 pb-10 flex-1 flex flex-col">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-2 pb-10 flex-1 flex flex-col">
         {favorites.length === 0 ? (
           <div className="p-6 md:p-10 text-center w-full border border-gray-100/50 relative overflow-hidden flex-1 flex flex-col justify-center items-center">
             {/* Decorative background element */}
@@ -276,7 +276,7 @@ const FavoritesPage = () => {
                       <img
                         src={imgUrl}
                         alt={property.basicInfo?.title || "Property"}
-                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ${property.isSold ? "grayscale-[0.6]" : ""}`}
+                        className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.6]" : ""}`}
                       />
                     ) : (
                       <div className="w-full h-full bg-[#f6f9fa] flex items-center justify-center">
@@ -334,11 +334,13 @@ const FavoritesPage = () => {
                           {property.isSold && property.soldPrice ? "Sold Price" : "Price"}
                         </p>
                         <p className="text-xl font-bold text-[#0e182b] leading-none">
-                          {formatIndianPrice(
-                            property.isSold && property.soldPrice
-                              ? property.soldPrice
-                              : property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0,
-                          )}
+                          {property.isSold && property.soldPrice
+                            ? formatIndianPrice(property.soldPrice)
+                            : formatPriceRange(
+                                property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                                property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                                property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0,
+                              )}
                         </p>
                       </div>
 
