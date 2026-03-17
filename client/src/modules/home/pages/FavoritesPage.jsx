@@ -250,7 +250,7 @@ const FavoritesPage = () => {
                   {/* ── Details ── */}
                   <div className="flex-1 p-6 flex flex-col min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#c19b48] bg-[#c19b48]/10 px-3 py-1 rounded-full shrink-0">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-[#e22454] bg-[#e22454]/10 px-3 py-1 rounded-full shrink-0">
                         {property.businessType?.name || property.basicInfo?.propertyType || "Property"}
                       </span>
                       <div className="shrink-0 -mt-1">
@@ -265,8 +265,8 @@ const FavoritesPage = () => {
                     </Link>
 
                     <div className="flex flex-col gap-1.5 mb-4">
-                      <div className="flex items-center gap-2 text-[#38526e] text-sm">
-                        <MapPin className="w-4 h-4 text-[#c19b48] shrink-0" />
+                      <div className="flex items-center gap-2 text-[#e22454] text-sm">
+                        <MapPin className="w-4 h-4 text-[#e22454] shrink-0" />
                         <span className="truncate">{locStr}</span>
                       </div>
                       {property.seller_id?.name && (
