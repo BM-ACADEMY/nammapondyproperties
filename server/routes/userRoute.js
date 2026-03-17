@@ -49,4 +49,7 @@ router.get("/wishlist", protect, userController.getWishlist);
 // Admin Routes
 router.post("/create-user-by-admin", protect, userController.createUserByAdmin);
 
+// Verification Request
+router.post("/request-badge", protect, userController.requestBadgeVerification);
+
 module.exports = router;

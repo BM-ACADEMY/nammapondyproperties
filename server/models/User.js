@@ -17,6 +17,12 @@ const userSchema = new mongoose.Schema(
     otp: { type: String },
     otpExpires: { type: Date },
     isVerified: { type: Boolean, default: false },
+    badgeVerified: { type: Boolean, default: false },
+    badgeRequestStatus: {
+      type: String,
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
+    },
     profile_image: { type: String }, // URL or path to image
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     customId: { type: String, unique: true, sparse: true },

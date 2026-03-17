@@ -12,7 +12,7 @@ export const formatIndianPrice = (price) => {
   if (numPrice >= 10000000) {
     return `₹ ${(numPrice / 10000000).toFixed(2)} Cr`;
   } else if (numPrice >= 100000) {
-    return `₹ ${(numPrice / 100000).toFixed(2)} Lakh`;
+    return `₹ ${(numPrice / 100000).toFixed(2)} L`;
   } else {
     return `₹ ${numPrice.toLocaleString("en-IN")}`;
   }

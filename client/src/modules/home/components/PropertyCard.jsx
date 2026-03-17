@@ -49,6 +49,14 @@ const PropertyCard = ({ property }) => {
           <WishlistButton propertyId={property._id} />
         </div>
 
+        {/* Verified Badge - Top Left */}
+        {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+          <div className="absolute top-3 left-3 z-20 bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200">
+            <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
+          </div>
+        )}
+
         {/* Price Badge - Bottom Left */}
         <div className="absolute bottom-3 left-3 z-20 bg-white px-3 py-1.5 rounded-lg shadow-md">
           <span className="text-sm font-bold text-gray-900">
