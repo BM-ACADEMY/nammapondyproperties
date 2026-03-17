@@ -75,11 +75,15 @@ const propertySchema = new mongoose.Schema(
     pricing: {
       sell: {
         price: Number,
+        minPrice: Number,
+        maxPrice: Number,
         pricePerSqft: Number
       },
 
       rent: {
         monthlyRent: Number,
+        minRent: Number,
+        maxRent: Number,
         securityDeposit: Number,
         maintenance: Number,
         availableFrom: Date,
@@ -112,6 +116,8 @@ const propertySchema = new mongoose.Schema(
 
       area: {
         totalArea: Number,
+        minArea: Number,
+        maxArea: Number,
         builtupArea: Number,
         superBuiltupArea: Number,
         carpetArea: Number

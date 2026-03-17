@@ -4,7 +4,7 @@ import { MapPin, Eye } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
-import { formatIndianPrice } from "../../../utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "../../../utils/formatPrice";
 import { formatNumber } from "../../../utils/formatNumber";
 import { getImageUrl } from "../../../utils/imageUrl";
 
@@ -21,8 +21,11 @@ const PropertyCard = ({ property }) => {
   const posterType = property.businessType?.name || (typeof property.businessType === 'string' && property.businessType !== "" ? property.businessType : null) || "Owner";
   const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
-  // Price formatting for the badge
-  const displayPrice = property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0;
+  // Price range display
+  const minPrice = property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent;
+  const maxPrice = property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent;
+  const singlePrice = property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0;
+  const displayPrice = formatPriceRange(minPrice, maxPrice, singlePrice);
 
   return (
     <div className="flex flex-col group h-full">
@@ -48,8 +51,8 @@ const PropertyCard = ({ property }) => {
 
         {/* Price Badge - Bottom Left */}
         <div className="absolute bottom-3 left-3 z-20 bg-white px-3 py-1.5 rounded-lg shadow-md">
-          <span className="text-lg font-bold text-gray-900">
-            {formatIndianPrice(displayPrice)}
+          <span className="text-sm font-bold text-gray-900">
+            {displayPrice}
           </span>
         </div>
 

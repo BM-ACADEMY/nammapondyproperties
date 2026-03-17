@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, MapPin, Eye, ArrowRight, Phone, MessageSquare } from "lucide-react";
-import { formatIndianPrice } from "@/utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
 import moment from "moment";
 import WishlistButton from "../../../components/Common/WishlistButton";
@@ -14,12 +14,19 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
     const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
     const bedrooms = property.specifications?.residential?.bedrooms || 0;
-    const area = property.specifications?.area?.totalArea || property.specifications?.area?.builtupArea || 0;
+    const minArea = property.specifications?.area?.minArea;
+    const maxArea = property.specifications?.area?.maxArea;
+    const totalArea = property.specifications?.area?.totalArea || property.specifications?.area?.builtupArea || 0;
     const areaUnit = property.specifications?.area?.unit || "sqft";
 
-    const floorInfo = property.specifications?.floor?.propertyOnFloor
-        ? `${property.specifications.floor.propertyOnFloor} out of ${property.specifications.floor.totalFloor || 1} Floors`
-        : "";
+    // Build area display string
+    const areaDisplay = (minArea && maxArea)
+        ? `${Number(minArea).toLocaleString()} - ${Number(maxArea).toLocaleString()} ${areaUnit}`
+        : minArea
+        ? `${Number(minArea).toLocaleString()}+ ${areaUnit}`
+        : `${Number(totalArea).toLocaleString()} ${areaUnit}`;
+
+    const areaLabel = (minArea || maxArea) ? "Area Range" : (property.specifications?.area?.totalArea ? "Total Area" : "Built Area");
 
     return (
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative h-full">
@@ -64,8 +71,12 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 {/* Stats Grid */}
                 <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 py-4 my-2">
                     <div className="flex-1 min-w-[30%] flex flex-col">
-                        <span className="text-lg font-bold text-slate-800">
-                            {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+                        <span className="text-base font-bold text-slate-800 break-words">
+                            {formatPriceRange(
+                                property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                                property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                                property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                            )}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
                             {property.pricing?.sell?.pricePerSqft ? `₹${property.pricing.sell.pricePerSqft.toLocaleString()}/sqft` : "Price"}
@@ -75,11 +86,11 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                     <div className="hidden sm:block h-10 w-px bg-gray-100 shrink-0" />
 
                     <div className="flex-1 min-w-[30%] flex flex-col">
-                        <span className="text-lg font-bold text-slate-800 break-words">
-                            {area.toLocaleString()} {areaUnit}
+                        <span className="text-base font-bold text-slate-800 break-words">
+                            {areaDisplay}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
-                            {property.specifications?.area?.totalArea ? "Total Area" : "Built Area"}
+                            {areaLabel}
                         </span>
                     </div>
 

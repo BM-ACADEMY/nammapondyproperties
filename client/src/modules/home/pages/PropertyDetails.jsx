@@ -34,7 +34,7 @@ import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
-import { formatIndianPrice } from "../../../utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "../../../utils/formatPrice";
 import { formatNumber } from "../../../utils/formatNumber";
 
 import Loader from "../../../components/Common/Loader";
@@ -261,12 +261,16 @@ const PropertyDetails = () => {
                         <span className="text-red-600">{formatIndianPrice(property.soldPrice)}</span>
                       </div>
                     ) : (
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-lg md:text-xl text-gray-500 font-medium">
-                          {property.isSold ? "Price:" : "Launch Price:"}
+                          {property.isSold ? "Price:" : "Price:"}
                         </span>
                         <span className="text-gray-900">
-                          {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+                          {formatPriceRange(
+                            property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                            property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                            property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                          )}
                         </span>
                       </div>
                     )}
@@ -377,17 +381,25 @@ const PropertyDetails = () => {
                       </span>
                     </div>
                   </div>
-                  {/* item */}
+                  {/* item — Area */}
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
                       <Square size={20} />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
-                        Total Area
+                        {(property.specifications?.area?.minArea || property.specifications?.area?.maxArea) ? "Area Range" : "Total Area"}
                       </span>
                       <span className="text-[15px] font-medium text-gray-800 leading-tight whitespace-nowrap">
-                        {property.specifications?.area?.totalArea ? `${property.specifications.area.totalArea} sqft` : "N/A"}
+                        {(() => {
+                          const minA = property.specifications?.area?.minArea;
+                          const maxA = property.specifications?.area?.maxArea;
+                          const total = property.specifications?.area?.totalArea;
+                          if (minA && maxA) return `${Number(minA).toLocaleString()} - ${Number(maxA).toLocaleString()} sqft`;
+                          if (minA) return `${Number(minA).toLocaleString()}+ sqft`;
+                          if (total) return `${total} sqft`;
+                          return "N/A";
+                        })()}
                       </span>
                     </div>
                   </div>

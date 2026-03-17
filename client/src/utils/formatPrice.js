@@ -17,3 +17,24 @@ export const formatIndianPrice = (price) => {
     return `₹ ${numPrice.toLocaleString("en-IN")}`;
   }
 };
+
+/**
+ * Formats a price range (min to max) into Indian currency format.
+ * If both min and max are provided, returns "₹X to ₹Y".
+ * Otherwise falls back to a single formatted price.
+ * @param {number} minPrice
+ * @param {number} maxPrice
+ * @param {number} [fallbackPrice] - single price to display if range is absent
+ * @returns {string}
+ */
+export const formatPriceRange = (minPrice, maxPrice, fallbackPrice) => {
+  const hasMin = minPrice != null && minPrice !== '' && !isNaN(Number(minPrice)) && Number(minPrice) > 0;
+  const hasMax = maxPrice != null && maxPrice !== '' && !isNaN(Number(maxPrice)) && Number(maxPrice) > 0;
+
+  if (hasMin && hasMax) {
+    return `${formatIndianPrice(minPrice)} - ${formatIndianPrice(maxPrice)}`;
+  }
+  if (hasMin) return formatIndianPrice(minPrice);
+  if (hasMax) return formatIndianPrice(maxPrice);
+  return formatIndianPrice(fallbackPrice || 0);
+};

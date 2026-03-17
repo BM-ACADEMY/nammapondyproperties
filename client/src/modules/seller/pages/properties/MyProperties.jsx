@@ -293,18 +293,18 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            if (properties.length >= 2) {
+            if (properties.length >= 5) {
               navigate("/seller/request-limit");
               return;
             }
             navigate("/seller/add-property");
           }}
-          className={`h-10 px-6 rounded-lg flex items-center gap-2 ${properties.length >= 2
+          className={`h-10 px-6 rounded-lg flex items-center gap-2 ${properties.length >= 5
             ? "bg-orange-500 hover:bg-orange-600 border-orange-500"
             : "bg-blue-600 hover:bg-blue-700 border-blue-600"
             }`}
         >
-          {properties.length >= 2 ? "Request Limit" : "Add Property"}
+          {properties.length >= 5 ? "Request Limit" : "Add Property"}
         </Button>
       </div>
 

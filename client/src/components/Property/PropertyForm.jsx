@@ -81,10 +81,14 @@ const PropertyForm = ({
     pricing: {
       sell: {
         price: data?.pricing?.sell?.price || data?.price || "",
+        minPrice: data?.pricing?.sell?.minPrice || "",
+        maxPrice: data?.pricing?.sell?.maxPrice || "",
         pricePerSqft: data?.pricing?.sell?.pricePerSqft || "",
       },
       rent: {
         monthlyRent: data?.pricing?.rent?.monthlyRent || data?.price || "",
+        minRent: data?.pricing?.rent?.minRent || "",
+        maxRent: data?.pricing?.rent?.maxRent || "",
         securityDeposit: data?.pricing?.rent?.securityDeposit || "",
         maintenance: data?.pricing?.rent?.maintenance || "",
         availableFrom: data?.pricing?.rent?.availableFrom || "",
@@ -99,6 +103,8 @@ const PropertyForm = ({
     specifications: {
       area: {
         totalArea: data?.specifications?.area?.totalArea || data?.area_size || "",
+        minArea: data?.specifications?.area?.minArea || "",
+        maxArea: data?.specifications?.area?.maxArea || "",
         builtupArea: data?.specifications?.area?.builtupArea || "",
         carpetArea: data?.specifications?.area?.carpetArea || "",
       },
@@ -208,10 +214,10 @@ const PropertyForm = ({
     if (data.location.addressLine1) score += 10;
     if (data.location.city) score += 10;
     if (data.location.locality) score += 10;
-    if (data.pricing.sell.price || data.pricing.rent.monthlyRent) score += 10;
+    if (data.pricing.sell.minPrice || data.pricing.sell.maxPrice || data.pricing.rent.minRent || data.pricing.rent.maxRent) score += 10;
     if (data.amenities?.length > 0) score += 10;
     if (images.length > 0) score += 15;
-    if (data.specifications.area.totalArea) score += 15;
+    if (data.specifications.area.minArea || data.specifications.area.totalArea) score += 15;
     return score;
   };
 
@@ -409,8 +415,8 @@ const PropertyForm = ({
       1: ["basicInfo.title", "basicInfo.description", "businessType"],
       2: ["location.addressLine1", "location.locality", "location.pincode"],
       3: categoryWatch === "Sell" 
-        ? ["pricing.sell.price", "specifications.area.totalArea"] 
-        : ["pricing.rent.monthlyRent", "specifications.area.totalArea"],
+        ? ["pricing.sell.minPrice", "pricing.sell.maxPrice", "specifications.area.minArea"] 
+        : ["pricing.rent.minRent", "pricing.rent.maxRent", "specifications.area.minArea"],
       4: []
     };
 
@@ -746,9 +752,14 @@ const PropertyForm = ({
                 {categoryWatch === "Sell" ? (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Total Price (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.sell.price", { required: "Price is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.price ? "border-red-500" : "border-gray-100"}`} />
-                      {errors.pricing?.sell?.price && <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.price.message}</p>}
+                      <label className="block text-sm font-bold mb-2">Price From (₹) <span className="text-red-500">*</span></label>
+                      <input type="number" {...register("pricing.sell.minPrice", { required: "Min price is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.minPrice ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 1500000" />
+                      {errors.pricing?.sell?.minPrice && <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.minPrice.message}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Price To (₹) <span className="text-red-500">*</span></label>
+                      <input type="number" {...register("pricing.sell.maxPrice", { required: "Max price is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.maxPrice ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 1600000" />
+                      {errors.pricing?.sell?.maxPrice && <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.maxPrice.message}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">Price Per Sqft (₹)</label>
@@ -758,9 +769,14 @@ const PropertyForm = ({
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Monthly Rent (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.rent.monthlyRent", { required: "Monthly rent is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.monthlyRent ? "border-red-500" : "border-gray-100"}`} />
-                      {errors.pricing?.rent?.monthlyRent && <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.monthlyRent.message}</p>}
+                      <label className="block text-sm font-bold mb-2">Rent From (₹/mo) <span className="text-red-500">*</span></label>
+                      <input type="number" {...register("pricing.rent.minRent", { required: "Min rent is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.minRent ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 15000" />
+                      {errors.pricing?.rent?.minRent && <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.minRent.message}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Rent To (₹/mo) <span className="text-red-500">*</span></label>
+                      <input type="number" {...register("pricing.rent.maxRent", { required: "Max rent is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.maxRent ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 20000" />
+                      {errors.pricing?.rent?.maxRent && <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.maxRent.message}</p>}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">Security Deposit (₹)</label>
@@ -775,9 +791,19 @@ const PropertyForm = ({
               <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Specifications</p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-bold mb-2">Total Area (sqft) *</label>
-                  <input type="number" {...register("specifications.area.totalArea", { required: "Total area is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.specifications?.area?.totalArea ? "border-red-500" : "border-gray-100"}`} />
-                  {errors.specifications?.area?.totalArea && <p className="text-red-500 text-xs mt-1">{errors.specifications.area.totalArea.message}</p>}
+                  <label className="block text-sm font-bold mb-2">
+                    Area From (sqft) <span className="text-red-500">*</span>
+                    <span className="text-gray-400 font-normal text-xs ml-1">(enter single value or min of range)</span>
+                  </label>
+                  <input type="number" {...register("specifications.area.minArea", { required: "Area is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.specifications?.area?.minArea ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 1200" />
+                  {errors.specifications?.area?.minArea && <p className="text-red-500 text-xs mt-1">{errors.specifications.area.minArea.message}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-bold mb-2">
+                    Area To (sqft)
+                    <span className="text-gray-400 font-normal text-xs ml-1">(optional — fill for range)</span>
+                  </label>
+                  <input type="number" {...register("specifications.area.maxArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="e.g. 1500" />
                 </div>
                 {!activeConfig.hasPlot && (
                   <div>
