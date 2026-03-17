@@ -106,10 +106,6 @@ const SellerEnquiries = () => {
             <Phone size={12} className="text-blue-500" />
             <span>{record.enquirer_phone}</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <Mail size={12} className="text-orange-500" />
-            <span>{record.enquirer_email}</span>
-          </div>
         </div>
       ),
     },
@@ -208,7 +204,6 @@ const SellerEnquiries = () => {
       "Property Title",
       "Enquirer Name",
       "Enquirer Phone",
-      "Enquirer Email",
       "Source",
       "Message",
       "Status",
@@ -219,7 +214,6 @@ const SellerEnquiries = () => {
       item.property_id?.title || "Deleted Property",
       item.enquirer_name || "Guest",
       item.enquirer_phone || "N/A",
-      item.enquirer_email || "N/A",
       item.type === "whatsapp_lead" ? "WhatsApp" : "Direct",
       `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
       item.status?.toUpperCase() || "NEW",
@@ -401,12 +395,6 @@ const SellerEnquiries = () => {
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                           <Phone size={14} className="text-indigo-500" />
                           <span>{item.enquirer_phone}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Mail size={14} className="text-indigo-500" />
-                          <span className="truncate">
-                            {item.enquirer_email}
-                          </span>
                         </div>
                       </div>
                     </div>

@@ -11,11 +11,12 @@ import {
   Building2,
 } from "lucide-react";
 import PropertyCard from "@/modules/home/components/PropertyCard";
-import { toast } from "react-hot-toast";
+
 import { useAuth } from "../../../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 import { getImageUrl } from "@/utils/imageUrl";
+import api from "../../../services/api";
 
 const UserPropertiesPage = () => {
   const { userId } = useParams();
@@ -68,11 +69,8 @@ const UserPropertiesPage = () => {
   }, [userId]);
 
   const handleWhatsAppClick = (e, property) => {
-    e.stopPropagation();
-    if (!profileUser?.phone) {
-      toast.error("Seller information missing");
-      return;
-    }
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (!profileUser?.phone) return;
 
     if (authUser) {
       if (!authUser.phone) {
@@ -82,13 +80,19 @@ const UserPropertiesPage = () => {
         submitEnquiry(property, authUser.name, authUser.email, authUser.phone);
       }
     } else {
-      toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: loc.pathname } });
     }
   };
 
   const submitEnquiry = async (property, name, email, phone) => {
-    const sellerPhone = profileUser.phone;
+    // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
+    const rawPhone = (profileUser.phone || "").toString().replace(/\D/g, "");
+    const sellerPhone = rawPhone.length === 10
+      ? `91${rawPhone}`
+      : rawPhone.length === 12 && rawPhone.startsWith("91")
+        ? rawPhone
+        : rawPhone || "919000000000";
+
     const locStr =
       typeof property.location === "string"
         ? property.location
@@ -97,7 +101,7 @@ const UserPropertiesPage = () => {
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
+      await api.post("/enquiries/create", {
         property_id: property._id,
         seller_id: profileUser._id,
         message: message,
@@ -105,22 +109,25 @@ const UserPropertiesPage = () => {
         email,
         phone,
       });
-      toast.success("Enquiry recorded! Redirecting to WhatsApp...");
     } catch (error) {
       console.error("Enquiry Error:", error);
-      toast.error("Redirecting to WhatsApp...");
     } finally {
       window.open(whatsappUrl, "_blank");
     }
   };
 
   const handleProfileContact = () => {
-    const sellerPhone = profileUser?.phone || "";
+    // Normalise phone
+    const rawPhone = (profileUser.phone || "").toString().replace(/\D/g, "");
+    const sellerPhone = rawPhone.length === 10
+      ? `91${rawPhone}`
+      : rawPhone.length === 12 && rawPhone.startsWith("91")
+        ? rawPhone
+        : rawPhone;
+
     if (sellerPhone) {
       const whatsappUrl = `https://wa.me/${sellerPhone}`;
       window.open(whatsappUrl, "_blank");
-    } else {
-      toast.error("Contact number not available");
     }
   };
 

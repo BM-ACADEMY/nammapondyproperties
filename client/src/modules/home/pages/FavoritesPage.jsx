@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MapPin, Heart, ArrowRight, Store, Eye, BookmarkX } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { formatIndianPrice } from "../../../utils/formatPrice";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { getImageUrl } from "@/utils/imageUrl";
+import api from "../../../services/api";
+import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
 
 const getLocation = (loc) => {
   if (!loc) return "Location not specified";
@@ -34,6 +36,11 @@ const FavoritesPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user, token } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [enquiryLoading, setEnquiryLoading] = useState(false);
 
   // --- NEW: Dynamically load the "Outfit" font to match the image ---
   useEffect(() => {
@@ -89,6 +96,53 @@ const FavoritesPage = () => {
       console.error("Error fetching favorites", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWhatsAppClick = (e, property) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (!property || !property.seller_id) return;
+
+    if (user) {
+      if (!user.phone) {
+        setSelectedProperty(property);
+        setShowPhoneModal(true);
+      } else {
+        submitEnquiry(property, user.name, user.email, user.phone);
+      }
+    } else {
+      navigate("/login", { state: { from: location.pathname } });
+    }
+  };
+
+  const submitEnquiry = async (property, name, email, phone) => {
+    // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
+    const rawPhone = (property.seller_id.phone || "").toString().replace(/\D/g, "");
+    const sellerPhone = rawPhone.length === 10
+      ? `91${rawPhone}`
+      : rawPhone.length === 12 && rawPhone.startsWith("91")
+        ? rawPhone
+        : rawPhone || "919000000000";
+
+    const locStr = getLocation(property.location);
+    const message = `Hi, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${locStr}. Please provide more details.`;
+    const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
+
+    setEnquiryLoading(true);
+    try {
+      await api.post("/enquiries/create", {
+        property_id: property._id,
+        seller_id: property.seller_id._id || property.seller_id,
+        message: message,
+        name,
+        email,
+        phone,
+      });
+    } catch (error) {
+      console.error("Enquiry Error:", error);
+    } finally {
+      window.open(whatsappUrl, "_blank");
+      setEnquiryLoading(false);
     }
   };
 
@@ -321,7 +375,7 @@ const FavoritesPage = () => {
 
                     {!property.isSold && sellerPhone && (
                       <button
-                        onClick={() => window.open(whatsappUrl, "_blank")}
+                        onClick={(e) => handleWhatsAppClick(e, property)}
                         className="flex items-center gap-1.5 text-xs font-semibold bg-[#25D366] hover:bg-[#1ebe5d] text-white px-4 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md"
                       >
                         <svg
@@ -344,9 +398,23 @@ const FavoritesPage = () => {
                 </div>
               </div>
             </div>
-          );
+            );
         })}
       </div>
+      <PhoneUpdateModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSuccess={(updatedPhone) => {
+          if (user && selectedProperty) {
+            submitEnquiry(
+              selectedProperty,
+              user.name,
+              user.email,
+              updatedPhone,
+            );
+          }
+        }}
+      />
     </div>
   );
 };

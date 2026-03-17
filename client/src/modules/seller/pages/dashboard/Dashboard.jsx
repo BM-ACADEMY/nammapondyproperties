@@ -379,8 +379,9 @@ const Dashboard = () => {
                       <div className="text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit mt-1 truncate max-w-full">
                         For: {item.property_id?.title || "Unknown Property"}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1 truncate">
-                        {item.user_id?.email || item.enquirer_email || "Interested in this property"}
+                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <Phone size={10} className="text-gray-400" />
+                        {item.user_id?.phone || item.enquirer_phone || "N/A"}
                       </div>
                     </div>
                   </div>

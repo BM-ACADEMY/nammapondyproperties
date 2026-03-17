@@ -35,7 +35,7 @@ import {
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
-import { formatIndianPrice } from "@/utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { formatNumber } from "@/utils/formatNumber";
 
 import { useAuth } from "@/context/AuthContext";
@@ -197,12 +197,16 @@ const AdminProperties = ({ mode }) => {
       title: "Price",
       key: "price",
       render: (_, record) => {
-        const originalPrice = record.pricing?.sell?.price || record.pricing?.rent?.monthlyRent || 0;
+        const priceDisplay = formatPriceRange(
+          record.pricing?.sell?.minPrice || record.pricing?.rent?.minRent,
+          record.pricing?.sell?.maxPrice || record.pricing?.rent?.maxRent,
+          record.pricing?.sell?.price || record.pricing?.rent?.monthlyRent || 0
+        );
         if (record.isSold && record.soldPrice) {
           return (
             <div className="flex flex-col">
               <span className="text-gray-400 line-through text-xs font-normal">
-                {formatIndianPrice(originalPrice)}
+                {priceDisplay}
               </span>
               <span className="text-green-600 font-bold">
                 {formatIndianPrice(record.soldPrice)}
@@ -210,11 +214,11 @@ const AdminProperties = ({ mode }) => {
             </div>
           );
         }
-        return <span className="font-semibold text-blue-600">{formatIndianPrice(originalPrice)}</span>;
+        return <span className="font-semibold text-blue-600">{priceDisplay}</span>;
       },
       sorter: (a, b) => {
-        const pa = a.pricing?.sell?.price || a.pricing?.rent?.monthlyRent || 0;
-        const pb = b.pricing?.sell?.price || b.pricing?.rent?.monthlyRent || 0;
+        const pa = a.pricing?.sell?.minPrice || a.pricing?.sell?.price || a.pricing?.rent?.minRent || a.pricing?.rent?.monthlyRent || 0;
+        const pb = b.pricing?.sell?.minPrice || b.pricing?.sell?.price || b.pricing?.rent?.minRent || b.pricing?.rent?.monthlyRent || 0;
         return pa - pb;
       },
     },
@@ -532,15 +536,23 @@ const AdminProperties = ({ mode }) => {
                       {selectedProperty.isSold && selectedProperty.soldPrice ? (
                         <>
                           <span className="text-sm text-gray-400 line-through font-normal opacity-80">
-                            {formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
+                            {formatPriceRange(
+                              selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
+                              selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
+                              selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
+                            )}
                           </span>
                           <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400 shadow-sm">
                             {formatIndianPrice(selectedProperty.soldPrice)}
                           </span>
                         </>
                       ) : (
-                        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white shadow-sm">
-                          {formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
+                        <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white shadow-sm">
+                          {formatPriceRange(
+                            selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
+                            selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
+                            selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
+                          )}
                         </p>
                       )}
                     </div>
@@ -573,10 +585,17 @@ const AdminProperties = ({ mode }) => {
                               <Ruler size={24} />
                             </span>
                             <span className="text-sm text-gray-500 font-medium">
-                              Area Size
+                              {(selectedProperty.specifications?.area?.minArea || selectedProperty.specifications?.area?.maxArea) ? "Area Range" : "Area Size"}
                             </span>
-                            <span className="text-lg font-bold text-gray-800">
-                              {selectedProperty.specifications?.area?.totalArea || "N/A"}
+                            <span className="text-base font-bold text-gray-800">
+                              {(() => {
+                                const minA = selectedProperty.specifications?.area?.minArea;
+                                const maxA = selectedProperty.specifications?.area?.maxArea;
+                                const total = selectedProperty.specifications?.area?.totalArea;
+                                if (minA && maxA) return `${Number(minA).toLocaleString()} - ${Number(maxA).toLocaleString()} sqft`;
+                                if (minA) return `${Number(minA).toLocaleString()}+ sqft`;
+                                return total ? `${total} sqft` : "N/A";
+                              })()}
                             </span>
                           </div>
                           <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 flex flex-col items-center justify-center text-center">
@@ -679,8 +698,19 @@ const AdminProperties = ({ mode }) => {
                             </h3>
                             <div className="space-y-3">
                               <div className="flex justify-between border-b pb-2">
-                                <span className="text-gray-500">Total Area</span>
-                                <span className="font-bold text-gray-800">{selectedProperty.specifications?.area?.totalArea || "N/A"} sqft</span>
+                                <span className="text-gray-500">
+                                  {(selectedProperty.specifications?.area?.minArea || selectedProperty.specifications?.area?.maxArea) ? "Area Range" : "Total Area"}
+                                </span>
+                                <span className="font-bold text-gray-800">
+                                  {(() => {
+                                    const minA = selectedProperty.specifications?.area?.minArea;
+                                    const maxA = selectedProperty.specifications?.area?.maxArea;
+                                    const total = selectedProperty.specifications?.area?.totalArea;
+                                    if (minA && maxA) return `${Number(minA).toLocaleString()} - ${Number(maxA).toLocaleString()} sqft`;
+                                    if (minA) return `${Number(minA).toLocaleString()}+ sqft`;
+                                    return total ? `${total} sqft` : "N/A";
+                                  })()}
+                                </span>
                               </div>
                               {selectedProperty.specifications?.area?.builtupArea && (
                                 <div className="flex justify-between border-b pb-2">

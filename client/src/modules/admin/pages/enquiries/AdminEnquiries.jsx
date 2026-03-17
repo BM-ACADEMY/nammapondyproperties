@@ -87,7 +87,6 @@ const AdminEnquiries = () => {
             {record.enquirer_name || "Guest"}
           </span>
           <span className="text-gray-500">{record.enquirer_phone}</span>
-          <span className="text-xs text-gray-400">{record.enquirer_email}</span>
         </div>
       ),
     },
@@ -151,7 +150,6 @@ const AdminEnquiries = () => {
       "Seller Name",
       "Enquirer Name",
       "Enquirer Phone",
-      "Enquirer Email",
       "Message",
       "Status",
     ];
@@ -162,7 +160,6 @@ const AdminEnquiries = () => {
       item.seller_id?.name || "Unknown",
       item.enquirer_name || "Guest",
       item.enquirer_phone || "N/A",
-      item.enquirer_email || "N/A",
       `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
       item.status?.toUpperCase() || "NEW",
     ]);

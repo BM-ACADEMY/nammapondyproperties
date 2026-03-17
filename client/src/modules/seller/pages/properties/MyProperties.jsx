@@ -47,7 +47,7 @@ import { useAuth } from "@/context/AuthContext";
 
 const { Title } = Typography;
 
-import { formatIndianPrice } from "@/utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
 
 const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
@@ -403,20 +403,28 @@ const MyProperties = () => {
                 <div className="mt-auto pt-4 border-t border-gray-100">
                   <div className="flex justify-between items-center mb-4">
                     <div className="flex flex-col">
-                      {property.isSold && property.soldPrice ? (
-                        <>
-                          <span className="text-sm text-gray-400 line-through font-normal">
-                            {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
-                          </span>
-                          <span className="text-lg font-bold text-green-600">
-                            {formatIndianPrice(property.soldPrice)}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="text-lg font-bold text-blue-600">
-                          {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
-                        </span>
-                      )}
+                       {property.isSold && property.soldPrice ? (
+                         <>
+                           <span className="text-sm text-gray-400 line-through font-normal">
+                             {formatPriceRange(
+                               property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                               property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                               property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                             )}
+                           </span>
+                           <span className="text-lg font-bold text-green-600">
+                             {formatIndianPrice(property.soldPrice)}
+                           </span>
+                         </>
+                       ) : (
+                         <span className="text-base font-bold text-blue-600">
+                           {formatPriceRange(
+                             property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                             property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                             property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                           )}
+                         </span>
+                       )}
                     </div>
                   </div>
 
@@ -814,15 +822,23 @@ const MyProperties = () => {
                       {selectedProperty.isSold && selectedProperty.soldPrice ? (
                         <>
                           <span className="text-sm text-gray-400 line-through font-normal opacity-80">
-                            {formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
+                            {formatPriceRange(
+                              selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
+                              selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
+                              selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
+                            )}
                           </span>
                           <span className="text-3xl md:text-4xl font-bold text-green-400 shadow-sm">
                             {formatIndianPrice(selectedProperty.soldPrice)}
                           </span>
                         </>
                       ) : (
-                        <p className="text-3xl md:text-4xl font-bold text-white shadow-sm">
-                          {formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
+                        <p className="text-xl md:text-2xl font-bold text-white shadow-sm">
+                          {formatPriceRange(
+                            selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
+                            selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
+                            selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
+                          )}
                         </p>
                       )}
                     </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import api from "../../../services/api";
 import {
   MapPin,
   ArrowRight,
@@ -30,7 +31,7 @@ import {
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { toast } from "react-hot-toast";
+
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
@@ -127,12 +128,8 @@ const PropertyDetails = () => {
   const handleWhatsAppClick = (e = null, clickedProp = null) => {
     if (e && e.stopPropagation) e.stopPropagation();
     const targetProp = clickedProp || property;
-    if (!targetProp || !targetProp.seller) {
-      toast.error("Seller information missing");
-      return;
-    }
+    if (!targetProp || !targetProp.seller) return;
     if (!user) {
-      toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
     } else if (!user.phone) {
       setSelectedEnquiryProperty(targetProp);
@@ -146,7 +143,14 @@ const PropertyDetails = () => {
     if (!targetProp || !targetProp.seller) return;
     setEnquiryLoading(true);
 
-    const sellerPhone = targetProp.seller.phone || "919000000000";
+    // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
+    const rawPhone = (targetProp.seller.phone || "").toString().replace(/\D/g, "");
+    const sellerPhone = rawPhone.length === 10
+      ? `91${rawPhone}`
+      : rawPhone.length === 12 && rawPhone.startsWith("91")
+      ? rawPhone
+      : rawPhone || "919000000000";
+
     const locationStr =
       typeof targetProp.location === "string"
         ? targetProp.location
@@ -155,7 +159,7 @@ const PropertyDetails = () => {
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
+      await api.post("/enquiries/create", {
         property_id: targetProp._id,
         seller_id: targetProp.seller._id || targetProp.seller,
         message: message,
@@ -163,10 +167,8 @@ const PropertyDetails = () => {
         email,
         phone,
       });
-      toast.success("Enquiry recorded! Redirecting to WhatsApp...");
     } catch (error) {
       console.error("Enquiry Error:", error);
-      toast.error("Redirecting to WhatsApp...");
     } finally {
       window.open(whatsappUrl, "_blank");
       setEnquiryLoading(false);

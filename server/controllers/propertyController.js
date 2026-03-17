@@ -896,7 +896,7 @@ exports.getSellerStats = async (req, res) => {
 
     // 1. Property Status Breakdown
     const properties = await Property.find({ seller: sellerId }).select(
-      "status isVerified isSold view_count basicInfo.title start_date",
+      "status isVerified isSold soldPrice view_count basicInfo.title start_date",
     );
 
     const totalProperties = properties.length;
@@ -1058,11 +1058,19 @@ exports.getAdminStats = async (req, res) => {
     const activeProperties = await Property.countDocuments({
       status: "available",
     });
-    const soldProperties = await Property.countDocuments({ isSold: true });
+    const soldProperties = await Property.countDocuments({ 
+      isSold: true,
+      seller: req.user._id
+    });
     
     // Total Sold Amount (Admin)
     const soldStats = await Property.aggregate([
-      { $match: { isSold: true } },
+      { 
+        $match: { 
+          isSold: true,
+          seller: new mongoose.Types.ObjectId(req.user._id)
+        } 
+      },
       { $group: { _id: null, totalAmount: { $sum: "$soldPrice" } } }
     ]);
     const totalSoldAmount = soldStats[0]?.totalAmount || 0;
