@@ -66,6 +66,7 @@ const Dashboard = () => {
       activeProperties: 0,
       soldProperties: 0,
       pendingApprovals: 0,
+      totalSoldAmount: 0,
       totalViews: 0,
       totalEnquiries: 0,
     },
@@ -128,11 +129,18 @@ const Dashboard = () => {
       desc: `${data.summary.totalSellers} Sellers, ${data.summary.totalBuyers} Buyers`,
     },
     {
-      title: "Total Properties",
-      value: data.summary.totalProperties,
+      title: "Available Properties",
+      value: data.summary.activeProperties,
       icon: <Building size={24} className="text-green-500" />,
       color: "#f6ffed",
-      desc: `${data.summary.activeProperties} Active, ${data.summary.soldProperties} Sold`,
+      desc: "Currently visible to users",
+    },
+    {
+      title: "Sold Properties",
+      value: data.summary.soldProperties,
+      icon: <CheckCircle size={24} className="text-red-500" />,
+      color: "#fff1f0",
+      desc: "Total inventory sold",
     },
     {
       title: "Pending Approvals",
@@ -147,6 +155,13 @@ const Dashboard = () => {
       icon: <MessageSquare size={24} className="text-purple-500" />,
       color: "#f9f0ff",
       desc: "All time leads",
+    },
+    {
+      title: "Total Revenue",
+      value: `₹${(data.summary.totalSoldAmount || 0).toLocaleString('en-IN')}`,
+      icon: <TrendingUp size={24} className="text-amber-500" />,
+      color: "#fffbe6",
+      desc: "Gross sold amount",
     },
   ];
 
@@ -191,7 +206,7 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <Row gutter={[24, 24]}>
         {statCardsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
+          <Col xs={24} sm={12} lg={4} key={index}>
             <Card
               variant="borderless"
               className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"

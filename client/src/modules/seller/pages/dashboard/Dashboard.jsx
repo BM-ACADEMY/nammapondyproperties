@@ -52,6 +52,7 @@ const Dashboard = () => {
       activeProperties: 0,
       soldProperties: 0,
       pendingProperties: 0,
+      totalSoldAmount: 0,
       totalViews: 0,
       totalLeads: 0,
     },
@@ -133,6 +134,20 @@ const Dashboard = () => {
       color: "#fff7e6",
       desc: "All time leads",
     },
+    {
+      title: "Sold Properties",
+      value: data.summary.soldProperties,
+      icon: <CheckCircle size={24} className="text-red-500" />,
+      color: "#fff1f0",
+      desc: "Total sold units",
+    },
+    {
+      title: "Sold Amount",
+      value: `₹${(data.summary.totalSoldAmount || 0).toLocaleString('en-IN')}`,
+      icon: <CheckCircle size={24} className="text-amber-500" />,
+      color: "#fffbe6",
+      desc: "Total revenue",
+    },
   ];
 
   // --- PIE CHART DATA ---
@@ -177,7 +192,7 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <Row gutter={[24, 24]}>
         {statCardsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={6} key={index}>
+          <Col xs={24} sm={12} lg={4} key={index}>
             <Card
               variant="borderless"
               className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"

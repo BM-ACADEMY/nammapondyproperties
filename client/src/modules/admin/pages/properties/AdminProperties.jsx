@@ -197,8 +197,20 @@ const AdminProperties = ({ mode }) => {
       title: "Price",
       key: "price",
       render: (_, record) => {
-        const p = record.pricing?.sell?.price || record.pricing?.rent?.monthlyRent || 0;
-        return formatIndianPrice(p);
+        const originalPrice = record.pricing?.sell?.price || record.pricing?.rent?.monthlyRent || 0;
+        if (record.isSold && record.soldPrice) {
+          return (
+            <div className="flex flex-col">
+              <span className="text-gray-400 line-through text-xs font-normal">
+                {formatIndianPrice(originalPrice)}
+              </span>
+              <span className="text-green-600 font-bold">
+                {formatIndianPrice(record.soldPrice)}
+              </span>
+            </div>
+          );
+        }
+        return <span className="font-semibold text-blue-600">{formatIndianPrice(originalPrice)}</span>;
       },
       sorter: (a, b) => {
         const pa = a.pricing?.sell?.price || a.pricing?.rent?.monthlyRent || 0;
@@ -516,11 +528,22 @@ const AdminProperties = ({ mode }) => {
                         ? "Sold Price"
                         : "Price"}
                     </p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white shadow-sm">
-                      {selectedProperty.isSold && selectedProperty.soldPrice
-                        ? formatIndianPrice(selectedProperty.soldPrice)
-                        : formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
-                    </p>
+                    <div className="flex flex-col items-start md:items-end">
+                      {selectedProperty.isSold && selectedProperty.soldPrice ? (
+                        <>
+                          <span className="text-sm text-gray-400 line-through font-normal opacity-80">
+                            {formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
+                          </span>
+                          <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400 shadow-sm">
+                            {formatIndianPrice(selectedProperty.soldPrice)}
+                          </span>
+                        </>
+                      ) : (
+                        <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white shadow-sm">
+                          {formatIndianPrice(selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
