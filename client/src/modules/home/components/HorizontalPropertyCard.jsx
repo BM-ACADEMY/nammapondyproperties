@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, MapPin, Eye, ArrowRight, Phone, MessageSquare } from "lucide-react";
-import { formatIndianPrice } from "@/utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
 import moment from "moment";
 import WishlistButton from "../../../components/Common/WishlistButton";
@@ -14,12 +14,19 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
     const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
     const bedrooms = property.specifications?.residential?.bedrooms || 0;
-    const area = property.specifications?.area?.totalArea || property.specifications?.area?.builtupArea || 0;
+    const minArea = property.specifications?.area?.minArea;
+    const maxArea = property.specifications?.area?.maxArea;
+    const totalArea = property.specifications?.area?.totalArea || property.specifications?.area?.builtupArea || 0;
     const areaUnit = property.specifications?.area?.unit || "sqft";
 
-    const floorInfo = property.specifications?.floor?.propertyOnFloor
-        ? `${property.specifications.floor.propertyOnFloor} out of ${property.specifications.floor.totalFloor || 1} Floors`
-        : "";
+    // Build area display string
+    const areaDisplay = (minArea && maxArea)
+        ? `${Number(minArea).toLocaleString()} - ${Number(maxArea).toLocaleString()} ${areaUnit}`
+        : minArea
+        ? `${Number(minArea).toLocaleString()}+ ${areaUnit}`
+        : `${Number(totalArea).toLocaleString()} ${areaUnit}`;
+
+    const areaLabel = (minArea || maxArea) ? "Area Range" : (property.specifications?.area?.totalArea ? "Total Area" : "Built Area");
 
     return (
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative h-full">
@@ -39,6 +46,15 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <div className="absolute top-3 right-3 z-20">
                     <WishlistButton propertyId={property._id} />
                 </div>
+
+                {/* Verified Badge - Top Left */}
+                {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+                    <div className="absolute top-3 left-3 z-20 bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200">
+                        <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
+                    </div>
+                )}
+
                 <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
                     1/{property.media?.images?.length || 1}
                 </div>
@@ -50,10 +66,11 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col flex-1">
                         <h3 className="text-lg md:text-xl font-bold text-slate-800 line-clamp-1">
-                            {locality}{city ? `, ${city}` : ""}
+                            {property.basicInfo?.title || "Untitled Property"}
                         </h3>
                         <p className="text-sm text-slate-500 font-medium">
-                            {bedrooms > 0 ? `${bedrooms} BHK ` : ""}{property.basicInfo?.propertyType || "Property"} in {locality}
+                            <MapPin className="w-3 h-3 inline mr-1" />
+                            {locality}{city ? `, ${city}` : ""}
                         </p>
                     </div>
                     <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0 ml-2">
@@ -64,8 +81,12 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 {/* Stats Grid */}
                 <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 py-4 my-2">
                     <div className="flex-1 min-w-[30%] flex flex-col">
-                        <span className="text-lg font-bold text-slate-800">
-                            {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+                        <span className="text-base font-bold text-slate-800 break-words">
+                            {formatPriceRange(
+                                property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                                property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                                property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                            )}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
                             {property.pricing?.sell?.pricePerSqft ? `₹${property.pricing.sell.pricePerSqft.toLocaleString()}/sqft` : "Price"}
@@ -75,11 +96,11 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                     <div className="hidden sm:block h-10 w-px bg-gray-100 shrink-0" />
 
                     <div className="flex-1 min-w-[30%] flex flex-col">
-                        <span className="text-lg font-bold text-slate-800 break-words">
-                            {area.toLocaleString()} {areaUnit}
+                        <span className="text-base font-bold text-slate-800 break-words">
+                            {areaDisplay}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
-                            {property.specifications?.area?.totalArea ? "Total Area" : "Built Area"}
+                            {areaLabel}
                         </span>
                     </div>
 

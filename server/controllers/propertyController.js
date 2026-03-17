@@ -205,14 +205,18 @@ exports.getProperties = async (req, res) => {
     }
 
     if (location) {
-      queryConditions.push({
-        $or: [
-          { "location.city": { $regex: location, $options: "i" } },
-          { "location.locality": { $regex: location, $options: "i" } },
-          { "location.state": { $regex: location, $options: "i" } },
-          { "location.subArea": { $regex: location, $options: "i" } }
-        ]
-      });
+      const locationTokens = location.split(',').map(tok => tok.trim()).filter(tok => tok.length > 0);
+      if (locationTokens.length > 0) {
+        const locationOrConditions = locationTokens.flatMap(token => {
+          const escapedToken = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const tokenRegex = { $regex: escapedToken, $options: "i" };
+          return [
+            { "location.city": tokenRegex },
+            { "location.locality": tokenRegex }
+          ];
+        });
+        queryConditions.push({ $or: locationOrConditions });
+      }
     }
 
     // 5. Advanced Search
@@ -400,10 +404,14 @@ exports.getFilters = async (req, res) => {
     // Fetch distinct cities, localities, and sub-areas
     const cities = await Property.distinct("location.city");
     const localities = await Property.distinct("location.locality");
-    const subAreas = await Property.distinct("location.subArea");
+    // const subAreas = await Property.distinct("location.subArea");
 
-    // const locations = [...new Set([...cities, ...localities, ...subAreas])];
-    const locations = [...new Set([...cities])];
+    // Combine cities and localities into locations
+    const stateBlacklist = ["Puducherry", "Tamil Nadu", "Pondicherry", "Tamilnadu"];
+    const locations = [...new Set([
+      ...cities.filter(c => c && !stateBlacklist.includes(c)), 
+      ...localities.filter(l => l && !stateBlacklist.includes(l))
+    ])];
 
     const priceStats = await Property.aggregate([
       {
@@ -475,7 +483,7 @@ exports.getFilters = async (req, res) => {
       locations: cleanLocations,
       cities: cities.filter((c) => c),
       localities: localities.filter((l) => l),
-      subAreas: subAreas.filter((s) => s),
+      subAreas: [], // Removed as requested
       priceRanges,
       maxPrice,
     });
@@ -888,7 +896,7 @@ exports.getSellerStats = async (req, res) => {
 
     // 1. Property Status Breakdown
     const properties = await Property.find({ seller: sellerId }).select(
-      "status isVerified isSold view_count basicInfo.title start_date",
+      "status isVerified isSold soldPrice view_count basicInfo.title start_date",
     );
 
     const totalProperties = properties.length;
@@ -896,7 +904,12 @@ exports.getSellerStats = async (req, res) => {
       (p) => p.status === "available" && !p.isSold,
     ).length;
     const soldProperties = properties.filter((p) => p.isSold).length;
-    const pendingProperties = properties.filter((p) => !p.is_verified).length;
+    const pendingProperties = properties.filter((p) => !p.isVerified).length;
+    
+    // Total Sold Amount
+    const totalSoldAmount = properties
+      .filter(p => p.isSold)
+      .reduce((sum, p) => sum + (p.soldPrice || 0), 0);
 
     // 2. Views Over Time (Aggegration from PropertyView)
     // We need to match views for properties owned by this seller
@@ -998,6 +1011,7 @@ exports.getSellerStats = async (req, res) => {
         activeProperties,
         soldProperties,
         pendingProperties,
+        totalSoldAmount,
         totalViews: totalViewsAllTime,
         totalLeads: totalLeadsAllTime,
       },
@@ -1044,7 +1058,23 @@ exports.getAdminStats = async (req, res) => {
     const activeProperties = await Property.countDocuments({
       status: "available",
     });
-    const soldProperties = await Property.countDocuments({ isSold: true });
+    const soldProperties = await Property.countDocuments({ 
+      isSold: true,
+      seller: req.user._id
+    });
+    
+    // Total Sold Amount (Admin)
+    const soldStats = await Property.aggregate([
+      { 
+        $match: { 
+          isSold: true,
+          seller: new mongoose.Types.ObjectId(req.user._id)
+        } 
+      },
+      { $group: { _id: null, totalAmount: { $sum: "$soldPrice" } } }
+    ]);
+    const totalSoldAmount = soldStats[0]?.totalAmount || 0;
+
     const pendingApprovals = await Property.countDocuments({
       isVerified: false,
     });
@@ -1145,6 +1175,7 @@ exports.getAdminStats = async (req, res) => {
         activeProperties,
         soldProperties,
         pendingApprovals,
+        totalSoldAmount,
         totalViews: totalViewsAllTime,
         totalEnquiries,
       },
@@ -1197,6 +1228,110 @@ exports.updateViewCount = async (req, res) => {
       view_count: property.view_count,
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getSuggestions = async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || query.length < 1) {
+      return res.json([]);
+    }
+
+    const words = query.trim().split(/\s+/).filter(w => w.length > 0);
+    const escapedWords = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    // Create a regex that matches if ALL words are present somewhere in the target string
+    const regex = new RegExp(escapedWords.map(w => `(?=.*${w})`).join(''), "i");
+
+    const suggestions = new Set();
+    const formattedSuggestions = [];
+
+    // 1. Search for Property Titles (High Priority)
+    const propertyResults = await Property.find({
+      "basicInfo.title": regex
+    })
+      .select("basicInfo.title location.city location.locality")
+      .limit(5);
+
+    propertyResults.forEach(item => {
+      const key = `property:${item.basicInfo.title}`;
+      if (!suggestions.has(key)) {
+        suggestions.add(key);
+        formattedSuggestions.push({
+          mainText: item.basicInfo.title,
+          subText: `${item.location.locality}, ${item.location.city}`,
+          type: "Property",
+          value: item.basicInfo.title
+        });
+      }
+    });
+
+    // 2. Search for Localities/Cities/States in Properties
+    // We match if the combined location fields contain all keywords
+    const locationResults = await Property.aggregate([
+      {
+        $addFields: {
+          combinedLocation: {
+            $concat: [
+              { $ifNull: ["$location.locality", ""] }, " ",
+              { $ifNull: ["$location.city", ""] }, " ",
+              { $ifNull: ["$location.state", ""] }, " ",
+              { $ifNull: ["$location.subArea", ""] }
+            ]
+          }
+        }
+      },
+      {
+        $match: {
+          combinedLocation: regex
+        }
+      },
+      {
+        $project: {
+          locality: "$location.locality",
+          city: "$location.city",
+          state: "$location.state",
+          subArea: "$location.subArea"
+        }
+      },
+      { $limit: 100 }
+    ]);
+
+    const stateBlacklist = ["Puducherry", "Tamil Nadu", "Pondicherry", "Tamilnadu"];
+
+    locationResults.forEach(item => {
+      // Check Locality
+      if (item.locality && item.locality.match(regex) && !stateBlacklist.includes(item.locality)) {
+        const key = `locality:${item.locality}:${item.city}`;
+        if (!suggestions.has(key)) {
+          suggestions.add(key);
+          formattedSuggestions.push({
+            mainText: item.locality,
+            subText: item.city,
+            type: "Locality",
+            value: item.locality
+          });
+        }
+      }
+      // Check City
+      if (item.city && item.city.match(regex) && !stateBlacklist.includes(item.city)) {
+        const key = `city:${item.city}`;
+        if (!suggestions.has(key)) {
+          suggestions.add(key);
+          formattedSuggestions.push({
+            mainText: item.city,
+            type: "City",
+            value: item.city
+          });
+        }
+      }
+      // SubArea is removed as requested
+    });
+
+    res.json(formattedSuggestions.slice(0, 10));
+  } catch (error) {
+    console.error("Suggestion API Error:", error);
     res.status(500).json({ error: error.message });
   }
 };

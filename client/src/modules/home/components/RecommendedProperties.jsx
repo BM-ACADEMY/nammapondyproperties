@@ -4,6 +4,7 @@ import { MapPin, ArrowRight } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
+import api from "../../../services/api";
 import { useLocation as useAppLocation } from "../../../context/LocationContext";
 import PropertyCard from "./PropertyCard";
 import PhoneUpdateModal from "../../../components/Common/PhoneUpdateModal";
@@ -63,10 +64,7 @@ const RecommendedProperties = () => {
 
     const handleWhatsAppClick = (e, property) => {
         e.stopPropagation();
-        if (!property || !property.seller) {
-            toast.error("Seller information missing");
-            return;
-        }
+        if (!property || !property.seller) return;
 
         if (user) {
             if (!user.phone) {
@@ -76,13 +74,19 @@ const RecommendedProperties = () => {
                 submitEnquiry(property, user.name, user.email, user.phone);
             }
         } else {
-            toast.error("Please login to contact the seller");
             navigate("/login", { state: { from: location.pathname } });
         }
     };
 
     const submitEnquiry = async (property, name, email, phone) => {
-        const sellerPhone = property.seller.phone;
+        // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
+        const rawPhone = (property.seller.phone || "").toString().replace(/\D/g, "");
+        const sellerPhone = rawPhone.length === 10
+            ? `91${rawPhone}`
+            : rawPhone.length === 12 && rawPhone.startsWith("91")
+                ? rawPhone
+                : rawPhone || "919000000000";
+
         const locationStr =
             typeof property.location === "string"
                 ? property.location
@@ -91,7 +95,7 @@ const RecommendedProperties = () => {
         const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
+            await api.post("/enquiries/create", {
                 property_id: property._id,
                 seller_id: property.seller._id,
                 message: message,
@@ -99,10 +103,8 @@ const RecommendedProperties = () => {
                 email,
                 phone,
             });
-            toast.success("Enquiry sent! Opening WhatsApp...");
         } catch (error) {
-            console.error(error);
-            toast.error("Redirecting to WhatsApp...");
+            console.error("Enquiry Error:", error);
         } finally {
             window.open(whatsappUrl, "_blank");
         }

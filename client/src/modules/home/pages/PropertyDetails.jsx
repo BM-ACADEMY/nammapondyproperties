@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import api from "../../../services/api";
 import {
   MapPin,
   ArrowRight,
@@ -30,11 +31,11 @@ import {
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { toast } from "react-hot-toast";
+
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
-import { formatIndianPrice } from "../../../utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "../../../utils/formatPrice";
 import { formatNumber } from "../../../utils/formatNumber";
 
 import Loader from "../../../components/Common/Loader";
@@ -127,12 +128,8 @@ const PropertyDetails = () => {
   const handleWhatsAppClick = (e = null, clickedProp = null) => {
     if (e && e.stopPropagation) e.stopPropagation();
     const targetProp = clickedProp || property;
-    if (!targetProp || !targetProp.seller) {
-      toast.error("Seller information missing");
-      return;
-    }
+    if (!targetProp || !targetProp.seller) return;
     if (!user) {
-      toast.error("Please login to contact the seller");
       navigate("/login", { state: { from: location.pathname } });
     } else if (!user.phone) {
       setSelectedEnquiryProperty(targetProp);
@@ -146,7 +143,14 @@ const PropertyDetails = () => {
     if (!targetProp || !targetProp.seller) return;
     setEnquiryLoading(true);
 
-    const sellerPhone = targetProp.seller.phone || "919000000000";
+    // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
+    const rawPhone = (targetProp.seller.phone || "").toString().replace(/\D/g, "");
+    const sellerPhone = rawPhone.length === 10
+      ? `91${rawPhone}`
+      : rawPhone.length === 12 && rawPhone.startsWith("91")
+      ? rawPhone
+      : rawPhone || "919000000000";
+
     const locationStr =
       typeof targetProp.location === "string"
         ? targetProp.location
@@ -155,7 +159,7 @@ const PropertyDetails = () => {
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/enquiries/create`, {
+      await api.post("/enquiries/create", {
         property_id: targetProp._id,
         seller_id: targetProp.seller._id || targetProp.seller,
         message: message,
@@ -163,10 +167,8 @@ const PropertyDetails = () => {
         email,
         phone,
       });
-      toast.success("Enquiry recorded! Redirecting to WhatsApp...");
     } catch (error) {
       console.error("Enquiry Error:", error);
-      toast.error("Redirecting to WhatsApp...");
     } finally {
       window.open(whatsappUrl, "_blank");
       setEnquiryLoading(false);
@@ -250,9 +252,21 @@ const PropertyDetails = () => {
                 )}
               </div>
             </div> */}
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
+                {property.basicInfo?.title || "Untitled Property"}
+              </h1>
+              <div className="flex items-center text-gray-500 text-lg">
+                <MapPin className="w-5 h-5 mr-2 text-blue-500" />
+                {typeof property.location === "string"
+                  ? property.location
+                  : `${property.location?.locality ? property.location.locality + ", " : ""}${property.location?.city || ""}`}
+              </div>
+            </div>
+
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
               {/* LEFT SECTION */}
-              <div className="space-y-4"> {/* Increased space-y to separate price row from views */}
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-baseline gap-4">
                   <h1 className="text-2xl md:text-3xl font-bold leading-tight">
                     {property.isSold && property.soldPrice ? (
@@ -261,12 +275,16 @@ const PropertyDetails = () => {
                         <span className="text-red-600">{formatIndianPrice(property.soldPrice)}</span>
                       </div>
                     ) : (
-                      <div className="flex items-baseline gap-2">
+                      <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-lg md:text-xl text-gray-500 font-medium">
-                          {property.isSold ? "Price:" : "Launch Price:"}
+                          {property.isSold ? "Price:" : "Price:"}
                         </span>
                         <span className="text-gray-900">
-                          {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+                          {formatPriceRange(
+                            property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                            property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                            property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                          )}
                         </span>
                       </div>
                     )}
@@ -315,8 +333,15 @@ const PropertyDetails = () => {
                   className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
                 />
                 <div className="absolute top-4 right-4 z-10">
-                  <WishlistButton propertyId={property._id} />
+                    <WishlistButton propertyId={property._id} />
                 </div>
+                {/* Verified Badge - Top Left */}
+                {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+                  <div className="absolute top-6 left-6 z-20 bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center gap-2 shadow-sm border border-green-200">
+                    <img src="/Logo/badge.png" alt="Verified" className="w-5 h-5 object-contain" />
+                    <span className="text-xs font-extrabold uppercase tracking-widest">Verified Seller</span>
+                  </div>
+                )}
               </div>
 
               {/* Thumbnails */}
@@ -377,17 +402,25 @@ const PropertyDetails = () => {
                       </span>
                     </div>
                   </div>
-                  {/* item */}
+                  {/* item — Area */}
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 flex-shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
                       <Square size={20} />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
-                        Total Area
+                        {(property.specifications?.area?.minArea || property.specifications?.area?.maxArea) ? "Area Range" : "Total Area"}
                       </span>
                       <span className="text-[15px] font-medium text-gray-800 leading-tight whitespace-nowrap">
-                        {property.specifications?.area?.totalArea ? `${property.specifications.area.totalArea} sqft` : "N/A"}
+                        {(() => {
+                          const minA = property.specifications?.area?.minArea;
+                          const maxA = property.specifications?.area?.maxArea;
+                          const total = property.specifications?.area?.totalArea;
+                          if (minA && maxA) return `${Number(minA).toLocaleString()} - ${Number(maxA).toLocaleString()} sqft`;
+                          if (minA) return `${Number(minA).toLocaleString()}+ sqft`;
+                          if (total) return `${total} sqft`;
+                          return "N/A";
+                        })()}
                       </span>
                     </div>
                   </div>

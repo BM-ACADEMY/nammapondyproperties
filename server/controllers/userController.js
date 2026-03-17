@@ -160,7 +160,7 @@ exports.getPublicUsers = async (req, res) => {
     }
 
     const users = await User.find(query)
-      .select("name email phone profile_image role_id isVerified") // Select only public fields
+      .select("name email phone profile_image role_id isVerified badgeVerified") // Select only public fields
       .populate("role_id")
       .limit(parseInt(limit) || 20);
 
@@ -173,7 +173,7 @@ exports.getPublicUsers = async (req, res) => {
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name email phone profile_image role_id isVerified") // Select only public fields
+      .select("name email phone profile_image role_id isVerified badgeVerified") // Select only public fields
       .populate("role_id");
 
     if (!user) return res.status(404).json({ error: "User not found" });
@@ -446,6 +446,7 @@ exports.createUserByAdmin = async (req, res) => {
       password, // hashed by pre-save
       role_id: userRole._id,
       isVerified: true, // Admin created users are verified by default
+      badgeVerified: req.body.badgeVerified || false,
     });
 
     await user.save();
@@ -618,10 +619,30 @@ exports.getSellersByPropertyBusinessType = async (req, res) => {
 
     // Fetch the user details for these sellers
     const sellers = await User.find({ _id: { $in: sellersIds } })
-      .select("name email phone profile_image role_id isVerified")
+      .select("name email phone profile_image role_id isVerified badgeVerified")
       .populate("role_id");
 
     res.json(sellers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+exports.requestBadgeVerification = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    if (user.badgeRequestStatus === "pending") {
+      return res.status(400).json({ error: "Verification request is already pending" });
+    }
+    if (user.badgeVerified) {
+      return res.status(400).json({ error: "You are already verified" });
+    }
+
+    user.badgeRequestStatus = "pending";
+    await user.save();
+
+    res.json({ message: "Verification request sent successfully", status: "pending" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

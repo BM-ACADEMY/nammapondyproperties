@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal, Form, Input, Button, message, Select } from "antd";
+import { Modal, Form, Input, Button, message, Select, Switch } from "antd";
 import { User, Mail, Phone, Lock } from "lucide-react";
 import api from "@/services/api";
 
@@ -22,6 +22,7 @@ const CreateUserModal = ({
           name: editingUser.name,
           email: editingUser.email,
           phone: editingUser.phone,
+          badgeVerified: editingUser.badgeVerified,
           // Password is usually not pre-filled for security
         });
       } else {
@@ -38,6 +39,7 @@ const CreateUserModal = ({
         await api.put(`/users/update-user-by-id/${editingUser._id}`, {
           name: values.name,
           phone: values.phone,
+          badgeVerified: values.badgeVerified,
           // Only send password if it's provided (optional for edit)
           ...(values.password ? { password: values.password } : {}),
         });
@@ -129,6 +131,14 @@ const CreateUserModal = ({
             prefix={<Lock size={16} />}
             placeholder={isEdit ? "Enter to change password" : "Enter password"}
           />
+        </Form.Item>
+
+        <Form.Item
+          name="badgeVerified"
+          label="Verified Badge"
+          valuePropName="checked"
+        >
+          <Switch />
         </Form.Item>
 
 

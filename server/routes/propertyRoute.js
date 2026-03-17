@@ -42,6 +42,9 @@ router.get("/filters", propertyController.getFilters);
 // Get amenities
 router.get("/amenities", propertyController.getAmenities);
 
+// Get suggestions for search bar
+router.get("/suggestions", propertyController.getSuggestions);
+
 // Get Seller Stats (Protected)
 router.get("/seller-stats", protect, propertyController.getSellerStats);
 

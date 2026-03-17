@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, Check, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import { useNav } from "@/context/NavContext";
 
 /**
@@ -16,6 +17,7 @@ const PropertySearchBar = ({
     showKeyword = true
 }) => {
     const navigate = useNavigate();
+    const locationObj = useLocation();
     const { locations, approvalTypes, priceRanges, propertyTypes } = useNav();
 
     // --- STATE MANAGEMENT ---
@@ -34,18 +36,24 @@ const PropertySearchBar = ({
     const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
     const [isApprovalDropdownOpen, setIsApprovalDropdownOpen] = useState(false);
     const [isBudgetDropdownOpen, setIsBudgetDropdownOpen] = useState(false);
+    const [suggestions, setSuggestions] = useState([]);
+    const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+    const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
 
     // Refs for click-outside
     const locationRef = useRef(null);
     const approvalRef = useRef(null);
     const budgetRef = useRef(null);
     const typeRef = useRef(null);
+    const searchInputRef = useRef(null);
+    const suggestionsRef = useRef(null);
+    const ignoreNextSuggest = useRef(false);
 
     // Animated Placeholder State
     const searchPlaceholders = [
-        "Search by title...",
-        "Search by description...",
-        "Search by area...",
+        "Search by city or locality...",
+        "Search by property title...",
+        "Looking for property in Pondy?",
     ];
     const [placeholderIdx, setPlaceholderIdx] = useState(0);
 
@@ -54,6 +62,34 @@ const PropertySearchBar = ({
     const filteredSubtypes = (propertyTypes || []).filter(t => t.usageType === activeUsageTab);
 
     // --- EFFECTS ---
+    useEffect(() => {
+        const params = new URLSearchParams(locationObj.search);
+        
+        const searchParam = params.get("search");
+        if (searchParam !== null) setSearchQuery(searchParam);
+        
+        const locParam = params.get("location");
+        if (locParam !== null) setLocation(locParam);
+        
+        const appParam = params.get("approval");
+        if (appParam !== null) setApproval(appParam);
+        
+        const minP = params.get("minPrice");
+        if (minP !== null) setMinPrice(minP);
+        
+        const maxP = params.get("maxPrice");
+        if (maxP !== null) setMaxPrice(maxP);
+        
+        const typeParam = params.get("type");
+        if (typeParam !== null) {
+            const types = typeParam.split(",");
+            setSelectedTypes(types);
+            // Set active usage tab based on first selected type
+            const firstType = (propertyTypes || []).find(t => t.name === types[0]);
+            if (firstType) setActiveUsageTab(firstType.usageType);
+        }
+    }, [locationObj.search, propertyTypes]);
+
     useEffect(() => {
         const placeholderInterval = setInterval(() => {
             setPlaceholderIdx((prev) => (prev + 1) % searchPlaceholders.length);
@@ -64,6 +100,7 @@ const PropertySearchBar = ({
             if (approvalRef.current && !approvalRef.current.contains(event.target)) setIsApprovalDropdownOpen(false);
             if (budgetRef.current && !budgetRef.current.contains(event.target)) setIsBudgetDropdownOpen(false);
             if (typeRef.current && !typeRef.current.contains(event.target)) setIsTypeDropdownOpen(false);
+            if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) setIsSuggestionsOpen(false);
         };
 
         document.addEventListener("mousedown", handleClickOutside);
@@ -73,15 +110,53 @@ const PropertySearchBar = ({
         };
     }, [searchPlaceholders.length]);
 
+    // Fetch Suggestions Effect
+    useEffect(() => {
+        const fetchSuggestions = async () => {
+            if (ignoreNextSuggest.current) {
+                ignoreNextSuggest.current = false;
+                return;
+            }
+            if (searchQuery.length < 1) {
+                setSuggestions([]);
+                setIsSuggestionsOpen(false);
+                return;
+            }
+
+            setIsSuggestionsLoading(true);
+            try {
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/properties/suggestions`, {
+                    params: { query: searchQuery }
+                });
+                setSuggestions(response.data);
+                setIsSuggestionsOpen(response.data.length > 0);
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+                setSuggestions([]);
+                setIsSuggestionsOpen(false);
+            } finally {
+                setIsSuggestionsLoading(false);
+            }
+        };
+
+        const timeoutId = setTimeout(fetchSuggestions, 150);
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
+
     // --- HANDLERS ---
-    const handleSearch = () => {
+    const handleSearch = (overrideParams = {}) => {
         const params = new URLSearchParams();
-        if (searchQuery) params.append("search", searchQuery);
-        if (location) params.append("location", location);
+        const finalSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
+        const finalLocation = overrideParams.location !== undefined ? overrideParams.location : location;
+        const finalTypes = overrideParams.type !== undefined ? overrideParams.type : selectedTypes;
+
+        if (finalSearch) params.append("search", finalSearch);
+        if (finalLocation) params.append("location", finalLocation);
         if (approval) params.append("approval", approval);
         if (minPrice) params.append("minPrice", minPrice);
         if (maxPrice) params.append("maxPrice", maxPrice);
-        if (selectedTypes.length > 0) params.append("type", selectedTypes.join(","));
+        if (finalTypes.length > 0) params.append("type", Array.isArray(finalTypes) ? finalTypes.join(",") : finalTypes);
+        
         navigate(`/properties?${params.toString()}`);
     };
 
@@ -129,7 +204,7 @@ const PropertySearchBar = ({
 
                 {/* 1. SEARCH INPUT */}
                 {showKeyword && (
-                    <div className={`flex-grow flex items-center ${isHeader ? "pl-3 pr-1" : "pl-4 pr-2 md:px-6"} h-full min-w-0 relative ${showFilters ? "lg:border-r border-gray-100" : ""}`}>
+                    <div className={`flex-grow flex items-center ${isHeader ? "pl-3 pr-1" : "pl-4 pr-2 md:px-6"} h-full min-w-0 relative ${showFilters ? "lg:border-r border-gray-100" : ""}`} ref={suggestionsRef}>
                         <Search className={`${isHeader ? "w-4 h-4" : "w-5 h-5"} text-gray-400 mr-2 flex-shrink-0`} />
 
                         <div className="relative w-full h-full flex items-center overflow-hidden">
@@ -149,13 +224,71 @@ const PropertySearchBar = ({
                             )}
 
                             <input
+                                ref={searchInputRef}
                                 type="text"
                                 className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => searchQuery.length >= 1 && suggestions.length > 0 && setIsSuggestionsOpen(true)}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />
                         </div>
+
+                        {/* Search Suggestions Dropdown */}
+                        <AnimatePresence>
+                            {isSuggestionsOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
+                                    className={`absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[2000] ${isHeader ? "w-80" : "w-full"}`}
+                                >
+                                    <div className="max-h-80 overflow-y-auto py-2">
+                                        {suggestions.map((sug, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => {
+                                                    const isLocation = sug.type === "City" || sug.type === "Locality";
+                                                    // const isType = sug.type === "Type";
+                                                    
+                                                    ignoreNextSuggest.current = true;
+                                                    setSuggestions([]);
+                                                    setIsSuggestionsOpen(false);
+
+                                                    if (isLocation) {
+                                                        setLocation(sug.value);
+                                                        setSearchQuery(""); // Clear keyword if location selected
+                                                        handleSearch({ location: sug.value, search: "" });
+                                                    } else if (isType) {
+                                                        const suggestionType = propertyTypes?.find(t => t.name === sug.value);
+                                                        if (suggestionType) setActiveUsageTab(suggestionType.usageType);
+                                                        setSelectedTypes([sug.value]);
+                                                        setSearchQuery(""); // Clear keyword if type selected
+                                                        handleSearch({ type: [sug.value], search: "" });
+                                                    } else {
+                                                        setSearchQuery(sug.value);
+                                                        handleSearch({ search: sug.value });
+                                                    }
+                                                }}
+                                                className="w-full text-left px-5 py-3 hover:bg-gray-50 flex items-center justify-between transition-colors border-b border-gray-50 last:border-0"
+                                            >
+                                                <div className="flex flex-col">
+                                                    <span className="font-semibold text-gray-800 text-sm md:text-base">
+                                                        {sug.mainText}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {sug.subText}
+                                                    </span>
+                                                </div>
+                                                <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded-md">
+                                                    {sug.type}
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 )}
 
@@ -379,7 +512,7 @@ const PropertySearchBar = ({
 
                 {/* 3. SEARCH BUTTON */}
                 <button
-                    onClick={handleSearch}
+                    onClick={() => handleSearch()}
                     className={`bg-red-500 cursor-pointer hover:bg-red-600 text-white font-medium h-full rounded-full lg:rounded-xl transition-colors duration-300 shadow-md flex items-center justify-center whitespace-nowrap flex-shrink-0 z-10 ${isHeader ? "px-4 md:px-6 text-xs" : "px-5 md:px-10 text-sm md:text-base"
                         }`}
                 >

@@ -8,8 +8,9 @@ import {
   Space,
   message,
   Modal,
+  Switch,
 } from "antd";
-import { Plus, Trash2, Edit, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Edit, AlertCircle, Clock, CheckCircle, XCircle } from "lucide-react";
 import api from "@/services/api";
 import CreateUserModal from "../components/CreateUserModal";
 
@@ -99,7 +100,46 @@ const SellerList = () => {
                 </Tag>
             ),
         },
-
+        {
+            title: "Badge Request",
+            dataIndex: "badgeRequestStatus",
+            key: "badgeRequestStatus",
+            render: (status) => {
+                let color = "default";
+                let icon = null;
+                if (status === "pending") { color = "orange"; icon = <Clock size={12} className="mr-1" />; }
+                else if (status === "approved") { color = "green"; icon = <CheckCircle size={12} className="mr-1" />; }
+                else if (status === "rejected") { color = "error"; icon = <XCircle size={12} className="mr-1" />; }
+                return (
+                    <Tag color={color} className="flex items-center w-fit">
+                        {icon}
+                        {status ? status.toUpperCase() : "NONE"}
+                    </Tag>
+                );
+            },
+        },
+        {
+            title: "Verified Badge",
+            dataIndex: "badgeVerified",
+            key: "badgeVerified",
+            render: (verified, record) => (
+                <Switch
+                    checked={verified}
+                    onChange={async (checked) => {
+                        try {
+                            await api.put(`/users/update-user-by-id/${record._id}`, {
+                                badgeVerified: checked,
+                                badgeRequestStatus: checked ? "approved" : "none",
+                            });
+                            message.success(`Badge ${checked ? "enabled" : "disabled"}`);
+                            fetchSellers();
+                        } catch (error) {
+                            message.error("Failed to update badge status");
+                        }
+                    }}
+                />
+            ),
+        },
     {
       title: "Action",
       key: "action",
