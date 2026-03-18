@@ -31,13 +31,13 @@ const HeroSection = () => {
       <div className="absolute inset-0">
         {/* Desktop Image */}
         <img
-          src="/public/banner/banner1.png"
+          src="/banner/banner1.png"
           alt="Hero Background Desktop"
           className="hidden md:block w-full h-full object-cover object-center"
         />
         {/* Mobile/Tablet Image */}
         <img
-          src="/public/banner/Banner.png"
+          src="/banner/Banner.png"
           alt="Hero Background Mobile"
           className="block md:hidden w-full h-full object-cover object-center"
         />

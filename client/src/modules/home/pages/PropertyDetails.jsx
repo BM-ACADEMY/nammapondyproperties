@@ -252,9 +252,21 @@ const PropertyDetails = () => {
                 )}
               </div>
             </div> */}
+            <div className="mb-8">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 leading-tight">
+                {property.basicInfo?.title || "Untitled Property"}
+              </h1>
+              <div className="flex items-center text-gray-500 text-lg">
+                <MapPin className="w-5 h-5 mr-2 text-blue-500" />
+                {typeof property.location === "string"
+                  ? property.location
+                  : `${property.location?.locality ? property.location.locality + ", " : ""}${property.location?.city || ""}`}
+              </div>
+            </div>
+
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
               {/* LEFT SECTION */}
-              <div className="space-y-4"> {/* Increased space-y to separate price row from views */}
+              <div className="space-y-4">
                 <div className="flex flex-wrap items-baseline gap-4">
                   <h1 className="text-2xl md:text-3xl font-bold leading-tight">
                     {property.isSold && property.soldPrice ? (
@@ -321,8 +333,15 @@ const PropertyDetails = () => {
                   className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
                 />
                 <div className="absolute top-4 right-4 z-10">
-                  <WishlistButton propertyId={property._id} />
+                    <WishlistButton propertyId={property._id} />
                 </div>
+                {/* Verified Badge - Top Left */}
+                {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+                  <div className="absolute top-6 left-6 z-20 bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center gap-2 shadow-sm border border-green-200">
+                    <img src="/Logo/badge.png" alt="Verified" className="w-5 h-5 object-contain" />
+                    <span className="text-xs font-extrabold uppercase tracking-widest">Verified Seller</span>
+                  </div>
+                )}
               </div>
 
               {/* Thumbnails */}

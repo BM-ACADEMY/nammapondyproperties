@@ -46,6 +46,15 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <div className="absolute top-3 right-3 z-20">
                     <WishlistButton propertyId={property._id} />
                 </div>
+
+                {/* Verified Badge - Top Left */}
+                {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+                    <div className="absolute top-3 left-3 z-20 bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200">
+                        <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
+                    </div>
+                )}
+
                 <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
                     1/{property.media?.images?.length || 1}
                 </div>
@@ -57,10 +66,11 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <div className="flex justify-between items-start">
                     <div className="flex flex-col flex-1">
                         <h3 className="text-lg md:text-xl font-bold text-slate-800 line-clamp-1">
-                            {locality}{city ? `, ${city}` : ""}
+                            {property.basicInfo?.title || "Untitled Property"}
                         </h3>
                         <p className="text-sm text-slate-500 font-medium">
-                            {bedrooms > 0 ? `${bedrooms} BHK ` : ""}{property.basicInfo?.propertyType || "Property"} in {locality}
+                            <MapPin className="w-3 h-3 inline mr-1" />
+                            {locality}{city ? `, ${city}` : ""}
                         </p>
                     </div>
                     <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0 ml-2">

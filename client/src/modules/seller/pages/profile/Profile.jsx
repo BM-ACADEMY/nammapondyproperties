@@ -11,7 +11,7 @@ import {
   Col,
   Upload,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle } from "lucide-react";
 import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -244,7 +244,42 @@ const Profile = () => {
                 />
               </Form.Item>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-between items-center pt-8 border-t mt-4">
+                <div className="flex flex-col">
+                  {user?.badgeVerified ? (
+                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+                      <CheckCircle size={18} />
+                      <span className="font-semibold">Verified Badge Active</span>
+                    </div>
+                  ) : user?.badgeRequestStatus === "pending" ? (
+                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+                      <Clock size={18} />
+                      <span className="font-semibold">Verification Pending</span>
+                    </div>
+                  ) : user?.badgeRequestStatus === "rejected" ? (
+                    <div className="flex items-center gap-2 text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-100">
+                      <XCircle size={18} />
+                      <span className="font-semibold">Verification Rejected</span>
+                    </div>
+                  ) : (
+                    <Button
+                      icon={<ShieldCheck size={18} />}
+                      className="bg-sky-50 text-sky-600 border-sky-200 hover:bg-sky-100"
+                      onClick={async () => {
+                        try {
+                          const res = await api.post("/users/request-badge");
+                          message.success(res.data.message);
+                          refreshUser(); // Refresh to show pending status
+                        } catch (err) {
+                          message.error(err.response?.data?.error || "Failed to send request");
+                        }
+                      }}
+                    >
+                      Request Verification Badge
+                    </Button>
+                  )}
+                </div>
+
                 <Button
                   type="primary"
                   htmlType="submit"

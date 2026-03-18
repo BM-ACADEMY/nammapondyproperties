@@ -408,12 +408,14 @@ const BusinessUserList = () => {
                           </p>
                           
                           <div className="flex items-center gap-2">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#0e182b] text-white rounded-md shadow-sm">
-                              <Star size={10} className="fill-current text-white" />
-                              <span className="text-[10px] font-extrabold uppercase tracking-widest">
-                                SUPERAGENT
-                              </span>
-                            </div>
+                            {(user.badgeVerified || user.role_id?.role_name === 'admin') && (
+                              <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-md border border-green-200">
+                                <img src="/Logo/badge.png" alt="Verified" className="w-3.5 h-3.5 object-contain" />
+                                <span className="text-[10px] font-extrabold uppercase tracking-widest">
+                                  Verified
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </motion.div>
@@ -460,19 +462,23 @@ const BusinessUserList = () => {
                                 )}
                               </div>
                               {/* Verified Badge Overlay */}
-                              <div className="absolute bottom-2 right-2 bg-white rounded-full p-1.5 shadow-lg border border-slate-50 z-20">
-                                <ShieldCheck size={24} className="text-[#1aa554]" />
-                              </div>
+                              {(selectedSeller?.badgeVerified || selectedSeller?.role_id?.role_name === 'admin') && (
+                                <div className="absolute bottom-2 right-2 bg-green-50 rounded-full p-1 shadow-md border border-green-100 z-20">
+                                  <img src="/Logo/badge.png" alt="Verified" className="w-6 h-6 object-contain" />
+                                </div>
+                              )}
                             </div>
 
                             {/* Bio Content */}
                             <div className="flex-1 text-center sm:text-left pt-2">
                               <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 justify-center sm:justify-start">
-                                {/* SUPERAGENT Badge */}
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#174685] text-white rounded-lg shadow-sm w-fit mx-auto sm:mx-0">
-                                  <Star size={12} className="fill-current" />
-                                  <span className="text-[10px] font-bold uppercase tracking-wider">SUPERAGENT</span>
-                                </div>
+                                {/* Verified Badge */}
+                                {(selectedSeller?.badgeVerified || selectedSeller?.role_id?.role_name === 'admin') && (
+                                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-lg border border-green-200 shadow-sm w-fit mx-auto sm:mx-0">
+                                    <img src="/Logo/badge.png" alt="Verified" className="w-3.5 h-3.5 object-contain" />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Verified Professional</span>
+                                  </div>
+                                )}
                                 <button className="sm:ml-auto text-slate-400 hover:text-[#174685] flex items-center gap-2 text-sm font-bold transition-colors group">
                                   <svg viewBox="0 0 24 24" className="w-5 h-5 fill-none stroke-current stroke-[2.5]">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13 19l6-6-6-6M5 19v-3a5 5 0 015-5h9" />
