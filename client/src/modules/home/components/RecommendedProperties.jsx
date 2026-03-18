@@ -134,7 +134,7 @@ const RecommendedProperties = () => {
     );
 
     return (
-        <section className="py-16">
+        <section className="py-8 md:py-16">
             <div className="mx-auto max-w-[1400px] px-4">
                 <div className="flex justify-between items-end mb-8">
                     <div>
