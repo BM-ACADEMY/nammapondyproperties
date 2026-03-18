@@ -142,6 +142,7 @@ exports.getProperties = async (req, res) => {
       seller_id,
       excludeId,
       isSold,
+      usageType,
       category,
     } = req.query;
     const queryConditions = [];
@@ -202,6 +203,11 @@ exports.getProperties = async (req, res) => {
     if (category) {
       const categoryArray = category.split(',').map(c => c.trim());
       queryConditions.push({ "basicInfo.category": { $in: categoryArray } });
+    }
+
+    if (usageType) {
+      const usageTypeArray = usageType.split(',').map(u => u.trim());
+      queryConditions.push({ "basicInfo.usageType": { $in: usageTypeArray } });
     }
 
     if (location) {
