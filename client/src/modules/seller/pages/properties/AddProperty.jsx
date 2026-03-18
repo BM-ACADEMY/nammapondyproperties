@@ -31,7 +31,7 @@ const AddProperty = () => {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?seller_id=${user._id}`,
       );
-      if (res.data.properties && res.data.properties.length >= 2) {
+      if (res.data.properties && res.data.properties.length >= 5) {
         navigate("/seller/request-limit");
       }
     } catch (error) {

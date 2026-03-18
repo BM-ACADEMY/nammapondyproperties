@@ -935,7 +935,7 @@ exports.getSellerStats = async (req, res) => {
     const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
-          seller: new mongoose.Types.ObjectId(sellerId),
+          seller_id: new mongoose.Types.ObjectId(sellerId),
           createdAt: { $gte: dateFrom },
         },
       },
@@ -979,11 +979,11 @@ exports.getSellerStats = async (req, res) => {
 
     // 5. Recent Activity (Enquiries)
     const recentEnquiries = await Enquiry.find({
-      seller: sellerId,
+      seller_id: sellerId,
     })
       .sort({ createdAt: -1 })
-      .limit(5)
-      .populate("property_id", "title")
+      .limit(50)
+      .populate("property_id", "basicInfo.title")
       .populate("user_id", "name email phoneNumber");
 
     // 6. Top Properties
@@ -999,7 +999,7 @@ exports.getSellerStats = async (req, res) => {
     );
     const totalLeadsAllTime =
       (await Enquiry.countDocuments({
-        seller: sellerId,
+        seller_id: sellerId,
       })) +
       (await require("../models/WhatsappLead").countDocuments({
         seller: sellerId,
@@ -1101,7 +1101,7 @@ exports.getAdminStats = async (req, res) => {
     const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
-          seller: req.user._id,
+          seller_id: req.user._id,
           createdAt: { $gte: dateFrom },
         },
       },
@@ -1115,7 +1115,7 @@ exports.getAdminStats = async (req, res) => {
     ]);
 
     const totalEnquiries =
-      (await Enquiry.countDocuments({ seller: req.user._id })) +
+      (await Enquiry.countDocuments({ seller_id: req.user._id })) +
       (await require("../models/WhatsappLead").countDocuments({
         seller: req.user._id,
       }));
@@ -1160,11 +1160,11 @@ exports.getAdminStats = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // Recent Enquiries (Only for this admin/seller to avoid leaking others' leads)
-    const recentEnquiries = await Enquiry.find({ seller: req.user._id })
-      .populate("property_id", "title")
+    const recentEnquiries = await Enquiry.find({ seller_id: req.user._id })
+      .populate("property_id", "basicInfo.title")
       .populate("user_id", "name email")
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(50);
 
     res.json({
       summary: {
