@@ -192,7 +192,7 @@ const Dashboard = () => {
           <Col xs={24} sm={12} lg={8} key={index}>
             <Card
               variant="borderless"
-              className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
+              className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -223,7 +223,7 @@ const Dashboard = () => {
         <Col xs={24} lg={16}>
           <Card
             title="Performance Trends"
-            className="shadow-sm rounded-xl h-full"
+            className="shadow-sm border border-gray-200 rounded-xl h-full"
             variant="borderless"
           >
             <div style={{ width: "100%", height: 350, minHeight: 350 }}>
@@ -279,7 +279,7 @@ const Dashboard = () => {
         <Col xs={24} lg={8}>
           <Card
             title="Listing Status"
-            className="shadow-sm rounded-xl h-full"
+            className="shadow-sm border border-gray-200 rounded-xl h-full"
             variant="borderless"
           >
             <div className="flex flex-col items-center justify-center h-[350px]">
@@ -338,16 +338,9 @@ const Dashboard = () => {
         <Col xs={24} lg={24}>
           <Card
             title="Recent Enquiries"
-            className="shadow-sm rounded-xl"
+            className="shadow-sm border border-gray-200 rounded-xl"
             bordered={false}
-            extra={
-              <button 
-                onClick={() => setData(prev => ({...prev, recentEnquiries: []}))} 
-                className="text-red-500 hover:text-red-600 font-medium bg-transparent border-none cursor-pointer p-0"
-              >
-                Clear All
-              </button>
-            }
+
           >
             <div className="space-y-4">
               {data.recentEnquiries.length > 0 ? (
@@ -357,7 +350,7 @@ const Dashboard = () => {
                     to="/seller/enquiries" 
                     state={{ targetEnquiry: item._id }} 
                     key={idx} 
-                    className="flex justify-between items-start p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 block cursor-pointer group"
+                    className="flex justify-between items-start p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-200 block cursor-pointer group"
                   >
                     <div className="flex gap-4 min-w-0 flex-1">
                       <Avatar
@@ -388,21 +381,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     
-                    {/* Delete locally from Dashboard */}
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setData(prev => ({
-                          ...prev,
-                          recentEnquiries: prev.recentEnquiries.filter(enq => enq._id !== item._id)
-                        }));
-                      }}
-                      className="ml-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all opacity-0 group-hover:opacity-100 shrink-0 border-none bg-transparent cursor-pointer"
-                      title="Dismiss from dashboard"
-                    >
-                      <X size={16} />
-                    </button>
+
                   </Link>
                   ))}
                   {data.recentEnquiries.length > ENQUIRIES_PER_PAGE && (
