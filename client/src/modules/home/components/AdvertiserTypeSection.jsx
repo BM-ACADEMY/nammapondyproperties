@@ -27,7 +27,7 @@ const AdvertiserTypeSection = () => {
     if (displayTypes.length === 0) return null;
 
     return (
-        <section className="py-15 px-4 bg-white font-['Outfit',_sans-serif]">
+        <section className="py-6 md:py-0 px-4 bg-white font-['Outfit',_sans-serif]">
             <div className="w-full max-w-5xl mx-auto">
                 
                 {/* Main Card Container */}
