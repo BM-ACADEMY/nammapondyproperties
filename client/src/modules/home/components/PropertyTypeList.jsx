@@ -70,7 +70,7 @@ const PropertyTypeList = () => {
   });
 
   return (
-    <section className="pt-24 md:pt-16 pb-10 bg-white font-sans overflow-hidden">
+    <section className="pt-12 md:pt-16 pb-10 bg-white font-sans overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1450px] flex flex-col lg:flex-row gap-10">
         
         {/* Left Section: Main Content */}
