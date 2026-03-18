@@ -344,7 +344,7 @@ const MyProperties = () => {
           ))}
         </div>
       ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
             <div
               key={property._id}
@@ -408,16 +408,22 @@ const MyProperties = () => {
 
               {/* Content Section */}
               <div className="p-6 flex flex-col flex-1">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 line-clamp-1 mb-1.5 leading-tight group-hover:text-blue-600 transition-colors">
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-1 leading-tight group-hover:text-blue-600 transition-colors">
                     {property.basicInfo?.title || "Untitled Property"}
                   </h3>
-                  <div className="flex items-center text-gray-500 text-sm font-medium">
-                    <MapPin size={14} className="mr-1.5 text-blue-500/60" />
+                  <div className="flex items-center text-gray-500 text-sm font-medium mb-1">
+                    <MapPin size={13} className="mr-1.5 text-blue-500/60" />
                     <span className="truncate">
                       {property.location?.city || "Location N/A"}
                     </span>
                   </div>
+                  {property.specifications?.area?.totalArea && (
+                    <div className="flex items-center text-gray-400 text-xs font-medium">
+                      <Ruler size={12} className="mr-1.5 text-gray-400" />
+                      <span>{property.specifications.area.totalArea} sq.ft</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-6 flex items-center">
@@ -893,7 +899,16 @@ const MyProperties = () => {
                             </div>
                             <div>
                               <p className="text-slate-500 text-xs font-semibold mb-1">Area Size:</p>
-                              <p className="text-base font-bold text-slate-800">{selectedProperty.specifications?.area?.totalArea || "N/A"} sqft</p>
+                              <p className="text-base font-bold text-slate-800">
+                                {(() => {
+                                  const area = selectedProperty.specifications?.area;
+                                  if (area?.totalArea) return `${area.totalArea} sq.ft`;
+                                  if (area?.minArea && area?.maxArea) return `${area.minArea} - ${area.maxArea} sq.ft`;
+                                  if (area?.minArea) return `${area.minArea} sq.ft`;
+                                  if (area?.maxArea) return `${area.maxArea} sq.ft`;
+                                  return "N/A";
+                                })()}
+                              </p>
                             </div>
                             <div className="col-span-2">
                               <p className="text-slate-500 text-xs font-semibold mb-1">Price Details:</p>
