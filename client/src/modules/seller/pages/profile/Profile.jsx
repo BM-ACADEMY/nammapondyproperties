@@ -24,7 +24,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, refetchUser } = useAuth();
   const [fileList, setFileList] = useState([]);
 
   const [hasInitialImage, setHasInitialImage] = useState(false);
@@ -269,7 +269,7 @@ const Profile = () => {
                         try {
                           const res = await api.post("/users/request-badge");
                           message.success(res.data.message);
-                          refreshUser(); // Refresh to show pending status
+                          refetchUser(); // Refresh to show pending status
                         } catch (err) {
                           message.error(err.response?.data?.error || "Failed to send request");
                         }

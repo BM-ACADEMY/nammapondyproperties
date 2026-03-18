@@ -40,7 +40,8 @@ const PropertiesPage = () => {
     location: getParamArray("location"),
     approval: getParamArray("approval"),
     bedrooms: getParamArray("bedrooms"),
-    category: getParamArray("category"), // Added category
+    category: getParamArray("category"),
+    usageType: getParamArray("usageType"),
     businessType: getParamArray("businessType"),
   });
 
@@ -54,7 +55,8 @@ const PropertiesPage = () => {
       location: getParamArray("location"),
       approval: getParamArray("approval"),
       bedrooms: getParamArray("bedrooms"),
-      category: getParamArray("category"), // Added category
+      category: getParamArray("category"),
+      usageType: getParamArray("usageType"),
       businessType: getParamArray("businessType"),
     });
     setCurrentPage(Number(searchParams.get("page")) || 1);
@@ -77,7 +79,8 @@ const PropertiesPage = () => {
       if (filters.location.length) params.append("location", filters.location.join(","));
       if (filters.approval.length) params.append("approval", filters.approval.join(","));
       if (filters.bedrooms.length) params.append("bedrooms", filters.bedrooms.join(","));
-      if (filters.category.length) params.append("category", filters.category.join(",")); // Added category
+      if (filters.category.length) params.append("category", filters.category.join(","));
+      if (filters.usageType.length) params.append("usageType", filters.usageType.join(","));
       if (filters.businessType.length) params.append("businessType", filters.businessType.join(","));
       params.append("page", currentPage);
 

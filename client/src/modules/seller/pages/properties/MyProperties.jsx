@@ -344,7 +344,7 @@ const MyProperties = () => {
           ))}
         </div>
       ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
             <div
               key={property._id}
@@ -408,16 +408,22 @@ const MyProperties = () => {
 
               {/* Content Section */}
               <div className="p-6 flex flex-col flex-1">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 line-clamp-1 mb-1.5 leading-tight group-hover:text-blue-600 transition-colors">
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-1 leading-tight group-hover:text-blue-600 transition-colors">
                     {property.basicInfo?.title || "Untitled Property"}
                   </h3>
-                  <div className="flex items-center text-gray-500 text-sm font-medium">
-                    <MapPin size={14} className="mr-1.5 text-blue-500/60" />
+                  <div className="flex items-center text-gray-500 text-sm font-medium mb-1">
+                    <MapPin size={13} className="mr-1.5 text-blue-500/60" />
                     <span className="truncate">
                       {property.location?.city || "Location N/A"}
                     </span>
                   </div>
+                  {property.specifications?.area?.totalArea && (
+                    <div className="flex items-center text-gray-400 text-xs font-medium">
+                      <Ruler size={12} className="mr-1.5 text-gray-400" />
+                      <span>{property.specifications.area.totalArea} sq.ft</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-6 flex items-center">
@@ -874,49 +880,68 @@ const MyProperties = () => {
                   items={[
                     {
                       key: "1",
-                      label: <span className="flex items-center gap-2 px-4 py-2 text-sm font-bold"><Plus size={14} className="text-blue-600 font-black rotate-45" /> Basic Info</span>,
+                      label: <span className="flex items-center gap-2 px-4 py-2 text-sm font-bold"> Basic Info</span>,
                       children: (
-                        <div className="pt-6 space-y-10 animate-fadeIn">
-                          {/* Stats Grid */}
-                          <div className="grid grid-cols-3 gap-y-10 border-b border-gray-100 pb-10">
-                            <div>
-                              <p className="text-slate-500 text-xs font-semibold mb-1">Property Type:</p>
-                              <p className="text-base font-bold text-slate-800">{selectedProperty.basicInfo?.propertyType || "Premier"}</p>
+                        <div className="pt-4 space-y-6 animate-fadeIn">
+                          {/* Stats Grid - Bordered table style like screenshot */}
+                          <div className="border border-gray-200 rounded-xl overflow-hidden">
+                            {/* Row 1 */}
+                            <div className="grid grid-cols-3 divide-x divide-gray-200 border-b border-gray-200">
+                              <div className="px-5 py-4">
+                                <p className="text-slate-400 text-xs font-medium mb-1">Property Type</p>
+                                <p className="text-sm font-bold text-slate-800">{selectedProperty.basicInfo?.propertyType || "—"}</p>
+                              </div>
+                              <div className="px-5 py-4">
+                                <p className="text-slate-400 text-xs font-medium mb-1">Bedrooms</p>
+                                <p className="text-sm font-bold text-slate-800">{selectedProperty.specifications?.residential?.bedrooms ?? "—"}</p>
+                              </div>
+                              <div className="px-5 py-4">
+                                <p className="text-slate-400 text-xs font-medium mb-1">Bathrooms</p>
+                                <p className="text-sm font-bold text-slate-800">{selectedProperty.specifications?.residential?.bathrooms ?? "—"}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-slate-500 text-xs font-semibold mb-1">Bedrooms</p>
-                              <p className="text-base font-bold text-slate-800">{selectedProperty.specifications?.residential?.bedrooms || "0"}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-xs font-semibold mb-1">Bathrooms</p>
-                              <p className="text-base font-bold text-slate-800">{selectedProperty.specifications?.residential?.bathrooms || "0"}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-xs font-semibold mb-1">Area Size:</p>
-                              <p className="text-base font-bold text-slate-800">{selectedProperty.specifications?.area?.totalArea || "N/A"} sqft</p>
-                            </div>
-                            <div className="col-span-2">
-                              <p className="text-slate-500 text-xs font-semibold mb-1">Price Details:</p>
-                              <p className="text-base font-bold text-slate-800">
-                                {formatPriceRange(
-                                  selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
-                                  selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
-                                  selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
-                                )}
-                              </p>
+                            {/* Row 2 */}
+                            <div className="grid grid-cols-3 divide-x divide-gray-200">
+                              <div className="px-5 py-4">
+                                <p className="text-slate-400 text-xs font-medium mb-1">Views</p>
+                                <p className="text-sm font-bold text-slate-800">{selectedProperty.view_count ?? "0"}</p>
+                              </div>
+                              <div className="px-5 py-4">
+                                <p className="text-slate-400 text-xs font-medium mb-1">Area Size</p>
+                                <p className="text-sm font-bold text-slate-800">
+                                  {(() => {
+                                    const area = selectedProperty.specifications?.area;
+                                    if (area?.totalArea) return `${area.totalArea} sq.ft`;
+                                    if (area?.minArea && area?.maxArea) return `${area.minArea} – ${area.maxArea} sq.ft`;
+                                    if (area?.minArea) return `${area.minArea} sq.ft`;
+                                    if (area?.maxArea) return `${area.maxArea} sq.ft`;
+                                    return "N/A";
+                                  })()}
+                                </p>
+                              </div>
+                              <div className="px-5 py-4">
+                                <p className="text-slate-400 text-xs font-medium mb-1">Price</p>
+                                <p className="text-sm font-bold text-slate-800">
+                                  {formatPriceRange(
+                                    selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
+                                    selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
+                                    selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
+                                  )}
+                                </p>
+                              </div>
                             </div>
                           </div>
 
-                          {/* Inline Description */}
+                          {/* Description */}
                           <div>
-                            <p className="text-slate-500 text-xs font-semibold mb-3">Property Description:</p>
-                            <p className="text-slate-600 font-normal leading-relaxed max-w-xl text-sm">
-                              {selectedProperty.basicInfo?.description || "Spacious and modern, with all the premium features you expect from a luxury listing in Puducherry."}
+                            <p className="text-slate-500 text-xs font-semibold mb-2">Description:</p>
+                            <p className="text-slate-600 leading-relaxed text-sm">
+                              {selectedProperty.basicInfo?.description || "No description provided."}
                             </p>
-                            <div className="mt-6 flex items-center gap-3">
-                               <span className="px-6 py-2 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">
+                            <div className="mt-4">
+                              <span className="px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
                                 {selectedProperty.status || "Available"}
-                               </span>
+                              </span>
                             </div>
                           </div>
                         </div>

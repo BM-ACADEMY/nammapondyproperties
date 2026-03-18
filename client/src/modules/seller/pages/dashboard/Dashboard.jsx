@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Calendar,
   Phone,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
@@ -22,6 +23,7 @@ import {
   List,
   Avatar,
   Tag,
+  Pagination,
 } from "antd";
 import {
   PieChart,
@@ -46,6 +48,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState("30d"); // 7d, 30d, 90d, all
+  const [enquiryPage, setEnquiryPage] = useState(1);
+  const ENQUIRIES_PER_PAGE = 5;
   const [data, setData] = useState({
     summary: {
       totalProperties: 0,
@@ -114,13 +118,6 @@ const Dashboard = () => {
       desc: "All time listings",
     },
     {
-      title: "Active Listings",
-      value: data.summary.activeProperties,
-      icon: <CheckCircle size={24} className="text-green-500" />,
-      color: "#f6ffed",
-      desc: "Currently visible",
-    },
-    {
       title: "Total Views",
       value: data.summary.totalViews,
       icon: <Eye size={24} className="text-purple-500" />,
@@ -154,12 +151,12 @@ const Dashboard = () => {
   const statusData = [
     { name: "Active", value: data.summary.activeProperties, color: "#10b981" },
     { name: "Sold", value: data.summary.soldProperties, color: "#ef4444" },
-    {
-      name: "Pending",
-      value: data.summary.pendingProperties,
-      color: "#f59e0b",
-    },
   ].filter((d) => d.value > 0);
+
+  const paginatedEnquiries = data.recentEnquiries.slice(
+    (enquiryPage - 1) * ENQUIRIES_PER_PAGE,
+    enquiryPage * ENQUIRIES_PER_PAGE
+  );
 
   return (
     <div className="space-y-6">
@@ -195,7 +192,7 @@ const Dashboard = () => {
           <Col xs={24} sm={12} lg={8} key={index}>
             <Card
               variant="borderless"
-              className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
+              className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -226,7 +223,7 @@ const Dashboard = () => {
         <Col xs={24} lg={16}>
           <Card
             title="Performance Trends"
-            className="shadow-sm rounded-xl h-full"
+            className="shadow-sm border border-gray-200 rounded-xl h-full"
             variant="borderless"
           >
             <div style={{ width: "100%", height: 350, minHeight: 350 }}>
@@ -282,7 +279,7 @@ const Dashboard = () => {
         <Col xs={24} lg={8}>
           <Card
             title="Listing Status"
-            className="shadow-sm rounded-xl h-full"
+            className="shadow-sm border border-gray-200 rounded-xl h-full"
             variant="borderless"
           >
             <div className="flex flex-col items-center justify-center h-[350px]">
@@ -324,15 +321,6 @@ const Dashboard = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />{" "}
-                    Pending
-                  </span>
-                  <span className="font-bold">
-                    {data.summary.pendingProperties}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-red-500" /> Sold
                   </span>
                   <span className="font-bold">
@@ -347,45 +335,67 @@ const Dashboard = () => {
 
       <Row gutter={[24, 24]}>
         {/* Recent Enquiries */}
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={24}>
           <Card
             title="Recent Enquiries"
-            className="shadow-sm rounded-xl"
+            className="shadow-sm border border-gray-200 rounded-xl"
             bordered={false}
-            extra={<Link to="/seller/enquiries">View All</Link>}
+
           >
             <div className="space-y-4">
               {data.recentEnquiries.length > 0 ? (
-                data.recentEnquiries.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100">
-                    <Avatar
-                      style={{ backgroundColor: "#fde3cf", color: "#f56a00", flexShrink: 0 }}
-                    >
-                      {item.user_id?.name
-                        ? item.user_id.name[0].toUpperCase()
-                        : item.enquirer_name
-                          ? item.enquirer_name[0].toUpperCase()
-                          : "U"}
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm font-semibold text-gray-900 truncate">
-                          {item.user_id?.name || item.enquirer_name || "Guest User"}
-                        </span>
-                        <span className="text-[10px] text-gray-400">
-                          {new Date(item.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit mt-1 truncate max-w-full">
-                        For: {item.property_id?.title || "Unknown Property"}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                        <Phone size={10} className="text-gray-400" />
-                        {item.user_id?.phone || item.enquirer_phone || "N/A"}
+                <>
+                  {paginatedEnquiries.map((item, idx) => (
+                  <Link 
+                    to="/seller/enquiries" 
+                    state={{ targetEnquiry: item._id }} 
+                    key={idx} 
+                    className="flex justify-between items-start p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-200 block cursor-pointer group"
+                  >
+                    <div className="flex gap-4 min-w-0 flex-1">
+                      <Avatar
+                        style={{ backgroundColor: "#fde3cf", color: "#f56a00", flexShrink: 0 }}
+                      >
+                        {item.user_id?.name
+                          ? item.user_id.name[0].toUpperCase()
+                          : item.enquirer_name
+                            ? item.enquirer_name[0].toUpperCase()
+                            : "U"}
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex justify-between items-start">
+                          <span className="text-sm font-semibold text-gray-900 truncate pr-2">
+                            {item.user_id?.name || item.enquirer_name || "Guest User"}
+                          </span>
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded w-fit mt-1 truncate max-w-full">
+                          For: {item.property_id?.basicInfo?.title || "Unknown Property"}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                          <Phone size={10} className="text-gray-400" />
+                          {item.user_id?.phone || item.enquirer_phone || "N/A"}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                    
+
+                  </Link>
+                  ))}
+                  {data.recentEnquiries.length > ENQUIRIES_PER_PAGE && (
+                    <div className="flex justify-end mt-4">
+                      <Pagination
+                        current={enquiryPage}
+                        pageSize={ENQUIRIES_PER_PAGE}
+                        total={data.recentEnquiries.length}
+                        onChange={setEnquiryPage}
+                        size="small"
+                      />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-8 text-gray-400">
                   <MessageSquare size={32} className="mx-auto mb-2 opacity-20" />
@@ -396,50 +406,6 @@ const Dashboard = () => {
           </Card>
         </Col>
 
-        {/* Top Properties */}
-        <Col xs={24} lg={12}>
-          <Card
-            title="Top Performing Properties"
-            className="shadow-sm rounded-xl"
-            bordered={false}
-            extra={<Link to="/seller/my-properties">View All</Link>}
-          >
-            <div className="space-y-4">
-              {data.topProperties.length > 0 ? (
-                data.topProperties.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 p-2 hover:bg-gray-50 rounded-xl transition-colors">
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                      {item.images && item.images[0] ? (
-                        <img
-                          src={getImageUrl(item.images[0].image_url)}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Building className="w-6 h-6 m-3 text-gray-400" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <Link to={`/property/${item._id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate block">
-                        {item.title}
-                      </Link>
-                      <div className="flex gap-2 mt-1 items-center">
-                        <Tag color={item.status === "available" ? "green" : item.status === "sold" ? "red" : "orange"} className="text-[10px] px-1 line-height-1">
-                          {item.status.toUpperCase()}
-                        </Tag>
-                        <span className="flex items-center gap-1 text-[10px] text-gray-500">
-                          <Eye size={10} /> {item.view_count} Views
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-400 text-sm">No properties found</div>
-              )}
-            </div>
-          </Card>
-        </Col>
       </Row>
     </div>
   );
