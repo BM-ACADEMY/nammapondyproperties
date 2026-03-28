@@ -5,14 +5,9 @@ const { protect } = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
 // Auth Routes
-router.post("/register", userController.createUser); // Alias for consistency
-router.post("/create-user", userController.createUser); // Legacy support
-router.post("/login", userController.login);
-router.post("/google-login", userController.googleLogin);
 router.get("/me", protect, userController.getMe);
-// router.post("/send-otp", userController.sendOtp); // Disabled
-// router.post("/verify-otp", userController.verifyOtp); // Disabled
-router.post("/reset-password", userController.resetPassword);
+router.post("/send-otp", userController.sendOtp); 
+router.post("/verify-otp", userController.verifyOtp); 
 router.get("/refresh-token", protect, userController.refreshToken);
 
 // Public Routes

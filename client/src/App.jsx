@@ -14,7 +14,13 @@ function App() {
   return (
     <HelmetProvider>
       <div>
-        <Toaster position="top-center" reverseOrder={false} />
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          containerStyle={{
+            zIndex: 999999,
+          }}
+        />
         <AuthProvider>
           <LocationProvider>
             <SocketProvider>

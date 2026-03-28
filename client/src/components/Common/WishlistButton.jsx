@@ -21,8 +21,7 @@ const WishlistButton = ({ propertyId, className = "" }) => {
     e.preventDefault();
 
     if (!user) {
-      toast.error("Please login to add to wishlist");
-      navigate("/login", { state: { from: location.pathname } }); // Redirect to login
+      setLoginModalOpen(true);
       return;
     }
 

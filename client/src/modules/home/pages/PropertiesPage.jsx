@@ -18,7 +18,7 @@ const PropertiesPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
 
@@ -132,9 +132,7 @@ const PropertiesPage = () => {
       } else {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
-    } else {
-      toast.error("Please login to contact the seller");
-      navigate("/login", { state: { from: loc.pathname } });
+      setLoginModalOpen(true);
     }
   };
 

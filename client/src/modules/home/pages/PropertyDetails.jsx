@@ -67,7 +67,7 @@ const PropertyDetails = () => {
   const [mainImage, setMainImage] = useState("");
   const [moreProperties, setMoreProperties] = useState([]);
   const [enquiryLoading, setEnquiryLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -130,7 +130,7 @@ const PropertyDetails = () => {
     const targetProp = clickedProp || property;
     if (!targetProp || !targetProp.seller) return;
     if (!user) {
-      navigate("/login", { state: { from: location.pathname } });
+      setLoginModalOpen(true);
     } else if (!user.phone) {
       setSelectedEnquiryProperty(targetProp);
       setShowPhoneModal(true);

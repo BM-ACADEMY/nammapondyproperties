@@ -39,7 +39,7 @@ const SkeletonCard = () => (
 const FavoritesPage = () => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user, token } = useAuth();
+  const { user, token, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -115,7 +115,7 @@ const FavoritesPage = () => {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
     } else {
-      navigate("/login", { state: { from: location.pathname } });
+      setLoginModalOpen(true);
     }
   };
 
@@ -177,12 +177,12 @@ const FavoritesPage = () => {
           <p className="text-[#38526e] text-sm mb-7 leading-relaxed">
             Save properties you love and access them anytime in one place.
           </p>
-          <Link
-            to="/login"
+          <button
+            onClick={() => setLoginModalOpen(true)}
             className="inline-flex items-center gap-2 bg-[#0e182b] hover:bg-[#1a2b4c] text-white text-sm font-medium py-2.5 px-6 rounded-full transition-colors"
           >
             Log in <ArrowRight className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </div>
     );

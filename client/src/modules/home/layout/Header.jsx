@@ -515,7 +515,7 @@ const Header = () => {
                             <button
                               onClick={() => {
                                 setIsLoginMenuOpen(false);
-                                navigate("/login");
+                                setLoginModalOpen(true);
                               }}
                               className="w-full flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
                             >
@@ -625,7 +625,7 @@ const Header = () => {
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      navigate("/login");
+                      setLoginModalOpen(true);
                     }}
                     className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase"
                   >

@@ -19,7 +19,7 @@ import "swiper/css/navigation";
 const FeaturedProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, setLoginModalOpen } = useAuth();
   const { businessTypes } = useNav();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -66,9 +66,7 @@ const FeaturedProperties = () => {
       } else {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
-    } else {
-      toast.error("Please login to contact the seller");
-      navigate("/login", { state: { from: location.pathname } });
+      setLoginModalOpen(true);
     }
   };
 

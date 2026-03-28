@@ -28,7 +28,7 @@ const BusinessUserList = () => {
   const [loading, setLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
 
-  const { user } = useAuth();
+  const { user, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -132,8 +132,7 @@ const BusinessUserList = () => {
       } else {
         submitEnquiry(targetUser, property, user.name, user.email, user.phone);
       }
-    } else {
-      navigate("/login", { state: { from: location.pathname } });
+      setLoginModalOpen(true);
     }
   };
 
