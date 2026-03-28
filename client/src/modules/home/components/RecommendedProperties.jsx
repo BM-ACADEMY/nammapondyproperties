@@ -18,7 +18,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const RecommendedProperties = () => {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { user } = useAuth();
+    const { user, setLoginModalOpen } = useAuth();
     const { city, locality, loading: locationLoading } = useAppLocation();
     const [showPhoneModal, setShowPhoneModal] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
@@ -73,8 +73,7 @@ const RecommendedProperties = () => {
             } else {
                 submitEnquiry(property, user.name, user.email, user.phone);
             }
-        } else {
-            navigate("/login", { state: { from: location.pathname } });
+            setLoginModalOpen(true);
         }
     };
 

@@ -1,6 +1,5 @@
 // models/User.js
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt"); // or const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
@@ -10,8 +9,6 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     name: { type: String, required: false },
-    email: { type: String, required: false }, // Optional and no longer unique for auth
-    password: { type: String, required: false },
     phone: { type: String, required: true, unique: true },
     status: { type: String, default: "active" },
     otp: { type: String },
@@ -28,27 +25,15 @@ const userSchema = new mongoose.Schema(
     customId: { type: String, unique: true, sparse: true },
     userId: { type: String, unique: true, sparse: true },
     referralCode: { type: String, unique: true, sparse: true },
-    googleId: { type: String, unique: true, sparse: true },
   },
   { timestamps: true },
 );
 
-// Hash password before saving (only if password is modified)
-// models/User.js
+// Pre-save middleware for generating IDs
 userSchema.pre("save", async function () {
-  // Only hash if password was modified / is new
-  if (this.isModified("password")) {
-    try {
-      const salt = await bcrypt.genSalt(10);
-      this.password = await bcrypt.hash(this.password, salt);
-    } catch (error) {
-      throw error;
-    }
-  }
-
   // Generate userId if not exists
   if (!this.userId) {
-    this.userId = "USR" + Math.floor(100000 + Math.random() * 900000); // Simple random ID
+    this.userId = "USR" + Math.floor(100000 + Math.random() * 900000); 
   }
 
   // Generate referralCode if not exists
@@ -59,9 +44,5 @@ userSchema.pre("save", async function () {
       .toUpperCase();
   }
 });
-// Add a method to compare passwords
-userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
 
 module.exports = mongoose.model("User", userSchema);

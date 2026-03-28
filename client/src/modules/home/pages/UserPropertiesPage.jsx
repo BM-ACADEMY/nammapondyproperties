@@ -23,7 +23,7 @@ const UserPropertiesPage = () => {
   const [properties, setProperties] = useState([]);
   const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { user: authUser } = useAuth();
+  const { user: authUser, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
 
@@ -79,8 +79,7 @@ const UserPropertiesPage = () => {
       } else {
         submitEnquiry(property, authUser.name, authUser.email, authUser.phone);
       }
-    } else {
-      navigate("/login", { state: { from: loc.pathname } });
+      setLoginModalOpen(true);
     }
   };
 

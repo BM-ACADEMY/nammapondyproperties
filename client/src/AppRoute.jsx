@@ -25,16 +25,6 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route element={<HomeLayout />}>
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Suspense fallback={<PageLoader />}>
-                <LoginPage />
-              </Suspense>
-            </PublicRoute>
-          }
-        />
         {/* Public pages accessible to everyone */}
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />

@@ -13,7 +13,7 @@ const PrivateRoute = ({ allowedRoles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" state={{ openLogin: true, from: window.location.pathname }} replace />;
   }
 
   // Handle both nested { user: { role: { role } } } and direct { role: { role } } or { role: { name } } structures

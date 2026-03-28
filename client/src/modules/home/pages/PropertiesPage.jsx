@@ -18,7 +18,7 @@ const PropertiesPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, setLoginModalOpen } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
 
@@ -101,15 +101,20 @@ const PropertiesPage = () => {
     }
   };
 
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (keyOrUpdates, value) => {
     const newParams = new URLSearchParams(searchParams);
-    if (Array.isArray(value)) {
-      if (value.length > 0) newParams.set(key, value.join(","));
-      else newParams.delete(key);
-    } else {
-      if (value) newParams.set(key, value);
-      else newParams.delete(key);
-    }
+    const updates = typeof keyOrUpdates === "object" ? keyOrUpdates : { [keyOrUpdates]: value };
+
+    Object.entries(updates).forEach(([key, val]) => {
+      if (Array.isArray(val)) {
+        if (val.length > 0) newParams.set(key, val.join(","));
+        else newParams.delete(key);
+      } else {
+        if (val !== undefined && val !== null && val !== "") newParams.set(key, val);
+        else newParams.delete(key);
+      }
+    });
+
     newParams.set("page", "1"); // Reset to page 1 on filter
     setSearchParams(newParams);
   };
@@ -132,9 +137,7 @@ const PropertiesPage = () => {
       } else {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
-    } else {
-      toast.error("Please login to contact the seller");
-      navigate("/login", { state: { from: loc.pathname } });
+      setLoginModalOpen(true);
     }
   };
 

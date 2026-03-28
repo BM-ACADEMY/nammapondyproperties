@@ -14,7 +14,7 @@ import "swiper/css/navigation";
 const PropertyTypeList = () => {
   const navigate = useNavigate();
   const { propertyTypes, isLoading: loading } = useNav();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, setLoginModalOpen } = useAuth();
   const [visitCount, setVisitCount] = useState(0);
 
   useEffect(() => {
@@ -187,7 +187,7 @@ const PropertyTypeList = () => {
               </div>
 
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => setLoginModalOpen(true)}
                 className="w-full bg-[#166aa8] hover:bg-[#0078d7] text-white font-semibold py-2.5 rounded-lg transition-colors shadow-sm"
               >
                 Login/Register to Save Activity
