@@ -229,7 +229,7 @@ const Header = () => {
                         to={`/properties?category=${encodeURIComponent(name)}`}
                         className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
                       >
-                        For {name.charAt(0).toUpperCase() + name.slice(1)}
+                        {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
                     );
                   })}
@@ -732,7 +732,7 @@ const Header = () => {
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                       >
-                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> For {name.charAt(0).toUpperCase() + name.slice(1)}
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
                     );
                   })}

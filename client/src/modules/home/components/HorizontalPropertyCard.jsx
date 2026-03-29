@@ -74,7 +74,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                         </p>
                     </div>
                     <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0 ml-2">
-                        {property.basicInfo?.category === "Rent" ? "FOR RENT" : "RESALE"}
+                        {property.basicInfo?.category === "Rent" ? "FOR RENT" : "SELL/BUY"}
                     </span>
                 </div>
 

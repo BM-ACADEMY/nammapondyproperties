@@ -8,14 +8,14 @@ import { PostPropertyRoute } from "../routes/PostPropertyRoute";
 
 const PostPropertyLanding = () => {
     const { isAuthenticated, setLoginModalOpen, user } = useAuth();
-    const { propertyCategories = ["Sell", "Rent"], propertyTypes = [], isLoading } = useNav();
+    const { propertyCategories = ["Sell/Buy", "Rent"], propertyTypes = [], isLoading } = useNav();
     const navigate = useNavigate();
     const nextSectionRef = useRef(null);
 
     // Derive usageTypes from propertyTypes
     const usageTypes = [...new Set(propertyTypes.map(t => t.usageType))];
 
-    const [selectedCategory, setSelectedCategory] = useState("Rent");
+    const [selectedCategory, setSelectedCategory] = useState("Sell/Buy");
     const [selectedType, setSelectedType] = useState("Residential");
     const [selectedSubtype, setSelectedSubtype] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -109,7 +109,7 @@ const PostPropertyLanding = () => {
                             className="space-y-6"
                         >
                             <h1 className="text-4xl lg:text-5xl font-bold text-[#0e182b] leading-tight">
-                                Sell or Rent Property <br />
+                                Sell/Buy or rent faster at the right price!
                                 <span className="text-[#c19b48]">online faster with NammaPondy</span>
                             </h1>
 

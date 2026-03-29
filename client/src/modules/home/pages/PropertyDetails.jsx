@@ -92,7 +92,7 @@ const PropertyDetails = () => {
 
         // Set dynamic meta title
         const title = propertyData.basicInfo?.title || "Property Details";
-        const category = propertyData.basicInfo?.category || "For Sale";
+        const category = propertyData.basicInfo?.category || "Sell/Buy";
         const locality = propertyData.location?.locality || "";
         const city = propertyData.location?.city || "Pondicherry";
         document.title = `${title} | ${category} in ${locality ? locality + ", " : ""}${city} | Namma Pondy Properties`;
@@ -294,7 +294,7 @@ const PropertyDetails = () => {
 
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 font-medium">
-                      {property.basicInfo?.propertyType || "Property"} for {property.basicInfo?.category === "Rent" ? "Rent" : "Sale"} in {property.location?.locality || property.location?.city}
+                      {property.basicInfo?.propertyType || "Property"} for {property.basicInfo?.category === "Rent" ? "Rent" : "Sell/Buy"} in {property.location?.locality || property.location?.city}
                     </span>
                   </div>
                 </div>

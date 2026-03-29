@@ -73,7 +73,7 @@ const PropertyForm = ({
     basicInfo: {
       title: data?.basicInfo?.title || data?.title || "",
       description: data?.basicInfo?.description || data?.description || "",
-      category: data?.basicInfo?.category || "Sell",
+      category: data?.basicInfo?.category || "Sell/Buy",
       usageType: data?.basicInfo?.usageType || "Residential",
       propertyType: data?.basicInfo?.propertyType || data?.property_type || "",
       approvalType: data?.basicInfo?.approvalType || data?.approval || "",
@@ -414,7 +414,7 @@ const PropertyForm = ({
     const fieldsToValidate = {
       1: ["basicInfo.title", "basicInfo.description", "businessType"],
       2: ["location.addressLine1", "location.locality", "location.pincode"],
-      3: categoryWatch === "Sell" 
+      3: categoryWatch === "Sell/Buy" 
         ? ["pricing.sell.minPrice", "pricing.sell.maxPrice", "specifications.area.minArea"] 
         : ["pricing.rent.minRent", "pricing.rent.maxRent", "specifications.area.minArea"],
       4: []
@@ -537,7 +537,7 @@ const PropertyForm = ({
               <div>
                 <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">I'm looking to</p>
                 <div className="flex flex-wrap gap-4">
-                  {["Sell", "Rent"].map((cat) => (
+                  {["Sell/Buy", "Rent"].map((cat) => (
                     <button
                       key={cat}
                       type="button"
@@ -749,7 +749,7 @@ const PropertyForm = ({
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Pricing Details</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {categoryWatch === "Sell" ? (
+                {categoryWatch === "Sell/Buy" ? (
                   <>
                     <div>
                       <label className="block text-sm font-bold mb-2">Price From (₹) <span className="text-red-500">*</span></label>

@@ -9,7 +9,9 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     name: { type: String, required: false },
-    phone: { type: String, required: true, unique: true },
+    phone: { type: String, unique: true, sparse: true }, // optional for Google users
+    email: { type: String, unique: true, sparse: true },
+    googleId: { type: String, unique: true, sparse: true },
     status: { type: String, default: "active" },
     otp: { type: String },
     otpExpires: { type: Date },
@@ -33,7 +35,7 @@ const userSchema = new mongoose.Schema(
 userSchema.pre("save", async function () {
   // Generate userId if not exists
   if (!this.userId) {
-    this.userId = "USR" + Math.floor(100000 + Math.random() * 900000); 
+    this.userId = "USR" + Math.floor(100000 + Math.random() * 900000);
   }
 
   // Generate referralCode if not exists

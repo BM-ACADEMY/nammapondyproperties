@@ -9,31 +9,34 @@ import { Toaster } from "react-hot-toast";
 
 import ScrollToTop from "./components/Common/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 function App() {
   return (
     <HelmetProvider>
-      <div>
-        <Toaster
-          position="top-center"
-          reverseOrder={false}
-          containerStyle={{
-            zIndex: 999999,
-          }}
-        />
-        <AuthProvider>
-          <LocationProvider>
-            <SocketProvider>
-              <NavProvider>
-                <BrowserRouter>
-                  <ScrollToTop />
-                  <AppRoutes />
-                </BrowserRouter>
-              </NavProvider>
-            </SocketProvider>
-          </LocationProvider>
-        </AuthProvider>
-      </div>
+      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+        <div>
+          <Toaster
+            position="top-center"
+            reverseOrder={false}
+            containerStyle={{
+              zIndex: 999999,
+            }}
+          />
+          <AuthProvider>
+            <LocationProvider>
+              <SocketProvider>
+                <NavProvider>
+                  <BrowserRouter>
+                    <ScrollToTop />
+                    <AppRoutes />
+                  </BrowserRouter>
+                </NavProvider>
+              </SocketProvider>
+            </LocationProvider>
+          </AuthProvider>
+        </div>
+      </GoogleOAuthProvider>
     </HelmetProvider>
   );
 }

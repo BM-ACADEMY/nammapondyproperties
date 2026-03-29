@@ -20,7 +20,7 @@ const propertySchema = new mongoose.Schema(
 
       category: {
         type: String,
-        enum: ["Rent", "Sell"],
+        enum: ["Rent", "Sell/Buy"],
         required: true
       },
 
