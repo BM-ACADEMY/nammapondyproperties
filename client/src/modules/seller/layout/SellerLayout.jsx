@@ -154,7 +154,7 @@ const SellerLayout = () => {
                 <Avatar
                   size="large"
                   src={getImageUrl(user?.profile_image)}
-                  className="bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-sm"
+                  className="bg-linear-to-tr from-blue-600 to-indigo-600 shadow-sm"
                 >
                   {!user?.profile_image &&
                     (user?.name?.charAt(0).toUpperCase() || "S")}
@@ -171,6 +171,7 @@ const SellerLayout = () => {
           }}
         >
           <div
+            className="seller-content-wrapper"
             style={{
               padding: isMobile ? 16 : 24,
               background: colorBgContainer,

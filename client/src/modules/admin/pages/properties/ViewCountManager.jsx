@@ -11,8 +11,9 @@ import {
     Tag,
     Avatar,
     Breadcrumb,
+    Dropdown,
 } from "antd";
-import { Search, Eye, Edit2, TrendingUp, Building } from "lucide-react";
+import { Search, Eye, Edit2, TrendingUp, Building, MoreHorizontal } from "lucide-react";
 import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
 import { formatNumber } from "@/utils/formatNumber";
@@ -74,7 +75,7 @@ const ViewCountManager = () => {
 
     const columns = [
         {
-            title: "Property",
+            title: "Property Name",
             key: "property",
             render: (_, record) => (
                 <Space>
@@ -99,7 +100,7 @@ const ViewCountManager = () => {
             },
         },
         {
-            title: "Seller",
+            title: "User",
             dataIndex: ["seller", "name"],
             key: "seller",
             render: (name) => name || "Admin",
@@ -120,14 +121,26 @@ const ViewCountManager = () => {
             title: "Actions",
             key: "actions",
             render: (_, record) => (
-                <Button
-                    type="primary"
-                    icon={<Edit2 size={14} />}
-                    onClick={() => handleEditClick(record)}
-                    className="flex items-center gap-2"
+                <Dropdown
+                    menu={{
+                        items: [
+                            {
+                                key: "manage",
+                                label: "Manage Views",
+                                icon: <TrendingUp size={14} />,
+                                onClick: () => handleEditClick(record),
+                            },
+                        ],
+                    }}
+                    trigger={["click"]}
+                    placement="bottomRight"
                 >
-                    Manage Views
-                </Button>
+                    <Button
+                        type="text"
+                        icon={<MoreHorizontal size={20} />}
+                        className="flex items-center justify-center hover:bg-gray-100 rounded-full"
+                    />
+                </Dropdown>
             ),
         },
     ];
@@ -161,7 +174,12 @@ const ViewCountManager = () => {
                     dataSource={properties}
                     rowKey="_id"
                     loading={loading}
-                    pagination={{ pageSize: 12 }}
+                    pagination={{ 
+                        pageSize: 10,
+                        showSizeChanger: false,
+                        className: "px-6 py-4 pagination-minimal",
+                        position: ['bottomRight']
+                    }}
                 />
             </div>
 
@@ -172,6 +190,7 @@ const ViewCountManager = () => {
                 onCancel={() => setEditModalVisible(false)}
                 confirmLoading={updating}
                 okText="Update Views"
+                centered
             >
                 {selectedProperty && (
                     <div className="py-4">

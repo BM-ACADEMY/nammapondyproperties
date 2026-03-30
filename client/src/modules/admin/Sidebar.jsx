@@ -9,6 +9,8 @@ import {
   MessageSquare,
   LibraryBig,
   Megaphone,
+  Briefcase,
+  BarChart3,
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -34,7 +36,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => handleMenuClick("/admin/dashboard"),
     },
     {
-      key: "properties-sub", // Unique key for submenu
+      key: "properties-sub",
       icon: <Building size={20} />,
       label: "Properties",
       children: [
@@ -44,7 +46,19 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           onClick: () => handleMenuClick("/admin/properties"),
         },
         {
-          key: "/admin/seller-listings", // New route for Seller Listings
+          key: "/admin/properties/add",
+          label: "Add Property",
+          onClick: () => handleMenuClick("/admin/properties/add"),
+        },
+      ],
+    },
+    {
+      key: "seller-sub",
+      icon: <Briefcase size={20} />,
+      label: "Seller",
+      children: [
+        {
+          key: "/admin/seller-listings",
           label: "Seller Listings",
           onClick: () => handleMenuClick("/admin/seller-listings"),
         },
@@ -53,15 +67,34 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Seller Requests",
           onClick: () => handleMenuClick("/admin/seller-requests"),
         },
-        {
-          key: "/admin/properties/add",
-          label: "Add Property",
-          onClick: () => handleMenuClick("/admin/properties/add"),
-        },
+      ],
+    },
+    {
+      key: "analytics-sub",
+      icon: <BarChart3 size={20} />,
+      label: "Analytics / Manager",
+      children: [
         {
           key: "/admin/view-count-manager",
           label: "View Count Manager",
           onClick: () => handleMenuClick("/admin/view-count-manager"),
+        },
+      ],
+    },
+    {
+      key: "marketing-sub",
+      icon: <Megaphone size={20} />,
+      label: "Marketing",
+      children: [
+        {
+          key: "/admin/marketing-plans",
+          label: "Marketing Plans",
+          onClick: () => handleMenuClick("/admin/marketing-plans"),
+        },
+        {
+          key: "/admin/marketing-requests",
+          label: "Marketing Leads",
+          onClick: () => handleMenuClick("/admin/marketing-requests"),
         },
       ],
     },
@@ -87,18 +120,6 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <LibraryBig size={20} />,
       label: "Enquiries Properties",
       onClick: () => handleMenuClick("/admin/enquiries"),
-    },
-    {
-      key: "/admin/marketing-plans",
-      icon: <Megaphone size={20} />,
-      label: "Marketing Plans",
-      onClick: () => handleMenuClick("/admin/marketing-plans"),
-    },
-    {
-      key: "/admin/marketing-requests",
-      icon: <MessageSquare size={20} />,
-      label: "Marketing Leads",
-      onClick: () => handleMenuClick("/admin/marketing-requests"),
     },
     {
       key: "forms-sub",
@@ -191,7 +212,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         theme="dark"
         mode="inline"
         selectedKeys={[pathname]}
-        defaultOpenKeys={["properties-sub", "users-sub"]} // Optional: Keep submenus open by default or manage state
+        defaultOpenKeys={["properties-sub", "users-sub", "seller-sub"]} // Optional: Keep submenus open by default or manage state
         items={menuItems}
         className="px-2 border-none"
         style={{ background: "transparent" }}

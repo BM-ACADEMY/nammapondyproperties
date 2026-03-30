@@ -219,10 +219,9 @@ const AdminLayout = () => {
         <Content
           id="admin-content"
           style={{
-            margin: "24px 16px",
+            // margin: "24px 16px",
             padding: 24,
             minHeight: 280,
-            background: "#f5f7fa",
             borderRadius: borderRadiusLG,
             overflowY: "auto",
             height: "calc(100vh - 112px)",

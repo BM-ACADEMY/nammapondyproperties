@@ -14,6 +14,14 @@ import {
   Image,
   Modal,
   Carousel,
+  Dropdown,
+  Menu,
+  Switch,
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Segmented,
 } from "antd";
 import {
   Search,
@@ -32,6 +40,18 @@ import {
   Zap,
   Layout,
   Compass,
+  MoreHorizontal,
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  FileText,
+  Phone,
+  Droplet,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  Bath,
+  ShieldCheck,
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
@@ -51,17 +71,39 @@ const AdminProperties = ({ mode }) => {
   const [soldPrice, setSoldPrice] = useState("");
   const [propertyToSell, setPropertyToSell] = useState(null);
   const [filterType, setFilterType] = useState("all"); // "all" or "my"
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [mainImage, setMainImage] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const handleViewDetail = (property) => {
     setSelectedProperty(property);
+    setMainImage(property.media?.images?.[0] || "");
     setViewModalVisible(true);
+    setIsDescriptionExpanded(false);
   };
+
+  const getStats = () => {
+    const total = properties.length;
+    const verified = properties.filter((p) => p.isVerified).length;
+    const pending = total - verified;
+    const sold = properties.filter((p) => p.isSold).length;
+    return { total, verified, pending, sold };
+  };
+
+  const stats = getStats();
 
   const handleCloseModal = () => {
     setViewModalVisible(false);
     setSelectedProperty(null);
+    setMainImage("");
+  };
+
+  const maskPhoneNumber = (phone) => {
+    if (!phone) return "**********";
+    const phoneStr = phone.toString();
+    if (phoneStr.length < 10) return phoneStr;
+    return phoneStr.substring(0, 5) + "*****";
   };
 
   const fetchProperties = React.useCallback(async () => {
@@ -170,8 +212,11 @@ const AdminProperties = ({ mode }) => {
     {
       title: "Title",
       key: "title",
+      width: 200,
       render: (_, record) => (
-        <span className="font-medium text-gray-800">{record.basicInfo?.title || "Untitled"}</span>
+        <span className="font-medium text-gray-800 line-clamp-1" title={record.basicInfo?.title}>
+          {record.basicInfo?.title || "Untitled"}
+        </span>
       ),
       filteredValue: [searchText],
       onFilter: (value, record) => {
@@ -234,15 +279,15 @@ const AdminProperties = ({ mode }) => {
       render: (_, record) => {
         const isMe = user && record.seller?._id === user._id;
         return (
-          <Space>
-            <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} />
-            <span className={isMe ? "font-bold text-blue-600" : "text-gray-600"}>
+          <div className="flex items-center gap-2">
+            <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} className="shrink-0" />
+            <span className={isMe ? "font-bold text-blue-600 truncate max-w-30" : "text-gray-600 truncate max-w-30"}>
               {isMe ? "Me" : (record.seller?.name || "Admin")}
             </span>
-          </Space>
+          </div>
         );
       },
-      hidden: mode === "seller", // Only show on admin properties page
+      // hidden: mode === "seller", // Allow showing on seller properties page as well
     },
     {
       title: "Status",
@@ -269,13 +314,12 @@ const AdminProperties = ({ mode }) => {
       dataIndex: "isVerified",
       key: "isVerified",
       render: (isVerified, record) => (
-        <Tag
-          color={isVerified ? "green" : "orange"}
-          className="cursor-pointer"
-          onClick={() => handleVerify(record._id, isVerified)}
-        >
-          {isVerified ? "Verified" : "Pending"}
-        </Tag>
+        <Switch
+          checked={isVerified}
+          onChange={() => handleVerify(record._id, isVerified)}
+          size="small"
+          className={isVerified ? "bg-green-500" : "bg-gray-300"}
+        />
       ),
       filters: [
         { text: "Verified", value: true },
@@ -286,6 +330,7 @@ const AdminProperties = ({ mode }) => {
     {
       title: "Expires In",
       key: "expiry",
+      hidden: mode === "admin", // Hide for admin properties as they don't expire
       render: (_, record) => {
         const sellerRole =
           record.seller_id?.role_id?.role_name?.toUpperCase() ||
@@ -314,92 +359,178 @@ const AdminProperties = ({ mode }) => {
     {
       title: "Action",
       key: "action",
-      render: (_, record) => (
-        <Space size="small" wrap>
-          <Button
-            size="small"
-            onClick={() => handleMarkAsSoldClick(record)}
-            className={`${record.isSold ? "bg-green-100 text-green-700 border-green-200 hover:bg-green-200 hover:text-green-800" : "bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700"}`}
-          >
-            {record.isSold ? "Mark Available" : "Sold Out"}
-          </Button>
-          <Button
-            size="small"
-            icon={<Eye size={14} />}
-            onClick={() => handleViewDetail(record)}
-            type="default"
-          >
-            View
-          </Button>
-          <Button
-            size="small"
-            onClick={() => navigate(`/admin/properties/add?edit=${record._id}`)}
-            disabled={mode === "seller"} // Disable editing for seller properties
-          >
-            Edit
-          </Button>
-          <Popconfirm
-            title="Delete the property"
-            description="Are you sure to delete this property?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button size="small" danger>
-              Delete
-            </Button>
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        const items = [
+          {
+            key: "view",
+            label: "View Detail",
+            icon: <Eye size={14} />,
+            onClick: () => handleViewDetail(record),
+          },
+          {
+            key: "edit",
+            label: "Edit Property",
+            icon: <FileText size={14} />,
+            disabled: mode === "seller",
+            onClick: () => navigate(`/admin/properties/add?edit=${record._id}`),
+          },
+          {
+            key: "sold",
+            label: record.isSold ? "Mark Available" : "Mark as Sold",
+            icon: <Zap size={14} />,
+            onClick: () => handleMarkAsSoldClick(record),
+            danger: !record.isSold,
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "delete",
+            label: (
+              <Popconfirm
+                title="Delete the property"
+                description="Are you sure to delete this property?"
+                onConfirm={() => handleDelete(record._id)}
+                okText="Yes"
+                cancelText="No"
+              >
+                <span>Delete Property</span>
+              </Popconfirm>
+            ),
+            icon: <X size={14} />,
+            danger: true,
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <Button
+              type="text"
+              icon={<MoreHorizontal size={20} />}
+              className="flex items-center justify-center hover:bg-gray-100 rounded-full"
+            />
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          {mode === "seller" ? "Seller Listings" : "Our Properties"}
-        </h1>
-        {mode === "admin" && (
-          <Tabs
-            activeKey={filterType}
-            onChange={setFilterType}
-            className="admin-property-filter-tabs"
-            items={[
-              { key: "all", label: "All Admin Properties" },
-              { key: "my", label: "My Additions" },
-            ]}
-          />
-        )}
-        <div className="w-full sm:w-auto flex justify-start">
+    <div className="p-0 bg-transparent min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-2">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            {mode === "seller" ? "Seller Listings" : "Properties Management"}
+          </h1>
+          <p className="text-gray-500 mt-1">Manage and monitor all property listings in one place.</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          {mode === "admin" && (
+            <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-100">
+              <Segmented
+                options={[
+                  { label: "All Properties", value: "all" },
+                  { label: "My Additions", value: "my" },
+                ]}
+                value={filterType}
+                onChange={setFilterType}
+                className="custom-segmented"
+              />
+            </div>
+          )}
           <Button
             type="primary"
+            size="large"
             onClick={() => navigate("/admin/properties/add")}
-            className="bg-blue-600 w-auto"
+            className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 h-auto py-2 px-6 shadow-md rounded-xl font-semibold transition-all hover:scale-[1.02]"
           >
-            + Add New Property
+            <Zap size={18} fill="currentColor" /> Add New Property
           </Button>
         </div>
       </div>
 
-      <div className="mb-4">
-        <Input
-          prefix={<Search size={18} className="text-gray-400" />}
-          placeholder="Search properties by title or location..."
-          onChange={(e) => setSearchText(e.target.value)}
-          className="max-w-md"
-          size="large"
-        />
+      {/* Stats Cards - Updated for perfect alignment */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {[
+          { 
+            label: "Total Listings", 
+            value: stats.total, 
+            icon: <Home size={22} />, 
+            bgColor: 'bg-blue-50', 
+            textColor: 'text-blue-600',
+            valueColor: '#1f2937'
+          },
+          { 
+            label: "Verified", 
+            value: stats.verified, 
+            icon: <CheckCircle size={22} />, 
+            bgColor: 'bg-green-50', 
+            textColor: 'text-green-600',
+            valueColor: '#10b981'
+          },
+          { 
+            label: "Pending", 
+            value: stats.pending, 
+            icon: <Clock size={22} />, 
+            bgColor: 'bg-amber-50', 
+            textColor: 'text-amber-600',
+            valueColor: '#f59e0b'
+          },
+          { 
+            label: "Sold Out", 
+            value: stats.sold, 
+            icon: <AlertCircle size={22} />, 
+            bgColor: 'bg-red-50', 
+            textColor: 'text-red-600',
+            valueColor: '#ef4444'
+          },
+        ].map((stat, index) => (
+          <Card key={index} className="rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="flex flex-col gap-2">
+              <span className="text-gray-500 font-semibold text-sm tracking-tight">{stat.label}</span>
+              <div className="flex items-center gap-4">
+                <div className={`p-2.5 ${stat.bgColor} ${stat.textColor} rounded-xl flex items-center justify-center shadow-inner`}>
+                  {stat.icon}
+                </div>
+                <span 
+                  className="text-3xl font-black tracking-tight leading-none"
+                  style={{ color: stat.valueColor }}
+                >
+                  {stat.value}
+                </span>
+              </div>
+            </div>
+          </Card>
+        ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+          <Input
+            prefix={<Search size={18} className="text-gray-400" />}
+            placeholder="Search by title, location or city..."
+            onChange={(e) => setSearchText(e.target.value)}
+            className="max-w-md bg-gray-50 border-gray-200 rounded-xl"
+            size="large"
+            allowClear
+          />
+          <div className="text-gray-400 text-sm font-medium">
+            Showing {filterType === "my" ? properties.filter(p => p.seller?._id === user?._id).length : properties.length} properties
+          </div>
+        </div>
         <Table
           columns={columns.filter(col => !col.hidden)}
           dataSource={filterType === "my" ? properties.filter(p => p.seller?._id === user?._id) : properties}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ 
+            pageSize: 10,
+            showSizeChanger: false, // Cleaner pagination
+            className: "px-6 py-4 pagination-minimal",
+            position: ['bottomRight']
+          }}
           scroll={{ x: true }}
+          className="admin-properties-table"
         />
       </div>
 
@@ -413,6 +544,7 @@ const AdminProperties = ({ mode }) => {
         onCancel={() => setSoldModalVisible(false)}
         okText="Update Status"
         cancelText="Cancel"
+        centered
       >
         <p className="mb-4">
           Are you sure you want to mark <b>{propertyToSell?.title}</b> as{" "}
@@ -435,7 +567,7 @@ const AdminProperties = ({ mode }) => {
       </Modal>
 
       {/* Property Detail Modal - Updated Design */}
-      <Modal
+         <Modal
         title={null}
         open={viewModalVisible}
         onCancel={handleCloseModal}
@@ -1020,6 +1152,64 @@ const AdminProperties = ({ mode }) => {
           </div>
         )}
       </Modal>
+
+      {/* Custom Styles */}
+      <style jsx>{`
+        .custom-segmented {
+          background: #f3f4f6 !important;
+          padding: 2px !important;
+          border-radius: 10px !important;
+        }
+        .custom-segmented .ant-segmented-item {
+          border-radius: 8px !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .custom-segmented .ant-segmented-item-selected {
+          background: #fff !important;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+          color: #2563eb !important;
+          font-weight: 600 !important;
+        }
+        .admin-properties-table .ant-table-thead > tr > th {
+          background: #f9fafb !important;
+          color: #6b7280 !important;
+          font-weight: 600 !important;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.05em;
+          border-bottom: 2px solid #f3f4f6 !important;
+        }
+        .admin-properties-table .ant-table-tbody > tr > td {
+          padding: 16px 20px !important;
+          border-bottom: 1px solid #f3f4f6 !important;
+        }
+        .admin-properties-table .ant-table-tbody > tr:hover > td {
+          background-color: #f9fafb !important;
+        }
+        .pagination-minimal .ant-pagination-item {
+          border-radius: 8px !important;
+          border-color: #e5e7eb !important;
+        }
+        .pagination-minimal .ant-pagination-item-active {
+          background: #2563eb !important;
+          border-color: #2563eb !important;
+        }
+        .pagination-minimal .ant-pagination-item-active a {
+          color: #fff !important;
+        }
+        .property-detail-modal-premium .ant-modal-content {
+          border-radius: 32px !important;
+          overflow: hidden;
+          box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };

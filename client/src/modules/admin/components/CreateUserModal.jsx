@@ -23,6 +23,7 @@ const CreateUserModal = ({
           email: editingUser.email,
           phone: editingUser.phone,
           badgeVerified: editingUser.badgeVerified,
+          status: editingUser.status || "active",
           // Password is usually not pre-filled for security
         });
       } else {
@@ -40,6 +41,7 @@ const CreateUserModal = ({
           name: values.name,
           phone: values.phone,
           badgeVerified: values.badgeVerified,
+          status: values.status,
           // Only send password if it's provided (optional for edit)
           ...(values.password ? { password: values.password } : {}),
         });
@@ -131,6 +133,17 @@ const CreateUserModal = ({
             prefix={<Lock size={16} />}
             placeholder={isEdit ? "Enter to change password" : "Enter password"}
           />
+        </Form.Item>
+
+        <Form.Item
+          name="status"
+          label="Account Status"
+          initialValue="active"
+        >
+          <Select>
+            <Select.Option value="active">Active</Select.Option>
+            <Select.Option value="inactive">Inactive</Select.Option>
+          </Select>
         </Form.Item>
 
         <Form.Item

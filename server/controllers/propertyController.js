@@ -54,22 +54,30 @@ exports.createProperty = async (req, res) => {
       }
     }
 
-    // Handle Images
+    // Handle Files (images and floorPlan)
     let images = [];
-    if (req.files && req.files.length > 0) {
-      images = req.files.map((file) => ({
-        image_url: `/uploads/properties/${file.filename}`,
-      }));
+    let floorPlanUrl = "";
+
+    if (req.files) {
+      if (req.files.images) {
+        images = req.files.images.map((file) => ({
+          image_url: `/uploads/properties/${file.filename}`,
+        }));
+      }
+      if (req.files.floorPlan && req.files.floorPlan.length > 0) {
+        floorPlanUrl = `/uploads/properties/${req.files.floorPlan[0].filename}`;
+      }
     }
 
     // Arrays might come as strings or arrays depending on frontend
     const amenities = typeof req.body.amenities === 'string' ? JSON.parse(req.body.amenities) : (req.body.amenities || []);
 
     const removeEmptyStrings = (obj) => {
+      if (!obj || typeof obj !== 'object') return obj;
       Object.keys(obj).forEach(key => {
         if (obj[key] === "") {
           delete obj[key];
-        } else if (typeof obj[key] === "object" && obj[key] !== null) {
+        } else if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
           removeEmptyStrings(obj[key]);
         }
       });
@@ -81,6 +89,7 @@ exports.createProperty = async (req, res) => {
     const pricing = removeEmptyStrings(parseJSON(req.body.pricing) || {});
     const specifications = removeEmptyStrings(parseJSON(req.body.specifications) || {});
     const legal = removeEmptyStrings(parseJSON(req.body.legal) || {});
+    const mediaMetadata = parseJSON(req.body.media) || {};
 
     const propertyData = {
       ...req.body,
@@ -89,11 +98,15 @@ exports.createProperty = async (req, res) => {
       specifications,
       legal,
       amenities,
-      location, // Use parsed location
+      location,
       seller: req.user && req.user._id ? req.user._id : req.body.seller,
+      video: mediaMetadata.video || req.body.video || "",
+      floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || "",
       media: {
         images: images.map(img => img.image_url),
-        featuredImage: images.length > 0 ? images[0].image_url : ""
+        featuredImage: images.length > 0 ? images[0].image_url : "",
+        video: mediaMetadata.video || req.body.video || "",
+        floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || ""
       },
       status: "Active",
       isVerified: true,
@@ -706,15 +719,22 @@ exports.updateProperty = async (req, res) => {
     const currentImages = property.media?.images || [];
     const remainingImages = currentImages.filter(img => !imagesToDelete.includes(img));
 
-    // Handle New Images
-    if (req.files && req.files.length > 0) {
-      const newImages = req.files.map((file) => `/uploads/properties/${file.filename}`);
-      remainingImages.push(...newImages);
+    let floorPlanUrl = property.media?.floorPlan || "";
+
+    // Handle New Files
+    if (req.files) {
+      if (req.files.images) {
+        const newImages = req.files.images.map((file) => `/uploads/properties/${file.filename}`);
+        remainingImages.push(...newImages);
+      }
+      if (req.files.floorPlan && req.files.floorPlan.length > 0) {
+        floorPlanUrl = `/uploads/properties/${req.files.floorPlan[0].filename}`;
+      }
     }
 
     // Parse nested structures
     const removeEmptyStrings = (obj) => {
-      if (!obj) return obj;
+      if (!obj || typeof obj !== 'object') return obj;
       Object.keys(obj).forEach(key => {
         if (obj[key] === "") {
           delete obj[key];
@@ -730,10 +750,12 @@ exports.updateProperty = async (req, res) => {
     const parsedSpecs = removeEmptyStrings(parseJSON(req.body.specifications));
     const parsedLegal = removeEmptyStrings(parseJSON(req.body.legal));
     const parsedAmenities = typeof req.body.amenities === 'string' ? parseJSON(req.body.amenities) : req.body.amenities;
+    const mediaMetadata = parseJSON(req.body.media) || {};
 
     const updates = { ...req.body };
     delete updates.images;
     delete updates.images_to_delete;
+    delete updates.media; // We will construct this manually
 
     // Apply nested parsing
     if (updates.location) updates.location = removeEmptyStrings(parseJSON(updates.location));
@@ -747,8 +769,14 @@ exports.updateProperty = async (req, res) => {
     updates.media = {
       ...(property.media || {}),
       images: remainingImages,
-      featuredImage: remainingImages.length > 0 ? remainingImages[0] : ""
+      featuredImage: remainingImages.length > 0 ? remainingImages[0] : (property.media?.featuredImage || ""),
+      video: mediaMetadata.video || property.media?.video || "",
+      floorPlan: floorPlanUrl
     };
+
+    // Set top-level fields
+    updates.video = updates.media.video;
+    updates.floorPlan = updates.media.floorPlan;
 
     Object.assign(property, updates);
 

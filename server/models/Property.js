@@ -37,6 +37,7 @@ const propertySchema = new mongoose.Schema(
 
       approvalType: String
     },
+    
 
     // =====================================================
     // 2.5️⃣ BUSINESS
@@ -173,6 +174,8 @@ const propertySchema = new mongoose.Schema(
     // 6️⃣ AMENITIES
     // =====================================================
     amenities: [String],
+    video: { type: String, default: "" },
+    floorPlan: { type: String, default: "" },
 
     // =====================================================
     // 7️⃣ MEDIA

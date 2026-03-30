@@ -9,8 +9,10 @@ import {
   message,
   Modal,
   Switch,
+  Dropdown,
+  Menu,
 } from "antd";
-import { Plus, Trash2, Edit, AlertCircle, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Trash2, Edit, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical } from "lucide-react";
 import api from "@/services/api";
 import CreateUserModal from "../components/CreateUserModal";
 
@@ -76,27 +78,32 @@ const SellerList = () => {
             title: "Name",
             dataIndex: "name",
             key: "name",
-            render: (text) => <span className="font-medium">{text}</span>,
+            render: (text, record) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase">
+                        {text ? text.charAt(0) : "S"}
+                    </div>
+                    <span className="font-medium text-gray-900">{text || "Unnamed Seller"}</span>
+                </div>
+            ),
         },
         {
-            title: "Email",
-            dataIndex: "email",
-            key: "email",
-            responsive: ["md"], // Hide on small screens, show on tablet and up
-        },
-        {
-            title: "Phone",
-            dataIndex: "phone",
-            key: "phone",
-            responsive: ["sm"], // Hide on mobile, show on small screens and up
+            title: "Contact Info",
+            key: "contact",
+            render: (_, record) => (
+                <div className="flex flex-col">
+                    <span className="text-sm font-medium">{record.phone || "No Phone"}</span>
+                    <span className="text-xs text-gray-500">{record.email}</span>
+                </div>
+            ),
         },
         {
             title: "Status",
-            dataIndex: "isVerified",
+            dataIndex: "status",
             key: "status",
-            render: (verified) => (
-                <Tag color={verified ? "green" : "orange"}>
-                    {verified ? "Verified" : "Pending"}
+            render: (status) => (
+                <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
+                    {status ? status.toUpperCase() : "ACTIVE"}
                 </Tag>
             ),
         },
@@ -110,61 +117,144 @@ const SellerList = () => {
                 if (status === "pending") { color = "orange"; icon = <Clock size={12} className="mr-1" />; }
                 else if (status === "approved") { color = "green"; icon = <CheckCircle size={12} className="mr-1" />; }
                 else if (status === "rejected") { color = "error"; icon = <XCircle size={12} className="mr-1" />; }
+                
+                if (!status || status === "none") return <span className="text-gray-400 text-xs">NONE</span>;
+                
                 return (
-                    <Tag color={color} className="flex items-center w-fit">
+                    <Tag color={color} className="flex items-center w-fit rounded-full px-3">
                         {icon}
-                        {status ? status.toUpperCase() : "NONE"}
+                        {status.toUpperCase()}
                     </Tag>
                 );
             },
         },
         {
-            title: "Verified Badge",
+            title: "Verified",
             dataIndex: "badgeVerified",
             key: "badgeVerified",
-            render: (verified, record) => (
-                <Switch
-                    checked={verified}
-                    onChange={async (checked) => {
-                        try {
-                            await api.put(`/users/update-user-by-id/${record._id}`, {
-                                badgeVerified: checked,
-                                badgeRequestStatus: checked ? "approved" : "none",
-                            });
-                            message.success(`Badge ${checked ? "enabled" : "disabled"}`);
-                            fetchSellers();
-                        } catch (error) {
-                            message.error("Failed to update badge status");
-                        }
-                    }}
-                />
+            align: "center",
+            render: (verified) => (
+                verified ? (
+                    <Tag color="blue" className="rounded-full px-3 flex items-center w-fit mx-auto">
+                        <CheckCircle size={12} className="mr-1" /> VERIFIED
+                    </Tag>
+                ) : (
+                    <Tag className="rounded-full px-3 w-fit mx-auto">NOT VERIFIED</Tag>
+                )
             ),
         },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="text"
-            icon={<Edit size={16} className="text-blue-500" />}
-            onClick={() => handleEdit(record)}
-          />
-          <Button
-            type="text"
-            danger
-            icon={<Trash2 size={16} />}
-            onClick={() => handleDelete(record._id)}
-          />
-        </Space>
-      ),
-    },
-  ];
+        {
+            title: "Action",
+            key: "action",
+            align: "right",
+            render: (_, record) => {
+                const items = [
+                    {
+                        key: "edit",
+                        label: (
+                            <div className="flex items-center gap-2" onClick={() => handleEdit(record)}>
+                                <Edit size={14} />
+                                <span>Edit Details</span>
+                            </div>
+                        ),
+                    },
+                    {
+                        key: "toggleStatus",
+                        label: (
+                            <div
+                                className="flex items-center gap-2"
+                                onClick={async () => {
+                                    try {
+                                        await api.put(`/users/update-user-by-id/${record._id}`, {
+                                            status: record.status === "active" ? "inactive" : "active",
+                                        });
+                                        message.success(`Seller ${record.status === "active" ? "deactivated" : "activated"} successfully`);
+                                        fetchSellers();
+                                    } catch (error) {
+                                        message.error("Failed to update status");
+                                    }
+                                }}
+                            >
+                                <AlertCircle size={14} />
+                                <span>{record.status === "active" ? "Deactivate Seller" : "Activate Seller"}</span>
+                            </div>
+                        ),
+                    },
+                    {
+                        key: "verifyBadge",
+                        label: (
+                            <div
+                                className="flex items-center gap-2"
+                                onClick={async () => {
+                                    try {
+                                        await api.put(`/users/update-user-by-id/${record._id}`, {
+                                            badgeVerified: !record.badgeVerified,
+                                            badgeRequestStatus: !record.badgeVerified ? "approved" : "none",
+                                        });
+                                        message.success(`Verified badge ${record.badgeVerified ? "removed" : "applied"} successfully`);
+                                        fetchSellers();
+                                    } catch (error) {
+                                        message.error("Failed to update badge");
+                                    }
+                                }}
+                            >
+                                <CheckCircle size={14} />
+                                <span>{record.badgeVerified ? "Remove Badge" : "Apply Verified Badge"}</span>
+                            </div>
+                        ),
+                    },
+                    record.badgeRequestStatus === "pending" && {
+                        key: "rejectBadge",
+                        danger: true,
+                        label: (
+                            <div
+                                className="flex items-center gap-2"
+                                onClick={async () => {
+                                    try {
+                                        await api.put(`/users/update-user-by-id/${record._id}`, {
+                                            badgeRequestStatus: "rejected",
+                                            badgeVerified: false
+                                        });
+                                        message.success("Badge request rejected");
+                                        fetchSellers();
+                                    } catch (error) {
+                                        message.error("Failed to reject badge");
+                                    }
+                                }}
+                            >
+                                <XCircle size={14} />
+                                <span>Reject Badge Request</span>
+                            </div>
+                        ),
+                    },
+                    {
+                        type: "divider",
+                    },
+                    {
+                        key: "delete",
+                        danger: true,
+                        label: (
+                            <div className="flex items-center gap-2" onClick={() => handleDelete(record._id)}>
+                                <Trash2 size={14} />
+                                <span>Delete Seller</span>
+                            </div>
+                        ),
+                    },
+                ].filter(Boolean);
+
+                return (
+                    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+                        <Button type="text" icon={<MoreVertical size={20} />} />
+                    </Dropdown>
+                );
+            },
+        },
+    ];
 
     return (
         <div className="p-4 sm:p-6">
             <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-6">
-                <Title level={3} className="!mb-0 w-full sm:w-auto text-left">Seller Management</Title>
+                <Title level={3} className="mb-0! w-full sm:w-auto text-left">Seller Management</Title>
                 <Button
                     type="primary"
                     icon={<Plus size={18} />}

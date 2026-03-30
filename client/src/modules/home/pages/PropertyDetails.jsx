@@ -192,6 +192,17 @@ const PropertyDetails = () => {
     return phoneStr.substring(0, 5) + "*****";
   };
 
+  const getVideoEmbedUrl = (url) => {
+    if (!url) return null;
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeMatch = url.match(youtubeRegex);
+    if (youtubeMatch) return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+    const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)([0-9]+)/;
+    const vimeoMatch = url.match(vimeoRegex);
+    if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    return null;
+  };
+
   return (
     <div className="bg-white min-h-screen py-8 font-sans text-gray-900">
       <div className="container mx-auto px-4 pt-19 max-w-7xl">
@@ -978,7 +989,7 @@ const PropertyDetails = () => {
             {/* 5. Amenities / Features - Pills Style */}
             {property.amenities && property.amenities.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-600 mb-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 font-sans">
                   Amenities
                 </h3>
                 <div className="flex flex-wrap gap-3">
@@ -990,6 +1001,49 @@ const PropertyDetails = () => {
                       {amenity}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Video Tour Section */}
+            {(property.video || property.media?.video) && getVideoEmbedUrl(property.video || property.media?.video) && (
+              <div className="space-y-6">
+                <hr className="border-gray-100" />
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
+                  Video Tour
+                </h3>
+                <div className="aspect-video rounded-3xl overflow-hidden shadow-sm border border-gray-100">
+                  <iframe
+                    src={getVideoEmbedUrl(property.video || property.media?.video)}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title="Property Video Tour"
+                  ></iframe>
+                </div>
+              </div>
+            )}
+
+            {/* Floor Plan Section */}
+            {(property.floorPlan || property.media?.floorPlan) && (
+              <div className="space-y-6">
+                <hr className="border-gray-100" />
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
+                  Floor Plan
+                </h3>
+                <div 
+                  className="bg-gray-50 rounded-3xl p-4 border border-gray-100 cursor-pointer group relative"
+                  onClick={() => window.open(getImageUrl(property.floorPlan || property.media?.floorPlan), '_blank')}
+                >
+                  <img 
+                    src={getImageUrl(property.floorPlan || property.media?.floorPlan)} 
+                    alt="Floor Plan" 
+                    className="w-full h-auto rounded-2xl shadow-sm"
+                  />
+                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-3xl">
+                    <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
+                      <Eye size={16} /> Click to view full size
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
