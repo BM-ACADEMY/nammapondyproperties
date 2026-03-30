@@ -8,8 +8,10 @@ import {
   Space,
   message,
   Modal,
+  Dropdown,
+  Menu,
 } from "antd";
-import { Plus, Trash2, Edit, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Edit, AlertCircle, MoreVertical, CheckCircle } from "lucide-react";
 import api from "@/services/api";
 import CreateUserModal from "../components/CreateUserModal";
 
@@ -75,53 +77,133 @@ const UserList = () => {
       title: "Name",
       dataIndex: "name",
       key: "name",
-      render: (text) => <span className="font-medium">{text}</span>,
+      render: (text, record) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
+            {text ? text.charAt(0) : "U"}
+          </div>
+          <span className="font-medium text-gray-900">{text || "Unnamed User"}</span>
+        </div>
+      ),
     },
     {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-      key: "phone",
+      title: "Contact Info",
+      key: "contact",
+      render: (_, record) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">{record.phone || "No Phone"}</span>
+          <span className="text-xs text-gray-500">{record.email}</span>
+        </div>
+      ),
     },
     {
       title: "Status",
-      dataIndex: "isVerified",
+      dataIndex: "status",
       key: "status",
+      render: (status) => (
+        <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
+          {status ? status.toUpperCase() : "ACTIVE"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Verified",
+      dataIndex: "isVerified",
+      key: "isVerified",
+      align: "center",
       render: (verified) => (
-        <Tag color={verified ? "green" : "orange"}>
-          {verified ? "Verified" : "Pending"}
+        <Tag color={verified ? "blue" : "default"} className="rounded-full px-3">
+          {verified ? "VERIFIED" : "NOT VERIFIED"}
         </Tag>
       ),
     },
     {
       title: "Action",
       key: "action",
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="text"
-            icon={<Edit size={16} className="text-blue-500" />}
-            onClick={() => handleEdit(record)}
-          />
-          <Button
-            type="text"
-            danger
-            icon={<Trash2 size={16} />}
-            onClick={() => handleDelete(record._id)}
-          />
-        </Space>
-      ),
+      align: "right",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <div className="flex items-center gap-2" onClick={() => handleEdit(record)}>
+                <Edit size={14} />
+                <span>Edit Details</span>
+              </div>
+            ),
+          },
+          {
+            key: "toggleStatus",
+            label: (
+              <div
+                className="flex items-center gap-2"
+                onClick={async () => {
+                  try {
+                    await api.put(`/users/update-user-by-id/${record._id}`, {
+                      status: record.status === "active" ? "inactive" : "active",
+                    });
+                    message.success(`User ${record.status === "active" ? "deactivated" : "activated"} successfully`);
+                    fetchUsers();
+                  } catch (error) {
+                    message.error("Failed to update status");
+                  }
+                }}
+              >
+                <AlertCircle size={14} />
+                <span>{record.status === "active" ? "Deactivate" : "Activate"}</span>
+              </div>
+            ),
+          },
+          {
+            key: "toggleVerify",
+            label: (
+              <div
+                className="flex items-center gap-2"
+                onClick={async () => {
+                  try {
+                    await api.put(`/users/update-user-by-id/${record._id}`, {
+                      isVerified: !record.isVerified,
+                    });
+                    message.success(`User verification ${record.isVerified ? "removed" : "applied"}`);
+                    fetchUsers();
+                  } catch (error) {
+                    message.error("Failed to update verification");
+                  }
+                }}
+              >
+                <CheckCircle size={14} />
+                <span>{record.isVerified ? "Unverify User" : "Verify User"}</span>
+              </div>
+            ),
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "delete",
+            danger: true,
+            label: (
+              <div className="flex items-center gap-2" onClick={() => handleDelete(record._id)}>
+                <Trash2 size={14} />
+                <span>Delete User</span>
+              </div>
+            ),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <Button type="text" icon={<MoreVertical size={20} />} />
+          </Dropdown>
+        );
+      },
     },
   ];
 
   return (
     <div className="p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <Title level={3} className="!mb-0">
+        <Title level={3} className="mb-0!">
           User Management
         </Title>
         <Button

@@ -40,6 +40,11 @@ const SellerRequests = () => {
 
   const columns = [
     {
+      title: "First Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
       title: "Date",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -47,25 +52,15 @@ const SellerRequests = () => {
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
     },
     {
-      title: "Seller Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-    },
-    {
       title: "Phone",
       dataIndex: "phone",
       key: "phone",
     },
     {
-      title: "Business Type",
-      dataIndex: "business_type",
-      key: "business_type",
-      render: (text) => text || "N/A",
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      render: (text) => text || "",
     },
     {
       title: "Status",
@@ -96,7 +91,12 @@ const SellerRequests = () => {
           dataSource={requests}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ 
+            pageSize: 10,
+            showSizeChanger: false,
+            className: "px-6 py-4 pagination-minimal",
+            position: ['bottomRight']
+          }}
           scroll={{ x: true }}
         />
       </div>

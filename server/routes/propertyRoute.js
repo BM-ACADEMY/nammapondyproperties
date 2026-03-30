@@ -9,7 +9,7 @@ const propertyUpload = require("../middleware/propertyUploadMiddleware");
 router.post(
   "/create-property",
   protect,
-  propertyUpload.array("images", 10),
+  propertyUpload.fields([{ name: "images", maxCount: 10 }, { name: "floorPlan", maxCount: 1 }]),
   propertyController.createProperty,
 );
 // Get all properties
@@ -24,7 +24,7 @@ router.get("/fetch-recommended-properties/:id", propertyController.getRecommende
 router.put(
   "/update-property-by-id/:id",
   protect,
-  propertyUpload.array("images", 10),
+  propertyUpload.fields([{ name: "images", maxCount: 10 }, { name: "floorPlan", maxCount: 1 }]),
   propertyController.updateProperty,
 );
 // Delete a property

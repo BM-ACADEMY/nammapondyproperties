@@ -105,6 +105,7 @@ const PropertyForm = ({
         totalArea: data?.specifications?.area?.totalArea || data?.area_size || "",
         minArea: data?.specifications?.area?.minArea || "",
         maxArea: data?.specifications?.area?.maxArea || "",
+        superBuiltupArea: data?.specifications?.area?.superBuiltupArea || "",
         builtupArea: data?.specifications?.area?.builtupArea || "",
         carpetArea: data?.specifications?.area?.carpetArea || "",
       },
@@ -161,6 +162,10 @@ const PropertyForm = ({
         lng: data?.location?.coordinates?.lng || data?.location?.longitude || ""
       }
     },
+    media: {
+      video: data?.video || data?.media?.video || "",
+      floorPlan: data?.floorPlan || data?.media?.floorPlan || "",
+    },
     amenities: data?.amenities || []
   });
 
@@ -181,6 +186,8 @@ const PropertyForm = ({
   const [images, setImages] = useState([]);
   const [existingImages, setExistingImages] = useState(initialData?.media?.images || initialData?.images || []);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [floorPlan, setFloorPlan] = useState(null);
+  const [floorPlanPreview, setFloorPlanPreview] = useState("");
   const [imagesToDelete, setImagesToDelete] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES);
@@ -239,6 +246,9 @@ const PropertyForm = ({
     if (isEdit && initialData && Object.keys(initialData).length > 0) {
       // Use existing values passed above
       setExistingImages(initialData?.media?.images || initialData?.images || []);
+      if (initialData?.media?.floorPlan) {
+        setFloorPlanPreview(initialData.media.floorPlan);
+      }
       reset(getFormValues(initialData));
     }
   }, [initialData, isEdit, reset]);
@@ -340,6 +350,17 @@ const PropertyForm = ({
     setImagePreviews(newPreviews);
   };
 
+  const handleFloorPlanChange = ({ fileList }) => {
+    const file = fileList[0]?.originFileObj;
+    if (file) {
+      setFloorPlan(file);
+      setFloorPlanPreview(URL.createObjectURL(file));
+    } else {
+      setFloorPlan(null);
+      setFloorPlanPreview("");
+    }
+  };
+
   const onPreview = async (file) => {
     let src = file.url;
     if (!src) {
@@ -392,6 +413,14 @@ const PropertyForm = ({
     formData.append("legal", JSON.stringify(sanitizedLegal));
     formData.append("location", JSON.stringify(sanitizedLocation));
     formData.append("amenities", JSON.stringify(data.amenities || []));
+    
+    if (data.media) {
+      const sanitizedMedia = removeEmptyStrings({ ...data.media });
+      formData.append("media", JSON.stringify(sanitizedMedia));
+      if (data.media.video) {
+        formData.append("video", data.media.video);
+      }
+    }
 
     if (data.businessType) {
       formData.append("businessType", data.businessType);
@@ -404,6 +433,11 @@ const PropertyForm = ({
     if (isEdit && imagesToDelete.length > 0) {
       formData.append("images_to_delete", JSON.stringify(imagesToDelete));
     }
+
+    if (floorPlan) {
+      formData.append("floorPlan", floorPlan);
+    }
+
     onSubmit(formData);
   };
 
@@ -782,6 +816,10 @@ const PropertyForm = ({
                       <label className="block text-sm font-bold mb-2">Security Deposit (₹)</label>
                       <input type="number" {...register("pricing.rent.securityDeposit")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
                     </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Maintenance (₹/mo)</label>
+                      <input type="number" {...register("pricing.rent.maintenance")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="e.g. 2000" />
+                    </div>
                   </>
                 )}
               </div>
@@ -806,10 +844,16 @@ const PropertyForm = ({
                   <input type="number" {...register("specifications.area.maxArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="e.g. 1500" />
                 </div>
                 {!activeConfig.hasPlot && (
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Built-up Area (sqft)</label>
-                    <input type="number" {...register("specifications.area.builtupArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
-                  </div>
+                  <>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Super Built-up Area (sqft)</label>
+                      <input type="number" {...register("specifications.area.superBuiltupArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Built-up Area (sqft)</label>
+                      <input type="number" {...register("specifications.area.builtupArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                    </div>
+                  </>
                 )}
                 {activeConfig.hasRooms && (
                   <>
@@ -884,37 +928,89 @@ const PropertyForm = ({
         {currentStep === 4 && (
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
             <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Property Media</p>
-            <div className="space-y-6">
-              <ImgCrop rotationSlider aspect={4 / 3}>
-                <Upload
-                  listType="picture-card"
-                  fileList={images.map((f, i) => ({ uid: i, name: f.name, status: "done", url: imagePreviews[i], originFileObj: f }))}
-                  onChange={handleImageChange}
-                  onPreview={onPreview}
-                  multiple accept="image/*"
-                  beforeUpload={() => false}
-                  className="custom-upload"
-                >
-                  {images.length + existingImages.length < 10 && (
-                    <div className="flex flex-col items-center gap-1">
-                      <Plus size={24} />
-                      <div className="text-xs font-bold">Add Photo</div>
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Property Photos</p>
+                <ImgCrop rotationSlider aspect={4 / 3}>
+                  <Upload
+                    listType="picture-card"
+                    fileList={images.map((f, i) => ({ uid: i, name: f.name, status: "done", url: imagePreviews[i], originFileObj: f }))}
+                    onChange={handleImageChange}
+                    onPreview={onPreview}
+                    multiple accept="image/*"
+                    beforeUpload={() => false}
+                    className="custom-upload"
+                  >
+                    {images.length + existingImages.length < 10 && (
+                      <div className="flex flex-col items-center gap-1">
+                        <Plus size={24} />
+                        <div className="text-xs font-bold">Add Photo</div>
+                      </div>
+                    )}
+                  </Upload>
+                </ImgCrop>
+                {existingImages.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {existingImages.map((img, i) => (
+                      <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
+                        <img src={getImageUrl(img)} alt={`Property ${i}`} className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => removeExistingImage(i)} className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-100">
+                <div className="space-y-4">
+                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Video Tour</p>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      {...register("media.video")}
+                      placeholder="YouTube or Vimeo URL"
+                      className="w-full px-4 py-3 pl-12 border-2 border-gray-100 rounded-2xl focus:border-blue-600 outline-none transition-all"
+                    />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Plus size={18} />
                     </div>
-                  )}
-                </Upload>
-              </ImgCrop>
-              {existingImages.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {existingImages.map((img, i) => (
-                    <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
-                      <img src={getImageUrl(img)} alt={`Property ${i}`} className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => removeExistingImage(i)} className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  ))}
+                  </div>
+                  <p className="text-xs text-gray-400">Paste a link to your property video (e.g., YouTube, Vimeo)</p>
                 </div>
-              )}
+
+                <div className="space-y-4">
+                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Floor Plan</p>
+                  <div className="flex items-start gap-4">
+                    <ImgCrop rotationSlider aspect={4 / 3}>
+                      <Upload
+                        listType="picture-card"
+                        maxCount={1}
+                        fileList={floorPlan ? [{ uid: "-1", name: "floor-plan", status: "done", url: floorPlanPreview, originFileObj: floorPlan }] : []}
+                        onChange={handleFloorPlanChange}
+                        beforeUpload={() => false}
+                        className="floor-plan-upload"
+                      >
+                        {!floorPlan && (
+                          <div className="flex flex-col items-center gap-1">
+                            <Plus size={24} />
+                            <div className="text-xs font-bold">Upload Plan</div>
+                          </div>
+                        )}
+                      </Upload>
+                    </ImgCrop>
+                    {initialData?.media?.floorPlan && !floorPlan && (
+                      <div className="relative group rounded-xl overflow-hidden h-[102px] w-[102px] border border-gray-100">
+                        <img src={getImageUrl(initialData.media.floorPlan)} alt="Existing Floor Plan" className="w-full h-full object-cover shadow-sm" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                          <span className="text-[10px] text-white font-bold bg-black/40 px-2 py-1 rounded">Current Plan</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
