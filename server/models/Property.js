@@ -37,6 +37,7 @@ const propertySchema = new mongoose.Schema(
 
       approvalType: String
     },
+    
 
     // =====================================================
     // 2.5️⃣ BUSINESS
