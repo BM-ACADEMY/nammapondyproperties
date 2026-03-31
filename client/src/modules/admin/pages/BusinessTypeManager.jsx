@@ -7,12 +7,27 @@ import {
   Input,
   Select,
   message,
-  Popconfirm,
   Tag,
+  Card,
+  Typography,
+  Row,
+  Col,
+  Statistic,
+  Dropdown,
 } from "antd";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  MoreVertical, 
+  Briefcase, 
+  CheckCircle, 
+  XCircle,
+  AlertCircle
+} from "lucide-react";
 import axios from "axios";
 
+const { Title, Text } = Typography;
 const API = import.meta.env.VITE_API_URL;
 
 const BusinessTypeManager = () => {
@@ -50,14 +65,24 @@ const BusinessTypeManager = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API}/business-types/${id}`);
-      message.success("Business Type deleted");
-      fetchBusinessTypes();
-    } catch {
-      message.error("Failed to delete business type");
-    }
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: "Are you sure you want to delete this business type?",
+      icon: <AlertCircle className="text-red-500" />,
+      content: "This action cannot be undone.",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          await axios.delete(`${API}/business-types/${id}`);
+          message.success("Business Type deleted");
+          fetchBusinessTypes();
+        } catch {
+          message.error("Failed to delete business type");
+        }
+      },
+    });
   };
 
   const onFinish = async (values) => {
@@ -79,92 +104,199 @@ const BusinessTypeManager = () => {
 
   const columns = [
     {
-      title: "Name",
+      title: "Business Type Name",
       dataIndex: "name",
       key: "name",
-      ellipsis: true,
+      render: (text) => (
+        <span className="font-medium text-gray-900">{text}</span>
+      ),
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Tag color={status === "active" ? "green" : "red"}>
+        <Tag 
+          color={status === "active" ? "green" : "red"} 
+          className="rounded-full px-3 py-0.5 border-none font-medium"
+        >
           {status.toUpperCase()}
         </Tag>
       ),
     },
     {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <div className="flex space-x-2">
-          <Button
-            icon={<Edit size={16} />}
-            onClick={() => handleEdit(record)}
-          />
-          <Popconfirm
-            title="Delete this type?"
-            onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button icon={<Trash2 size={16} />} danger />
-          </Popconfirm>
-        </div>
-      ),
+      title: "Action",
+      key: "action",
+      align: "right",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <div className="flex items-center gap-2 py-1" onClick={() => handleEdit(record)}>
+                <Edit size={14} />
+                <span>Edit Type</span>
+              </div>
+            ),
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "delete",
+            danger: true,
+            label: (
+              <div className="flex items-center gap-2 py-1" onClick={() => handleDelete(record._id)}>
+                <Trash2 size={14} />
+                <span>Delete Type</span>
+              </div>
+            ),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <Button type="text" icon={<MoreVertical size={18} className="text-gray-500" />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  const stats = [
+    {
+      title: "Total Types",
+      value: businessTypes.length,
+      icon: <Briefcase size={22} />,
+      color: "blue",
+      bgColor: "bg-blue-50/50 hover:bg-blue-50",
+      iconContainerColor: "bg-blue-100 text-blue-600",
+    },
+    {
+      title: "Active Types",
+      value: businessTypes.filter(t => t.status === "active").length,
+      icon: <CheckCircle size={22} />,
+      color: "emerald",
+      bgColor: "bg-emerald-50/50 hover:bg-emerald-50",
+      iconContainerColor: "bg-emerald-100 text-emerald-600",
+    },
+    {
+      title: "Inactive Types",
+      value: businessTypes.filter(t => t.status !== "active").length,
+      icon: <XCircle size={22} />,
+      color: "rose",
+      bgColor: "bg-rose-50/50 hover:bg-rose-50",
+      iconContainerColor: "bg-rose-100 text-rose-600",
     },
   ];
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold">Business Types</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <Title level={3} className="mb-1!">Business Types</Title>
+          <Text type="secondary">Manage different types of businesses registered on the platform</Text>
+        </div>
         <Button
           type="primary"
-          icon={<Plus size={16} />}
+          icon={<Plus size={18} />}
           onClick={handleAdd}
-          className="bg-blue-600 w-full sm:w-auto h-10 flex items-center justify-center order-last sm:order-none"
+          className="bg-blue-600 h-10 px-6 rounded-lg font-medium flex items-center gap-2"
         >
           Add Business Type
         </Button>
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={businessTypes}
-        rowKey="_id"
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-        scroll={{ x: true }}
-      />
+      <Row gutter={[24, 24]} className="mb-8">
+        {stats.map((stat, i) => (
+          <Col xs={24} sm={12} lg={8} key={i}>
+            <Card className={`shadow-sm border-none transition-all duration-300 ${stat.bgColor} py-2`}>
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${stat.iconContainerColor}`}>
+                  {stat.icon}
+                </div>
+                <div>
+                  <div className={`font-semibold text-xs uppercase tracking-wider opacity-80`}>{stat.title}</div>
+                  <div className="text-2xl font-bold text-gray-800">{loading ? "..." : stat.value}</div>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+        <Table
+          columns={columns}
+          dataSource={businessTypes}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ 
+            pageSize: 10,
+            showSizeChanger: false,
+            className: "px-6 py-4"
+          }}
+          scroll={{ x: true }}
+          className="modern-table"
+        />
+      </Card>
 
       <Modal
-        title={editingType ? "Edit Business Type" : "Add Business Type"}
+        title={
+          <div className="flex items-center gap-2 pb-4 border-b border-gray-300">
+            {editingType ? <Edit size={20} /> : <Plus size={20} />}
+            <span>{editingType ? "Edit Business Type" : "Add Business Type"}</span>
+          </div>
+        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
+        width={500}
+        centered
+        className="modern-modal"
       >
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form 
+          form={form} 
+          layout="vertical" 
+          onFinish={onFinish}
+          className="pt-6"
+        >
           <Form.Item
             name="name"
-            label="Name"
-            rules={[{ required: true, message: "Please enter name" }]}
+            label={<span className="font-medium">Business Type Name</span>}
+            rules={[{ required: true, message: "Please enter business type name" }]}
           >
-            <Input placeholder="e.g. Builder, Agent" disabled={!!editingType} />
+            <Input 
+              placeholder="e.g. Real Estate Agency" 
+              className="h-11 rounded-lg" 
+              disabled={!!editingType} 
+            />
           </Form.Item>
 
-          <Form.Item name="status" label="Status" initialValue="active">
-            <Select>
+          <Form.Item 
+            name="status" 
+            label={<span className="font-medium">Status</span>}
+            initialValue="active"
+          >
+            <Select className="h-11 w-full" dropdownClassName="rounded-lg">
               <Select.Option value="active">Active</Select.Option>
               <Select.Option value="inactive">Inactive</Select.Option>
             </Select>
           </Form.Item>
 
-          <div className="flex justify-end space-x-2">
-            <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
-            <Button type="primary" htmlType="submit">
-              {editingType ? "Update" : "Add"}
+          <div className="flex justify-end gap-3 mt-8">
+            <Button 
+              onClick={() => setIsModalOpen(false)} 
+              className="h-11 px-6 rounded-lg font-medium"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              className="h-11 px-8 rounded-lg font-medium bg-blue-600"
+            >
+              {editingType ? "Update Changes" : "Save Business Type"}
             </Button>
           </div>
         </Form>
@@ -174,3 +306,4 @@ const BusinessTypeManager = () => {
 };
 
 export default BusinessTypeManager;
+

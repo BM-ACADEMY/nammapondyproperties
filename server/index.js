@@ -142,6 +142,9 @@ const io = new Server(server, {
   },
 });
 
+// Store io instance in app for access in controllers
+app.set("socketio", io);
+
 // Basic Socket.IO connection handling
 io.on("connection", (socket) => {
   console.log("🔌 New websocket connection:", socket.id);

@@ -1,5 +1,7 @@
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Layout, Menu, Drawer } from "antd";
+import { Layout, Menu, Drawer, Badge } from "antd";
+import { useSocket } from "@/context/SocketContext";
 import {
   LayoutDashboard,
   Users,
@@ -11,6 +13,8 @@ import {
   Megaphone,
   Briefcase,
   BarChart3,
+  Image,
+  Sliders
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -18,6 +22,32 @@ const { Sider } = Layout;
 const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const socket = useSocket();
+  const [newLeadsCount, setNewLeadsCount] = useState(0);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewRequest = (data) => {
+        // Only increment if we're not already on the marketing requests page
+        if (pathname !== "/admin/marketing-requests") {
+          setNewLeadsCount((prev) => prev + 1);
+        }
+      };
+
+      socket.on("new-marketing-request", handleNewRequest);
+
+      return () => {
+        socket.off("new-marketing-request", handleNewRequest);
+      };
+    }
+  }, [socket, pathname]);
+
+  // Reset count when navigating to the marketing requests page
+  useEffect(() => {
+    if (pathname === "/admin/marketing-requests") {
+      setNewLeadsCount(0);
+    }
+  }, [pathname]);
 
   // Handle menu click for mobile responsive closing
   const handleMenuClick = (path) => {
@@ -84,7 +114,12 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "marketing-sub",
       icon: <Megaphone size={20} />,
-      label: "Marketing",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Marketing</span>
+          {newLeadsCount > 0 && <Badge dot offset={[5, -2]} />}
+        </div>
+      ),
       children: [
         {
           key: "/admin/marketing-plans",
@@ -93,7 +128,14 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
         {
           key: "/admin/marketing-requests",
-          label: "Marketing Leads",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Marketing Leads</span>
+              {newLeadsCount > 0 && (
+                <Badge count={newLeadsCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/marketing-requests"),
         },
       ],
@@ -138,26 +180,17 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
       ],
     },
+     {
+      key: "/admin/banner-ads",
+      icon: <Image size={20} />,
+      label: "Banner Ads",
+      onClick: () => handleMenuClick("/admin/banner-ads"),
+    },
     {
-      key: "settings-sub",
-      icon: <Settings size={20} />,
-      label: "Settings",
+      key: "property-settings-sub",
+      icon: <Sliders size={20} />,
+      label: "Property Settings",
       children: [
-        {
-          key: "/admin/profile",
-          label: "My Profile",
-          onClick: () => handleMenuClick("/admin/profile"),
-        },
-        {
-          key: "/admin/testimonials",
-          label: "Testimonials",
-          onClick: () => handleMenuClick("/admin/testimonials"),
-        },
-        {
-          key: "/admin/social-media",
-          label: "Social Media",
-          onClick: () => handleMenuClick("/admin/social-media"),
-        },
         {
           key: "/admin/business-types",
           label: "Business Types",
@@ -173,13 +206,31 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Approval Types",
           onClick: () => handleMenuClick("/admin/approval-types"),
         },
+      ],
+    },
+     {
+      key: "settings-sub",
+      icon: <Settings size={20} />,
+      label: "Settings",
+      children: [
         {
-          key: "/admin/banner-ads",
-          label: "Banner Ads",
-          onClick: () => handleMenuClick("/admin/banner-ads"),
+          key: "/admin/profile",
+          label: "Profile",
+          onClick: () => handleMenuClick("/admin/profile"),
+        },
+        {
+          key: "/admin/testimonials",
+          label: "Testimonials",
+          onClick: () => handleMenuClick("/admin/testimonials"),
+        },
+        {
+          key: "/admin/social-media",
+          label: "Social Media",
+          onClick: () => handleMenuClick("/admin/social-media"),
         },
       ],
     },
+   
   ];
 
   const SidebarContent = (
@@ -229,7 +280,6 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         open={!collapsed}
         styles={{ body: { padding: 0, background: "#001529" } }}
         width={250}
-        size="default"
       >
         {SidebarContent}
       </Drawer>

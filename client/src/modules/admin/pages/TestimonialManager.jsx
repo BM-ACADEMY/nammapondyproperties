@@ -5,15 +5,27 @@ import {
   Tag,
   Button,
   message,
-  Popconfirm,
-  Space,
+  Card,
   Typography,
+  Row,
+  Col,
+  Statistic,
+  Dropdown,
   Modal,
 } from "antd";
-import { CheckCircle, XCircle, Trash2, Eye } from "lucide-react";
+import { 
+  CheckCircle, 
+  XCircle, 
+  Trash2, 
+  Eye, 
+  MoreVertical, 
+  MessageSquare,
+  Clock,
+  AlertCircle
+} from "lucide-react";
 import dayjs from "dayjs";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const TestimonialManager = () => {
   const [testimonials, setTestimonials] = useState([]);
@@ -36,7 +48,6 @@ const TestimonialManager = () => {
       );
       setTestimonials(res.data);
     } catch (error) {
-      console.error("Error fetching testimonials:", error);
       message.error("Failed to fetch testimonials");
     } finally {
       setLoading(false);
@@ -45,7 +56,7 @@ const TestimonialManager = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      const res = await axios.put(
+      await axios.put(
         `${import.meta.env.VITE_API_URL}/testimonials/${id}/status`,
         { status },
         {
@@ -53,24 +64,32 @@ const TestimonialManager = () => {
         },
       );
       message.success(`Testimonial ${status} successfully`);
-      fetchTestimonials(); // Refresh list
+      fetchTestimonials();
     } catch (error) {
-      console.error("Error updating status:", error);
       message.error(`Failed to mark as ${status}`);
     }
   };
 
-  const deleteTestimonial = async (id) => {
-    try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/testimonials/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      message.success("Testimonial deleted");
-      fetchTestimonials();
-    } catch (error) {
-      console.error("Error deleting testimonial:", error);
-      message.error("Failed to delete testimonial");
-    }
+  const deleteTestimonial = (id) => {
+    Modal.confirm({
+      title: "Delete testimonial?",
+      icon: <AlertCircle className="text-red-500" />,
+      content: "Are you sure you want to permanently delete this testimonial?",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "No, Keep it",
+      onOk: async () => {
+        try {
+          await axios.delete(`${import.meta.env.VITE_API_URL}/testimonials/${id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          });
+          message.success("Testimonial deleted");
+          fetchTestimonials();
+        } catch (error) {
+          message.error("Failed to delete testimonial");
+        }
+      },
+    });
   };
 
   const handleView = (record) => {
@@ -80,34 +99,39 @@ const TestimonialManager = () => {
 
   const columns = [
     {
-      title: "Date",
+      title: "Date Received",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => dayjs(date).format("MMM D, YYYY"),
+      render: (date) => (
+        <div className="flex flex-col">
+           <span className="font-medium text-gray-900">{dayjs(date).format("MMM D, YYYY")}</span>
+           <span className="text-[10px] text-gray-500 uppercase tracking-tighter">{dayjs(date).format("h:mm A")}</span>
+        </div>
+      ),
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
       defaultSortOrder: "descend",
-      responsive: ["md"],
     },
     {
-      title: "User",
+      title: "User Info",
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
         <div>
-          <div className="font-semibold">{text}</div>
+          <div className="font-semibold text-gray-900">{text}</div>
           <div className="text-xs text-gray-500">{record.role || "User"}</div>
         </div>
       ),
     },
-   
     {
       title: "Rating",
       dataIndex: "rating",
       key: "rating",
       render: (rating) => (
-        <span className="text-yellow-500 font-bold">★ {rating}</span>
+        <div className="flex items-center gap-1">
+          <span className="text-yellow-500 font-bold">★</span>
+          <span className="font-semibold">{rating}/5</span>
+        </div>
       ),
-      responsive: ["sm"],
     },
     {
       title: "Status",
@@ -117,105 +141,186 @@ const TestimonialManager = () => {
         let color = "blue";
         if (status === "approved") color = "green";
         if (status === "rejected") color = "red";
-        return <Tag color={color}>{status.toUpperCase()}</Tag>;
+        return (
+          <Tag color={color} className="rounded-full px-3 py-0.5 border-none font-medium">
+            {status.toUpperCase()}
+          </Tag>
+        );
       },
-      responsive: ["sm"],
     },
     {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            type="text"
-            icon={<Eye size={18} className="text-blue-600" />}
-            onClick={() => handleView(record)}
-            title="View Content"
-          />
-          {record.status !== "approved" && (
-            <Button
-              type="text"
-              icon={<CheckCircle size={18} className="text-green-600" />}
-              onClick={() => updateStatus(record._id, "approved")}
-              title="Approve"
-            />
-          )}
-          {record.status !== "rejected" && (
-            <Button
-              type="text"
-              icon={<XCircle size={18} className="text-red-600" />}
-              onClick={() => updateStatus(record._id, "rejected")}
-              title="Reject"
-            />
-          )}
-          <Popconfirm
-            title="Delete testimonial?"
-            onConfirm={() => deleteTestimonial(record._id)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <Button
-              type="text"
-              danger
-              icon={<Trash2 size={18} />}
-              title="Delete"
-            />
-          </Popconfirm>
-        </Space>
-      ),
+      title: "Action",
+      key: "action",
+      align: "right",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "view",
+            label: (
+              <div className="flex items-center gap-2 py-1" onClick={() => handleView(record)}>
+                <Eye size={14} />
+                <span>View Message</span>
+              </div>
+            ),
+          },
+          {
+            type: "divider"
+          },
+          {
+            key: "approve",
+            disabled: record.status === "approved",
+            label: (
+              <div className="flex items-center gap-2 py-1 text-emerald-600 font-medium" onClick={() => updateStatus(record._id, "approved")}>
+                <CheckCircle size={14} />
+                <span>Approve Review</span>
+              </div>
+            ),
+          },
+          {
+            key: "reject",
+            disabled: record.status === "rejected",
+            label: (
+              <div className="flex items-center gap-2 py-1 text-amber-600 font-medium" onClick={() => updateStatus(record._id, "rejected")}>
+                <XCircle size={14} />
+                <span>Reject Review</span>
+              </div>
+            ),
+          },
+          {
+            key: "delete",
+            danger: true,
+            label: (
+              <div className="flex items-center gap-2 py-1" onClick={() => deleteTestimonial(record._id)}>
+                <Trash2 size={14} />
+                <span>Permanent Delete</span>
+              </div>
+            ),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <Button type="text" icon={<MoreVertical size={18} className="text-gray-500" />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  const stats = [
+    {
+        title: "Total Reviews",
+        value: testimonials.length,
+        icon: <MessageSquare size={22} />,
+        bgColor: "bg-blue-50/50 hover:bg-blue-50",
+        iconColor: "bg-blue-100 text-blue-600",
+    },
+    {
+        title: "Approved",
+        value: testimonials.filter(t => t.status === "approved").length,
+        icon: <CheckCircle size={22} />,
+        bgColor: "bg-emerald-50/50 hover:bg-emerald-50",
+        iconColor: "bg-emerald-100 text-emerald-600",
+    },
+    {
+        title: "Pending/Rejected",
+        value: testimonials.filter(t => t.status !== "approved").length,
+        icon: <Clock size={22} />,
+        bgColor: "bg-amber-50/50 hover:bg-amber-50",
+        iconColor: "bg-amber-100 text-amber-600",
     },
   ];
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="mb-6">
-        <Title level={window.innerWidth < 768 ? 3 : 2} className="!mb-0">
-          Testimonials
-        </Title>
-        <p className="text-gray-500 mt-1">
-          Manage user reviews appearing on the homepage.
-        </p>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <Title level={3} className="mb-1!">Testimonials</Title>
+          <Text type="secondary">Review and manage user feedback appearing on the public website</Text>
+        </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <Row gutter={[24, 24]} className="mb-8">
+        {stats.map((stat, i) => (
+          <Col xs={24} sm={12} lg={8} key={i}>
+            <Card className={`shadow-sm border-none transition-all duration-300 ${stat.bgColor} py-2`}>
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${stat.iconColor}`}>
+                  {stat.icon}
+                </div>
+                <div>
+                  <div className="font-semibold text-xs uppercase tracking-wider opacity-80">{stat.title}</div>
+                  <div className="text-2xl font-bold text-gray-800">{loading ? "..." : stat.value}</div>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden rounded-xl">
         <Table
           columns={columns}
           dataSource={testimonials}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ 
+            pageSize: 10,
+            showSizeChanger: false,
+            className: "px-6 py-4"
+          }}
           scroll={{ x: true }}
         />
-      </div>
+      </Card>
 
       <Modal
-        title="Testimonial Content"
+        title={
+          <div className="flex items-center gap-2 pb-4 border-b">
+            <MessageSquare size={20} className="text-blue-600" />
+            <span>Testimonial Details</span>
+          </div>
+        }
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
+        centered
         footer={[
-          <Button key="close" onClick={() => setIsModalOpen(false)}>
-            Close
+          <Button key="close" onClick={() => setIsModalOpen(false)} className="h-10 px-6 font-medium rounded-lg">
+            Dismiss
           </Button>,
         ]}
       >
         {selectedTestimonial && (
-          <div className="py-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="font-bold text-lg">
-                {selectedTestimonial.name}
-              </div>
-              <span className="text-yellow-500 font-bold">
-                ★ {selectedTestimonial.rating}
-              </span>
+          <div className="py-6">
+            <div className="flex items-center justify-between mb-6">
+               <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gray-50 rounded-full">
+                     <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-lg">
+                        {selectedTestimonial.name.charAt(0).toUpperCase()}
+                     </div>
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-900 text-lg leading-tight">{selectedTestimonial.name}</div>
+                    <div className="text-sm text-gray-500 uppercase tracking-wider">{selectedTestimonial.role || "User"}</div>
+                  </div>
+               </div>
+               <div className="flex flex-col items-end">
+                  <div className="text-yellow-500 text-xl font-bold">★ {selectedTestimonial.rating}</div>
+                  <Tag color={selectedTestimonial.status === "approved" ? "green" : "blue"} className="mr-0 mt-1 rounded-full border-none px-3 font-medium">
+                    {selectedTestimonial.status.toUpperCase()}
+                  </Tag>
+               </div>
             </div>
-            <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-              {selectedTestimonial.content}
+
+            <div className="bg-gray-50 p-6 rounded-2xl relative border">
+              <div className="absolute -top-3 left-6 px-3 bg-white text-[10px] uppercase font-bold text-gray-400 tracking-widest border rounded-full">Review Content</div>
+              <p className="text-gray-700 leading-relaxed text-base italic">
+                "{selectedTestimonial.content}"
+              </p>
             </div>
-            <div className="mt-6 text-xs text-gray-500">
-              Sent on:{" "}
-              {dayjs(selectedTestimonial.createdAt).format(
-                "MMMM D, YYYY h:mm A",
-              )}
+
+            <div className="mt-8 flex items-center gap-2 text-xs text-gray-400 font-medium">
+              <Clock size={14} />
+              <span>Received on: {dayjs(selectedTestimonial.createdAt).format("MMMM D, YYYY [at] h:mm A")}</span>
             </div>
           </div>
         )}

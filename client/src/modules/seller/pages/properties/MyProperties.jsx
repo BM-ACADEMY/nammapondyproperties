@@ -118,7 +118,7 @@ const MyProperties = () => {
   const [isMarketingModalOpen, setIsMarketingModalOpen] = useState(false);
   const [marketingPlans, setMarketingPlans] = useState([]);
   const [marketingRequests, setMarketingRequests] = useState([]);
-  const [requestLoading, setRequestLoading] = useState(false);
+  const [loadingPlanId, setLoadingPlanId] = useState(null);
   const [soldModalVisible, setSoldModalVisible] = useState(false);
   const [soldPrice, setSoldPrice] = useState("");
   const [propertyToSell, setPropertyToSell] = useState(null);
@@ -165,14 +165,6 @@ const MyProperties = () => {
     const property_id = params.get("property_id");
 
     if (success && properties.length > 0) {
-      message.success({
-        content: "Promote your property for 10x faster visibility!",
-        duration: 5,
-        // Make it appear at the top
-        style: { marginTop: "10vh" },
-        icon: <Plus className="text-blue-500" />,
-      });
-
       if (property_id) {
         const prop = properties.find((p) => p._id === property_id);
         if (prop) {
@@ -238,7 +230,7 @@ const MyProperties = () => {
   };
 
   const handleRequestMarketing = async (planId) => {
-    setRequestLoading(true);
+    setLoadingPlanId(planId);
     try {
       await api.post("/marketing/requests", {
         property_id: selectedProperty._id,
@@ -249,7 +241,7 @@ const MyProperties = () => {
     } catch (error) {
       message.error(error.response?.data?.error || "Failed to send request");
     } finally {
-      setRequestLoading(false);
+      setLoadingPlanId(null);
       fetchMarketingRequests(); // Refresh requests after submitting
     }
   };
@@ -575,7 +567,16 @@ const MyProperties = () => {
         footer={null}
         width={850} // Reduced modal width
         className="marketing-modal pb-0"
-        styles={{ body: { padding: 0, borderRadius: "16px", overflow: "hidden" } }}
+        styles={{
+          body: {
+            padding: 0,
+            borderRadius: "16px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#cbd5e1 transparent",
+          },
+        }}
         closeIcon={
           <div className="bg-slate-200 hover:bg-slate-300 p-1.5 rounded-full transition-colors mt-2 mr-2">
             <X size={16} className="text-slate-700" />
@@ -591,10 +592,10 @@ const MyProperties = () => {
           `}
         </style>
 
-        {/* Reduced vertical padding from py-16 to py-10 */}
-        <div className="poppins-font bg-slate-50 py-10 px-4">
+        {/* Reduced vertical padding from py-10 to py-8 */}
+        <div className="poppins-font bg-slate-50 py-8 px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               {/* Reduced title font size */}
               <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
                 Promote Your Property
@@ -614,8 +615,8 @@ const MyProperties = () => {
                 return (
                   <div
                     key={plan._id}
-                    // Reduced card padding from px-6 py-8 to px-5 py-6
-                    className={`rounded-2xl px-5 py-6 ${isPopular
+                    // Reduced card padding from px-5 py-6 to px-5 py-5
+                    className={`rounded-2xl px-5 py-5 ${isPopular
                       ? "bg-slate-900 shadow-xl shadow-black/10"
                       : "bg-white border border-slate-200"
                       }`}
@@ -627,14 +628,14 @@ const MyProperties = () => {
                       {plan.name}
                     </h3>
                     <p
-                      className={`text-[13px] leading-snug mb-6 max-w-[200px] ${isPopular ? "text-white/90" : "text-slate-700"
+                      className={`text-[13px] leading-snug mb-4 max-w-[200px] ${isPopular ? "text-white/90" : "text-slate-700"
                         }`}
                     >
                       {plan.description ||
                         "Perfect for getting your property noticed by potential buyers fast."}
                     </p>
 
-                    <div className="mb-6">
+                    <div className="mb-4">
                       <div className="flex items-start gap-2">
                         <div className="flex items-baseline gap-1">
                           {/* Reduced price font size */}
@@ -650,25 +651,25 @@ const MyProperties = () => {
 
                     <button
                       onClick={() => handleRequestMarketing(plan._id)}
-                      disabled={requestLoading}
+                      disabled={loadingPlanId !== null}
                       // Reduced button padding and text size
                       className={`w-full py-2.5 rounded-sm text-xs font-medium mb-2.5 transition cursor-pointer flex justify-center items-center ${isPopular
                         ? "bg-gradient-to-r from-orange-500 to-orange-400 text-white hover:from-orange-600 hover:to-orange-500"
                         : "bg-white border border-slate-200 text-slate-800 hover:bg-slate-50"
-                        }`}
+                        } ${loadingPlanId === plan._id ? "opacity-70 cursor-not-allowed" : ""}`}
                     >
-                      {requestLoading ? "Processing..." : "Request Plan"}
+                      {loadingPlanId === plan._id ? "Processing..." : "Request Plan"}
                     </button>
 
                     <p
-                      className={`text-[11px] leading-tight max-w-[200px] mb-5 ${isPopular ? "text-white/70" : "text-black/50"
+                      className={`text-[11px] leading-tight max-w-[200px] mb-3 ${isPopular ? "text-white/70" : "text-black/50"
                         }`}
                     >
                       Pay later. Our team will contact you.
                     </p>
 
                     <div
-                      className={`border-t mb-4 ${isPopular ? "border-white/20" : "border-slate-200"
+                      className={`border-t mb-3 ${isPopular ? "border-white/20" : "border-slate-200"
                         }`}
                     ></div>
 
