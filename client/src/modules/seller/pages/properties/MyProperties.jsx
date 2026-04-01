@@ -54,7 +54,6 @@ import {
   Clock,
   AlertCircle,
   FileText,
-  Ruler,
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
