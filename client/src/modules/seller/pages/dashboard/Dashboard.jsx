@@ -7,7 +7,8 @@ import {
   AlertCircle,
   Calendar,
   Phone,
-  X,
+  ArrowRight,
+  TrendingUp,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
@@ -115,35 +116,38 @@ const Dashboard = () => {
       value: data.summary.totalProperties,
       icon: <Building size={24} className="text-blue-500" />,
       color: "#e6f7ff",
-      desc: "All time listings",
+      desc: "Manage your listings",
+      path: "/seller/my-properties",
     },
     {
       title: "Total Views",
       value: data.summary.totalViews,
       icon: <Eye size={24} className="text-purple-500" />,
       color: "#f9f0ff",
-      desc: "All time views",
+      desc: "All time analytics",
+      path: "/seller/dashboard",
     },
     {
       title: "Total Enquiries",
       value: data.summary.totalLeads,
       icon: <MessageSquare size={24} className="text-orange-500" />,
       color: "#fff7e6",
-      desc: "All time leads",
+      desc: "Manage your leads",
+      path: "/seller/enquiries",
     },
     {
       title: "Sold Properties",
       value: data.summary.soldProperties,
-      icon: <CheckCircle size={24} className="text-red-500" />,
-      color: "#fff1f0",
-      desc: "Total sold units",
+      icon: <CheckCircle size={24} className="text-emerald-500" />,
+      color: "#f6ffed",
+      desc: "Closed deals",
     },
     {
       title: "Sold Amount",
       value: `₹${(data.summary.totalSoldAmount || 0).toLocaleString('en-IN')}`,
-      icon: <CheckCircle size={24} className="text-amber-500" />,
+      icon: <TrendingUp size={24} className="text-amber-500" />,
       color: "#fffbe6",
-      desc: "Total revenue",
+      desc: "Verified revenue",
     },
   ];
 
@@ -161,13 +165,17 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header & Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div>
-          <Title level={2} style={{ margin: 0 }}>
+          <Title
+            level={2}
+            style={{ margin: 0 }}
+            className="bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600"
+          >
             Dashboard Overview
           </Title>
           <Text type="secondary">
-            Track your property performance and leads
+            Real-time performance tracking & insights
           </Text>
         </div>
         <div className="flex items-center gap-3">
@@ -187,55 +195,96 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <Row gutter={[24, 24]}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {statCardsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={8} key={index}>
+          <Link
+            to={stat.path}
+            key={index}
+            className="flex flex-col h-full no-underline group focus:outline-none"
+          >
             <Card
               variant="borderless"
-              className="border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
+              className="shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl group-hover:-translate-y-1 h-full flex flex-col pt-0 border border-gray-300"
+              styles={{
+                body: {
+                  padding: "20px",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                },
+              }}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <Text type="secondary" className="font-medium">
+              <div className="flex flex-col h-full justify-between">
+                <div className="flex justify-between items-start mb-4">
+                  <div
+                    style={{ background: stat.color }}
+                    className="p-3 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300"
+                  >
+                    {stat.icon}
+                  </div>
+                  <TrendingUp
+                    size={16}
+                    className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  />
+                </div>
+
+                <div className="grow">
+                  <Text
+                    type="secondary"
+                    className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400"
+                  >
                     {stat.title}
                   </Text>
-                  <Title level={3} style={{ margin: "8px 0 0 0" }}>
+                  <Title
+                    level={2}
+                    className="text-2xl! font-black m-0! mt-1 tracking-tight text-gray-800"
+                  >
                     {stat.value}
                   </Title>
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                  <Text
+                    type="secondary"
+                    className="text-[10px] leading-tight text-gray-400 font-medium line-clamp-1"
+                  >
                     {stat.desc}
                   </Text>
-                </div>
-                <div
-                  style={{ background: stat.color }}
-                  className="p-3 rounded-xl shadow-inner"
-                >
-                  {stat.icon}
+                  <ArrowRight
+                    size={12}
+                    className="text-gray-300 group-hover:text-blue-500 transform translate-x-0 group-hover:translate-x-1 transition-all"
+                  />
                 </div>
               </div>
             </Card>
-          </Col>
+          </Link>
         ))}
-      </Row>
+      </div>
 
       <Row gutter={[24, 24]}>
-        {/* Main Chart: Views & Enquiries */}
-        <Col xs={24} lg={16}>
+        {/* Main Chart: Views & Enquiries */}        <Col xs={24} lg={16}>
           <Card
-            title="Performance Trends"
-            className="shadow-sm border border-gray-200 rounded-xl h-full"
+            title={
+              <div className="flex flex-col">
+                <span>Performance Trends</span>
+                <span className="text-xs font-normal text-gray-400">
+                  Daily listing engagement metrics
+                </span>
+              </div>
+            }
+            className="shadow-sm border border-gray-300 rounded-2xl h-full"
             variant="borderless"
           >
             <div style={{ width: "100%", height: 350, minHeight: 350 }}>
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data.chartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient
                       id="colorEnquiries"
@@ -244,27 +293,41 @@ const Dashboard = () => {
                       x2="0"
                       y2="1"
                     >
-                      <stop offset="5%" stopColor="#ffc658" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#ffc658" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="1 5" vertical={true} horizontal={true} stroke="#e2e8f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 11 }} 
+                    dy={10}
+                    tickFormatter={(str) => {
+                      const date = new Date(str);
+                      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+                    }}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend verticalAlign="top" align="right" iconType="circle" height={36} />
                   <Area
                     type="monotone"
                     dataKey="views"
-                    stroke="#8884d8"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorViews)"
-                    name="Page Views"
+                    name="Property Views"
                   />
                   <Area
                     type="monotone"
                     dataKey="enquiries"
-                    stroke="#ffc658"
+                    stroke="#10b981"
+                    strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorEnquiries)"
                     name="Enquiries"
@@ -275,59 +338,83 @@ const Dashboard = () => {
           </Card>
         </Col>
 
+
         {/* Property Status Pie Chart */}
         <Col xs={24} lg={8}>
           <Card
-            title="Listing Status"
-            className="shadow-sm border border-gray-200 rounded-xl h-full"
+            title={
+              <div className="flex flex-col">
+                <span>Listing Status</span>
+                <span className="text-xs font-normal text-gray-400">Inventory Distribution</span>
+              </div>
+            }
+            className="shadow-sm border border-gray-300 rounded-2xl h-full"
             variant="borderless"
           >
-            <div className="flex flex-col items-center justify-center h-[350px]">
+            <div className="flex flex-col items-center justify-center min-h-[350px]">
               {statusData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={250} minWidth={0} minHeight={0}>
-                  <PieChart>
-                    <Pie
-                      data={statusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {statusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend verticalAlign="bottom" height={36} />
-                  </PieChart>
-                </ResponsiveContainer>
+                <>
+                  <div style={{ width: "100%", height: 250 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <defs>
+                          <linearGradient id="gradActive" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" />
+                            <stop offset="100%" stopColor="#059669" />
+                          </linearGradient>
+                          <linearGradient id="gradSold" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#3b82f6" />
+                            <stop offset="100%" stopColor="#2563eb" />
+                          </linearGradient>
+                        </defs>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={65}
+                          outerRadius={90}
+                          paddingAngle={8}
+                          dataKey="value"
+                        >
+                          <Cell key="cell-0" fill="url(#gradActive)" stroke="none" />
+                          <Cell key="cell-1" fill="url(#gradSold)" stroke="none" />
+                        </Pie>
+                        <Tooltip 
+                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {/* Refined Summary Legend */}
+                  <div className="w-full mt-6 space-y-3 px-4">
+                    <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-300">
+                      <span className="flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-emerald-600">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" /> 
+                        Active
+                      </span>
+                      <span className="text-lg font-black text-gray-800">
+                        {data.summary.activeProperties}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center bg-gray-50/50 p-3 rounded-xl border border-gray-300">
+                      <span className="flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-blue-600">
+                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" /> 
+                        Sold
+                      </span>
+                      <span className="text-lg font-black text-gray-800">
+                        {data.summary.soldProperties}
+                      </span>
+                    </div>
+                  </div>
+                </>
               ) : (
-                <div className="text-gray-400 flex flex-col items-center">
-                  <AlertCircle size={48} className="mb-2 opacity-20" />
-                  <p>No active properties</p>
+                <div className="text-center py-12">
+                  <div className="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                    <AlertCircle size={32} className="text-gray-300" />
+                  </div>
+                  <Text type="secondary" className="font-medium">No inventory data available</Text>
                 </div>
               )}
-              {/* Quick Legend/Summary */}
-              <div className="w-full mt-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-green-500" /> Active
-                  </span>
-                  <span className="font-bold">
-                    {data.summary.activeProperties}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-500" /> Sold
-                  </span>
-                  <span className="font-bold">
-                    {data.summary.soldProperties}
-                  </span>
-                </div>
-              </div>
             </div>
           </Card>
         </Col>

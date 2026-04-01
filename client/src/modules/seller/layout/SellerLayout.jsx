@@ -173,8 +173,6 @@ const SellerLayout = () => {
           <div
             className="seller-content-wrapper"
             style={{
-              padding: isMobile ? 16 : 24,
-              background: colorBgContainer,
               borderRadius: borderRadiusLG,
               minHeight: "100%",
               boxShadow: "0 1px 2px rgba(0,0,0,0.03)",

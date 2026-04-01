@@ -86,7 +86,7 @@ const PropertyTypeList = () => {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="bg-gray-100 rounded-2xl flex h-[300px] animate-pulse overflow-hidden"
+                  className="bg-gray-100 border rounded-2xl flex h-[300px] animate-pulse overflow-hidden"
                 ></div>
               ))}
             </div>
@@ -139,26 +139,25 @@ const PropertyTypeList = () => {
                         )
                       }
                       // ⬇️ FIXED: Responsive height so it doesn't stay stuck at 400px on small screens
-                      className={`flex flex-col h-[300px] sm:h-[350px] lg:h-[400px] rounded-[24px] overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all duration-300 border border-transparent hover:border-blue-100 ${item.bgColor}`}
+                      className={`relative flex flex-col h-[240px] sm:h-[280px] lg:h-[320px] rounded-[24px] overflow-hidden cursor-pointer group shadow-sm transition-all duration-300 border border-gray-200 ${item.bgColor}`}
                     >
-                      {/* Top Content (Text) */}
-                      <div className="p-8 pb-0">
-                        <h3 className="text-[21px] font-bold text-[#1E293B] leading-[1.2] mb-0 group-hover:text-[#166aa8] transition-colors">
-                          {item.title}
-                        </h3>
-                      </div>
-
-                      {/* Bottom Content (Image) */}
-                      <div className="mt-auto relative w-full h-[65%] overflow-hidden">
+                      {/* Full-Height Image */}
+                      <div className="absolute inset-0 w-full h-full">
                         <img
                           src={item.image}
                           alt={item.title}
-                          // ⬇️ FIXED: Changed to object-center so the image scales proportionally and crops from the middle instead of the bottom edge
-                          className="w-full h-full object-cover object-bottom"
+                          className="w-full h-full object-cover object-center transition-transform duration-500"
                           onError={(e) => {
                             e.target.src = "/dummyimg/dummy.png";
                           }}
                         />
+                      </div>
+
+                      {/* Overlay Content */}
+                      <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-white/90 via-white/40 to-transparent flex flex-col justify-start p-6 h-1/2">
+                        <h3 className="text-[21px] font-bold text-[#1E293B] leading-[1.2] transition-colors relative z-10">
+                          {item.title}
+                        </h3>
                       </div>
                     </div>
                   </SwiperSlide>

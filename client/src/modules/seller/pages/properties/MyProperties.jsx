@@ -304,7 +304,7 @@ const MyProperties = () => {
       </div>
 
       {/* Search Bar */}
-      <div className="max-w-md w-full">
+      {/* <div className="max-w-md w-full">
         <Card
           variant="borderless"
           className="shadow-sm rounded-xl overflow-hidden"
@@ -319,7 +319,7 @@ const MyProperties = () => {
             allowClear
           />
         </Card>
-      </div>
+      </div> */}
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -336,11 +336,11 @@ const MyProperties = () => {
           ))}
         </div>
       ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
             <div
               key={property._id}
-              className="bg-white rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100/50 overflow-hidden group flex flex-col h-full"
+              className="bg-white rounded-xl shadow-sm hover:shadow-xl  transition-all duration-500 border border-gray-400/50 overflow-hidden group flex flex-col h-full"
             >
               {/* Image Section */}
               <div className="relative h-56 overflow-hidden">
@@ -348,7 +348,7 @@ const MyProperties = () => {
                   <img
                     src={getImageUrl(property.media?.featuredImage || property.media.images[0])}
                     alt={property.basicInfo?.title || "Property"}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover transform transition-transform duration-700"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center text-gray-300">
@@ -358,16 +358,16 @@ const MyProperties = () => {
                 )}
                 
                 {/* Status Badges Overlay */}
-                <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-                  <div className={`px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase backdrop-blur-md border ${
+                <div className="absolute top-4 right-4 flex flex-row gap-2 z-10">
+                  <div className={`px-3 py-1.5 rounded-full text-[10px] font-medium tracking-wider uppercase backdrop-blur-md border ${
                     property.status === "available" 
                       ? "bg-green-500/80 text-white border-green-400/50" 
-                      : "bg-red-500/80 text-white border-red-400/50"
+                      : "bg-red-600 text-white border-red-400/50"
                   }`}>
                     {property.status}
                   </div>
                   {property.isSold && (
-                    <div className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-red-600 text-white border border-red-500/50 shadow-lg animate-pulse">
+                    <div className="px-3 py-1.5 rounded-full text-[10px] font-medium tracking-wider uppercase bg-red-600 text-white border border-red-500/50 shadow-lg">
                       Sold Out
                     </div>
                   )}
@@ -377,7 +377,7 @@ const MyProperties = () => {
                 <div className="absolute bottom-4 inset-x-4 flex justify-between items-end z-10">
                   <div className="flex flex-col gap-2">
                     {property.isVerified && (
-                      <div className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg border border-blue-500/50">
+                      <div className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider shadow-lg border border-blue-500/50">
                         <CheckCircle2 size={12} strokeWidth={3} />
                         Verified
                       </div>
@@ -400,26 +400,22 @@ const MyProperties = () => {
 
               {/* Content Section */}
               <div className="p-6 flex flex-col flex-1">
+
+                
                 <div className="mb-3">
-                  <h3 className="text-lg font-bold text-gray-900 line-clamp-1 mb-1 leading-tight group-hover:text-blue-600 transition-colors">
-                    {property.basicInfo?.title || "Untitled Property"}
+                  <h3 className="text-lg font-medium capitalize text-gray-900 truncate mb-1 leading-tight transition-colors">
+                    {property.basicInfo?.title}
                   </h3>
                   <div className="flex items-center text-gray-500 text-sm font-medium mb-1">
-                    <MapPin size={13} className="mr-1.5 text-blue-500/60" />
+                    {/* <MapPin size={13} className="mr-1.5 text-blue-500/60" /> */}
                     <span className="truncate">
                       {property.location?.city || "Location N/A"}
                     </span>
                   </div>
-                  {property.specifications?.area?.totalArea && (
-                    <div className="flex items-center text-gray-400 text-xs font-medium">
-                      <Ruler size={12} className="mr-1.5 text-gray-400" />
-                      <span>{property.specifications.area.totalArea} sq.ft</span>
-                    </div>
-                  )}
                 </div>
 
                 <div className="mb-6 flex items-center">
-                  <div className="bg-white border border-gray-100 shadow-sm rounded-xl px-4 py-2 flex items-center gap-1">
+                  <div className="bg-white py-2 flex items-center gap-1">
                     {property.isSold && property.soldPrice ? (
                       <div className="flex flex-col">
                         <span className="text-[10px] text-gray-400 line-through leading-none mb-1">
@@ -429,12 +425,12 @@ const MyProperties = () => {
                             property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
                           )}
                         </span>
-                        <span className="text-xl font-bold text-gray-900 leading-none">
+                        <span className="text-xl font-medium text-gray-900 leading-none">
                           {formatIndianPrice(property.soldPrice)}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xl font-bold text-gray-900 leading-none">
+                      <span className="text-xl font-medium text-gray-900 leading-none">
                         {formatPriceRange(
                           property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
                           property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
@@ -446,65 +442,65 @@ const MyProperties = () => {
                 </div>
 
                 {/* Management Actions */}
-                <div className="mt-auto space-y-3 pt-5 border-t border-gray-50">
+                <div className="mt-auto space-y-3 pt-5 border-t border-gray-200">
                   {/* Primary Actions */}
                   <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      block
-                      icon={<Eye size={16} />}
-                      onClick={() => handleViewDetail(property)}
-                      className="h-10 rounded-xl font-semibold border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-600 bg-gray-50/50 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
-                    >
-                      View
-                    </Button>
-                    <Button
-                      block
-                      icon={<Edit size={16} />}
-                      onClick={() => navigate(`/seller/add-property?edit=${property._id}`)}
-                      className="h-10 rounded-xl font-semibold border-gray-100 text-gray-600 hover:text-orange-600 hover:border-orange-600 bg-gray-50/50 hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
-                    >
-                      Edit
-                    </Button>
-                  </div>
+                      <Button
+                        block
+                        icon={<Eye size={16} />}
+                        onClick={() => handleViewDetail(property)}
+                        className="h-10 rounded-none font-medium border-gray-100 text-gray-600 hover:text-blue-600 hover:border-blue-600 bg-gray-50/50 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        View
+                      </Button>
+                      <Button
+                        block
+                        icon={<Edit size={16} />}
+                        onClick={() => navigate(`/seller/add-property?edit=${property._id}`)}
+                        className="h-10 rounded-none font-medium border-gray-100 text-gray-600 hover:text-orange-600 hover:border-orange-600 bg-gray-50/50 hover:bg-orange-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        Edit
+                      </Button>
+                    </div>
 
-                  {/* Secondary/Promotion Actions */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {(() => {
-                      const request = marketingRequests.find(
-                        (r) => r.property_id?._id === property._id,
-                      );
-                      const hasActiveRequest =
-                        request &&
-                        ["pending", "contacted"].includes(request.status);
+                    {/* Secondary/Promotion Actions */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {(() => {
+                        const request = marketingRequests.find(
+                          (r) => r.property_id?._id === property._id,
+                        );
+                        const hasActiveRequest =
+                          request &&
+                          ["pending", "contacted"].includes(request.status);
 
-                      return (
-                        <Button
-                          block
-                          disabled={hasActiveRequest}
-                          icon={hasActiveRequest ? <CheckCircle size={16} /> : <Sparkles size={16} />}
-                          onClick={() => {
-                            setSelectedProperty(property);
-                            setIsMarketingModalOpen(true);
-                          }}
-                          className={`h-10 rounded-xl font-semibold border-none shadow-sm transition-all flex items-center justify-center gap-2 ${
-                            hasActiveRequest 
-                              ? "bg-indigo-50 text-indigo-400" 
-                              : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
-                          }`}
-                        >
-                          {hasActiveRequest ? "Promoted" : "Promote"}
-                        </Button>
-                      );
-                    })()}
-                    <Button
-                      block
-                      onClick={() => handleMarkAsSoldClick(property)}
-                      className={`h-10 rounded-xl font-semibold border-none shadow-sm transition-all flex items-center justify-center gap-2 ${
-                        property.isSold 
-                          ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" 
-                          : "bg-rose-50 text-rose-600 hover:bg-rose-100"
-                      }`}
-                    >
+                        return (
+                          <Button
+                            block
+                            disabled={hasActiveRequest}
+                            icon={hasActiveRequest ? <CheckCircle size={16} /> : <Sparkles size={16} />}
+                            onClick={() => {
+                              setSelectedProperty(property);
+                              setIsMarketingModalOpen(true);
+                            }}
+                            className={`h-10 rounded-none font-medium border-none shadow-sm transition-all flex items-center justify-center gap-2 ${
+                              hasActiveRequest 
+                                ? "bg-indigo-50 text-indigo-400" 
+                                : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
+                            }`}
+                          >
+                            {hasActiveRequest ? "Promoted" : "Promote"}
+                          </Button>
+                        );
+                      })()}
+                      <Button
+                        block
+                        onClick={() => handleMarkAsSoldClick(property)}
+                        className={`h-10 rounded-none font-medium border-none shadow-sm transition-all flex items-center justify-center gap-2 ${
+                          property.isSold 
+                            ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" 
+                            : "bg-rose-50 text-rose-600 hover:bg-rose-100"
+                        }`}
+                      >
                       {property.isSold ? "Available" : "Mark Sold"}
                     </Button>
                   </div>
@@ -523,7 +519,7 @@ const MyProperties = () => {
                       type="text"
                       block
                       icon={<Trash2 size={16} />}
-                      className="h-9 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all flex items-center justify-center gap-2 text-xs"
+                      className="h-9 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-100! bg-red-50! border border-gray-300! transition-all flex items-center justify-center gap-2 text-xs"
                     >
                       Remove Listing
                     </Button>
