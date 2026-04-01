@@ -80,18 +80,8 @@ const StandardPropertyDetailsUI = ({
             Home
           </Link>
           <span className="text-gray-400">›</span>
-          <Link to="/properties" className="hover:text-blue-800">
-            Property in {property.location?.city || "City"}
-          </Link>
-          <span className="text-gray-400">›</span>
           <span className="text-gray-500 truncate max-w-[200px] md:max-w-md">
-            {property.basicInfo?.propertyType || "Property"} in{" "}
-            {property.location?.locality ||
-              property.location?.city ||
-              "Unknown"}{" "}
-            {(property.specifications?.plot?.plotLength ||
-              property.specifications?.plot?.plotWidth) &&
-              `${Number(property.specifications.plot.plotLength || 0) * Number(property.specifications.plot.plotWidth || 0)} Sq.ft.`}
+            {property.basicInfo?.title || "Property"}
           </span>
         </div>
 
@@ -192,11 +182,37 @@ const StandardPropertyDetailsUI = ({
                     </span>
                   </div>
                 )}
-                <img
-                  src={getImageUrl(mainImage)}
-                  alt={property.basicInfo?.title || "Property"}
-                  className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
-                />
+                {mainImage === "MAP_LOCATION" ? (
+                  <div className="w-full h-full relative z-0">
+                    <MapContainer
+                      center={[
+                        property.location?.coordinates?.lat || 0,
+                        property.location?.coordinates?.lng || 0,
+                      ]}
+                      zoom={15}
+                      scrollWheelZoom={false}
+                      className="h-full w-full"
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker
+                        position={[
+                          property.location?.coordinates?.lat || 0,
+                          property.location?.coordinates?.lng || 0,
+                        ]}
+                      />
+                    </MapContainer>
+                    <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
+                      <MapPin size={14} className="text-blue-500" />
+                      <span className="text-xs font-bold text-gray-800">Property Location</span>
+                    </div>
+                  </div>
+                ) : (
+                  <img
+                    src={getImageUrl(mainImage)}
+                    alt={property.basicInfo?.title || "Property"}
+                    className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
+                  />
+                )}
                 <div className="absolute top-4 right-4 z-10">
                   <WishlistButton propertyId={property._id} />
                 </div>
@@ -217,27 +233,43 @@ const StandardPropertyDetailsUI = ({
               </div>
 
               {/* Thumbnails */}
-              {property.media?.images && property.media.images.length > 1 && (
-                <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
-                  {property.media.images.map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setMainImage(img)}
-                      className={`relative w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 cursor-pointer border-2 ${
-                        mainImage === img
-                          ? "border-blue-600 opacity-100 shadow-md scale-[1.02]"
-                          : "border-transparent opacity-60 hover:opacity-100"
-                      }`}
-                    >
-                      <img
-                        src={getImageUrl(img)}
-                        alt="thumbnail"
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const thumbnails = [...(property.media?.images || [])];
+                if (thumbnails.length > 0 && property.location?.coordinates?.lat) {
+                  thumbnails.splice(1, 0, "MAP_LOCATION");
+                }
+                if (thumbnails.length > 1) {
+                  return (
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+                      {thumbnails.map((img, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setMainImage(img)}
+                          className={`relative w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 transition-all duration-300 cursor-pointer border-2 ${
+                            mainImage === img
+                              ? "border-blue-600 opacity-100 shadow-md scale-[1.02]"
+                              : "border-transparent opacity-60 hover:opacity-100"
+                          }`}
+                        >
+                          {img === "MAP_LOCATION" ? (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-500">
+                              <MapPin size={24} />
+                              <span className="text-[10px] font-bold">MAP</span>
+                            </div>
+                          ) : (
+                            <img
+                              src={getImageUrl(img)}
+                              alt="thumbnail"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
 
             {/* 3. Key Information - Clean Style Grid */}
