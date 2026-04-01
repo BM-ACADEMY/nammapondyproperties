@@ -12,6 +12,7 @@ import {
   Clock,
   UserPlus,
   Home,
+  ArrowRight,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
@@ -127,20 +128,23 @@ const Dashboard = () => {
       icon: <Users size={24} className="text-blue-500" />,
       color: "#e6f7ff",
       desc: `${data.summary.totalSellers} Sellers, ${data.summary.totalBuyers} Buyers`,
+      path: "/admin/users",
     },
     {
-      title: "Available Properties",
-      value: data.summary.activeProperties,
-      icon: <Building size={24} className="text-green-500" />,
-      color: "#f6ffed",
-      desc: "Currently visible to users",
+      title: "Admin Properties",
+      value: data.summary.adminPropertiesCount,
+      icon: <UserPlus size={24} className="text-indigo-500" />,
+      color: "#f0f5ff",
+      desc: "Properties posted by Admin",
+      path: "/admin/properties?seller=me",
     },
     {
-      title: "Sold Properties",
-      value: data.summary.soldProperties,
-      icon: <CheckCircle size={24} className="text-red-500" />,
-      color: "#fff1f0",
-      desc: "Total inventory sold",
+      title: "Sold (Admin)",
+      value: data.summary.soldAdminPropertiesCount,
+      icon: <CheckCircle size={24} className="text-teal-500" />, // Changed from red for a fresher look
+      color: "#e6fffb",
+      desc: "Admin properties sold",
+      path: "/admin/properties?status=sold&seller=me",
     },
     {
       title: "Pending Approvals",
@@ -148,6 +152,15 @@ const Dashboard = () => {
       icon: <FileCheck size={24} className="text-orange-500" />,
       color: "#fff7e6",
       desc: "Requires Verification",
+      path: "/admin/properties?verified=false",
+    },
+    {
+      title: "Marketing Leads",
+      value: data.summary.marketingLeadsCount,
+      icon: <TrendingUp size={24} className="text-pink-500" />,
+      color: "#fff0f6",
+      desc: "Total Marketing Requests",
+      path: "/admin/marketing-requests",
     },
     {
       title: "Total Enquiries",
@@ -155,37 +168,37 @@ const Dashboard = () => {
       icon: <MessageSquare size={24} className="text-purple-500" />,
       color: "#f9f0ff",
       desc: "All time leads",
+      path: "/admin/enquiries",
     },
     {
-      title: "Total Revenue",
-      value: `₹${(data.summary.totalSoldAmount || 0).toLocaleString('en-IN')}`,
-      icon: <TrendingUp size={24} className="text-amber-500" />,
-      color: "#fffbe6",
-      desc: "Gross sold amount",
+      title: "Seller Properties",
+      value: data.summary.sellerPropertiesCount,
+      icon: <Building size={24} className="text-emerald-500" />,
+      color: "#f6ffed",
+      desc: "Properties by Sellers",
+      path: "/admin/seller/overview",
     },
   ];
 
   // --- CHARTS DATA ---
   const userDistributionData = [
-    { name: "Sellers", value: data.summary.totalSellers, color: "#3b82f6" },
-    { name: "Buyers", value: data.summary.totalBuyers, color: "#10b981" },
-  ].filter((d) => d.value > 0);
-
-  const propertyStatusData = [
-    { name: "Active", value: data.summary.activeProperties, color: "#10b981" },
-    { name: "Sold", value: data.summary.soldProperties, color: "#ef4444" },
-    { name: "Pending", value: data.summary.pendingApprovals, color: "#f59e0b" },
-  ].filter((d) => d.value > 0);
+    { name: "Sellers", count: data.summary.totalSellers },
+    { name: "Buyers", count: data.summary.totalBuyers },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 animate-in fade-in duration-700">
       {/* Header & Filter */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
-          <Title level={2} style={{ margin: 0 }}>
-            Admin Dashboard
+          <Title
+            level={2}
+            style={{ margin: 0 }}
+            className="bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600"
+          >
+            Admin Insights
           </Title>
-          <Text type="secondary">System overview and statistics</Text>
+          <Text type="secondary">Real-time system performance & activity</Text>
         </div>
         <div className="flex items-center gap-3">
           <Calendar size={18} className="text-gray-500" />
@@ -203,77 +216,131 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <Row gutter={[24, 24]}>
+      {/* Stats Grid - Robust responsiveness using auto-fit */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6">
         {statCardsData.map((stat, index) => (
-          <Col xs={24} sm={12} lg={4} key={index}>
+          <Link
+            to={stat.path}
+            key={index}
+            className="flex flex-col h-full no-underline group focus:outline-none"
+          >
             <Card
               variant="borderless"
-              className="shadow-sm hover:shadow-md transition-all duration-300 rounded-xl overflow-hidden"
+              className="shadow-sm hover:shadow-lg transition-all duration-300 rounded-2xl group-hover:-translate-y-1 h-full flex flex-col pt-0"
+              styles={{
+                body: {
+                  padding: "20px",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                },
+              }}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <Text type="secondary" className="font-medium">
+              <div className="flex flex-col h-full justify-between">
+                <div className="flex justify-between items-start mb-4">
+                  <div
+                    style={{ background: stat.color }}
+                    className="p-3 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300"
+                  >
+                    {stat.icon}
+                  </div>
+                  <TrendingUp
+                    size={16}
+                    className="text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  />
+                </div>
+
+                <div className="grow">
+                  <Text
+                    type="secondary"
+                    className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400"
+                  >
                     {stat.title}
                   </Text>
-                  <Title level={3} style={{ margin: "8px 0 0 0" }}>
+                  <Title
+                    level={2}
+                    className="text-2xl! font-black m-0! mt-1 tracking-tight text-gray-800"
+                  >
                     {stat.value}
                   </Title>
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                  <Text
+                    type="secondary"
+                    className="text-[10px] leading-tight text-gray-400 font-medium line-clamp-1"
+                  >
                     {stat.desc}
                   </Text>
-                </div>
-                <div
-                  style={{ background: stat.color }}
-                  className="p-3 rounded-xl shadow-inner"
-                >
-                  {stat.icon}
+                  <ArrowRight
+                    size={12}
+                    className="text-gray-300 group-hover:text-blue-500 transform translate-x-0 group-hover:translate-x-1 transition-all"
+                  />
                 </div>
               </div>
             </Card>
-          </Col>
+          </Link>
         ))}
-      </Row>
+      </div>
+
+  
 
       <Row gutter={[24, 24]}>
         {/* Main Chart: Views & Enquiries */}
         <Col xs={24} lg={16}>
           <Card
-            title="Platform Activity Trends"
-            className="shadow-sm rounded-xl h-full"
+            title={
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex flex-col">
+                  <span>Platform Activity Trends</span>
+                  <span className="text-xs font-normal text-gray-400">
+                    Cumulative admin property performance
+                  </span>
+                </div>
+              </div>
+            }
+            className="shadow-sm rounded-2xl h-full"
             variant="borderless"
           >
-            <div style={{ width: "100%", height: 350, minHeight: 350 }}>
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <div style={{ width: "100%", height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={data.chartData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  style={{ outline: 'none' }}
                 >
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient
-                      id="colorEnquiries"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#ffc658" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#ffc658" stopOpacity={0} />
+                    <linearGradient id="colorEnquiries" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <Tooltip />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="1 5" vertical={true} horizontal={true} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 11 }} 
+                    dy={10}
+                    tickFormatter={(str) => {
+                      const date = new Date(str);
+                      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+                    }}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend verticalAlign="top" align="right" iconType="circle" height={36} />
                   <Area
                     type="monotone"
                     dataKey="views"
-                    stroke="#8884d8"
+                    stroke="#06b6d4"
+                    strokeWidth={1.6}
                     fillOpacity={1}
                     fill="url(#colorViews)"
                     name="Property Views"
@@ -281,7 +348,8 @@ const Dashboard = () => {
                   <Area
                     type="monotone"
                     dataKey="enquiries"
-                    stroke="#ffc658"
+                    stroke="#10b981"
+                    strokeWidth={1.6}
                     fillOpacity={1}
                     fill="url(#colorEnquiries)"
                     name="Enquiries"
@@ -292,174 +360,121 @@ const Dashboard = () => {
           </Card>
         </Col>
 
-        {/* Distribution Charts */}
+        {/* User Distribution Chart */}
         <Col xs={24} lg={8}>
-          <div className="space-y-6 h-full flex flex-col">
-            <Card
-              title="User Distribution"
-              className="shadow-sm rounded-xl flex-1"
-              variant="borderless"
-            >
-              <div className="h-[150px]">
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                  <PieChart>
-                    <Pie
-                      data={userDistributionData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={60}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {userDistributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend
-                      iconSize={10}
-                      verticalAlign="middle"
-                      align="right"
-                      layout="vertical"
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-
-            <Card
-              title="Property Status"
-              className="shadow-sm rounded-xl flex-1"
-              variant="borderless"
-            >
-              <div className="h-[150px]">
+          <Card
+            title="User Distribution"
+            className="shadow-sm rounded-2xl h-full"
+            variant="borderless"
+            styles={{ body: { padding: "24px" } }}
+          >
+            <div className="flex flex-col">
+              <div style={{ width: "100%", height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={propertyStatusData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={60}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {propertyStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend
-                      iconSize={10}
-                      verticalAlign="middle"
-                      align="right"
-                      layout="vertical"
+                  <BarChart
+                    data={userDistributionData}
+                    margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="gray"
                     />
-                  </PieChart>
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#c7c7b0", fontSize: 12, fontWeight: 500 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "#94a3b8", fontSize: 11 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#f8fafc" }}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "none",
+                        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                      }}
+                    />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={50}>
+                      {userDistributionData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={index === 0 ? "#3b82f6" : "#10b981"}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
-            </Card>
-          </div>
+              <div className="flex justify-center gap-4 py-3 bg-gray-50/80 rounded-xl mt-4">
+                {userDistributionData.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full shadow-sm"
+                      style={{
+                        backgroundColor: i === 0 ? "#3b82f6" : "#10b981",
+                      }}
+                    ></div>
+                    <span className="text-[11px] sm:text-xs text-gray-700 font-bold uppercase tracking-wide">
+                      {d.name}: {d.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
         </Col>
       </Row>
-
+          {/* Marketing Trends Section */}
       <Row gutter={[24, 24]}>
-        {/* Recent Activity Section */}
-        <Col xs={24}>
-          <Title level={4}>Recent Activity</Title>
-        </Col>
-
-        {/* Recent Enquiries */}
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={16}>
           <Card
-            title="Latest Enquiries"
-            className="shadow-sm rounded-xl"
+            title={
+              <div className="flex flex-col">
+                <span>Marketing Performance Trends</span>
+                <span className="text-xs font-normal text-gray-400">Time-series of premium marketing requests</span>
+              </div>
+            }
+            className="shadow-sm rounded-2xl"
             variant="borderless"
-            extra={<Link to="/admin/enquiries">View All</Link>}
+            styles={{ body: { padding: '24px' } }}
           >
-            <div className="space-y-4">
-              {data.recentEnquiries.length > 0 ? (
-                data.recentEnquiries.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                    <Avatar style={{ backgroundColor: "#e6f7ff", color: "#1890ff", flexShrink: 0 }}>
-                      <MessageSquare size={16} />
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-gray-900 truncate">On: {item.property}</div>
-                      <div className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleDateString()}</div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-400 text-sm">No recent enquiries</div>
-              )}
-            </div>
-          </Card>
-        </Col>
-
-        {/* Recent Properties */}
-        <Col xs={24} lg={8}>
-          <Card
-            title="New Properties"
-            className="shadow-sm rounded-xl"
-            variant="borderless"
-            extra={<Link to="/admin/properties">View All</Link>}
-          >
-            <div className="space-y-4">
-              {data.recentProperties.length > 0 ? (
-                data.recentProperties.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                    <Avatar style={{ backgroundColor: "#f6ffed", color: "#52c41a", flexShrink: 0 }}>
-                      <Home size={16} />
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <Link to={`/property/${item._id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600 truncate block">
-                        {item.title}
-                      </Link>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-gray-500">By: {item.seller}</span>
-                        <Tag color={item.status === "available" ? "green" : item.status === "sold" ? "red" : "gold"}>
-                          {item.status.toUpperCase()}
-                        </Tag>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-400 text-sm">No recent properties</div>
-              )}
-            </div>
-          </Card>
-        </Col>
-
-        {/* Recent Users */}
-        <Col xs={24} lg={8}>
-          <Card
-            title="New Users"
-            className="shadow-sm rounded-xl"
-            variant="borderless"
-            extra={<Link to="/admin/users">View All</Link>}
-          >
-            <div className="space-y-4">
-              {data.recentUsers.length > 0 ? (
-                data.recentUsers.map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-4 p-2 hover:bg-gray-50 rounded-lg transition-colors">
-                    <Avatar style={{ backgroundColor: "#f9f0ff", color: "#722ed1", flexShrink: 0 }}>
-                      <UserPlus size={16} />
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium text-gray-900 truncate">{item.name}</div>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-xs text-gray-500">{item.email}</span>
-                        <Tag className="m-0 text-[10px]">{item.role}</Tag>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-400 text-sm">No recent users</div>
-              )}
+            <div style={{ width: "100%", height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart 
+                  data={data.chartData} 
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  style={{ outline: 'none' }}
+                >
+                  <CartesianGrid strokeDasharray="1 5" vertical={true} horizontal={true} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#94a3b8', fontSize: 11 }} 
+                    dy={10}
+                    tickFormatter={(str) => {
+                      const date = new Date(str);
+                      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+                    }}
+                  />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  />
+                  <Bar 
+                    dataKey="marketingLeads" 
+                    name="Leads" 
+                    fill="#a78bfa" 
+                    radius={[6, 6, 0, 0]} 
+                    barSize={24}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </Card>
         </Col>

@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import AdminLayout from "./AdminLayout";
 import Dashboard from "./pages/dashboard/Dashboard";
+import SellerOverview from "./pages/dashboard/SellerOverview";
 import Users from "./pages/users/Users";
 import AdminProperties from "./pages/properties/AdminProperties";
 import AdminApprovals from "./pages/approvals/AdminApprovals";
@@ -28,6 +29,7 @@ const AdminRoute = () => {
       <Route element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="seller/overview" element={<SellerOverview />} />
         <Route path="users" element={<UserList />} />{" "}
         {/* Changed to UserList */}
         <Route path="sellers" element={<SellerList />} />{" "}

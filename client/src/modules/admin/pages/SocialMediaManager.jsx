@@ -167,7 +167,7 @@ const SocialMediaManager = () => {
       key: "platform",
       render: (text, record) => (
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-gray-50 rounded-lg text-blue-600 border">
+          <div className="p-2 bg-gray-50 rounded-lg text-blue-600 border border-gray-200">
             {iconMap[record.icon] || <Globe size={18} />}
           </div>
           <span className="font-semibold text-gray-900">{text}</span>
@@ -327,7 +327,7 @@ const SocialMediaManager = () => {
 
       <Modal
         title={
-          <div className="flex items-center gap-2 pb-4 border-b">
+          <div className="flex items-center gap-2 pb-4 border-b border-gray-300">
             {editingItem ? <Edit size={20} /> : <Plus size={20} />}
             <span>{editingItem ? "Edit Social Media Link" : "Add New Social Media Link"}</span>
           </div>

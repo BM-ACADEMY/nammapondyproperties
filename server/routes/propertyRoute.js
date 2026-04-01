@@ -54,4 +54,10 @@ router.put("/update-view-count/:id", protect, propertyController.updateViewCount
 // Get Admin Stats (Protected)
 router.get("/admin-stats", protect, propertyController.getAdminStats);
 
+// Get Seller Overview Stats (Admin only)
+router.get("/seller-overview-stats", protect, propertyController.getSellerOverviewStats);
+
+// Get specific property view stats (Admin only)
+router.get("/property-view-stats/:id", protect, propertyController.getPropertyViewStats);
+
 module.exports = router;

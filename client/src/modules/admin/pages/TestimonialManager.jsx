@@ -275,7 +275,7 @@ const TestimonialManager = () => {
 
       <Modal
         title={
-          <div className="flex items-center gap-2 pb-4 border-b">
+          <div className="flex items-center gap-2 pb-4 border-b border-gray-200">
             <MessageSquare size={20} className="text-blue-600" />
             <span>Testimonial Details</span>
           </div>
@@ -311,7 +311,7 @@ const TestimonialManager = () => {
                </div>
             </div>
 
-            <div className="bg-gray-50 p-6 rounded-2xl relative border">
+            <div className="bg-gray-50 p-6 rounded-2xl relative border border-gray-300">
               <div className="absolute -top-3 left-6 px-3 bg-white text-[10px] uppercase font-bold text-gray-400 tracking-widest border rounded-full">Review Content</div>
               <p className="text-gray-700 leading-relaxed text-base italic">
                 "{selectedTestimonial.content}"

@@ -14,7 +14,10 @@ import {
   Row,
   Col,
   Statistic,
+  Avatar,
 } from "antd";
+import { Hash, UserPlus } from "lucide-react";
+import { getImageUrl } from "@/utils/imageUrl";
 import { 
   Trash2, 
   AlertCircle, 
@@ -81,10 +84,28 @@ const SellerList = () => {
       key: "name",
       render: (text, record) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs uppercase">
-            {text ? text.charAt(0) : "S"}
+          <Avatar 
+            src={getImageUrl(record.profile_image)} 
+            size={40}
+            className="bg-indigo-100 text-indigo-600 border border-indigo-200"
+          >
+            {text ? text.charAt(0).toUpperCase() : "S"}
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900">{text || "Unnamed Seller"}</span>
+            <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{record.userId || "NO ID"}</span>
           </div>
-          <span className="font-medium text-gray-900">{text || "Unnamed Seller"}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Referral ID",
+      dataIndex: "referralCode",
+      key: "referralCode",
+      render: (code) => (
+        <div className="flex items-center gap-1.5 font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100 w-fit">
+          <UserPlus size={12} className="text-gray-400" />
+          <span>{code || "---"}</span>
         </div>
       ),
     },

@@ -1089,15 +1089,23 @@ exports.getAdminStats = async (req, res) => {
 
     // 2. Property Stats
     const totalProperties = await Property.countDocuments();
-    const activeProperties = await Property.countDocuments({
-      status: "available",
-    });
-    const soldProperties = await Property.countDocuments({ 
-      isSold: true,
+    
+    // Admin Specific Properties (those posted by currently logged in admin)
+    const adminPropertiesCount = await Property.countDocuments({
       seller: req.user._id
     });
     
-    // Total Sold Amount (Admin)
+    const soldAdminPropertiesCount = await Property.countDocuments({ 
+      isSold: true,
+      seller: req.user._id
+    });
+
+    // Seller Specific Properties (those NOT posted by currently logged in admin)
+    const sellerPropertiesCount = await Property.countDocuments({
+      seller: { $ne: req.user._id }
+    });
+    
+    // Total Sold Amount (Admin's properties)
     const soldStats = await Property.aggregate([
       { 
         $match: { 
@@ -1113,10 +1121,13 @@ exports.getAdminStats = async (req, res) => {
       isVerified: false,
     });
 
-    // 3. Views Aggregation (Global, Time-Series)
+    // 3. Views Aggregation (Filter by Admin Properties Only)
+    const adminPropertyIds = await Property.find({ seller: req.user._id }).distinct("_id");
+
     const viewsOverTime = await PropertyView.aggregate([
       {
         $match: {
+          property_id: { $in: adminPropertyIds },
           viewed_at: { $gte: dateFrom },
         },
       },
@@ -1129,9 +1140,28 @@ exports.getAdminStats = async (req, res) => {
       { $sort: { _id: 1 } },
     ]);
 
-    const totalViewsAllTime = await PropertyView.estimatedDocumentCount(); // Faster than countDocuments or aggregation if huge
+    const totalViewsAllTime = await PropertyView.countDocuments({
+      property_id: { $in: adminPropertyIds }
+    });
 
-    // 4. Enquiries Aggregation (Global, Time-Series)
+    // 4. Marketing Leads & Enquiries
+    const marketingLeadsCount = await require("../models/MarketingRequest").countDocuments();
+    
+    const marketingRequestsOverTime = await require("../models/MarketingRequest").aggregate([
+      {
+        $match: {
+          createdAt: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
     const enquiriesOverTime = await Enquiry.aggregate([
       {
         $match: {
@@ -1169,11 +1199,13 @@ exports.getAdminStats = async (req, res) => {
       const dateStr = currentDate.toISOString().split("T")[0];
       const viewData = viewsOverTime.find((v) => v._id === dateStr);
       const enquiryData = enquiriesOverTime.find((e) => e._id === dateStr);
+      const mktData = marketingRequestsOverTime.find((m) => m._id === dateStr);
 
       chartData.push({
         date: dateStr,
         views: viewData ? viewData.count : 0,
         enquiries: enquiryData ? enquiryData.count : 0,
+        marketingLeads: mktData ? mktData.count : 0,
       });
       currentDate.setDate(currentDate.getDate() + 1);
     }
@@ -1186,14 +1218,14 @@ exports.getAdminStats = async (req, res) => {
       .select("name email role_id createdAt")
       .populate("role_id", "role_name");
 
-    // Recent Properties
+    // Recent Properties (Increased limit for dashboard selector)
     const recentProperties = await Property.find()
       .populate("seller", "name")
-      .limit(5)
+      .limit(50)
       .select("basicInfo.title seller isVerified createdAt status")
       .sort({ createdAt: -1 });
 
-    // Recent Enquiries (Only for this admin/seller to avoid leaking others' leads)
+    // Recent Enquiries
     const recentEnquiries = await Enquiry.find({ seller_id: req.user._id })
       .populate("property_id", "basicInfo.title")
       .populate("user_id", "name email")
@@ -1206,8 +1238,10 @@ exports.getAdminStats = async (req, res) => {
         totalSellers,
         totalBuyers,
         totalProperties,
-        activeProperties,
-        soldProperties,
+        adminPropertiesCount,
+        soldAdminPropertiesCount,
+        sellerPropertiesCount,
+        marketingLeadsCount,
         pendingApprovals,
         totalSoldAmount,
         totalViews: totalViewsAllTime,
@@ -1240,6 +1274,74 @@ exports.getAdminStats = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getSellerOverviewStats = async (req, res) => {
+  try {
+    const Role = require("../models/Role");
+    const sellerRole = await Role.findOne({ role_name: { $regex: /seller/i } });
+    
+    if (!sellerRole) {
+      return res.status(404).json({ error: "Seller role not found" });
+    }
+
+    // 1. First, find all users with the "Seller" role to ensure we only count them
+    const User = require("../models/User");
+    const sellers = await User.find({ role_id: sellerRole._id }).distinct("_id");
+
+    // Aggregate property counts per seller (strictly only for those with Seller role)
+    const sellerStats = await Property.aggregate([
+      {
+        $match: {
+          seller: { $in: sellers }
+        }
+      },
+      {
+        $group: {
+          _id: "$seller",
+          propertyCount: { $sum: 1 },
+          totalViews: { $sum: "$view_count" },
+          soldCount: { $sum: { $cond: [{ $eq: ["$isSold", true] }, 1, 0] } }
+        }
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "_id",
+          as: "sellerDetails"
+        }
+      },
+      { $unwind: "$sellerDetails" },
+      {
+        $project: {
+          _id: 1,
+          propertyCount: 1,
+          totalViews: 1,
+          soldCount: 1,
+          name: "$sellerDetails.name",
+          email: "$sellerDetails.email",
+          phone: "$sellerDetails.phone",
+          isVerified: "$sellerDetails.is_verified"
+        }
+      },
+      { $sort: { propertyCount: -1 } }
+    ]);
+
+    // Overall property trends for sellers (Views)
+    const topPerformer = sellerStats.length > 0 ? sellerStats[0] : null;
+
+    res.json({
+      sellerStats,
+      topPerformer,
+      totalSellerProperties: sellerStats.reduce((sum, s) => sum + s.propertyCount, 0),
+      totalSellerViews: sellerStats.reduce((sum, s) => sum + s.totalViews, 0)
+    });
+  } catch (error) {
+    console.error("Error fetching seller overview stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.updateViewCount = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1366,6 +1468,60 @@ exports.getSuggestions = async (req, res) => {
     res.json(formattedSuggestions.slice(0, 10));
   } catch (error) {
     console.error("Suggestion API Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPropertyViewStats = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { range = "30d" } = req.query;
+
+    let dateFrom = new Date();
+    if (range === "7d") dateFrom.setDate(dateFrom.getDate() - 7);
+    else if (range === "30d") dateFrom.setDate(dateFrom.getDate() - 30);
+    else if (range === "90d") dateFrom.setDate(dateFrom.getDate() - 90);
+    else if (range === "all") dateFrom = new Date(0);
+
+    const viewsOverTime = await PropertyView.aggregate([
+      {
+        $match: {
+          property_id: new mongoose.Types.ObjectId(id),
+          viewed_at: { $gte: dateFrom },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$viewed_at" } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const property = await Property.findById(id).select("basicInfo.title view_count");
+
+    // Merge with date range to ensure continuous line
+    const chartData = [];
+    const today = new Date();
+    let currentDate = new Date(dateFrom.getTime() < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).getTime() ? dateFrom : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
+    
+    while (currentDate <= today) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      const viewData = viewsOverTime.find((v) => v._id === dateStr);
+      chartData.push({
+        date: dateStr,
+        views: viewData ? viewData.count : 0,
+      });
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    res.json({
+      property,
+      chartData
+    });
+  } catch (error) {
+    console.error("Error fetching property view stats:", error);
     res.status(500).json({ error: error.message });
   }
 };

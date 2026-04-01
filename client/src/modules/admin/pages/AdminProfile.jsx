@@ -19,6 +19,7 @@ import Loader from "../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
+import { Hash, UserPlus } from "lucide-react"; // Import hash for UserID and UserPlus for Referral
 
 const AdminProfile = () => {
   const [loading, setLoading] = useState(false);
@@ -141,7 +142,7 @@ const AdminProfile = () => {
   }
 
   return (
-    <div className="p-6 max-w-8xl mx-auto">
+    <div className="p-6">
       <div className="mb-6">
         <Title level={2}>Account Settings</Title>
         <Text type="secondary">
@@ -218,15 +219,6 @@ const AdminProfile = () => {
                 />
               </Form.Item>
 
-              <Form.Item name="email" label="Email Address">
-                <Input
-                  prefix={<Mail size={18} className="text-gray-400" />}
-                  disabled
-                  className="bg-gray-50 text-gray-500"
-                  size="large"
-                />
-              </Form.Item>
-
               <Form.Item
                 name="phone"
                 label="Phone Number"
@@ -250,6 +242,29 @@ const AdminProfile = () => {
                   }}
                 />
               </Form.Item>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item name="userId" label="User ID">
+                    <Input
+                      prefix={<Hash size={18} className="text-gray-400" />}
+                      disabled
+                      className="bg-gray-50 text-gray-500 font-mono"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name="referralCode" label="Referral ID">
+                    <Input
+                      prefix={<UserPlus size={18} className="text-gray-400" />}
+                      disabled
+                      className="bg-gray-50 text-gray-500 font-mono"
+                      size="large"
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
 
               <div className="flex justify-end pt-4">
                 <Button
