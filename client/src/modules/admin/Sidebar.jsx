@@ -160,7 +160,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "/admin/enquiries",
       icon: <LibraryBig size={20} />,
-      label: "Enquiries Properties",
+      label: "Enquiry Leads",
       onClick: () => handleMenuClick("/admin/enquiries"),
     },
     {

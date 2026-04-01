@@ -13,7 +13,7 @@ const AdminEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [viewMode] = useState("my"); // Default and only view: 'my'
+  const [viewMode] = useState("all"); // Default and only view: 'all' to show platform-wide leads
 
   useEffect(() => {
     fetchEnquiries();
@@ -267,8 +267,8 @@ const AdminEnquiries = () => {
     <div className="p-4 sm:p-6 bg-gray-50/50 min-h-screen">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <Title level={2} className="mb-0 text-gray-800">Property Enquiries (Leads)</Title>
-          <Text type="secondary">Manage and track all incoming property enquiries from users</Text>
+          <Title level={2} className="mb-0 text-gray-800">Property Enquiry Leads</Title>
+          <Text type="secondary">Monitor and manage all incoming property inquiries and direct WhatsApp leads platform-wide</Text>
         </div>
         <Button
           type="primary"
@@ -340,11 +340,11 @@ const AdminEnquiries = () => {
           
           {/* Title and results tag: Top on mobile, Left on desktop */}
           <div className="flex items-center gap-3">
-            <Title level={4} className="mb-0 text-gray-800! whitespace-nowrap">
-              Recent Inquiries
+            <Title level={4} className="mb-0 text-gray-800 font-semibold tracking-tight">
+              All Platform Inquiries
             </Title>
-            <Tag color="geekblue" className="rounded-full border-none px-3 font-semibold whitespace-nowrap">
-              {filteredEnquiries.length} results
+            <Tag color="indigo" className="rounded-full border-none px-3 font-semibold text-xs whitespace-nowrap">
+              {filteredEnquiries.length} TOTAL LEADS
             </Tag>
           </div>
 

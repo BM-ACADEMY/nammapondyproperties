@@ -163,7 +163,7 @@ const Dashboard = () => {
       path: "/admin/marketing-requests",
     },
     {
-      title: "Total Enquiries",
+      title: "Enquiry Leads",
       value: data.summary.totalEnquiries,
       icon: <MessageSquare size={24} className="text-purple-500" />,
       color: "#f9f0ff",

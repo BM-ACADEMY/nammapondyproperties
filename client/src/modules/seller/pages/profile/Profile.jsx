@@ -11,7 +11,7 @@ import {
   Col,
   Upload,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2 } from "lucide-react";
 import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -150,7 +150,17 @@ const Profile = () => {
       <Row gutter={[24, 24]} justify="start">
         {/* Profile Details Section */}
         <Col xs={24} md={18} lg={12}>
-          <Card title="Profile Information" className="shadow-sm h-full">
+          <Card 
+            title="Profile Information" 
+            className="shadow-xl shadow-slate-100/50 border-gray-100 rounded-3xl h-full overflow-hidden"
+            headStyle={{ 
+              borderBottom: '1px solid #f8fafc',
+              padding: '24px',
+              fontSize: '18px',
+              fontWeight: '500' 
+            }}
+            bodyStyle={{ padding: '32px' }}
+          >
             <div className="flex justify-center mb-6">
               <ImgCrop rotationSlider>
                 <Upload
@@ -210,14 +220,25 @@ const Profile = () => {
                 />
               </Form.Item>
 
-              <Form.Item name="email" label="Email Address">
-                <Input
-                  prefix={<Mail size={18} className="text-gray-400" />}
-                  disabled
-                  className="bg-gray-50 text-gray-500"
-                  size="large"
-                />
-              </Form.Item>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Form.Item name="userId" label="User ID">
+                  <Input
+                    prefix={<Hash size={18} className="text-gray-400" />}
+                    readOnly
+                    className="bg-slate-50 border-gray-100 text-gray-500 font-mono cursor-default"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item name="referralCode" label="Referral ID">
+                  <Input
+                    prefix={<Share2 size={18} className="text-gray-400" />}
+                    readOnly
+                    className="bg-slate-50 border-gray-100 text-gray-500 font-mono cursor-default"
+                    size="large"
+                  />
+                </Form.Item>
+              </div>
 
               <Form.Item
                 name="phone"
@@ -244,7 +265,7 @@ const Profile = () => {
                 />
               </Form.Item>
 
-              <div className="flex justify-between items-center pt-8 border-t mt-4">
+              <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-4">
                 <div className="flex flex-col">
                   {user?.badgeVerified ? (
                     <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
