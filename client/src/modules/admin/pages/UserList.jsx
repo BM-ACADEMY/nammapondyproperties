@@ -10,18 +10,30 @@ import {
   Modal,
   Dropdown,
   Menu,
+  Row,
+  Col,
+  Statistic,
+  Avatar,
 } from "antd";
-import { Plus, Trash2, Edit, AlertCircle, MoreVertical, CheckCircle } from "lucide-react";
+import { getImageUrl } from "@/utils/imageUrl";
+import { Hash, UserPlus } from "lucide-react";
+import { 
+  Trash2, 
+  AlertCircle, 
+  MoreVertical, 
+  CheckCircle, 
+  Users, 
+  UserCheck, 
+  UserX, 
+  ShieldCheck 
+} from "lucide-react";
 import api from "@/services/api";
-import CreateUserModal from "../components/CreateUserModal";
 
 const { Title } = Typography;
 
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -40,11 +52,6 @@ const UserList = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const handleEdit = (user) => {
-    setEditingUser(user);
-    setIsModalVisible(true);
-  };
 
   const handleDelete = (id) => {
     Modal.confirm({
@@ -67,11 +74,6 @@ const UserList = () => {
     });
   };
 
-  const handleModalClose = () => {
-    setIsModalVisible(false);
-    setEditingUser(null);
-  };
-
   const columns = [
     {
       title: "Name",
@@ -79,10 +81,28 @@ const UserList = () => {
       key: "name",
       render: (text, record) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs uppercase">
-            {text ? text.charAt(0) : "U"}
+          <Avatar 
+            src={getImageUrl(record.profile_image)} 
+            size={40}
+            className="bg-blue-100 text-blue-600 border border-blue-200"
+          >
+            {text ? text.charAt(0).toUpperCase() : "U"}
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900">{text || "Unnamed User"}</span>
+            <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{record.userId || "NO ID"}</span>
           </div>
-          <span className="font-medium text-gray-900">{text || "Unnamed User"}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Referral ID",
+      dataIndex: "referralCode",
+      key: "referralCode",
+      render: (code) => (
+        <div className="flex items-center gap-1.5 font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100 w-fit">
+          <UserPlus size={12} className="text-gray-400" />
+          <span>{code || "---"}</span>
         </div>
       ),
     },
@@ -102,7 +122,9 @@ const UserList = () => {
       key: "status",
       render: (status) => (
         <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
-          {status ? status.toUpperCase() : "ACTIVE"}
+          <span className="inline-flex items-center whitespace-nowrap">
+            {status ? status.toUpperCase() : "ACTIVE"}
+          </span>
         </Tag>
       ),
     },
@@ -112,8 +134,10 @@ const UserList = () => {
       key: "isVerified",
       align: "center",
       render: (verified) => (
-        <Tag color={verified ? "blue" : "default"} className="rounded-full px-3">
-          {verified ? "VERIFIED" : "NOT VERIFIED"}
+        <Tag color={verified ? "blue" : "default"} className="rounded-full px-4">
+          <span className="inline-flex items-center whitespace-nowrap font-medium text-[10px]">
+             {verified ? "VERIFIED" : "NOT VERIFIED"}
+          </span>
         </Tag>
       ),
     },
@@ -123,15 +147,6 @@ const UserList = () => {
       align: "right",
       render: (_, record) => {
         const items = [
-          {
-            key: "edit",
-            label: (
-              <div className="flex items-center gap-2" onClick={() => handleEdit(record)}>
-                <Edit size={14} />
-                <span>Edit Details</span>
-              </div>
-            ),
-          },
           {
             key: "toggleStatus",
             label: (
@@ -206,37 +221,77 @@ const UserList = () => {
         <Title level={3} className="mb-0!">
           User Management
         </Title>
-        <Button
-          type="primary"
-          icon={<Plus size={18} />}
-          onClick={() => {
-            setEditingUser(null);
-            setIsModalVisible(true);
-          }}
-          className="w-full sm:w-auto"
-        >
-          Add New User
-        </Button>
       </div>
 
-      <Card className="shadow-sm border-none">
+      <Row gutter={[24, 24]} className="mb-8">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="shadow-sm border-none bg-blue-50/50 hover:bg-blue-50 transition-colors py-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+                <Users size={24} />
+              </div>
+              <div>
+                <div className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Total Users</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : users.length}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="shadow-sm border-none bg-emerald-50/50 hover:bg-emerald-50 transition-colors py-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                <UserCheck size={24} />
+              </div>
+              <div>
+                <div className="text-emerald-600 font-semibold text-xs uppercase tracking-wider">Active Users</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : users.filter(u => u.status === 'active').length}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="shadow-sm border-none bg-rose-50/50 hover:bg-rose-50 transition-colors py-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-rose-100 rounded-xl text-rose-600">
+                <UserX size={24} />
+              </div>
+              <div>
+                <div className="text-rose-600 font-semibold text-xs uppercase tracking-wider">Inactive Users</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : users.filter(u => u.status !== 'active').length}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="shadow-sm border-none bg-indigo-50/50 hover:bg-indigo-50 transition-colors py-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
+                <ShieldCheck size={24} />
+              </div>
+              <div>
+                <div className="text-indigo-600 font-semibold text-xs uppercase tracking-wider">Verified Users</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : users.filter(u => u.isVerified).length}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden">
         <Table
           columns={columns}
           dataSource={users}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
+          pagination={{ 
+            pageSize: 10,
+            showSizeChanger: false,
+            className: "px-4"
+          }}
           scroll={{ x: true }}
         />
       </Card>
-
-      <CreateUserModal
-        visible={isModalVisible}
-        onClose={handleModalClose}
-        initialRole="user"
-        refreshData={fetchUsers}
-        editingUser={editingUser}
-      />
     </div>
   );
 };

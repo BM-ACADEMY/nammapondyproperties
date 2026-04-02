@@ -9,19 +9,35 @@ import {
     Switch,
     Upload,
     message,
-    Popconfirm,
     Tag,
-    Space,
+    Card,
+    Typography,
+    Row,
+    Col,
+    Dropdown,
 } from "antd";
-import { Plus, Edit, Trash2, Upload as UploadIcon, ExternalLink } from "lucide-react";
+import { 
+    Plus, 
+    Edit, 
+    Trash2, 
+    Upload as UploadIcon, 
+    ExternalLink, 
+    MoreVertical, 
+    Image as ImageIcon,
+    CheckCircle,
+    XCircle,
+    Clock
+} from "lucide-react";
 import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
 import dayjs from "dayjs";
 
+const { Title, Text } = Typography;
+
 const AdminBannerAds = () => {
     const [ads, setAds] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isByModalVisible, setIsByModalVisible] = useState(false);
     const [editingAd, setEditingAd] = useState(null);
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState([]);
@@ -48,7 +64,7 @@ const AdminBannerAds = () => {
         setEditingAd(null);
         form.resetFields();
         setFileList([]);
-        setIsModalVisible(true);
+        setIsByModalVisible(true);
     };
 
     const handleEdit = (record) => {
@@ -67,19 +83,29 @@ const AdminBannerAds = () => {
                 url: getImageUrl(record.imageUrl),
             },
         ]);
-        setIsModalVisible(true);
+        setIsByModalVisible(true);
     };
 
-    const handleDelete = async (id) => {
-        try {
-            const response = await api.delete(`/banner-ads/${id}`);
-            if (response.data.success) {
-                message.success("Advertisement deleted successfully");
-                fetchAds();
-            }
-        } catch (error) {
-            message.error("Failed to delete advertisement");
-        }
+    const handleDelete = (id) => {
+        Modal.confirm({
+            title: "Are you sure you want to delete this advertisement?",
+            icon: <XCircle className="text-red-500" />,
+            content: "This action cannot be undone.",
+            okText: "Yes, Delete",
+            okType: "danger",
+            cancelText: "Cancel",
+            onOk: async () => {
+                try {
+                    const response = await api.delete(`/banner-ads/${id}`);
+                    if (response.data.success) {
+                        message.success("Advertisement deleted successfully");
+                        fetchAds();
+                    }
+                } catch (error) {
+                    message.error("Failed to delete advertisement");
+                }
+            },
+        });
     };
 
     const handleToggleActive = async (checked, record) => {
@@ -126,11 +152,10 @@ const AdminBannerAds = () => {
 
             if (response.data.success) {
                 message.success(`Advertisement ${editingAd ? "updated" : "created"} successfully`);
-                setIsModalVisible(false);
+                setIsByModalVisible(false);
                 fetchAds();
             }
         } catch (error) {
-            console.error("Submit error:", error);
             message.error(error.response?.data?.message || "Failed to save advertisement");
         } finally {
             setLoading(false);
@@ -139,24 +164,27 @@ const AdminBannerAds = () => {
 
     const columns = [
         {
-            title: "Banner",
+            title: "Banner Preview",
             dataIndex: "imageUrl",
             key: "imageUrl",
             render: (url) => (
-                <img
-                    src={getImageUrl(url)}
-                    alt="Ad"
-                    style={{ width: 100, height: 40, objectFit: "cover", borderRadius: 4 }}
-                />
+                <div className="relative group overflow-hidden rounded-lg w-24 h-10 border shadow-sm">
+                    <img
+                        src={getImageUrl(url)}
+                        alt="Ad"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                    />
+                </div>
             ),
         },
         {
             title: "Title",
             dataIndex: "title",
             key: "title",
+            render: (text) => <span className="font-medium text-gray-900">{text}</span>,
         },
         {
-            title: "Expiry Date",
+            title: "Validity",
             dataIndex: "expiryDate",
             key: "expiryDate",
             render: (date) => {
@@ -166,123 +194,206 @@ const AdminBannerAds = () => {
                 const daysDiff = expiry.diff(now, 'day');
 
                 return (
-                    <Space direction="vertical" size={0}>
-                        <Tag color={isExpired ? "red" : "green"}>
+                    <div className="flex flex-col">
+                        <Tag color={isExpired ? "red" : "green"} className="w-fit m-0 font-medium border-none rounded-full px-2">
                             {expiry.format("DD MMM YYYY")}
                         </Tag>
-                        <span className={`text-xs ${isExpired ? "text-red-500 font-medium" : "text-gray-500"}`}>
-                            {isExpired ? "Expired" : `${daysDiff} days remaining`}
+                        <span className={`text-[10px] mt-1 ${isExpired ? "text-red-500 font-semibold" : "text-gray-500"}`}>
+                            {isExpired ? "EXPIRED" : `${daysDiff} days left`}
                         </span>
-                    </Space>
+                    </div>
                 );
             },
         },
         {
-            title: "Status",
+            title: "Display Status",
             dataIndex: "isActive",
             key: "isActive",
             render: (isActive, record) => (
                 <Switch
                     checked={isActive}
+                    size="small"
                     onChange={(checked) => handleToggleActive(checked, record)}
                 />
             ),
         },
         {
-            title: "Actions",
-            key: "actions",
-            render: (_, record) => (
-                <Space size="middle">
-                    <Button
-                        type="text"
-                        icon={<Edit size={16} />}
-                        onClick={() => handleEdit(record)}
-                    />
-                    <Popconfirm
-                        title="Delete advertisement?"
-                        description="Are you sure you want to delete this ad?"
-                        onConfirm={() => handleDelete(record._id)}
-                        okText="Yes"
-                        cancelText="No"
-                    >
-                        <Button type="text" danger icon={<Trash2 size={16} />} />
-                    </Popconfirm>
-                    {record.linkUrl && (
-                        <a href={record.linkUrl} target="_blank" rel="noopener noreferrer">
-                            <Button type="text" icon={<ExternalLink size={16} />} />
-                        </a>
-                    )}
-                </Space>
-            ),
+            title: "Action",
+            key: "action",
+            align: "right",
+            render: (_, record) => {
+                const items = [
+                    {
+                        key: "edit",
+                        label: (
+                            <div className="flex items-center gap-2 py-1" onClick={() => handleEdit(record)}>
+                                <Edit size={14} />
+                                <span>Edit Ad</span>
+                            </div>
+                        ),
+                    },
+                    {
+                        key: "link",
+                        disabled: !record.linkUrl,
+                        label: record.linkUrl ? (
+                            <a href={record.linkUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 py-1 text-gray-700">
+                                <ExternalLink size={14} />
+                                <span>View Target</span>
+                            </a>
+                        ) : (
+                            <div className="flex items-center gap-2 py-1 opacity-50">
+                                <ExternalLink size={14} />
+                                <span>No Link</span>
+                            </div>
+                        ),
+                    },
+                    {
+                        type: "divider",
+                    },
+                    {
+                        key: "delete",
+                        danger: true,
+                        label: (
+                            <div className="flex items-center gap-2 py-1" onClick={() => handleDelete(record._id)}>
+                                <Trash2 size={14} />
+                                <span>Delete Ad</span>
+                            </div>
+                        ),
+                    },
+                ];
+
+                return (
+                    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+                        <Button type="text" icon={<MoreVertical size={18} className="text-gray-500" />} />
+                    </Dropdown>
+                );
+            },
+        },
+    ];
+
+    const stats = [
+        {
+            title: "Total Ads",
+            value: ads.length,
+            icon: <ImageIcon size={22} />,
+            bgColor: "bg-blue-50/50 hover:bg-blue-50",
+            iconColor: "bg-blue-100 text-blue-600",
+        },
+        {
+            title: "Active Now",
+            value: ads.filter(a => a.isActive && !dayjs().isAfter(dayjs(a.expiryDate))).length,
+            icon: <CheckCircle size={22} />,
+            bgColor: "bg-emerald-50/50 hover:bg-emerald-50",
+            iconColor: "bg-emerald-100 text-emerald-600",
+        },
+        {
+            title: "Expired",
+            value: ads.filter(a => dayjs().isAfter(dayjs(a.expiryDate))).length,
+            icon: <Clock size={22} />,
+            bgColor: "bg-rose-50/50 hover:bg-rose-50",
+            iconColor: "bg-rose-100 text-rose-600",
         },
     ];
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
+        <div className="p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-800">Banner Advertisements</h2>
-                    <p className="text-gray-500">Manage the rectangular ads displayed on the homepage.</p>
+                    <Title level={3} className="mb-1!">Banner Ads</Title>
+                    <Text type="secondary">Manage horizontal promotional banners for the website homepage</Text>
                 </div>
                 <Button
                     type="primary"
                     icon={<Plus size={18} />}
                     onClick={handleAdd}
-                    className="bg-blue-600 flex items-center"
+                    className="bg-blue-600 h-10 px-6 rounded-lg font-medium flex items-center gap-2"
                 >
                     Add Advertisement
                 </Button>
             </div>
 
-            <Table
-                columns={columns}
-                dataSource={ads}
-                rowKey="_id"
-                loading={loading}
-                pagination={{ pageSize: 10 }}
-                className="bg-white rounded-lg shadow-sm"
-                rowClassName={(record) => {
-                    return dayjs().isAfter(dayjs(record.expiryDate)) ? 'bg-gray-100 opacity-60' : '';
-                }}
-            />
+            <Row gutter={[24, 24]} className="mb-8">
+                {stats.map((stat, i) => (
+                    <Col xs={24} sm={12} lg={8} key={i}>
+                        <Card className={`shadow-sm border-none transition-all duration-300 ${stat.bgColor} py-2`}>
+                            <div className="flex items-center gap-4">
+                                <div className={`p-3 rounded-xl ${stat.iconColor}`}>
+                                    {stat.icon}
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-xs uppercase tracking-wider opacity-80">{stat.title}</div>
+                                    <div className="text-2xl font-bold text-gray-800">{loading ? "..." : stat.value}</div>
+                                </div>
+                            </div>
+                        </Card>
+                    </Col>
+                ))}
+            </Row>
+
+            <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+                <Table
+                    columns={columns}
+                    dataSource={ads}
+                    rowKey="_id"
+                    loading={loading}
+                    pagination={{ 
+                        pageSize: 10,
+                        showSizeChanger: false,
+                        className: "px-6 py-4"
+                    }}
+                    scroll={{ x: true }}
+                    rowClassName={(record) => {
+                        return dayjs().isAfter(dayjs(record.expiryDate)) ? 'bg-gray-50/50' : '';
+                    }}
+                />
+            </Card>
 
             <Modal
-                title={editingAd ? "Edit Advertisement" : "New Advertisement"}
-                open={isModalVisible}
+                title={
+                    <div className="flex items-center gap-2 pb-4 border-b">
+                        {editingAd ? <Edit size={20} /> : <Plus size={20} />}
+                        <span>{editingAd ? "Edit Advertisement" : "New Advertisement"}</span>
+                    </div>
+                }
+                open={isByModalVisible}
                 onOk={handleModalSubmit}
-                onCancel={() => setIsModalVisible(false)}
+                onCancel={() => setIsByModalVisible(false)}
                 confirmLoading={loading}
-                width={600}
+                width={500}
+                centered
+                footer={null}
             >
-                <Form form={form} layout="vertical" initialValues={{ isActive: true }}>
+                <Form form={form} layout="vertical" initialValues={{ isActive: true }} className="pt-6">
                     <Form.Item
                         name="title"
-                        label="Title"
+                        label={<span className="font-medium">Title</span>}
                         rules={[{ required: true, message: "Please input the title!" }]}
                     >
-                        <Input placeholder="E.g., Special Summer Offer" />
+                        <Input placeholder="E.g., Special Summer Offer" className="h-11 rounded-lg" />
                     </Form.Item>
 
-                    <Form.Item name="linkUrl" label="Link URL (Optional)">
-                        <Input placeholder="https://example.com/promo" />
+                    <Form.Item name="linkUrl" label={<span className="font-medium">Target URL (Optional)</span>}>
+                        <Input placeholder="https://example.com/promo" className="h-11 rounded-lg" />
                     </Form.Item>
 
-                    <div className="flex gap-4">
-                        <Form.Item
-                            name="expiryDate"
-                            label="Expiry Date"
-                            className="flex-1"
-                            rules={[{ required: true, message: "Please select expiry date!" }]}
-                        >
-                            <DatePicker className="w-full" />
-                        </Form.Item>
+                    <Row gutter={16}>
+                        <Col span={14}>
+                            <Form.Item
+                                name="expiryDate"
+                                label={<span className="font-medium">Expiry Date</span>}
+                                rules={[{ required: true, message: "Please select expiry date!" }]}
+                            >
+                                <DatePicker className="w-full h-11 rounded-lg" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={10}>
+                            <Form.Item name="isActive" label={<span className="font-medium">Status</span>} valuePropName="checked">
+                                <Switch checkedChildren="Active" unCheckedChildren="Hidden" className="mt-1" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
 
-                        <Form.Item name="isActive" label="Status" valuePropName="checked">
-                            <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
-                        </Form.Item>
-                    </div>
-
-                    <Form.Item label="Banner Image (Rectangular recommended)">
+                    <Form.Item label={<span className="font-medium">Banner Image</span>}>
                         <Upload
                             listType="picture-card"
                             fileList={fileList}
@@ -292,12 +403,20 @@ const AdminBannerAds = () => {
                         >
                             {fileList.length < 1 && (
                                 <div className="flex flex-col items-center">
-                                    <UploadIcon size={20} />
-                                    <div className="mt-2">Upload</div>
+                                    <UploadIcon size={20} className="text-gray-400" />
+                                    <div className="mt-1 text-xs">Upload</div>
                                 </div>
                             )}
                         </Upload>
+                        <Text type="secondary" className="text-[11px]">Recommended: High-resolution rectangular banner</Text>
                     </Form.Item>
+
+                    <div className="flex justify-end gap-3 mt-8">
+                        <Button onClick={() => setIsByModalVisible(false)} className="h-11 px-6 rounded-lg font-medium">Cancel</Button>
+                        <Button type="primary" onClick={handleModalSubmit} loading={loading} className="h-11 px-8 rounded-lg font-medium bg-blue-600">
+                            {editingAd ? "Update Changes" : "Create Advertisement"}
+                        </Button>
+                    </div>
                 </Form>
             </Modal>
         </div>

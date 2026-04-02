@@ -1,496 +1,415 @@
 import React, { useState, useEffect } from "react";
 import api from "@/services/api";
 import {
-    Plus,
-    Edit,
-    Trash2,
-    Check,
-    X,
-    Search,
-    Layout,
-    Home,
-    Building2,
-    Square,
-    Bed,
-    Layers,
-    Image as ImageIcon,
-    Upload,
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  message,
+  Tag,
+  Card,
+  Typography,
+  Row,
+  Col,
+  Statistic,
+  Dropdown,
+  Checkbox,
+  Upload,
+} from "antd";
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  MoreVertical, 
+  Home, 
+  Building2, 
+  CheckCircle, 
+  XCircle,
+  AlertCircle,
+  Upload as UploadIcon,
+  Search
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
+const { Title, Text } = Typography;
 const API_URL = import.meta.env.VITE_API_URL.replace("/api", "");
 
-
 const PropertyTypeManager = () => {
-    const [types, setTypes] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingType, setEditingType] = useState(null);
-    const [searchQuery, setSearchQuery] = useState("");
+  const [types, setTypes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingType, setEditingType] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [form] = Form.useForm();
+  const [fileList, setFileList] = useState([]);
 
-    const [formData, setFormData] = useState({
-        name: "",
-        usageType: "Residential",
-        hasRooms: false,
-        hasFloor: false,
-        hasPlot: false,
-        hasCommercial: false,
-        status: "active",
-        image: null,
+  const fetchTypes = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/property-types");
+      setTypes(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch property types");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTypes();
+  }, []);
+
+  const handleAdd = () => {
+    setEditingType(null);
+    form.resetFields();
+    setFileList([]);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (record) => {
+    setEditingType(record);
+    form.setFieldsValue({
+      name: record.name,
+      usageType: record.usageType,
+      hasRooms: record.hasRooms,
+      hasFloor: record.hasFloor,
+      hasPlot: record.hasPlot,
+      hasCommercial: record.hasCommercial,
+      status: record.status,
     });
-    const [imagePreview, setImagePreview] = useState(null);
+    if (record.imageUrl) {
+      setFileList([
+        {
+          uid: "-1",
+          name: "Current Image",
+          status: "done",
+          url: `${API_URL}${record.imageUrl}`,
+        },
+      ]);
+    } else {
+      setFileList([]);
+    }
+    setIsModalOpen(true);
+  };
 
-
-    const fetchTypes = async () => {
-        setIsLoading(true);
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: "Are you sure you want to delete this property type?",
+      icon: <AlertCircle className="text-red-500" />,
+      content: "This action cannot be undone.",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
         try {
-            const response = await api.get("/property-types");
-            setTypes(response.data);
+          await api.delete(`/property-types/${id}`);
+          toast.success("Property type deleted successfully");
+          fetchTypes();
         } catch (error) {
-            toast.error("Failed to fetch property types");
-        } finally {
-            setIsLoading(false);
+          toast.error("Failed to delete property type");
         }
-    };
+      },
+    });
+  };
 
-    useEffect(() => {
-        fetchTypes();
-    }, []);
+  const onFinish = async (values) => {
+    const data = new FormData();
+    Object.keys(values).forEach((key) => {
+      data.append(key, values[key]);
+    });
 
-    const handleInputChange = (e) => {
-        const { name, value, type, checked, files } = e.target;
-        if (type === "file") {
-            const file = files[0];
-            setFormData((prev) => ({ ...prev, [name]: file }));
-            if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImagePreview(reader.result);
-                };
-                reader.readAsDataURL(file);
-            }
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: type === "checkbox" ? checked : value,
-            }));
-        }
-    };
+    if (fileList[0]?.originFileObj) {
+      data.append("image", fileList[0].originFileObj);
+    }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const data = new FormData();
-        Object.keys(formData).forEach((key) => {
-            if (key === "image" && formData[key]) {
-                data.append("image", formData[key]);
-            } else if (key !== "image") {
-                data.append(key, formData[key]);
-            }
+    try {
+      if (editingType) {
+        await api.put(`/property-types/${editingType._id}`, data, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-
-        try {
-            if (editingType) {
-                await api.put(`/property-types/${editingType._id}`, data, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
-                toast.success("Property type updated successfully");
-            } else {
-                await api.post("/property-types", data, {
-                    headers: { "Content-Type": "multipart/form-data" },
-                });
-                toast.success("Property type created successfully");
-            }
-            setIsModalOpen(false);
-            setEditingType(null);
-            setFormData({
-                name: "",
-                usageType: "Residential",
-                hasRooms: false,
-                hasFloor: false,
-                hasPlot: false,
-                hasCommercial: false,
-                status: "active",
-                image: null,
-            });
-            setImagePreview(null);
-            fetchTypes();
-        } catch (error) {
-            toast.error(error.response?.data?.error || "Something went wrong");
-        }
-    };
-
-    const handleEdit = (type) => {
-        setEditingType(type);
-        setFormData({
-            name: type.name,
-            usageType: type.usageType,
-            hasRooms: type.hasRooms,
-            hasFloor: type.hasFloor,
-            hasPlot: type.hasPlot,
-            hasCommercial: type.hasCommercial,
-            status: type.status,
-            image: null,
+        toast.success("Property type updated successfully");
+      } else {
+        await api.post("/property-types", data, {
+          headers: { "Content-Type": "multipart/form-data" },
         });
-        setImagePreview(type.imageUrl ? `${API_URL}${type.imageUrl}` : null);
-        setIsModalOpen(true);
-    };
+        toast.success("Property type created successfully");
+      }
+      setIsModalOpen(false);
+      fetchTypes();
+    } catch (error) {
+      toast.error(error.response?.data?.error || "Something went wrong");
+    }
+  };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this property type?")) {
-            try {
-                await api.delete(`/property-types/${id}`);
-                toast.success("Property type deleted successfully");
-                fetchTypes();
-            } catch (error) {
-                toast.error("Failed to delete property type");
-            }
-        }
-    };
-
-    const filteredTypes = types.filter((t) =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Property Types</h1>
-                        <p className="text-gray-500">Manage property types and their form fields</p>
-                    </div>
-                    <button
-                        onClick={() => {
-                            setEditingType(null);
-                            setFormData({
-                                name: "",
-                                usageType: "Residential",
-                                hasRooms: false,
-                                hasFloor: false,
-                                hasPlot: false,
-                                hasCommercial: false,
-                                status: "active",
-                                image: null,
-                            });
-                            setImagePreview(null);
-                            setIsModalOpen(true);
-                        }}
-                        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors shadow-sm"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Add New Type
-                    </button>
-                </div>
-
-                {/* Search and Filters */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex items-center gap-4">
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Search property types..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                        />
-                    </div>
-                </div>
-
-                {/* Content */}
-                {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3].map((n) => (
-                            <div key={n} className="bg-white h-48 rounded-xl animate-pulse"></div>
-                        ))}
-                    </div>
-                ) : filteredTypes.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredTypes.map((type) => (
-                            <div
-                                key={type._id}
-                                className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow group relative overflow-hidden"
-                            >
-                                {/* Status Badge */}
-                                <div className="absolute top-4 right-4">
-                                    <span
-                                        className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${type.status === "active"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
-                                            }`}
-                                    >
-                                        {type.status}
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="relative">
-                                        <div className={`p-3 rounded-lg ${type.usageType === "Residential" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
-                                            {type.imageUrl ? (
-                                                <img 
-                                                    src={`${API_URL}${type.imageUrl}`} 
-                                                    alt={type.name} 
-                                                    className="w-8 h-8 object-cover rounded"
-                                                />
-                                            ) : (
-                                                type.usageType === "Residential" ? <Home className="w-6 h-6" /> : <Building2 className="w-6 h-6" />
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900">{type.name}</h3>
-                                        <p className="text-xs text-gray-500">{type.usageType}</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 mb-6">
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Enabled Fields</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {type.hasRooms && (
-                                            <span className="flex items-center gap-1 text-[11px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">
-                                                <Bed className="w-3 h-3" /> Rooms
-                                            </span>
-                                        )}
-                                        {type.hasFloor && (
-                                            <span className="flex items-center gap-1 text-[11px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">
-                                                <Layers className="w-3 h-3" /> Floor
-                                            </span>
-                                        )}
-                                        {type.hasPlot && (
-                                            <span className="flex items-center gap-1 text-[11px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">
-                                                <Square className="w-3 h-3" /> Plot
-                                            </span>
-                                        )}
-                                        {type.hasCommercial && (
-                                            <span className="flex items-center gap-1 text-[11px] bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-medium">
-                                                <Building2 className="w-3 h-3" /> Commercial
-                                            </span>
-                                        )}
-                                        {!type.hasRooms && !type.hasFloor && !type.hasPlot && !type.hasCommercial && (
-                                            <span className="text-[11px] text-gray-400 italic">No specific sections</span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3 pt-4 border-t border-gray-50">
-                                    <button
-                                        onClick={() => handleEdit(type)}
-                                        className="flex-1 flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-lg text-sm transition-colors"
-                                    >
-                                        <Edit className="w-4 h-4" /> Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(type._id)}
-                                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-white p-12 text-center rounded-2xl border-2 border-dashed border-gray-200">
-                        <Layout className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">No property types found</h3>
-                        <p className="text-gray-500 mb-6">Start by adding your first property type configuration.</p>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                        >
-                            Add New Type
-                        </button>
-                    </div>
-                )}
-
-                {/* Modal */}
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div
-                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-                            onClick={() => setIsModalOpen(false)}
-                        ></div>
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                                <h2 className="text-xl font-bold text-gray-900">
-                                    {editingType ? "Edit Property Type" : "Add New Property Type"}
-                                </h2>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Type Name
-                                    </label>
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        required
-                                        value={formData.name}
-                                        onChange={handleInputChange}
-                                        placeholder="e.g., Flat / Apartment"
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Usage Category
-                                    </label>
-                                    <select
-                                        name="usageType"
-                                        value={formData.usageType}
-                                        onChange={handleInputChange}
-                                        className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                                    >
-                                        <option value="Residential">Residential</option>
-                                        <option value="Commercial">Commercial</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Type Image
-                                    </label>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-16 h-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
-                                            {imagePreview ? (
-                                                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <ImageIcon className="w-6 h-6 text-gray-300" />
-                                            )}
-                                        </div>
-                                        <label className="flex-1">
-                                            <div className="flex items-center justify-center gap-2 w-full px-4 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                                                <Upload className="w-4 h-4 text-gray-400" />
-                                                <span className="text-sm font-medium text-gray-600">
-                                                    {formData.image ? formData.image.name : "Upload Image"}
-                                                </span>
-                                            </div>
-                                            <input
-                                                type="file"
-                                                name="image"
-                                                accept="image/*"
-                                                onChange={handleInputChange}
-                                                className="hidden"
-                                            />
-                                        </label>
-                                    </div>
-                                    <p className="mt-1.5 text-[11px] text-gray-500">
-                                        Recommended: SVG or small PNG/JPG, max 5MB
-                                    </p>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <label className="block text-sm font-semibold text-gray-700">
-                                        Form Configuration (Select sections to show)
-                                    </label>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <label className="flex items-center p-3 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                name="hasRooms"
-                                                checked={formData.hasRooms}
-                                                onChange={handleInputChange}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-3"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700">Rooms / BHK</span>
-                                        </label>
-
-                                        <label className="flex items-center p-3 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                name="hasFloor"
-                                                checked={formData.hasFloor}
-                                                onChange={handleInputChange}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-3"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700">Floor Details</span>
-                                        </label>
-
-                                        <label className="flex items-center p-3 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                name="hasPlot"
-                                                checked={formData.hasPlot}
-                                                onChange={handleInputChange}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-3"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700">Plot / Area</span>
-                                        </label>
-
-                                        <label className="flex items-center p-3 border border-gray-100 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                name="hasCommercial"
-                                                checked={formData.hasCommercial}
-                                                onChange={handleInputChange}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 mr-3"
-                                            />
-                                            <span className="text-sm font-medium text-gray-700">Commercial</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Status
-                                    </label>
-                                    <div className="flex gap-4">
-                                        <label className="flex items-center">
-                                            <input
-                                                type="radio"
-                                                name="status"
-                                                value="active"
-                                                checked={formData.status === "active"}
-                                                onChange={handleInputChange}
-                                                className="mr-2"
-                                            />
-                                            Active
-                                        </label>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="radio"
-                                                name="status"
-                                                value="inactive"
-                                                checked={formData.status === "inactive"}
-                                                onChange={handleInputChange}
-                                                className="mr-2"
-                                            />
-                                            Inactive
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div className="pt-4 flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsModalOpen(false)}
-                                        className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-md"
-                                    >
-                                        {editingType ? "Update Type" : "Create Type"}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
-            </div>
+  const columns = [
+    {
+      title: "Property Type",
+      dataIndex: "name",
+      key: "name",
+      render: (text, record) => (
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${record.usageType === "Residential" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
+            {record.imageUrl ? (
+              <img 
+                src={`${API_URL}${record.imageUrl}`} 
+                alt={text} 
+                className="w-8 h-8 object-cover rounded"
+              />
+            ) : (
+              record.usageType === "Residential" ? <Home size={18} /> : <Building2 size={18} />
+            )}
+          </div>
+          <div>
+            <div className="font-semibold text-gray-900">{text}</div>
+            <div className="text-xs text-gray-500">{record.usageType}</div>
+          </div>
         </div>
-    );
+      ),
+    },
+    {
+      title: "Enabled Sections",
+      key: "sections",
+      render: (_, record) => (
+        <div className="flex flex-wrap gap-1.5">
+          {record.hasRooms && <Tag className="m-0 text-[10px]">ROOMS</Tag>}
+          {record.hasFloor && <Tag className="m-0 text-[10px]">FLOORS</Tag>}
+          {record.hasPlot && <Tag className="m-0 text-[10px]">PLOTS</Tag>}
+          {record.hasCommercial && <Tag className="m-0 text-[10px]">COMMERCIAL</Tag>}
+          {!record.hasRooms && !record.hasFloor && !record.hasPlot && !record.hasCommercial && (
+             <span className="text-xs text-gray-400 italic">None</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag 
+          color={status === "active" ? "green" : "red"} 
+          className="rounded-full px-3 py-0.5 border-none font-medium"
+        >
+          {status.toUpperCase()}
+        </Tag>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      align: "right",
+      render: (_, record) => {
+        const items = [
+          {
+            key: "edit",
+            label: (
+              <div className="flex items-center gap-2 py-1" onClick={() => handleEdit(record)}>
+                <Edit size={14} />
+                <span>Edit Config</span>
+              </div>
+            ),
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "delete",
+            danger: true,
+            label: (
+              <div className="flex items-center gap-2 py-1" onClick={() => handleDelete(record._id)}>
+                <Trash2 size={14} />
+                <span>Delete Type</span>
+              </div>
+            ),
+          },
+        ];
+
+        return (
+          <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+            <Button type="text" icon={<MoreVertical size={18} className="text-gray-500" />} />
+          </Dropdown>
+        );
+      },
+    },
+  ];
+
+  const stats = [
+    {
+      title: "Total Types",
+      value: types.length,
+      icon: <Building2 size={22} />,
+      bgColor: "bg-blue-50/50 hover:bg-blue-50",
+      iconContainerColor: "bg-blue-100 text-blue-600",
+    },
+    {
+      title: "Residential",
+      value: types.filter(t => t.usageType === "Residential").length,
+      icon: <Home size={22} />,
+      bgColor: "bg-emerald-50/50 hover:bg-emerald-50",
+      iconContainerColor: "bg-emerald-100 text-emerald-600",
+    },
+    {
+      title: "Commercial",
+      value: types.filter(t => t.usageType === "Commercial").length,
+      icon: <Building2 size={22} />,
+      bgColor: "bg-purple-50/50 hover:bg-purple-50",
+      iconContainerColor: "bg-purple-100 text-purple-600",
+    },
+  ];
+
+  const filteredTypes = types.filter((t) =>
+    t.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <Title level={3} className="mb-1!">Property Types</Title>
+          <Text type="secondary">Configure form sections and icons for different property categories</Text>
+        </div>
+        <Button
+          type="primary"
+          icon={<Plus size={18} />}
+          onClick={handleAdd}
+          className="bg-blue-600 h-10 px-6 rounded-lg font-medium flex items-center gap-2"
+        >
+          Add New Type
+        </Button>
+      </div>
+
+      <Row gutter={[24, 24]} className="mb-8">
+        {stats.map((stat, i) => (
+          <Col xs={24} sm={12} lg={8} key={i}>
+            <Card className={`shadow-sm border-none transition-all duration-300 ${stat.bgColor} py-2`}>
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${stat.iconContainerColor}`}>
+                  {stat.icon}
+                </div>
+                <div>
+                  <div className="font-semibold text-xs uppercase tracking-wider opacity-80">{stat.title}</div>
+                  <div className="text-2xl font-bold text-gray-800">{loading ? "..." : stat.value}</div>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+        <div className="p-4 border-b border-gray-300">
+           <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-4" />
+              <Input
+                placeholder="Search property types..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-10 rounded-lg"
+              />
+           </div>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={filteredTypes}
+          rowKey="_id"
+          loading={loading}
+          pagination={{ 
+            pageSize: 10,
+            showSizeChanger: false,
+            className: "px-6 py-4"
+          }}
+          scroll={{ x: true }}
+        />
+      </Card>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2 pb-4 border-b border-gray-300">
+            {editingType ? <Edit size={20} /> : <Plus size={20} />}
+            <span>{editingType ? "Edit Property Type" : "Add Property Type"}</span>
+          </div>
+        }
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        footer={null}
+        width={500}
+        centered
+      >
+        <Form form={form} layout="vertical" onFinish={onFinish} className="pt-6">
+          <Form.Item
+            name="name"
+            label={<span className="font-medium">Type Name</span>}
+            rules={[{ required: true, message: "Please enter type name" }]}
+          >
+            <Input placeholder="e.g. Flat / Apartment" className="h-11 rounded-lg" />
+          </Form.Item>
+
+          <Form.Item
+            name="usageType"
+            label={<span className="font-medium">Usage Category</span>}
+            initialValue="Residential"
+          >
+            <Select className="h-11" dropdownClassName="rounded-lg">
+              <Select.Option value="Residential">Residential</Select.Option>
+              <Select.Option value="Commercial">Commercial</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item label={<span className="font-medium">Icon / Image</span>}>
+            <Upload
+              listType="picture-card"
+              fileList={fileList}
+              onChange={({ fileList }) => setFileList(fileList)}
+              beforeUpload={() => false}
+              maxCount={1}
+            >
+              {fileList.length < 1 && (
+                <div className="flex flex-col items-center">
+                  <UploadIcon size={20} className="text-gray-400" />
+                  <div className="mt-1 text-xs">Upload</div>
+                </div>
+              )}
+            </Upload>
+            <Text type="secondary" className="text-[10px]">SVG or small PNG, max 1MB</Text>
+          </Form.Item>
+
+          <div className="space-y-4 mb-8">
+            <Text strong className="text-sm block">Form Configuration</Text>
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item name="hasRooms" valuePropName="checked" noStyle>
+                <Checkbox className="text-sm">Rooms / BHK</Checkbox>
+              </Form.Item>
+              <Form.Item name="hasFloor" valuePropName="checked" noStyle>
+                <Checkbox className="text-sm">Floor Details</Checkbox>
+              </Form.Item>
+              <Form.Item name="hasPlot" valuePropName="checked" noStyle>
+                <Checkbox className="text-sm">Plot / Area</Checkbox>
+              </Form.Item>
+              <Form.Item name="hasCommercial" valuePropName="checked" noStyle>
+                <Checkbox className="text-sm">Commercial</Checkbox>
+              </Form.Item>
+            </div>
+          </div>
+
+          <Form.Item name="status" label={<span className="font-medium">Status</span>} initialValue="active">
+            <Select className="h-11" dropdownClassName="rounded-lg">
+              <Select.Option value="active">Active</Select.Option>
+              <Select.Option value="inactive">Inactive</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <div className="flex justify-end gap-3 mt-8">
+            <Button onClick={() => setIsModalOpen(false)} className="h-11 px-6 rounded-lg font-medium">Cancel</Button>
+            <Button type="primary" htmlType="submit" className="h-11 px-8 rounded-lg font-medium bg-blue-600">
+              {editingType ? "Update Config" : "Create Type"}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+    </div>
+  );
 };
 
 export default PropertyTypeManager;

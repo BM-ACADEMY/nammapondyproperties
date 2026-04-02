@@ -176,7 +176,7 @@ const MarketingRequests = () => {
           cancelled: "error",
         };
         return (
-          <Tag color={colors[status]} bordered={false} className="px-2 py-0.5 rounded-md font-medium">
+          <Tag color={colors[status]} bordered={false} className="px-2 py-0.5 rounded-md font-medium whitespace-nowrap inline-flex items-center">
             {status?.toUpperCase()}
           </Tag>
         );
@@ -235,11 +235,11 @@ const MarketingRequests = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6">
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <Title level={2} className="!mb-1 !mt-0 text-gray-800">Marketing Leads</Title>
+          <Title level={2} className="mb-1! mt-0! text-gray-800">Marketing Leads</Title>
           <p className="text-gray-500 m-0">
             Track and follow up with sellers who requested property promotion.
           </p>
@@ -285,7 +285,7 @@ const MarketingRequests = () => {
           dataSource={requests}
           loading={loading}
           rowKey="_id"
-          pagination={{ pageSize: 10, showSizeChanger: true }}
+          pagination={{ pageSize: 10 }}
           scroll={{ x: 800 }}
         />
       </div>
@@ -301,7 +301,7 @@ const MarketingRequests = () => {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         centered
       >
         <div className="mb-6 mt-4 p-5 bg-indigo-50/50 border border-indigo-100 rounded-xl">
@@ -326,13 +326,6 @@ const MarketingRequests = () => {
               icon={<Phone size={16} />}
             >
               Call Seller
-            </Button>
-            <Button
-              href={`mailto:${selectedRequest?.seller_id?.email}`}
-              className="w-full flex items-center justify-center gap-2 border-indigo-200 text-indigo-700 hover:text-indigo-800"
-              icon={<Mail size={16} />}
-            >
-              Send Email
             </Button>
           </div>
         </div>

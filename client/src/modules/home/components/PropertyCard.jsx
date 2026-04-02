@@ -30,7 +30,7 @@ const PropertyCard = ({ property }) => {
   return (
     <div className="flex flex-col group h-full">
       {/* Top Image Section */}
-      <div className="relative aspect-[4/3] rounded-xl overflow-hidden mb-4">
+      <div className="relative aspect-video rounded-xl overflow-hidden mb-4">
         <Link
           to={`/properties/${property.slug || property._id}`}
           target="_blank"
@@ -76,7 +76,7 @@ const PropertyCard = ({ property }) => {
       {/* Bottom Content Section */}
       <div className="flex flex-col flex-1 px-1">
         {/* Title */}
-        <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-1">
+        <h3 className="text-xl font-bold text-gray-900 mb-1 truncate">
           {property.basicInfo?.title || "Untitled Property"}
         </h3>
 

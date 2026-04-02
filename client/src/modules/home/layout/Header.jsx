@@ -117,6 +117,24 @@ const Header = () => {
     setIsMenuOpen(false);
   };
 
+  const handlePostProperty = () => {
+    setIsMenuOpen(false);
+    if (isAuthenticated && user) {
+      const role =
+        user?.role_id?.role_name?.toUpperCase() ||
+        user?.role?.name?.toUpperCase();
+      if (role === "ADMIN") {
+        navigate("/admin/properties/add");
+      } else if (role === "SELLER") {
+        navigate("/seller/add-property");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/post-property");
+    }
+  };
+
   // --- Animation Variants ---
   const dropdownVariants = {
     hidden: { opacity: 0, y: 15, scale: 0.95 },
@@ -267,9 +285,7 @@ const Header = () => {
               <div className="flex items-center space-x-4 lg:space-x-5">
                 {/* Post Property Button */}
                 <button
-                  onClick={() => {
-                    navigate("/post-property");
-                  }}
+                  onClick={handlePostProperty}
                   className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
                 >
                   <span className="text-[14px]">Post property</span>
@@ -311,7 +327,7 @@ const Header = () => {
                               (Mon-Sun)
                             </p>
                             <p className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide">
-                              1800-41-99099
+                              +91 94038 92971
                             </p>
                           </div>
                         </div>
@@ -654,10 +670,7 @@ const Header = () => {
                       Sell or rent faster at the right price!
                     </h3>
                     <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        navigate("/post-property");
-                      }}
+                      onClick={handlePostProperty}
                       className="bg-[#0078d7] hover:bg-[#005bb5] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
                     >
                       Post Property

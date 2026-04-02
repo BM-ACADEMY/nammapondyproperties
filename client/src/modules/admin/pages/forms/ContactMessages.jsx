@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Table, Card, Button, Input, Tag, message, Drawer, Descriptions, Popconfirm } from "antd";
-import { Download, Search, RefreshCw, Eye, Trash2 } from "lucide-react";
+import { Table, Card, Button, Input, Tag, message, Drawer, Descriptions, Popconfirm, Row, Col, Typography, Tooltip, Avatar } from "antd";
+import { Download, Search, RefreshCw, Eye, Trash2, Phone, Mail, Clock, Calendar, MessageSquare, CheckCircle, AlertCircle, User, Info } from "lucide-react";
 import api from "@/services/api";
 import * as XLSX from "xlsx";
 import moment from "moment";
+
+const { Title, Text } = Typography;
 
 const ContactMessages = () => {
   const [data, setData] = useState([]);
@@ -31,21 +33,29 @@ const ContactMessages = () => {
     fetchData();
   }, []);
 
+  const stats = {
+    total: data.length,
+    new: data.filter(d => d.status === "new").length,
+    seller: data.filter(d => d.sellProperty).length,
+    today: data.filter(d => moment(d.createdAt).isSame(moment(), 'day')).length
+  };
+
   const handleExport = () => {
     if (data.length === 0) {
       message.warning("No data to export");
       return;
     }
 
-    const exportData = data.map((item, index) => ({
+    const exportData = filteredData.map((item, index) => ({
       "S.No": index + 1,
       Name: item.name || "-",
       Phone: item.phone || "-",
       Email: item.email || "-",
-      "Wants to Sell": item.sellProperty ? "Yes" : "No",
+      "Enquiry Type": item.sellProperty ? "Seller Enquiry" : "General",
       Message: item.message || "-",
+      "Date": moment(item.createdAt).format("DD MMM, YYYY"),
+      "Time": moment(item.createdAt).format("hh:mm A"),
       Status: item.status || "new",
-      "Received On": moment(item.createdAt).format("DD-MM-YYYY hh:mm A"),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -85,72 +95,102 @@ const ContactMessages = () => {
 
   const columns = [
     {
+      title: "S.No",
+      key: "index",
+      width: 70,
+      align: "center",
+      render: (_, __, index) => <span className="text-gray-400 font-medium">{index + 1}</span>,
+    },
+    {
       title: "Name",
       dataIndex: "name",
       key: "name",
       width: 200,
-      render: (text) => <span className="font-semibold text-gray-800">{text}</span>,
+      render: (text) => (
+        <div className="flex items-center gap-2.5 whitespace-nowrap">
+          <Avatar size={32} className="bg-indigo-100 text-indigo-600 font-bold shrink-0">
+            {text?.charAt(0).toUpperCase()}
+          </Avatar>
+          <span className="font-semibold text-gray-900 truncate">{text || "Guest User"}</span>
+        </div>
+      ),
     },
     {
-      title: "Contact Info",
-      key: "contact",
-      render: (_, record) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-blue-600">{record.phone}</span>
-          <span className="text-xs text-gray-500">{record.email}</span>
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      width: 150,
+      render: (phone) => (
+        <div className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
+          <Phone size={14} className="shrink-0" />
+          <span>{phone}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      width: 200,
+      render: (email) => (
+        <div className="flex items-center gap-1.5 text-gray-500 text-xs whitespace-nowrap">
+          <Mail size={13} className="shrink-0" />
+          <span className="truncate">{email || "N/A"}</span>
         </div>
       ),
     },
     {
       title: "Type",
       key: "sellProperty",
-      width: 140,
+      width: 150,
       render: (_, record) => (
-        record.sellProperty ? (
-          <Tag color="purple" className="font-bold border-none">Seller Enquiry</Tag>
-        ) : (
-          <Tag color="cyan" className="font-bold border-none">General</Tag>
-        )
+        <Tag color={record.sellProperty ? "purple" : "cyan"} className="rounded-full px-3 border-none whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 uppercase text-[10px] font-bold tracking-wider">
+            <Info size={10} />
+            {record.sellProperty ? "Seller Enquiry" : "General"}
+          </span>
+        </Tag>
       ),
     },
     {
       title: "Date",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 170,
+      width: 130,
       render: (date) => (
-        <div className="flex flex-col">
+        <div className="flex items-center gap-1.5 text-gray-700 font-medium whitespace-nowrap">
+          <Calendar size={14} className="text-indigo-500" />
           <span>{moment(date).format("DD MMM, YYYY")}</span>
-          <span className="text-xs text-gray-500">{moment(date).format("hh:mm A")}</span>
         </div>
       ),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      width: 120,
-      render: (status) => {
-        let color = "blue";
-        if (status === "closed") color = "green";
-        if (status === "new") color = "volcano";
-        return <Tag color={color} className="uppercase font-bold tracking-wider text-[10px]">{status}</Tag>;
-      },
+      title: "Time",
+      dataIndex: "createdAt",
+      key: "reqTime",
+      width: 110,
+      render: (date) => (
+        <div className="flex items-center gap-1.5 text-gray-500 font-medium whitespace-nowrap">
+          <Clock size={14} className="text-gray-400" />
+          <span>{moment(date).format("hh:mm A")}</span>
+        </div>
+      ),
     },
     {
       title: "Action",
       key: "action",
-      width: 130,
+      width: 120,
+      align: "center",
       render: (_, record) => (
-        <div className="flex space-x-2">
-          <Button 
-            type="text" 
-            icon={<Eye className="w-4 h-4 text-blue-600" />} 
-            onClick={() => handleView(record)}
-            className="hover:bg-blue-50"
-          >
-            View
-          </Button>
+        <div className="flex justify-center gap-2">
+          <Tooltip title="View Message">
+            <Button 
+              type="text" 
+              icon={<Eye size={16} className="text-blue-600" />} 
+              onClick={() => handleView(record)}
+              className="hover:bg-blue-50 flex items-center justify-center p-2 rounded-lg"
+            />
+          </Tooltip>
           <Popconfirm
             title="Delete the message"
             description="Are you sure to delete this message?"
@@ -161,8 +201,8 @@ const ContactMessages = () => {
             <Button 
               type="text" 
               danger 
-              icon={<Trash2 className="w-4 h-4" />} 
-              className="hover:bg-red-50"
+              icon={<Trash2 size={16} />} 
+              className="hover:bg-red-50 flex items-center justify-center p-2 rounded-lg"
             />
           </Popconfirm>
         </div>
@@ -171,88 +211,171 @@ const ContactMessages = () => {
   ];
 
   return (
-    <div className="p-6">
-      <Card
-        title={
-          <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-gray-800 whitespace-nowrap">Contact Messages</span>
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-              {filteredData.length} Total
-            </span>
-          </div>
-        }
-        extra={
-          <div className="flex space-x-3 items-center">
+    <div className="p-4 sm:p-6 bg-gray-50/50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <Title level={2} className="mb-0 text-gray-800">Contact Messages</Title>
+          <Text type="secondary">Manage and respond to general inquiries and seller requests</Text>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Tooltip title="Refresh Data">
             <Button
-              icon={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
+              icon={<RefreshCw size={18} className={loading ? 'animate-spin' : ''} />}
               onClick={fetchData}
-              type="text"
-              className="text-gray-500 hover:text-blue-600"
+              className="h-10 w-10 flex items-center justify-center rounded-xl border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-100"
             />
-            <Input
-              placeholder="Search name, phone, email..."
-              prefix={<Search className="w-4 h-4 text-gray-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-64 rounded-full"
-              allowClear
-            />
-            <Button
-              type="primary"
-              icon={<Download className="w-4 h-4" />}
-              onClick={handleExport}
-              className="bg-green-600 hover:bg-green-700 rounded-lg flex items-center font-semibold tracking-wide border-none shadow-md shadow-green-600/20"
-            >
-              Export Excel
-            </Button>
+          </Tooltip>
+          <Button
+            type="primary"
+            icon={<Download size={18} />}
+            onClick={handleExport}
+            className="h-10 px-6 bg-indigo-600 hover:bg-indigo-700 border-none rounded-lg flex items-center gap-2 font-semibold shadow-sm transition-all"
+          >
+            Export Messages
+          </Button>
+        </div>
+      </div>
+
+      <Row gutter={[24, 24]} className="mb-8">
+        {[
+          { title: "Total Messages", value: stats.total, icon: <MessageSquare size={24} />, bg: "bg-indigo-50", text: "text-indigo-600" },
+          { title: "New Enquiries", value: stats.new, icon: <AlertCircle size={24} />, bg: "bg-volcano-50", text: "text-volcano-600" },
+          { title: "Seller Leads", value: stats.seller, icon: <User size={24} />, bg: "bg-purple-50", text: "text-purple-600" },
+          { title: "Received Today", value: stats.today, icon: <Calendar size={24} />, bg: "bg-emerald-50", text: "text-emerald-600" },
+        ].map((item, idx) => (
+          <Col xs={24} sm={12} lg={6} key={idx}>
+            <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 ${item.bg} ${item.text} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                  {item.icon}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">{item.title}</span>
+                  <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : item.value}</span>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Title level={4} className="m-0! text-gray-800! whitespace-nowrap">
+              Recent Messages
+            </Title>
+            <Tag color="geekblue" className="rounded-full border-none px-3 font-semibold whitespace-nowrap">
+              {filteredData.length} records found
+            </Tag>
           </div>
-        }
-        className="shadow-sm border-gray-100 rounded-2xl overflow-hidden"
-      >
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="_id"
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} messages`,
-          }}
-          className="admin-forms-table"
-        />
+          <div className="w-full lg:w-auto">
+            <Input
+              prefix={<Search size={18} className="text-gray-400" />}
+              placeholder="Search by name, phone or email..."
+              allowClear
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full lg:w-60 rounded-lg bg-gray-50 border-gray-100 hover:border-indigo-300 focus:border-indigo-500 transition-all"
+              size="large"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="_id"
+            loading={loading}
+            pagination={{
+              pageSize: 8,
+              placement: "bottomRight",
+              showTotal: (total) => `Total ${total} messages`,
+              size: "default",
+              className: "px-4 py-4 pt-6 border-t border-gray-50",
+              responsive: true
+            }}
+            scroll={{ x: 1200 }}
+            className="admin-forms-table"
+          />
+        </div>
       </Card>
 
       <Drawer
-        title={<span className="text-lg font-bold">Message Details</span>}
+        title={<span className="text-lg font-bold text-gray-800">Message Details</span>}
         placement="right"
         width={500}
         onClose={() => setViewDrawerOpen(false)}
         open={viewDrawerOpen}
+        headerStyle={{ borderBottom: '1px solid #f0f0f0' }}
+        bodyStyle={{ padding: '0' }}
       >
         {selectedMessage && (
-          <Descriptions column={1} bordered className="message-details-drawer">
-            <Descriptions.Item label={<span className="font-semibold text-gray-500">Name</span>}>
-              <span className="font-bold text-gray-900">{selectedMessage.name}</span>
-            </Descriptions.Item>
-            <Descriptions.Item label={<span className="font-semibold text-gray-500">Phone</span>}>
-              {selectedMessage.phone}
-            </Descriptions.Item>
-            <Descriptions.Item label={<span className="font-semibold text-gray-500">Email</span>}>
-              {selectedMessage.email}
-            </Descriptions.Item>
-            <Descriptions.Item label={<span className="font-semibold text-gray-500">Date</span>}>
-              {moment(selectedMessage.createdAt).format("DD MMM YYYY, hh:mm A")}
-            </Descriptions.Item>
-            <Descriptions.Item label={<span className="font-semibold text-gray-500">Enquiry Type</span>}>
-              {selectedMessage.sellProperty ? 'Wants to Sell Property' : 'General Enquiry'}
-            </Descriptions.Item>
-            <Descriptions.Item label={<span className="font-semibold text-gray-500">Message</span>}>
-              <div className="bg-gray-50 p-4 rounded-lg whitespace-pre-wrap text-gray-700 mt-2 border border-gray-100">
-                {selectedMessage.message || <span className="text-gray-400 italic">No message provided</span>}
-              </div>
-            </Descriptions.Item>
-          </Descriptions>
+          <div className="flex flex-col h-full bg-gray-50/30">
+            {/* Header info */}
+            <div className="p-6 bg-white border-b border-gray-100">
+               <div className="flex items-center gap-4 mb-4">
+                  <Avatar size={64} className="bg-indigo-100 text-indigo-600 text-2xl font-bold">
+                    {selectedMessage.name?.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 m-0">{selectedMessage.name}</h3>
+                    <Tag color={selectedMessage.sellProperty ? "purple" : "cyan"} className="rounded-full mt-1 border-none font-semibold">
+                      {selectedMessage.sellProperty ? "Seller Enquiry" : "General Inquiry"}
+                    </Tag>
+                  </div>
+               </div>
+               <div className="grid grid-cols-1 gap-3">
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <Phone size={16} className="text-blue-500" />
+                    <span className="font-medium">{selectedMessage.phone}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <Mail size={16} className="text-amber-500" />
+                    <span className="font-medium">{selectedMessage.email}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <Calendar size={16} className="text-indigo-500" />
+                    <span className="font-medium">{moment(selectedMessage.createdAt).format("DD MMM YYYY, hh:mm A")}</span>
+                  </div>
+               </div>
+            </div>
+
+            {/* Message Body */}
+            <div className="p-6 flex-1 overflow-auto">
+               <div className="flex items-center gap-2 mb-3 text-gray-400 uppercase text-[11px] font-bold tracking-wider">
+                  <MessageSquare size={14} />
+                  <span>Message Content</span>
+               </div>
+               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-gray-700 leading-relaxed text-base min-h-40 whitespace-pre-wrap">
+                  {selectedMessage.message || <span className="text-gray-300 italic">No message provided</span>}
+               </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 bg-white border-t border-gray-100 flex gap-3">
+              <Button 
+                type="primary" 
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 h-11 rounded-xl font-bold text-white border-none shadow-md shadow-indigo-100"
+                onClick={() => {
+                  window.location.href = `mailto:${selectedMessage.email}`;
+                }}
+              >
+                Reply via Email
+              </Button>
+              <Popconfirm
+                title="Delete this message?"
+                onConfirm={() => handleDelete(selectedMessage._id)}
+                okText="Delete"
+                cancelText="Cancel"
+                okButtonProps={{ danger: true }}
+              >
+                <Button className="h-11 rounded-xl border-gray-200 text-gray-500 font-bold px-6">
+                  Delete
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
         )}
       </Drawer>
     </div>

@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Input, Popconfirm } from "antd";
-import { Search, Download, Trash2 } from "lucide-react";
+import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space } from "antd";
+import { Search, Download, Trash2, MessageSquare, Phone, User, Inbox, MoreVertical, ExternalLink } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/utils/imageUrl";
 
+const { Title, Text } = Typography;
+
 const AdminEnquiries = () => {
+  const navigate = useNavigate();
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [viewMode] = useState("my"); // Default and only view: 'my'
+  const [viewMode] = useState("all"); // Default and only view: 'all' to show platform-wide leads
 
   useEffect(() => {
     fetchEnquiries();
@@ -45,12 +49,29 @@ const AdminEnquiries = () => {
     }
   };
 
+  const stats = {
+    total: enquiries.length,
+    new: enquiries.filter((e) => e.status === "new").length,
+    whatsapp: enquiries.filter((e) => e.type === "whatsapp_lead").length,
+    responded: enquiries.filter((e) => e.status !== "new").length,
+  };
+
   const columns = [
     {
       title: "Date",
       dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => moment(date).format("DD MMM YYYY, hh:mm A"),
+      width: 160,
+      render: (date) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-800">
+            {moment(date).format("DD MMM YYYY")}
+          </span>
+          <span className="text-xs text-gray-500">
+            {moment(date).format("hh:mm A")}
+          </span>
+        </div>
+      ),
       sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
       defaultSortOrder: "descend",
     },
@@ -60,33 +81,62 @@ const AdminEnquiries = () => {
       key: "property",
       render: (property) =>
         property ? (
-          <div className="flex items-center gap-2">
+          <div 
+            className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all duration-300"
+            onClick={() => navigate(`/properties/${property.slug || property._id}`)}
+          >
             <img
-              src={getImageUrl(property.images?.[0]?.image_url)}
+              src={getImageUrl(
+                property.media?.featuredImage || 
+                property.media?.images?.[0] || 
+                property.images?.[0]?.image_url || 
+                property.images?.[0]
+              )}
               alt="prop"
-              className="w-8 h-8 rounded object-cover"
+              className="w-10 h-10 rounded-lg object-cover shadow-sm border border-gray-100 group-hover:border-indigo-300 group-hover:shadow-md transition-all"
             />
-            <span className="font-medium">{property.title}</span>
+            <div className="flex flex-col max-w-50">
+              <span className="font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                {property.basicInfo?.title || property.title || "Untitled Property"}
+              </span>
+              <span className="text-xs text-gray-500 truncate">
+                {typeof property.location === "string" 
+                  ? property.location 
+                  : (property.location?.locality || property.location?.addressLine1 || "Pondicherry")}
+              </span>
+            </div>
           </div>
         ) : (
-          <span className="text-gray-400">Deleted Property</span>
+          <span className="text-gray-400 italic">Deleted Property</span>
         ),
     },
     {
-      title: "Seller/Developer",
+      title: "Seller",
       dataIndex: "seller_id",
       key: "seller",
-      render: (seller) => seller?.name || "Unknown",
+      render: (seller) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-800">{seller?.name || "Unknown"}</span>
+          <span className="text-xs text-gray-500">{seller?.phone || "N/A"}</span>
+        </div>
+      ),
     },
     {
       title: "Enquirer",
       key: "enquirer",
       render: (record) => (
-        <div className="flex flex-col text-sm">
-          <span className="font-semibold">
-            {record.enquirer_name || "Guest"}
-          </span>
-          <span className="text-gray-500">{record.enquirer_phone}</span>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+            {(record.enquirer_name || "G").charAt(0).toUpperCase()}
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900">
+              {record.enquirer_name || "Guest"}
+            </span>
+            <span className="text-xs text-blue-600 font-medium">
+              {record.enquirer_phone}
+            </span>
+          </div>
         </div>
       ),
     },
@@ -94,37 +144,68 @@ const AdminEnquiries = () => {
       title: "Message",
       dataIndex: "message",
       key: "message",
-      ellipsis: true,
+      width: 250,
+      render: (msg) => (
+        <Tooltip title={msg} placement="topLeft" overlayStyle={{ maxWidth: "300px" }}>
+          <div className="max-w-60 truncate text-gray-600 text-sm italic">
+            "{msg || "No message provided"}"
+          </div>
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Lead Type",
+      dataIndex: "type",
+      key: "type",
+      render: (type) => (
+        <Tag
+          color={type === "whatsapp_lead" ? "green" : "blue"}
+          className="rounded-full px-3 border-none flex items-center gap-1 w-fit uppercase text-[10px] font-bold"
+        >
+          {type === "whatsapp_lead" ? (
+            <Phone size={10} />
+          ) : (
+            <MessageSquare size={10} />
+          )}
+          {type === "whatsapp_lead" ? "WhatsApp" : "Portal"}
+        </Tag>
+      ),
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Tag color={status === "new" ? "blue" : "green"}>
-          {status.toUpperCase()}
+        <Tag
+          color={status === "new" ? "cyan" : "success"}
+          className="rounded-full px-3 uppercase text-[10px] font-bold"
+        >
+          {status || "NEW"}
         </Tag>
       ),
     },
     {
       title: "Actions",
       key: "actions",
+      align: "right",
       render: (_, record) => (
-        <Popconfirm
-          title="Delete Enquiry"
-          description="Are you sure you want to delete this enquiry?"
-          onConfirm={() => handleDelete(record)}
-          okText="Yes"
-          cancelText="No"
-          okButtonProps={{ danger: true }}
-        >
-          <Button
-            type="text"
-            danger
-            icon={<Trash2 size={16} />}
-            className="flex items-center justify-center"
-          />
-        </Popconfirm>
+        <Space>
+          <Popconfirm
+            title="Delete Enquiry"
+            description="Are you sure you want to delete this enquiry?"
+            onConfirm={() => handleDelete(record)}
+            okText="Yes"
+            cancelText="No"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              type="text"
+              danger
+              icon={<Trash2 size={16} />}
+              className="hover:bg-red-50 flex items-center justify-center p-2 rounded-lg"
+            />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -183,45 +264,121 @@ const AdminEnquiries = () => {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Property Enquiries (Leads)
-      </h1>
-
-      <div className="mb-4 flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex gap-2 w-full md:w-auto">
-          {/* View toggle removed per user request - Defaulting to My Enquiries */}
+    <div className="p-4 sm:p-6 bg-gray-50/50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <Title level={2} className="mb-0 text-gray-800">Property Enquiry Leads</Title>
+          <Text type="secondary">Monitor and manage all incoming property inquiries and direct WhatsApp leads platform-wide</Text>
         </div>
+        <Button
+          type="primary"
+          icon={<Download size={18} />}
+          onClick={downloadCSV}
+          className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 rounded-lg flex items-center gap-2 border-none transition-all shadow-sm"
+        >
+          Export Leads
+        </Button>
+      </div>
 
-        <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
-          <Input
-            prefix={<Search size={18} className="text-gray-400" />}
-            placeholder="Search by property or seller..."
-            onChange={(e) => setSearchText(e.target.value)}
-            className="max-w-md w-full"
-            size="large"
+      <Row gutter={[24, 24]} className="mb-8">
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600 flex items-center justify-center">
+                <Inbox size={24} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">Total Leads</span>
+                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.total}</span>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-cyan-50 rounded-xl text-cyan-600 flex items-center justify-center">
+                <User size={24} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">New Leads</span>
+                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.new}</span>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600 flex items-center justify-center">
+                <Phone size={24} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">WhatsApp</span>
+                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.whatsapp}</span>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-50 rounded-xl text-blue-600 flex items-center justify-center">
+                <MessageSquare size={24} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">Portal Leads</span>
+                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.responded}</span>
+              </div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col lg:flex-row  lg:items-center lg:justify-between gap-4">
+          
+          {/* Title and results tag: Top on mobile, Left on desktop */}
+          <div className="flex items-center gap-3">
+            <Title level={4} className="mb-0 text-gray-800 font-semibold tracking-tight">
+              All Platform Inquiries
+            </Title>
+            <Tag color="indigo" className="rounded-full border-none px-3 font-semibold text-xs whitespace-nowrap">
+              {filteredEnquiries.length} TOTAL LEADS
+            </Tag>
+          </div>
+
+          {/* Search bar: Below title on mobile, Right on desktop */}
+          <div className="w-full lg:w-auto">
+            <Input
+              prefix={<Search size={18} className="text-gray-400" />}
+              placeholder="Search leads..."
+              allowClear
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full lg:w-60 rounded-lg bg-gray-50 border-gray-100 hover:border-indigo-300 focus:border-indigo-500 transition-all"
+              size="large"
+            />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <Table
+            columns={columns}
+            dataSource={filteredEnquiries}
+            rowKey="_id"
+            loading={loading}
+            pagination={{
+              pageSize: 8,
+              placement: "bottomRight",
+              showTotal: (total) => `Total ${total} enquiries`,
+              size: "default",
+              className: "px-4 py-4 pt-6 border-t border-gray-50",
+              responsive: true
+            }}
+            scroll={{ x: 1200 }}
+            className="enquiries-table"
           />
-          <Button
-            type="primary"
-            icon={<Download size={18} />}
-            onClick={downloadCSV}
-            className="bg-green-600 hover:bg-green-700 w-full md:w-auto flex items-center justify-center gap-2"
-          >
-            Export CSV
-          </Button>
         </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={filteredEnquiries}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ pageSize: 10 }}
-          scroll={{ x: true }}
-        />
-      </div>
+      </Card>
     </div>
   );
 };

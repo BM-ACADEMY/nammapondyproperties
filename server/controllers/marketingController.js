@@ -98,11 +98,25 @@ exports.createRequest = async (req, res) => {
     }
 
     const request = await MarketingRequest.create({
-      seller: req.user._id,
+      seller_id: req.user._id,
       property_id,
       plan_id,
       notes,
     });
+
+    // Populate for the notification
+    const populatedRequest = await MarketingRequest.findById(request._id)
+      .populate("seller_id", "name")
+      .populate("plan_id", "name");
+
+    // Emit socket event to notify admins
+    const io = req.app.get("socketio");
+    if (io) {
+      io.emit("new-marketing-request", {
+        message: `New marketing request from ${populatedRequest.seller_id?.name || "a seller"}`,
+        request: populatedRequest,
+      });
+    }
 
     res.status(201).json({ success: true, data: request });
   } catch (error) {
@@ -112,7 +126,7 @@ exports.createRequest = async (req, res) => {
 
 exports.getSellerRequests = async (req, res) => {
   try {
-    const requests = await MarketingRequest.find({ seller: req.user._id })
+    const requests = await MarketingRequest.find({ seller_id: req.user._id })
       .populate("property_id", "title images price")
       .populate("plan_id", "name price")
       .sort({ createdAt: -1 });
@@ -127,7 +141,7 @@ exports.getSellerRequests = async (req, res) => {
 exports.getAdminRequests = async (req, res) => {
   try {
     const requests = await MarketingRequest.find()
-      .populate("seller", "name email phone customId")
+      .populate("seller_id", "name email phone customId")
       .populate("property_id", "title images price location")
       .populate("plan_id", "name price")
       .sort({ createdAt: -1 });

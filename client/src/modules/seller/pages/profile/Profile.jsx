@@ -10,8 +10,9 @@ import {
   Row,
   Col,
   Upload,
+  Select,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, Award, Globe, Tags, Banknote } from "lucide-react";
 import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -69,6 +70,12 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("phone", values.phone);
+      
+      // Professional Metadata
+      if (values.experience) formData.append("experience", values.experience);
+      if (values.startingPrice) formData.append("startingPrice", values.startingPrice);
+      if (values.expertise) formData.append("expertise", JSON.stringify(values.expertise));
+      if (values.languages) formData.append("languages", JSON.stringify(values.languages));
 
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append("profile_image", fileList[0].originFileObj);
@@ -150,7 +157,17 @@ const Profile = () => {
       <Row gutter={[24, 24]} justify="start">
         {/* Profile Details Section */}
         <Col xs={24} md={18} lg={12}>
-          <Card title="Profile Information" className="shadow-sm h-full">
+          <Card 
+            title="Profile Information" 
+            className="shadow-xl shadow-slate-100/50 border-gray-100 rounded-3xl h-full overflow-hidden"
+            headStyle={{ 
+              borderBottom: '1px solid #f8fafc',
+              padding: '24px',
+              fontSize: '18px',
+              fontWeight: '500' 
+            }}
+            bodyStyle={{ padding: '32px' }}
+          >
             <div className="flex justify-center mb-6">
               <ImgCrop rotationSlider>
                 <Upload
@@ -210,14 +227,25 @@ const Profile = () => {
                 />
               </Form.Item>
 
-              <Form.Item name="email" label="Email Address">
-                <Input
-                  prefix={<Mail size={18} className="text-gray-400" />}
-                  disabled
-                  className="bg-gray-50 text-gray-500"
-                  size="large"
-                />
-              </Form.Item>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Form.Item name="userId" label="User ID">
+                  <Input
+                    prefix={<Hash size={18} className="text-gray-400" />}
+                    readOnly
+                    className="bg-slate-50 border-gray-100 text-gray-500 font-mono cursor-default"
+                    size="large"
+                  />
+                </Form.Item>
+
+                <Form.Item name="referralCode" label="Referral ID">
+                  <Input
+                    prefix={<Share2 size={18} className="text-gray-400" />}
+                    readOnly
+                    className="bg-slate-50 border-gray-100 text-gray-500 font-mono cursor-default"
+                    size="large"
+                  />
+                </Form.Item>
+              </div>
 
               <Form.Item
                 name="phone"
@@ -234,9 +262,8 @@ const Profile = () => {
                   prefix={<Phone size={18} className="text-gray-400" />}
                   placeholder="1234567890"
                   size="large"
-                  maxLength={10} // Prevents typing more than 10 chars
+                  maxLength={10} 
                   onKeyPress={(event) => {
-                    // Blocks any key that isn't a number
                     if (!/[0-9]/.test(event.key)) {
                       event.preventDefault();
                     }
@@ -244,7 +271,69 @@ const Profile = () => {
                 />
               </Form.Item>
 
-              <div className="flex justify-between items-center pt-8 border-t mt-4">
+              {/* Professional Metadata Section */}
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                <Title level={5} className="mb-4 flex items-center gap-2">
+                    <Award size={18} className="text-[#174685]" />
+                    Professional Details
+                </Title>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Form.Item
+                        name="experience"
+                        label="Years of Experience"
+                        rules={[{ required: true, message: "Please enter experience" }]}
+                    >
+                        <Input
+                            type="number"
+                            prefix={<Clock size={18} className="text-gray-400" />}
+                            placeholder="e.g. 5"
+                            size="large"
+                        />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="startingPrice"
+                        label="Starting Price (Label)"
+                    >
+                        <Input
+                            prefix={<Banknote size={18} className="text-gray-400" />}
+                            placeholder="e.g. 25 Lakh"
+                            size="large"
+                        />
+                    </Form.Item>
+                </div>
+
+                <Form.Item
+                    name="expertise"
+                    label="Expertise / Specializations"
+                >
+                    <Select
+                        mode="tags"
+                        style={{ width: '100%' }}
+                        placeholder="Type and press enter (e.g. Luxury Villas)"
+                        size="large"
+                        className="rounded-xl"
+                        suffixIcon={<Tags size={16} className="text-gray-400" />}
+                    />
+                </Form.Item>
+
+                <Form.Item
+                    name="languages"
+                    label="Languages Spoken"
+                >
+                    <Select
+                        mode="tags"
+                        style={{ width: '100%' }}
+                        placeholder="e.g. Tamil, English"
+                        size="large"
+                        className="rounded-xl"
+                        suffixIcon={<Globe size={16} className="text-gray-400" />}
+                    />
+                </Form.Item>
+              </div>
+
+              <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-4">
                 <div className="flex flex-col">
                   {user?.badgeVerified ? (
                     <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">

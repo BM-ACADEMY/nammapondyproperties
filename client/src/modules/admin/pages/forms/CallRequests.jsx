@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Table, Card, Button, Input, Tag, message, Popconfirm } from "antd";
-import { Download, Search, RefreshCw, Trash2 } from "lucide-react";
+import { Table, Card, Button, Input, Tag, message, Popconfirm, Row, Col, Typography, Tooltip, Avatar } from "antd";
+import { Download, Search, RefreshCw, Trash2, Phone, Mail, Clock, Calendar, Layout, CheckCircle, AlertCircle, Hash } from "lucide-react";
 import api from "@/services/api";
 import * as XLSX from "xlsx";
 import moment from "moment";
+
+const { Title, Text } = Typography;
 
 const timeMapping = {
   morning: "9 AM to 12 PM",
@@ -35,21 +37,29 @@ const CallRequests = () => {
     fetchData();
   }, []);
 
+  const stats = {
+    total: data.length,
+    new: data.filter(d => d.status === "new").length,
+    today: data.filter(d => moment(d.createdAt).isSame(moment(), 'day')).length,
+    closed: data.filter(d => d.status === "closed").length
+  };
+
   const handleExport = () => {
     if (data.length === 0) {
       message.warning("No data to export");
       return;
     }
 
-    const exportData = data.map((item, index) => ({
+    const exportData = filteredData.map((item, index) => ({
       "S.No": index + 1,
       Name: item.fullName || "-",
       Phone: item.phone || "-",
       Email: item.email || "-",
       Category: item.category || "-",
       "Preferred Time": timeMapping[item.preferredTime] || item.preferredTime || "-",
+      "Date": moment(item.createdAt).format("DD MMM, YYYY"),
+      "Time": moment(item.createdAt).format("hh:mm A"),
       Status: item.status || "new",
-      "Requested On": moment(item.createdAt).format("DD-MM-YYYY hh:mm A"),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -80,49 +90,103 @@ const CallRequests = () => {
 
   const columns = [
     {
+      title: (
+        <div className="flex items-center gap-1.5 text-gray-500 whitespace-nowrap">
+          {/* <Hash size={14} /> */}
+          <span>S.No</span>
+        </div>
+      ),
+      key: "index",
+      width: 70,
+      align: "center",
+      render: (_, __, index) => <span className="text-gray-400 font-medium">{index + 1}</span>,
+    },
+    {
       title: "Name",
       dataIndex: "fullName",
       key: "fullName",
       width: 200,
-      render: (text) => <span className="font-semibold text-gray-800">{text}</span>,
-    },
-    {
-      title: "Contact Info",
-      key: "contact",
-      render: (_, record) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-blue-600">{record.phone}</span>
-          {record.email && <span className="text-xs text-gray-500">{record.email}</span>}
+      render: (text) => (
+        <div className="flex items-center gap-2.5 whitespace-nowrap">
+          <Avatar size={32} className="bg-blue-100 text-blue-600 font-bold shrink-0">
+            {text?.charAt(0).toUpperCase()}
+          </Avatar>
+          <span className="font-semibold text-gray-900 truncate">{text || "Unknown User"}</span>
         </div>
       ),
     },
     {
-      title: "Type",
-      dataIndex: "category",
-      key: "category",
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
       width: 150,
-      render: (text) => (
-        <span className="capitalize px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-semibold">
-          {text}
-        </span>
+      render: (phone) => (
+        <div className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
+          <Phone size={14} className="shrink-0" />
+          <span>{phone}</span>
+        </div>
       ),
     },
     {
-      title: "Preferred Time",
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      width: 200,
+      render: (email) => 
+        email ? (
+          <div className="flex items-center gap-1.5 text-gray-500 text-xs whitespace-nowrap">
+            <Mail size={13} className="shrink-0" />
+            <span className="truncate">{email}</span>
+          </div>
+        ) : <span className="text-gray-300 italic text-xs whitespace-nowrap">No email</span>,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      key: "category",
+      width: 140,
+      render: (text) => (
+        <Tag color="geekblue" className="rounded-full px-3 border-none whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 uppercase text-[10px] font-bold tracking-wider">
+            <Layout size={10} />
+            {text || "General"}
+          </span>
+        </Tag>
+      ),
+    },
+    {
+      title: "Time Slot",
       dataIndex: "preferredTime",
       key: "preferredTime",
-      width: 150,
-      render: (text) => <span className="capitalize text-gray-700 font-medium">{timeMapping[text] || text}</span>,
+      width: 160,
+      render: (text) => (
+        <div className="flex items-center gap-2 text-amber-600 text-xs font-semibold whitespace-nowrap">
+          <Clock size={14} />
+          <span>{timeMapping[text] || text}</span>
+        </div>
+      ),
     },
     {
       title: "Date",
       dataIndex: "createdAt",
-      key: "createdAt",
-      width: 180,
+      key: "reqDate",
+      width: 130,
       render: (date) => (
-        <div className="flex flex-col">
+        <div className="flex items-center gap-1.5 text-gray-700 font-medium whitespace-nowrap">
+          <Calendar size={14} className="text-indigo-500" />
           <span>{moment(date).format("DD MMM, YYYY")}</span>
-          <span className="text-xs text-gray-500">{moment(date).format("hh:mm A")}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Time",
+      dataIndex: "createdAt",
+      key: "reqTime",
+      width: 110,
+      render: (date) => (
+        <div className="flex items-center gap-1.5 text-gray-500 font-medium whitespace-nowrap">
+          <Clock size={14} className="text-gray-400" />
+          <span>{moment(date).format("hh:mm A")}</span>
         </div>
       ),
     },
@@ -132,16 +196,27 @@ const CallRequests = () => {
       key: "status",
       width: 120,
       render: (status) => {
-        let color = "blue";
-        if (status === "closed") color = "green";
-        if (status === "new") color = "volcano";
-        return <Tag color={color} className="uppercase font-bold tracking-wider text-[10px]">{status}</Tag>;
+        const config = {
+          new: { color: "volcano", text: "NEW REQUEST", icon: <AlertCircle size={10} /> },
+          closed: { color: "success", text: "COMPLETED", icon: <CheckCircle size={10} /> },
+          default: { color: "blue", text: "IN PROGRESS", icon: <Clock size={10} /> }
+        };
+        const item = config[status] || config.default;
+        return (
+          <Tag color={item.color} className="rounded-full px-3 border-none shadow-sm whitespace-nowrap">
+            <span className="inline-flex items-center gap-1 uppercase text-[10px] font-bold tracking-wider">
+              {item.icon}
+              {item.text}
+            </span>
+          </Tag>
+        );
       },
     },
     {
       title: "Action",
       key: "action",
       width: 80,
+      align: "center",
       render: (_, record) => (
         <Popconfirm
           title="Delete the request"
@@ -153,8 +228,8 @@ const CallRequests = () => {
           <Button 
             type="text" 
             danger 
-            icon={<Trash2 className="w-4 h-4" />} 
-            className="hover:bg-red-50"
+            icon={<Trash2 size={16} />} 
+            className="hover:bg-red-50 flex items-center justify-center p-2 rounded-lg"
           />
         </Popconfirm>
       ),
@@ -162,56 +237,94 @@ const CallRequests = () => {
   ];
 
   return (
-    <div className="p-6">
-      <Card
-        title={
-          <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold text-gray-800 whitespace-nowrap">Callback Requests</span>
-            <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-              {filteredData.length} Total
-            </span>
-          </div>
-        }
-        extra={
-          <div className="flex space-x-3 items-center">
+    <div className="p-4 sm:p-6 bg-gray-50/50 min-h-screen">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+          <Title level={2} className="mb-0 text-gray-800">Callback Requests</Title>
+          <Text type="secondary">Manage and track user requests for callbacks</Text>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Tooltip title="Refresh Data">
             <Button
-              icon={<RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />}
+              icon={<RefreshCw size={18} className={loading ? 'animate-spin' : ''} />}
               onClick={fetchData}
-              type="text"
-              className="text-gray-500 hover:text-blue-600"
+              className="h-10 w-10 flex items-center justify-center rounded-xl border-gray-200 text-gray-500 hover:text-indigo-600 hover:border-indigo-100"
             />
-            <Input
-              placeholder="Search name, phone..."
-              prefix={<Search className="w-4 h-4 text-gray-400" />}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="w-64 rounded-full"
-              allowClear
-            />
-            <Button
-              type="primary"
-              icon={<Download className="w-4 h-4" />}
-              onClick={handleExport}
-              className="bg-green-600 hover:bg-green-700 rounded-lg flex items-center font-semibold tracking-wide border-none shadow-md shadow-green-600/20"
-            >
-              Export Excel
-            </Button>
+          </Tooltip>
+          <Button
+            type="primary"
+            icon={<Download size={18} />}
+            onClick={handleExport}
+            className="h-10 px-6 bg-indigo-600 hover:bg-indigo-700 border-none rounded-lg flex items-center gap-2 font-semibold shadow-sm transition-all"
+          >
+            Export Requests
+          </Button>
+        </div>
+      </div>
+
+      <Row gutter={[24, 24]} className="mb-8">
+        {[
+          { title: "Total Requests", value: stats.total, icon: <Phone size={24} />, bg: "bg-indigo-50", text: "text-indigo-600" },
+          { title: "New Requests", value: stats.new, icon: <AlertCircle size={24} />, bg: "bg-yellow-50", text: "text-yellow-600" },
+          { title: "Received Today", value: stats.today, icon: <Calendar size={24} />, bg: "bg-emerald-50", text: "text-emerald-600" },
+          { title: "Completed", value: stats.closed, icon: <CheckCircle size={24} />, bg: "bg-blue-50", text: "text-blue-600" },
+        ].map((item, idx) => (
+          <Col xs={24} sm={12} lg={6} key={idx}>
+            <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 ${item.bg} ${item.text} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                  {item.icon}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">{item.title}</span>
+                  <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : item.value}</span>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        ))}
+      </Row>
+
+      <Card className="shadow-sm border-none overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Title level={4} className="m-0! text-gray-800! whitespace-nowrap">
+              Recent Requests
+            </Title>
+            <Tag color="geekblue" className="rounded-full border-none px-3 font-semibold whitespace-nowrap">
+              {filteredData.length} records found
+            </Tag>
           </div>
-        }
-        className="shadow-sm border-gray-100 rounded-2xl overflow-hidden"
-      >
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          rowKey="_id"
-          loading={loading}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} requests`,
-          }}
-          className="admin-forms-table"
-        />
+          <div className="w-full lg:w-auto">
+            <Input
+              prefix={<Search size={18} className="text-gray-400" />}
+              placeholder="Search leads..."
+              allowClear
+              onChange={(e) => setSearchText(e.target.value)}
+              className="w-full lg:w-60 rounded-lg bg-gray-50 border-gray-100 hover:border-indigo-300 focus:border-indigo-500 transition-all"
+              size="large"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <Table
+            columns={columns}
+            dataSource={filteredData}
+            rowKey="_id"
+            loading={loading}
+            pagination={{
+              pageSize: 8,
+              placement: "bottomRight",
+              showTotal: (total) => `Total ${total} requests`,
+              size: "default",
+              className: "px-4 py-4 pt-6 border-t border-gray-50",
+              responsive: true
+            }}
+            scroll={{ x: 1200 }}
+            className="admin-forms-table"
+          />
+        </div>
       </Card>
     </div>
   );

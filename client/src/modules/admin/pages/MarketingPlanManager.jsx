@@ -159,7 +159,7 @@ const MarketingPlanManager = () => {
       {/* Plan Price */}
       <div className="px-6 py-4 bg-gray-50/50">
         <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-black text-gray-900">{plan.price}</span>
+          <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
         </div>
       </div>
 

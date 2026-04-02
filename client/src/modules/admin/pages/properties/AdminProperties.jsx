@@ -214,7 +214,7 @@ const AdminProperties = ({ mode }) => {
       key: "title",
       width: 200,
       render: (_, record) => (
-        <span className="font-medium text-gray-800 line-clamp-1" title={record.basicInfo?.title}>
+        <span className="font-medium text-gray-800 truncate" title={record.basicInfo?.title}>
           {record.basicInfo?.title || "Untitled"}
         </span>
       ),
