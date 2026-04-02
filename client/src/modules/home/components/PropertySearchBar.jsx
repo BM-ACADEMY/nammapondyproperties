@@ -249,7 +249,8 @@ const PropertySearchBar = ({
                                                 key={idx}
                                                 onClick={() => {
                                                     const isLocation = sug.type === "City" || sug.type === "Locality";
-                                                    // const isType = sug.type === "Type";
+                                                    const isType = sug.type === "Type";
+                                                    const isProperty = sug.type === "Property";
                                                     
                                                     ignoreNextSuggest.current = true;
                                                     setSuggestions([]);
@@ -259,6 +260,9 @@ const PropertySearchBar = ({
                                                         setLocation(sug.value);
                                                         setSearchQuery(""); // Clear keyword if location selected
                                                         handleSearch({ location: sug.value, search: "" });
+                                                    } else if (isProperty) {
+                                                        navigate(`/properties/${sug.value}`);
+                                                        setSearchQuery(""); 
                                                     } else if (isType) {
                                                         const suggestionType = propertyTypes?.find(t => t.name === sug.value);
                                                         if (suggestionType) setActiveUsageTab(suggestionType.usageType);

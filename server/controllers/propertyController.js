@@ -1405,7 +1405,7 @@ exports.getSuggestions = async (req, res) => {
     const propertyResults = await Property.find({
       "basicInfo.title": regex
     })
-      .select("basicInfo.title location.city location.locality")
+      .select("basicInfo.title location.city location.locality slug")
       .limit(5);
 
     propertyResults.forEach(item => {
@@ -1416,7 +1416,7 @@ exports.getSuggestions = async (req, res) => {
           mainText: item.basicInfo.title,
           subText: `${item.location.locality}, ${item.location.city}`,
           type: "Property",
-          value: item.basicInfo.title
+          value: item.slug || item._id
         });
       }
     });
