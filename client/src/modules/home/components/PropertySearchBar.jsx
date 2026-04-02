@@ -117,19 +117,17 @@ const PropertySearchBar = ({
                 ignoreNextSuggest.current = false;
                 return;
             }
-            if (searchQuery.length < 1) {
-                setSuggestions([]);
-                setIsSuggestionsOpen(false);
-                return;
-            }
-
+            // Fetch even if empty to get default suggestions
             setIsSuggestionsLoading(true);
             try {
                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/properties/suggestions`, {
                     params: { query: searchQuery }
                 });
                 setSuggestions(response.data);
-                setIsSuggestionsOpen(response.data.length > 0);
+                // Only auto-open if results exist
+                if (response.data.length > 0 && searchQuery.length > 0) {
+                    setIsSuggestionsOpen(true);
+                }
             } catch (error) {
                 console.error("Error fetching suggestions:", error);
                 setSuggestions([]);
@@ -229,7 +227,9 @@ const PropertySearchBar = ({
                                 className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                onFocus={() => searchQuery.length >= 1 && suggestions.length > 0 && setIsSuggestionsOpen(true)}
+                                onFocus={() => {
+                                    setIsSuggestionsOpen(true);
+                                }}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />
                         </div>

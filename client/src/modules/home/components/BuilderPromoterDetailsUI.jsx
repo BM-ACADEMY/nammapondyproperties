@@ -35,6 +35,7 @@ import {
 } from "../../../utils/formatPrice";
 import { formatNumber } from "../../../utils/formatNumber";
 import WishlistButton from "../../../components/Common/WishlistButton";
+import PropertyCard from "../components/PropertyCard";
 
 const BuilderPromoterDetailsUI = ({
   property,
@@ -43,7 +44,7 @@ const BuilderPromoterDetailsUI = ({
   enquiryLoading,
   handleWhatsAppClick,
   maskPhoneNumber,
-  getVideoEmbedUrl,
+  moreProperties = [],
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
   const scrollRefs = {
@@ -86,7 +87,10 @@ const BuilderPromoterDetailsUI = ({
       });
     };
 
-    const observer = new IntersectionObserver(observerCallback, observerOptions);
+    const observer = new IntersectionObserver(
+      observerCallback,
+      observerOptions,
+    );
 
     Object.values(scrollRefs).forEach((ref) => {
       if (ref.current) observer.observe(ref.current);
@@ -130,7 +134,9 @@ const BuilderPromoterDetailsUI = ({
             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
               <div className="space-y-4 text-white max-w-3xl">
                 <span className="bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded">
-                  {property.basicInfo?.category === "Rent" ? "For Rent" : "For Sale"}
+                  {property.basicInfo?.category === "Rent"
+                    ? "For Rent"
+                    : "For Sale"}
                 </span>
                 <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
                   {property.basicInfo?.title}
@@ -138,7 +144,8 @@ const BuilderPromoterDetailsUI = ({
                 <div className="flex items-center gap-2 text-white/90 text-sm md:text-base">
                   <MapPin size={18} className="text-red-500" />
                   {property.location?.locality}, {property.location?.city}{" "}
-                  {property.location?.pincode && `- ${property.location.pincode}`}
+                  {property.location?.pincode &&
+                    `- ${property.location.pincode}`}
                   {property.basicInfo?.approvalType && (
                     <span className="ml-4 px-2 py-0.5 bg-green-500/20 border border-green-500/50 rounded text-xs font-bold text-green-400 capitalize">
                       {property.basicInfo.approvalType} Approved
@@ -153,9 +160,13 @@ const BuilderPromoterDetailsUI = ({
                 </div>
                 <div className="text-2xl md:text-4xl font-bold text-white">
                   {formatPriceRange(
-                    property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
-                    property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
-                    property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                    property.pricing?.sell?.minPrice ||
+                      property.pricing?.rent?.minRent,
+                    property.pricing?.sell?.maxPrice ||
+                      property.pricing?.rent?.maxRent,
+                    property.pricing?.sell?.price ||
+                      property.pricing?.rent?.monthlyRent ||
+                      0,
                   )}
                 </div>
               </div>
@@ -184,13 +195,18 @@ const BuilderPromoterDetailsUI = ({
       </nav>
 
       <div className="container mx-auto max-w-7xl px-4 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* MAIN CONTENT AREA: LONG SCROLLING LAYOUT */}
           <div className="lg:col-span-8 space-y-12">
-            
             {/* OVERVIEW SECTION */}
-            <div id="overview" ref={scrollRefs.overview} className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Overview</h2>
+            <div
+              id="overview"
+              ref={scrollRefs.overview}
+              className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100"
+            >
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                Overview
+              </h2>
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-8 pb-8 border-b border-gray-50">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
                   <MapPin size={16} className="text-red-500" />
@@ -200,30 +216,61 @@ const BuilderPromoterDetailsUI = ({
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
                   <ShieldCheck size={16} className="text-green-500" />
-                  <span className="font-semibold text-gray-800">Verified Listing</span>
+                  <span className="font-semibold text-gray-800">
+                    Verified Listing
+                  </span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                  <div className="text-[10px] text-orange-600 font-bold uppercase tracking-widest mb-1">Configuration</div>
-                  <div className="text-lg font-bold text-gray-900">{property.basicInfo?.propertyType}</div>
-                  <div className="text-xs text-gray-500 mt-1">{property.basicInfo?.usageType}</div>
+                  <div className="text-[10px] text-orange-600 font-bold uppercase tracking-widest mb-1">
+                    Configuration
+                  </div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {property.basicInfo?.propertyType}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {property.basicInfo?.usageType}
+                  </div>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                  <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1">Total Area</div>
-                  <div className="text-lg font-bold text-gray-900">
-                    {property.specifications?.area?.totalArea || property.specifications?.area?.minArea} sq.ft
+                  <div className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1">
+                    {property.specifications?.area?.minArea &&
+                    property.specifications?.area?.maxArea
+                      ? "Area Range"
+                      : "Total Area"}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Ready to Move</div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {(() => {
+                      const minA = property.specifications?.area?.minArea;
+                      const maxA = property.specifications?.area?.maxArea;
+                      const total = property.specifications?.area?.totalArea;
+                      if (minA && maxA)
+                        return `${Number(minA).toLocaleString()} - ${Number(maxA).toLocaleString()} sq.ft`;
+                      if (minA)
+                        return `${Number(minA).toLocaleString()}+ sq.ft`;
+                      return total ? `${total} sq.ft` : "N/A";
+                    })()}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Ready to Move
+                  </div>
                 </div>
+
                 <div className="p-4 bg-green-50 rounded-xl border border-green-100">
-                  <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest mb-1">Price</div>
+                  <div className="text-[10px] text-green-600 font-bold uppercase tracking-widest mb-1">
+                    Price
+                  </div>
                   <div className="text-lg font-bold text-gray-900">
                     {formatPriceRange(
-                      property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
-                      property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
-                      property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                      property.pricing?.sell?.minPrice ||
+                        property.pricing?.rent?.minRent,
+                      property.pricing?.sell?.maxPrice ||
+                        property.pricing?.rent?.maxRent,
+                      property.pricing?.sell?.price ||
+                        property.pricing?.rent?.monthlyRent ||
+                        0,
                     )}
                   </div>
                 </div>
@@ -232,40 +279,64 @@ const BuilderPromoterDetailsUI = ({
 
             {/* ABOUT PROJECT */}
             <div id="about" ref={scrollRefs.about} className="space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900">About Project</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                About Project
+              </h3>
               <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
                 <p className="text-gray-600 leading-relaxed whitespace-pre-line mb-8">
-                  {property.basicInfo?.description || "No project overview provided."}
+                  {property.basicInfo?.description ||
+                    "No project overview provided."}
                 </p>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-y-8 gap-x-4">
                   <div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Launch Date</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                      Launch Date
+                    </div>
                     <div className="font-bold text-gray-800">
-                      {new Date(property.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                      {new Date(property.createdAt).toLocaleDateString(
+                        "en-US",
+                        { month: "long", year: "numeric" },
+                      )}
                     </div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Status</div>
-                    <div className="font-bold text-gray-800">{property.legal?.propertyStatus || "Active"}</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                      Status
+                    </div>
+                    <div className="font-bold text-gray-800">
+                      {property.legal?.propertyStatus || "Active"}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Possession</div>
-                    <div className="font-bold text-gray-800">{property.legal?.expectedCompletionYear || "Immediate"}</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                      Possession
+                    </div>
+                    <div className="font-bold text-gray-800">
+                      {property.legal?.expectedCompletionYear || "Immediate"}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Locality</div>
-                    <div className="font-bold text-gray-800 truncate">{property.location?.locality}</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                      Locality
+                    </div>
+                    <div className="font-bold text-gray-800 truncate">
+                      {property.location?.locality}
+                    </div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Project Size</div>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                      Project Size
+                    </div>
                     <div className="font-bold text-gray-800">5 Acres</div>
                   </div>
                 </div>
               </div>
 
               {/* DETAILED SPECIFICATIONS */}
-              {(property.specifications?.residential || property.specifications?.commercial || property.specifications?.plot) && (
+              {(property.specifications?.residential ||
+                property.specifications?.commercial ||
+                property.specifications?.plot) && (
                 <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
                   <h4 className="font-bold text-gray-800 border-b border-gray-50 pb-4 flex items-center gap-2 text-sm uppercase tracking-widest">
                     Project Specifications
@@ -273,28 +344,46 @@ const BuilderPromoterDetailsUI = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4">
                     {property.specifications?.residential?.bedrooms > 0 && (
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-400"><BedDouble size={20} /></div>
+                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-400">
+                          <BedDouble size={20} />
+                        </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bedrooms</span>
-                          <span className="text-[14px] font-bold text-gray-800">{property.specifications.residential.bedrooms}</span>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                            Bedrooms
+                          </span>
+                          <span className="text-[14px] font-bold text-gray-800">
+                            {property.specifications.residential.bedrooms}
+                          </span>
                         </div>
                       </div>
                     )}
                     {property.specifications?.residential?.bathrooms > 0 && (
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-400"><Bath size={20} /></div>
+                        <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-400">
+                          <Bath size={20} />
+                        </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Bathrooms</span>
-                          <span className="text-[14px] font-bold text-gray-800">{property.specifications.residential.bathrooms}</span>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                            Bathrooms
+                          </span>
+                          <span className="text-[14px] font-bold text-gray-800">
+                            {property.specifications.residential.bathrooms}
+                          </span>
                         </div>
                       </div>
                     )}
                     {property.specifications?.commercial?.cabins > 0 && (
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-400"><Layers size={20} /></div>
+                        <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-400">
+                          <Layers size={20} />
+                        </div>
                         <div className="flex flex-col">
-                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Cabins</span>
-                          <span className="text-[14px] font-bold text-gray-800">{property.specifications.commercial.cabins}</span>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                            Cabins
+                          </span>
+                          <span className="text-[14px] font-bold text-gray-800">
+                            {property.specifications.commercial.cabins}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -309,12 +398,21 @@ const BuilderPromoterDetailsUI = ({
               <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm h-[400px]">
                 {property.location?.coordinates?.lat && (
                   <MapContainer
-                    center={[property.location.coordinates.lat, property.location.coordinates.lng]}
+                    center={[
+                      property.location.coordinates.lat,
+                      property.location.coordinates.lng,
+                    ]}
                     zoom={15}
+                    scrollWheelZoom={false}
                     className="h-full w-full z-10"
                   >
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                    <Marker position={[property.location.coordinates.lat, property.location.coordinates.lng]}>
+                    <Marker
+                      position={[
+                        property.location.coordinates.lat,
+                        property.location.coordinates.lng,
+                      ]}
+                    >
                       <Popup>{property.basicInfo?.title}</Popup>
                     </Marker>
                   </MapContainer>
@@ -325,10 +423,14 @@ const BuilderPromoterDetailsUI = ({
             {/* FLOOR PLANS */}
             {hasFloorPlan && (
               <div id="plans" ref={scrollRefs.plans} className="space-y-6">
-                <h3 className="text-2xl font-bold text-gray-900">Floor Plans</h3>
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Floor Plans
+                </h3>
                 <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm text-center">
                   <img
-                    src={getImageUrl(property.floorPlan || property.media?.floorPlan)}
+                    src={getImageUrl(
+                      property.floorPlan || property.media?.floorPlan,
+                    )}
                     className="max-h-[500px] mx-auto rounded-2xl"
                     alt="Floor Plan"
                   />
@@ -337,34 +439,64 @@ const BuilderPromoterDetailsUI = ({
             )}
 
             {/* AMENITIES */}
-            <div id="amenities" ref={scrollRefs.amenities} className="space-y-6">
+            <div
+              id="amenities"
+              ref={scrollRefs.amenities}
+              className="space-y-6"
+            >
               <h3 className="text-2xl font-bold text-gray-900">Amenities</h3>
               <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap gap-3">
                 {property.amenities?.map((amenity, i) => (
-                  <div key={i} className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full flex items-center gap-2 group hover:bg-red-50 transition-all">
-                    <CheckCircle2 size={14} className="text-green-500 group-hover:text-red-500" />
-                    <span className="text-sm font-bold text-gray-700 group-hover:text-red-700">{amenity}</span>
+                  <div
+                    key={i}
+                    className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full flex items-center gap-2 group hover:bg-red-50 transition-all"
+                  >
+                    <CheckCircle2
+                      size={14}
+                      className="text-green-500 group-hover:text-red-500"
+                    />
+                    <span className="text-sm font-bold text-gray-700 group-hover:text-red-700">
+                      {amenity}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* HIGHLIGHTS / UTILITIES */}
-            <div id="highlights" ref={scrollRefs.highlights} className="space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900">Essential Utilities</h3>
+            <div
+              id="highlights"
+              ref={scrollRefs.highlights}
+              className="space-y-6"
+            >
+              <h3 className="text-2xl font-bold text-gray-900">
+                Essential Utilities
+              </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {property.specifications?.utilities?.waterSupply && (
                   <div className="p-6 bg-white border border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-center shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center"><Droplet size={24} /></div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Water Supply</span>
-                    <span className="text-sm font-bold text-gray-800">{property.specifications.utilities.waterSupply}</span>
+                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
+                      <Droplet size={24} />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      Water Supply
+                    </span>
+                    <span className="text-sm font-bold text-gray-800">
+                      {property.specifications.utilities.waterSupply}
+                    </span>
                   </div>
                 )}
                 {property.specifications?.utilities?.powerBackup && (
                   <div className="p-6 bg-white border border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-center shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center"><Zap size={24} /></div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Power Backup</span>
-                    <span className="text-sm font-bold text-gray-800">{property.specifications.utilities.powerBackup}</span>
+                    <div className="w-12 h-12 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center">
+                      <Zap size={24} />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      Power Backup
+                    </span>
+                    <span className="text-sm font-bold text-gray-800">
+                      Available
+                    </span>
                   </div>
                 )}
               </div>
@@ -381,83 +513,159 @@ const BuilderPromoterDetailsUI = ({
                   className="rounded-2xl h-[450px]"
                 >
                   {property.media?.images?.map((img, i) => (
-                    <SwiperSlide key={i}><img src={getImageUrl(img)} className="w-full h-full object-cover" alt="Gallery" /></SwiperSlide>
+                    <SwiperSlide key={i}>
+                      <img
+                        src={getImageUrl(img)}
+                        className="w-full h-full object-cover"
+                        alt="Gallery"
+                      />
+                    </SwiperSlide>
                   ))}
                 </Swiper>
-                <button className="gal-prev absolute left-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-xl opacity-0 group-hover/gallery:opacity-100 transition-all active:scale-95"><ChevronLeft size={24} /></button>
-                <button className="gal-next absolute right-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-xl opacity-0 group-hover/gallery:opacity-100 transition-all active:scale-95"><ChevronRight size={24} /></button>
-              </div>
-            </div>
-          </div>
-
-          {/* SIDEBAR: Simplified Seller Info */}
-          <div className="lg:col-span-4 space-y-8">
-            <div className="sticky top-24">
-              {/* Contact Card */}
-              <div className="bg-white p-6 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                    {property.seller?.profile_image ? (
-                      <img
-                        src={getImageUrl(property.seller.profile_image)}
-                        alt="Seller"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
-                        <User className="w-8 h-8" />
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-[#174685] uppercase font-bold tracking-widest mb-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
-                      {property.businessType?.name || "LISTED BY"}
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {property.seller?.name || "Seller"}
-                    </h3>
-                    <div className="text-sm font-semibold text-gray-500">
-                      {maskPhoneNumber(property.seller?.phone)}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3 mb-6">
-                  <div className="text-sm text-gray-600 text-center px-4">
-                    Interested in this property? <br /> Connect directly with
-                    the seller.
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleWhatsAppClick}
-                  disabled={enquiryLoading || property.isSold}
-                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${
-                    property.isSold
-                      ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
-                      : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"
-                  }`}
-                >
-                  {property.isSold ? (
-                    "Property Sold Out"
-                  ) : enquiryLoading ? (
-                    "Processing..."
-                  ) : (
-                    <>
-                      <svg
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-6 h-6"
-                      >
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                      </svg>
-                      WhatsApp Enquiry
-                    </>
-                  )}
+                <button className="gal-prev absolute left-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-xl opacity-0 group-hover/gallery:opacity-100 transition-all active:scale-95">
+                  <ChevronLeft size={24} />
+                </button>
+                <button className="gal-next absolute right-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-xl opacity-0 group-hover/gallery:opacity-100 transition-all active:scale-95">
+                  <ChevronRight size={24} />
                 </button>
               </div>
             </div>
           </div>
+
+          {/* SIDEBAR: Seller Info */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="sticky top-34">
+              {/* Contact Card */}
+              <div className="bg-white p-6 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100">
+                             <div className="flex items-center gap-4 mb-6">
+                               <div className="w-16 h-16 bg-gray-100 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                                 {property.seller?.profile_image ? (
+                                   <img
+                                     src={getImageUrl(property.seller.profile_image)}
+                                     alt="Seller"
+                                     className="w-full h-full object-cover"
+                                   />
+                                 ) : (
+                                   <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                                     <User className="w-8 h-8" />
+                                   </div>
+                                 )}
+                               </div>
+                               <div>
+                                 <div className="text-[10px] text-[#174685] uppercase font-bold tracking-widest mb-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
+                                   {property.businessType?.name || "LISTED BY"}
+                                 </div>
+                                 <h3 className="text-lg font-bold text-gray-900 mb-1">
+                                   {property.seller?.name || "Seller"}
+                                 </h3>
+                                 <div className="text-sm font-semibold text-gray-500">
+                                   {maskPhoneNumber(property.seller?.phone)}
+                                 </div>
+                               </div>
+                             </div>
+                             <div className="space-y-3 mb-6">
+                               <div className="text-sm text-gray-600 text-center px-4">
+                                 Interested in this property? <br /> Connect directly with
+                                 the seller.
+                               </div>
+                             </div>
+             
+                             <button
+                               onClick={handleWhatsAppClick}
+                               disabled={enquiryLoading || property.isSold}
+                               className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${
+                                 property.isSold
+                                   ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
+                                   : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"
+                               }`}
+                             >
+                               {property.isSold ? (
+                                 "Property Sold Out"
+                               ) : enquiryLoading ? (
+                                 "Processing..."
+                               ) : (
+                                 <>
+                                   <svg
+                                     viewBox="0 0 24 24"
+                                     fill="currentColor"
+                                     className="w-6 h-6"
+                                   >
+                                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                                   </svg>
+                                   WhatsApp Enquiry
+                                 </>
+                               )}
+                             </button>
+                           </div>
+            </div>
+          </div>
         </div>
+
+        {/* Recommended Properties */}
+        {moreProperties && moreProperties.length > 0 && (
+          <div className="mt-24">
+            <div className="flex justify-between items-end mb-8">
+              <div>
+                <h2 className="text-[28px] font-bold text-[#1E293B]">
+                  Recommended in{" "}
+                  <span className="text-[#174685] font-semibold">
+                    {property.location?.locality ||
+                      property.location?.city ||
+                      "this area"}
+                  </span>
+                </h2>
+              </div>
+
+              {/* Navigation Buttons for Desktop */}
+              <div className="hidden md:flex items-center gap-3 mb-8">
+                <button className="rec-prev w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 hover:text-blue-600 transition-all disabled:opacity-30">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button className="rec-next w-10 h-10 flex items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm hover:bg-gray-50 hover:text-blue-600 transition-all disabled:opacity-30">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Swiper
+                modules={[Navigation, Pagination, Autoplay]}
+                spaceBetween={20}
+                slidesPerView={1}
+                navigation={{
+                  prevEl: ".rec-prev",
+                  nextEl: ".rec-next",
+                }}
+                pagination={{
+                  clickable: true,
+                  dynamicBullets: true,
+                  el: ".rec-pagination",
+                }}
+                autoplay={{
+                  delay: 5000,
+                  disableOnInteraction: false,
+                }}
+                breakpoints={{
+                  640: { slidesPerView: 2, spaceBetween: 20 },
+                  1024: { slidesPerView: 3, spaceBetween: 24 },
+                  1280: { slidesPerView: 4, spaceBetween: 24 },
+                }}
+                className="recommended-swiper !pb-12"
+              >
+                {moreProperties.map((prop) => (
+                  <SwiperSlide key={prop._id}>
+                    <div className="h-full">
+                      <PropertyCard
+                        property={prop}
+                        onWhatsAppClick={handleWhatsAppClick}
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

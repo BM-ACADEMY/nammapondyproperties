@@ -163,7 +163,6 @@ const PropertyForm = ({
       }
     },
     media: {
-      video: data?.video || data?.media?.video || "",
       floorPlan: data?.floorPlan || data?.media?.floorPlan || "",
     },
     amenities: data?.amenities || []
@@ -210,7 +209,7 @@ const PropertyForm = ({
     { number: 1, title: "Basic Details", sub: "Step 1" },
     { number: 2, title: "Location Details", sub: "Step 2" },
     { number: 3, title: "Property Profile", sub: "Step 3" },
-    { number: 4, title: "Photos, Videos & Voice-over", sub: "Step 4" },
+    { number: 4, title: "Photos & Floor Plan", sub: "Step 4" },
     { number: 5, title: "Amenities section", sub: "Step 5" },
   ];
 
@@ -920,6 +919,28 @@ const PropertyForm = ({
                     ))}
                   </select>
                 </div>
+
+                <div className="md:col-span-2 lg:col-span-3 border-t border-gray-100 pt-6 mt-2">
+                  <p className="text-gray-700 font-bold mb-4 uppercase text-[10px] tracking-wider">Utilities & Services</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Water Supply</label>
+                      <select {...register("specifications.utilities.waterSupply")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                        <option value="">Select Water Supply</option>
+                        <option value="Corporation">Corporation</option>
+                        <option value="Borewell">Borewell</option>
+                        <option value="Both">Both</option>
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-3 h-full pt-6">
+                      <div className="flex items-center gap-3 px-4 py-3 border-2 border-gray-100 rounded-2xl bg-gray-50/50 w-full">
+                        <input type="checkbox" {...register("specifications.utilities.powerBackup")} id="powerBackup" className="w-5 h-5 text-blue-600 border-gray-300 rounded-lg focus:ring-blue-500 transition-all cursor-pointer" />
+                        <label htmlFor="powerBackup" className="text-sm font-bold text-gray-700 cursor-pointer select-none">Power Backup Available</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -964,20 +985,8 @@ const PropertyForm = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-100">
-                <div className="space-y-4">
-                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Video Tour</p>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      {...register("media.video")}
-                      placeholder="YouTube or Vimeo URL"
-                      className="w-full px-4 py-3 pl-12 border-2 border-gray-100 rounded-2xl focus:border-blue-600 outline-none transition-all"
-                    />
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                      <Plus size={18} />
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-400">Paste a link to your property video (e.g., YouTube, Vimeo)</p>
+                <div className="md:col-span-2">
+                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Floor Plan</p>
                 </div>
 
                 <div className="space-y-4">

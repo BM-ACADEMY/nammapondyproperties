@@ -181,7 +181,29 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    let updateData = req.body;
+    let updateData = { ...req.body };
+
+    // Handle array fields that might come as strings from FormData
+    if (typeof updateData.expertise === "string") {
+      try {
+        updateData.expertise = JSON.parse(updateData.expertise);
+      } catch (e) {
+        updateData.expertise = updateData.expertise.split(",").map(item => item.trim()).filter(Boolean);
+      }
+    }
+
+    if (typeof updateData.languages === "string") {
+      try {
+        updateData.languages = JSON.parse(updateData.languages);
+      } catch (e) {
+        updateData.languages = updateData.languages.split(",").map(item => item.trim()).filter(Boolean);
+      }
+    }
+
+    // Handle numeric fields
+    if (updateData.experience) {
+      updateData.experience = Number(updateData.experience);
+    }
 
     if (req.file) {
       updateData.profile_image = `/uploads/profiles/${req.file.filename}`;
@@ -199,7 +221,10 @@ exports.updateUser = async (req, res) => {
       updateData.profile_image = null;
     }
 
-    const user = await User.findByIdAndUpdate(userId, updateData, { new: true }).populate("role_id");
+    const user = await User.findByIdAndUpdate(userId, updateData, { 
+      new: true,
+      runValidators: true 
+    }).populate("role_id");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {

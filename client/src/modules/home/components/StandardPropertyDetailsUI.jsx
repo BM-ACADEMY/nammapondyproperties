@@ -201,7 +201,7 @@ const StandardPropertyDetailsUI = ({
                         ]}
                       />
                     </MapContainer>
-                    <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
+                    <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
                       <MapPin size={14} className="text-blue-500" />
                       <span className="text-xs font-bold text-gray-800">Property Location</span>
                     </div>
@@ -435,7 +435,40 @@ const StandardPropertyDetailsUI = ({
                       </div>
                     </div>
                   )}
+                  {/* item — Utilities */}
+                  {property.specifications?.utilities?.waterSupply && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Droplet size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Water Supply
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {property.specifications.utilities.waterSupply}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {/* item — Power Backup */}
+                  {property.specifications?.utilities?.powerBackup && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 shrink-0 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
+                        <Zap size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Power Backup
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          Available
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {/* item */}
+
                   {property.legal?.propertyStatus === "Ready to Move" &&
                     property.legal?.ageOfProperty && (
                       <div className="flex items-center gap-4">
@@ -520,7 +553,7 @@ const StandardPropertyDetailsUI = ({
               </div>
             </div>
 
-            <hr className="border-gray-100" />
+            <hr className="border-gray-200" />
 
             {/* 4. About the Project */}
             <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2 mb-6">
@@ -528,8 +561,11 @@ const StandardPropertyDetailsUI = ({
             </h3>
             <div className="space-y-6">
               <div className="relative">
+                {/* <div
+                  className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? "max-h-[90px] line-clamp-3" : "max-h-[2000px]"}`}
+                > */}
                 <div
-                  className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? "max-h-[160px]" : "max-h-[2000px]"}`}
+                  className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? "max-h-[90px] line-clamp-3" : "max-h-[2000px]"}`}
                 >
                   <p className="whitespace-pre-line text-slate-700">
                     {property.basicInfo?.description ||
@@ -538,7 +574,7 @@ const StandardPropertyDetailsUI = ({
                 </div>
 
                 {!isDescriptionExpanded && (
-                  <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                 )}
               </div>
 
@@ -980,26 +1016,6 @@ const StandardPropertyDetailsUI = ({
               </div>
             )}
 
-            {/* Video Tour Section */}
-            {(property.video || property.media?.video) &&
-              getVideoEmbedUrl(property.video || property.media?.video) && (
-                <div className="space-y-6">
-                  <hr className="border-gray-100" />
-                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
-                    Video Tour
-                  </h3>
-                  <div className="aspect-video rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-                    <iframe
-                      src={getVideoEmbedUrl(
-                        property.video || property.media?.video,
-                      )}
-                      className="w-full h-full"
-                      allowFullScreen
-                      title="Property Video Tour"
-                    ></iframe>
-                  </div>
-                </div>
-              )}
 
             {/* Floor Plan Section */}
             {(property.floorPlan || property.media?.floorPlan) && (
@@ -1068,7 +1084,7 @@ const StandardPropertyDetailsUI = ({
                         </Marker>
                       </MapContainer>
 
-                      <div className="absolute bottom-4 left-4 z-[999]">
+                      <div className="absolute bottom-4 left-4 z-10">
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${property.location.coordinates.lat},${property.location.coordinates.lng}`}
                           target="_blank"

@@ -86,7 +86,7 @@ const PropertyTypeList = () => {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="bg-gray-100 border rounded-2xl flex h-[300px] animate-pulse overflow-hidden"
+                  className="bg-gray-100 rounded-2xl flex h-[300px] animate-pulse overflow-hidden"
                 ></div>
               ))}
             </div>

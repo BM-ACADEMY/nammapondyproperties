@@ -1372,7 +1372,25 @@ exports.getSuggestions = async (req, res) => {
   try {
     const { query } = req.query;
     if (!query || query.length < 1) {
-      return res.json([]);
+      const suggestions = new Set();
+      const formattedSuggestions = [];
+
+      // 1. Get unique localities from properties (limit to 10)
+      const localities = await Property.distinct("location.locality", { "location.locality": { $ne: null } });
+      localities.slice(0, 10).forEach(loc => {
+        const key = `locality:${loc}`;
+        if (!suggestions.has(key)) {
+          suggestions.add(key);
+          formattedSuggestions.push({
+            mainText: loc,
+            subText: "Area in Pondy",
+            type: "Locality",
+            value: loc
+          });
+        }
+      });
+
+      return res.json(formattedSuggestions);
     }
 
     const words = query.trim().split(/\s+/).filter(w => w.length > 0);

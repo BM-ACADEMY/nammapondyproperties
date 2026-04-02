@@ -168,6 +168,7 @@ const PropertyDetails = () => {
           property={property}
           mainImage={mainImage}
           setMainImage={setMainImage}
+          moreProperties={moreProperties}
           enquiryLoading={enquiryLoading}
           handleWhatsAppClick={handleWhatsAppClick}
           maskPhoneNumber={maskPhoneNumber}

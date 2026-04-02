@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 
-.leaflet-control-attribution{
-    display: none;
+.leaflet-control-attribution {
+  display: none;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+
+.leaflet-pane {
+  z-index: 1 !important;
 }
 
 @theme {
@@ -15,4 +24,29 @@
       transform: translateX(200%);
     }
   }
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #166aa8;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #115585; /* Slightly darker shade for hover */
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #166aa8 #f1f1f1;
 }

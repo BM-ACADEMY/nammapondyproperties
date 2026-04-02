@@ -174,7 +174,6 @@ const propertySchema = new mongoose.Schema(
     // 6️⃣ AMENITIES
     // =====================================================
     amenities: [String],
-    video: { type: String, default: "" },
     floorPlan: { type: String, default: "" },
 
     // =====================================================
@@ -183,7 +182,6 @@ const propertySchema = new mongoose.Schema(
     media: {
       featuredImage: String,
       images: [String],
-      video: String,
       floorPlan: String
     },
 

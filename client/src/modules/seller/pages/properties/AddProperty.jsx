@@ -112,7 +112,7 @@ const AddProperty = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50/50 min-h-screen">
+    <div className="p-4 mt-18 md:p-8 bg-gray-50/50 min-h-screen">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
