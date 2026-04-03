@@ -23,6 +23,7 @@ import AdminBannerAds from "./pages/AdminBannerAds";
 import ViewCountManager from "./pages/properties/ViewCountManager";
 import CallRequests from "./pages/forms/CallRequests";
 import ContactMessages from "./pages/forms/ContactMessages";
+import FailedRegistrations from "./pages/FailedRegistrations";
 const AdminRoute = () => {
   return (
     <Routes>
@@ -33,7 +34,8 @@ const AdminRoute = () => {
         <Route path="users" element={<UserList />} />{" "}
         {/* Changed to UserList */}
         <Route path="sellers" element={<SellerList />} />{" "}
-        {/* Added sellers route */}
+        <Route path="failed-registrations" element={<FailedRegistrations />} />{" "}
+        {/* Added failed-registrations route */}
         <Route path="profile" element={<AdminProfile />} />
         <Route path="properties" element={<AdminProperties mode="admin" />} />
         <Route
