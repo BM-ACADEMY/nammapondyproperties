@@ -119,13 +119,17 @@ exports.getMe = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const { role } = req.query;
+    const { role, verified } = req.query;
     let query = {};
 
     if (role) {
       const roleDoc = await Role.findOne({ role_name: role.toLowerCase() });
       if (roleDoc) query.role_id = roleDoc._id;
       else return res.json([]);
+    }
+
+    if (verified !== undefined) {
+      query.isVerified = verified === "true";
     }
 
     const users = await User.find(query).populate("role_id");

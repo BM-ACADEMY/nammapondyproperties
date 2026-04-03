@@ -247,18 +247,7 @@ const AdminProperties = ({ mode }) => {
           record.pricing?.sell?.maxPrice || record.pricing?.rent?.maxRent,
           record.pricing?.sell?.price || record.pricing?.rent?.monthlyRent || 0
         );
-        if (record.isSold && record.soldPrice) {
-          return (
-            <div className="flex flex-col">
-              <span className="text-gray-400 line-through text-xs font-normal">
-                {priceDisplay}
-              </span>
-              <span className="text-green-600 font-bold">
-                {formatIndianPrice(record.soldPrice)}
-              </span>
-            </div>
-          );
-        }
+        return <span className="font-semibold text-blue-600">{priceDisplay}</span>;
         return <span className="font-semibold text-blue-600">{priceDisplay}</span>;
       },
       sorter: (a, b) => {
@@ -660,25 +649,9 @@ const AdminProperties = ({ mode }) => {
                   </div>
                   <div className="text-left md:text-right">
                     <p className="text-sm text-gray-300 mb-1 font-medium">
-                      {selectedProperty.isSold && selectedProperty.soldPrice
-                        ? "Sold Price"
-                        : "Price"}
+                      Price
                     </p>
                     <div className="flex flex-col items-start md:items-end">
-                      {selectedProperty.isSold && selectedProperty.soldPrice ? (
-                        <>
-                          <span className="text-sm text-gray-400 line-through font-normal opacity-80">
-                            {formatPriceRange(
-                              selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
-                              selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
-                              selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
-                            )}
-                          </span>
-                          <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400 shadow-sm">
-                            {formatIndianPrice(selectedProperty.soldPrice)}
-                          </span>
-                        </>
-                      ) : (
                         <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white shadow-sm">
                           {formatPriceRange(
                             selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
@@ -686,7 +659,6 @@ const AdminProperties = ({ mode }) => {
                             selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
                           )}
                         </p>
-                      )}
                     </div>
                   </div>
                 </div>

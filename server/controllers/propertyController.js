@@ -663,6 +663,40 @@ exports.getRecommendedProperties = async (req, res) => {
   }
 };
 
+// Get other properties by the same builder/promoter (for builder detail page recommendations)
+exports.getBuilderOtherProperties = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const property = await Property.findById(id).populate("seller");
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    const sellerId = property.seller?._id || property.seller;
+    if (!sellerId) return res.json([]);
+
+    // Find other properties by the same seller, excluding the current property
+    const otherProperties = await Property.find({
+      _id: { $ne: id },
+      seller: sellerId,
+      status: "Active",
+      isSold: { $ne: true },
+    })
+      .limit(12)
+      .populate([
+        {
+          path: "seller",
+          populate: { path: "role_id" },
+        },
+        { path: "businessType" },
+      ])
+      .sort({ createdAt: -1 });
+
+    res.json(otherProperties);
+  } catch (error) {
+    console.error("Builder Other Properties Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.updateProperty = async (req, res) => {
   try {
     console.log("Update Property Body:", req.body);

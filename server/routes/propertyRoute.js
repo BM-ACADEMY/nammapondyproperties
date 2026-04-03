@@ -20,6 +20,8 @@ router.get("/fetch-property-by-id/:id", propertyController.getPropertyById);
 router.get("/fetch-property-by-slug/:slug", propertyController.getPropertyBySlug);
 // Get recommended properties
 router.get("/fetch-recommended-properties/:id", propertyController.getRecommendedProperties);
+// Get other properties by the same builder/promoter
+router.get("/fetch-builder-other-properties/:id", propertyController.getBuilderOtherProperties);
 // Update a property
 router.put(
   "/update-property-by-id/:id",

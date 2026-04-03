@@ -155,6 +155,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Seller List",
           onClick: () => handleMenuClick("/admin/sellers"),
         },
+        {
+          key: "/admin/failed-registrations",
+          label: "Failed Registrations",
+          onClick: () => handleMenuClick("/admin/failed-registrations"),
+        },
       ],
     },
     {

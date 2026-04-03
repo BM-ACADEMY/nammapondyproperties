@@ -26,7 +26,28 @@ import {
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  LayersControl,
+  LayerGroup,
+} from "react-leaflet";
+
+const { BaseLayer } = LayersControl;
+
+// Custom marker icon for properties
+import customIconUrl from "@/assets/marker-custom.png";
+
+const CustomIcon = L.icon({
+  iconUrl: customIconUrl,
+  iconSize: [38, 48],
+  iconAnchor: [19, 48],
+  popupAnchor: [0, -45],
+});
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "../../../utils/imageUrl";
 import {
@@ -44,6 +65,8 @@ const BuilderPromoterDetailsUI = ({
   enquiryLoading,
   handleWhatsAppClick,
   maskPhoneNumber,
+  getVideoEmbedUrl,
+  fromBuilderList,
   moreProperties = [],
 }) => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -133,7 +156,7 @@ const BuilderPromoterDetailsUI = ({
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
               <div className="space-y-4 text-white max-w-3xl">
-                <span className="bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded">
+                <span className="bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded w-fit">
                   {property.basicInfo?.category === "Rent"
                     ? "For Rent"
                     : "For Sale"}
@@ -214,12 +237,22 @@ const BuilderPromoterDetailsUI = ({
                     {property.location?.locality}, {property.location?.city}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
-                  <ShieldCheck size={16} className="text-green-500" />
-                  <span className="font-semibold text-gray-800">
-                    Verified Listing
-                  </span>
-                </div>
+                {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
+                    <ShieldCheck size={16} className="text-green-500" />
+                    <span className="font-semibold text-gray-800">
+                      Verified Listing
+                    </span>
+                  </div>
+                )}
+                {property.view_count > 0 && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 rounded-lg">
+                    <Eye size={16} className="text-blue-500" />
+                    <span className="font-semibold text-gray-800">
+                      {formatNumber(property.view_count)} Views
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -406,12 +439,32 @@ const BuilderPromoterDetailsUI = ({
                     scrollWheelZoom={false}
                     className="h-full w-full z-10"
                   >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <LayersControl position="topright">
+                      <BaseLayer name="Street Map">
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                      </BaseLayer>
+                      <BaseLayer checked name="Satellite View">
+                        <LayerGroup>
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                          />
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                          />
+                        </LayerGroup>
+                      </BaseLayer>
+                    </LayersControl>
                     <Marker
                       position={[
                         property.location.coordinates.lat,
                         property.location.coordinates.lng,
                       ]}
+                      icon={CustomIcon}
                     >
                       <Popup>{property.basicInfo?.title}</Popup>
                     </Marker>
@@ -601,19 +654,35 @@ const BuilderPromoterDetailsUI = ({
           </div>
         </div>
 
-        {/* Recommended Properties */}
+        {/* More Properties / Recommended Properties Section */}
         {moreProperties && moreProperties.length > 0 && (
           <div className="mt-24">
             <div className="flex justify-between items-end mb-8">
               <div>
                 <h2 className="text-[28px] font-bold text-[#1E293B]">
-                  Recommended in{" "}
-                  <span className="text-[#174685] font-semibold">
-                    {property.location?.locality ||
-                      property.location?.city ||
-                      "this area"}
-                  </span>
+                  {fromBuilderList ? (
+                    <>
+                      More Properties by{" "}
+                      <span className="text-[#174685] font-semibold">
+                        {property.seller?.name || "this Builder"}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Recommended in{" "}
+                      <span className="text-[#174685] font-semibold">
+                        {property.location?.locality ||
+                          property.location?.city ||
+                          "this area"}
+                      </span>
+                    </>
+                  )}
                 </h2>
+                {fromBuilderList && (
+                  <p className="text-sm text-slate-500 mt-1">
+                    Explore other projects from the same builder
+                  </p>
+                )}
               </div>
 
               {/* Navigation Buttons for Desktop */}

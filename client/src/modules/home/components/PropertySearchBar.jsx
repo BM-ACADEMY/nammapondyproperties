@@ -117,21 +117,23 @@ const PropertySearchBar = ({
                 ignoreNextSuggest.current = false;
                 return;
             }
-            // Fetch even if empty to get default suggestions
+
             setIsSuggestionsLoading(true);
             try {
                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/properties/suggestions`, {
                     params: { query: searchQuery }
                 });
                 setSuggestions(response.data);
-                // Only auto-open if results exist
-                if (response.data.length > 0 && searchQuery.length > 0) {
+                
+                // Only open if there is an active search query
+                if (searchQuery.length > 0) {
                     setIsSuggestionsOpen(true);
+                } else {
+                    setIsSuggestionsOpen(false);
                 }
             } catch (error) {
                 console.error("Error fetching suggestions:", error);
                 setSuggestions([]);
-                setIsSuggestionsOpen(false);
             } finally {
                 setIsSuggestionsLoading(false);
             }
@@ -224,11 +226,16 @@ const PropertySearchBar = ({
                             <input
                                 ref={searchInputRef}
                                 type="text"
+                                autoComplete="off"
                                 className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    if (e.target.value.length > 0) setIsSuggestionsOpen(true);
+                                    else setIsSuggestionsOpen(false);
+                                }}
                                 onFocus={() => {
-                                    setIsSuggestionsOpen(true);
+                                    if (searchQuery.length > 0) setIsSuggestionsOpen(true);
                                 }}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />
@@ -244,51 +251,68 @@ const PropertySearchBar = ({
                                     className={`absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[2000] ${isHeader ? "w-80" : "w-full"}`}
                                 >
                                     <div className="max-h-80 overflow-y-auto py-2">
-                                        {suggestions.map((sug, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => {
-                                                    const isLocation = sug.type === "City" || sug.type === "Locality";
-                                                    const isType = sug.type === "Type";
-                                                    const isProperty = sug.type === "Property";
-                                                    
-                                                    ignoreNextSuggest.current = true;
-                                                    setSuggestions([]);
-                                                    setIsSuggestionsOpen(false);
+                                        {isSuggestionsLoading ? (
+                                            <div className="px-5 py-8 text-center">
+                                                <div className="inline-block w-6 h-6 border-2 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div>
+                                                <p className="mt-2 text-xs text-gray-400 font-medium animate-pulse lowercase">Searching...</p>
+                                            </div>
+                                        ) : suggestions.length > 0 ? (
+                                            suggestions.map((sug, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => {
+                                                        const isLocation = sug.type === "City" || sug.type === "Locality";
+                                                        const isType = sug.type === "Type";
+                                                        const isProperty = sug.type === "Property";
 
-                                                    if (isLocation) {
-                                                        setLocation(sug.value);
-                                                        setSearchQuery(""); // Clear keyword if location selected
-                                                        handleSearch({ location: sug.value, search: "" });
-                                                    } else if (isProperty) {
-                                                        navigate(`/properties/${sug.value}`);
-                                                        setSearchQuery(""); 
-                                                    } else if (isType) {
-                                                        const suggestionType = propertyTypes?.find(t => t.name === sug.value);
-                                                        if (suggestionType) setActiveUsageTab(suggestionType.usageType);
-                                                        setSelectedTypes([sug.value]);
-                                                        setSearchQuery(""); // Clear keyword if type selected
-                                                        handleSearch({ type: [sug.value], search: "" });
-                                                    } else {
-                                                        setSearchQuery(sug.value);
-                                                        handleSearch({ search: sug.value });
-                                                    }
-                                                }}
-                                                className="w-full text-left px-5 py-3 hover:bg-gray-50 flex items-center justify-between transition-colors border-b border-gray-50 last:border-0"
-                                            >
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-gray-800 text-sm md:text-base">
-                                                        {sug.mainText}
+                                                        ignoreNextSuggest.current = true;
+                                                        setSuggestions([]);
+                                                        setIsSuggestionsOpen(false);
+
+                                                        if (isLocation) {
+                                                            setLocation(sug.value);
+                                                            setSearchQuery(""); // Clear keyword if location selected
+                                                            handleSearch({ location: sug.value, search: "" });
+                                                        } else if (isProperty) {
+                                                            navigate(`/properties/${sug.value}`);
+                                                            setSearchQuery("");
+                                                        } else if (isType) {
+                                                            const suggestionType = propertyTypes?.find(t => t.name === sug.value);
+                                                            if (suggestionType) setActiveUsageTab(suggestionType.usageType);
+                                                            setSelectedTypes([sug.value]);
+                                                            setSearchQuery(""); // Clear keyword if type selected
+                                                            handleSearch({ type: [sug.value], search: "" });
+                                                        } else {
+                                                            setSearchQuery(sug.value);
+                                                            handleSearch({ search: sug.value });
+                                                        }
+                                                    }}
+                                                    className="w-full text-left px-5 py-3 hover:bg-gray-50 flex items-center justify-between transition-colors border-b border-gray-50 last:border-0"
+                                                >
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-gray-800 text-sm md:text-base">
+                                                            {sug.mainText}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">
+                                                            {sug.subText}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded-md">
+                                                        {sug.type}
                                                     </span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {sug.subText}
-                                                    </span>
+                                                </button>
+                                            ))
+                                        ) : searchQuery.length > 0 ? (
+                                            <div className="px-5 py-8 text-center space-y-2">
+                                                <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto">
+                                                    <Search className="w-5 h-5 text-gray-300" />
                                                 </div>
-                                                <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded-md">
-                                                    {sug.type}
-                                                </span>
-                                            </button>
-                                        ))}
+                                                <div>
+                                                    <p className="text-gray-800 font-semibold text-sm">No results found</p>
+                                                    <p className="text-gray-500 text-xs mt-1">We couldn't find any matches for "{searchQuery}"</p>
+                                                </div>
+                                            </div>
+                                        ) : null}
                                     </div>
                                 </motion.div>
                             )}

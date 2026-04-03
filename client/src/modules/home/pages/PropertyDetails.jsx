@@ -37,7 +37,6 @@ const PropertyDetails = () => {
 
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [selectedEnquiryProperty, setSelectedEnquiryProperty] = useState(null);
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -64,11 +63,29 @@ const PropertyDetails = () => {
           setMainImage(propertyData.media.featuredImage || propertyData.media.images[0]);
         }
 
-        const relatedRes = await axios.get(
-          `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${propertyData._id}`,
-        );
-        if (Array.isArray(relatedRes.data)) {
-          setMoreProperties(relatedRes.data);
+        // Check if this is a builder/promoter property and if we came from the builder list
+        const isBuilder = propertyData.businessType?.name?.toLowerCase().includes("builder") ||
+          propertyData.businessType?.name?.toLowerCase().includes("promoter");
+        
+        const queryParams = new URLSearchParams(location.search);
+        const fromBuilderList = queryParams.get("from") === "builder";
+
+        if (isBuilder && fromBuilderList) {
+          // For builder properties, fetch other properties by the same builder
+          const builderRes = await axios.get(
+            `${import.meta.env.VITE_API_URL}/properties/fetch-builder-other-properties/${propertyData._id}`,
+          );
+          if (Array.isArray(builderRes.data)) {
+            setMoreProperties(builderRes.data);
+          }
+        } else {
+          // For non-builder properties or if not navigated from builder list, fetch location-based recommendations
+          const relatedRes = await axios.get(
+            `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${propertyData._id}`,
+          );
+          if (Array.isArray(relatedRes.data)) {
+            setMoreProperties(relatedRes.data);
+          }
         }
 
         const viewResult = await recordPropertyView(propertyData._id);
@@ -161,6 +178,8 @@ const PropertyDetails = () => {
   const isBuilderProperty = property.businessType?.name?.toLowerCase().includes("builder") ||
     property.businessType?.name?.toLowerCase().includes("promoter");
 
+  const fromBuilderList = new URLSearchParams(location.search).get("from") === "builder";
+
   return (
     <div className="relative">
       {isBuilderProperty ? (
@@ -169,6 +188,7 @@ const PropertyDetails = () => {
           mainImage={mainImage}
           setMainImage={setMainImage}
           moreProperties={moreProperties}
+          fromBuilderList={fromBuilderList}
           enquiryLoading={enquiryLoading}
           handleWhatsAppClick={handleWhatsAppClick}
           maskPhoneNumber={maskPhoneNumber}
@@ -184,8 +204,6 @@ const PropertyDetails = () => {
           handleWhatsAppClick={handleWhatsAppClick}
           maskPhoneNumber={maskPhoneNumber}
           getVideoEmbedUrl={getVideoEmbedUrl}
-          isDescriptionExpanded={isDescriptionExpanded}
-          setIsDescriptionExpanded={setIsDescriptionExpanded}
           showPhoneModal={showPhoneModal}
           setShowPhoneModal={setShowPhoneModal}
           user={user}
