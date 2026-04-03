@@ -86,7 +86,7 @@ const AdminProperties = ({ mode }) => {
   const getStats = () => {
     const total = properties.length;
     const verified = properties.filter((p) => p.isVerified).length;
-    const pending = total - verified;
+    const pending = properties.filter((p) => p.status === "Pending").length;
     const sold = properties.filter((p) => p.isSold).length;
     return { total, verified, pending, sold };
   };
@@ -282,14 +282,30 @@ const AdminProperties = ({ mode }) => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status, record) => (
-        <div className="flex flex-col gap-1">
-          <Tag color={status === "available" ? "green" : "red"}>
-            {status.toUpperCase()}
-          </Tag>
-          {record.isSold && <Tag color="red">SOLD</Tag>}
-        </div>
-      ),
+      render: (status, record) => {
+        const getStatusColor = (s) => {
+          switch (s?.toLowerCase()) {
+            case "active":
+            case "available":
+              return "green";
+            case "pending":
+              return "gold";
+            case "sold":
+            case "rented":
+              return "red";
+            default:
+              return "blue";
+          }
+        };
+        return (
+          <div className="flex flex-col gap-1">
+            <Tag color={getStatusColor(status)}>
+              {status?.toUpperCase() || "UNKNOWN"}
+            </Tag>
+            {record.isSold && <Tag color="red">SOLD</Tag>}
+          </div>
+        );
+      },
     },
     {
       title: "Views",
@@ -329,9 +345,13 @@ const AdminProperties = ({ mode }) => {
           return <Tag color="blue">No Expiry</Tag>;
         }
 
-        const createdAt = new Date(record.createdAt);
+        if (record.status === "Pending") {
+          return <Tag color="gold">Awaiting Approval</Tag>;
+        }
+
+        const baseDate = record.approvedAt ? new Date(record.approvedAt) : new Date(record.createdAt);
         const expiryDate = new Date(
-          createdAt.getTime() + 21 * 24 * 60 * 60 * 1000,
+          baseDate.getTime() + 21 * 24 * 60 * 60 * 1000,
         );
         const now = new Date();
         const diffTime = expiryDate - now;

@@ -203,7 +203,7 @@ const propertySchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["Active", "Sold", "Rented", "Pending"],
-      default: "Active"
+      default: "Pending"
     },
 
     isVerified: {
@@ -227,7 +227,8 @@ const propertySchema = new mongoose.Schema(
       default: false
     },
 
-    soldPrice: Number
+    soldPrice: Number,
+    approvedAt: Date
 
   },
   {

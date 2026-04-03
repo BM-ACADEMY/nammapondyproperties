@@ -108,8 +108,8 @@ exports.createProperty = async (req, res) => {
         video: mediaMetadata.video || req.body.video || "",
         floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || ""
       },
-      status: "Active",
-      isVerified: true,
+      status: "Pending",
+      isVerified: false,
     };
 
     const property = new Property(propertyData);
@@ -203,6 +203,25 @@ exports.getProperties = async (req, res) => {
     if (isVerified) {
       queryConditions.push({ isVerified: isVerified === "true" });
     }
+
+    // 3.1 Status filter for public listings
+    const requesterId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
+    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin";
+    
+    // Check if the requester is the owner of the properties being queried
+    let isMe = false;
+    if (requesterId && seller_id) {
+      // Normalize both to strings for a safe comparison
+      const sid = String(seller_id);
+      if (sid === "me" || sid === requesterId) {
+        isMe = true;
+      }
+    }
+    
+    if (!isAdmin && !isMe) {
+      queryConditions.push({ status: "Active" });
+    }
+
 
     // 4. Property Specifications
     if (type) {
@@ -404,6 +423,20 @@ exports.verifyProperty = async (req, res) => {
       return res.status(404).json({ error: "Property not found" });
     }
     property.isVerified = !property.isVerified;
+
+    if (property.isVerified) {
+      // Approve and switch to Active if verified
+      if (property.status === "Pending") {
+        property.status = "Active";
+        property.approvedAt = property.approvedAt || new Date();
+      }
+    } else {
+      // If unverified, take it down back to Pending
+      if (property.status === "Active") {
+        property.status = "Pending";
+      }
+    }
+
     await property.save();
     res.json({
       message: `Property ${property.isVerified ? "verified" : "unverified"}`,
@@ -1153,6 +1186,7 @@ exports.getAdminStats = async (req, res) => {
 
     const pendingApprovals = await Property.countDocuments({
       isVerified: false,
+      seller: { $ne: req.user._id }
     });
 
     // 3. Views Aggregation (Filter by Admin Properties Only)

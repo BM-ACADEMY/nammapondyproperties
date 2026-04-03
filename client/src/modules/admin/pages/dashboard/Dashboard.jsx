@@ -147,11 +147,11 @@ const Dashboard = () => {
       path: "/admin/properties?status=sold&seller=me",
     },
     {
-      title: "Pending Approvals",
+      title: "Seller Approval",
       value: data.summary.pendingApprovals,
       icon: <FileCheck size={24} className="text-orange-500" />,
       color: "#fff7e6",
-      desc: "Requires Verification",
+      desc: "Seller properties pending approval",
       path: "/admin/properties?verified=false",
     },
     {
