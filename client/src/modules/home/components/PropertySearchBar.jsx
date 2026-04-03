@@ -125,9 +125,11 @@ const PropertySearchBar = ({
                 });
                 setSuggestions(response.data);
                 
-                // Keep open if there's a query OR if there are default suggestions
-                if (searchQuery.length > 0 || response.data.length > 0) {
+                // Only open if there is an active search query
+                if (searchQuery.length > 0) {
                     setIsSuggestionsOpen(true);
+                } else {
+                    setIsSuggestionsOpen(false);
                 }
             } catch (error) {
                 console.error("Error fetching suggestions:", error);
@@ -224,14 +226,16 @@ const PropertySearchBar = ({
                             <input
                                 ref={searchInputRef}
                                 type="text"
+                                autoComplete="off"
                                 className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
                                     if (e.target.value.length > 0) setIsSuggestionsOpen(true);
+                                    else setIsSuggestionsOpen(false);
                                 }}
                                 onFocus={() => {
-                                    setIsSuggestionsOpen(true);
+                                    if (searchQuery.length > 0) setIsSuggestionsOpen(true);
                                 }}
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />

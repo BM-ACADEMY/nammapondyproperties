@@ -26,7 +26,28 @@ import {
 } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  LayersControl,
+  LayerGroup,
+} from "react-leaflet";
+
+const { BaseLayer } = LayersControl;
+
+// Custom marker icon for properties
+import customIconUrl from "@/assets/marker-custom.png";
+
+const CustomIcon = L.icon({
+  iconUrl: customIconUrl,
+  iconSize: [38, 48],
+  iconAnchor: [19, 48],
+  popupAnchor: [0, -45],
+});
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "../../../utils/imageUrl";
 import {
@@ -418,12 +439,32 @@ const BuilderPromoterDetailsUI = ({
                     scrollWheelZoom={false}
                     className="h-full w-full z-10"
                   >
-                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <LayersControl position="topright">
+                      <BaseLayer name="Street Map">
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                      </BaseLayer>
+                      <BaseLayer checked name="Satellite View">
+                        <LayerGroup>
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                          />
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                          />
+                        </LayerGroup>
+                      </BaseLayer>
+                    </LayersControl>
                     <Marker
                       position={[
                         property.location.coordinates.lat,
                         property.location.coordinates.lng,
                       ]}
+                      icon={CustomIcon}
                     >
                       <Popup>{property.basicInfo?.title}</Popup>
                     </Marker>

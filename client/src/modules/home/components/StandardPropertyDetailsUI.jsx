@@ -21,7 +21,17 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  LayersControl,
+  LayerGroup,
+} from "react-leaflet";
+
+const { BaseLayer, Overlay } = LayersControl;
+
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -42,15 +52,14 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import PropertyCard from "../components/PropertyCard";
 
-// Fix for default marker icon
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+// Custom marker icon
+import customMarkerIcon from "@/assets/marker-custom.png";
+
+const CustomIcon = L.icon({
+  iconUrl: customMarkerIcon,
+  iconSize: [38, 48],
+  iconAnchor: [19, 48],
+  popupAnchor: [0, -45],
 });
 
 const StandardPropertyDetailsUI = ({
@@ -513,7 +522,7 @@ const StandardPropertyDetailsUI = ({
             <hr className="border-gray-200" />
 
             {/* 4. About the Project */}
-            <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2 mb-6">
+            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2 mb-6">
               Property Overview
             </h3>
             <div className="space-y-6">
@@ -538,7 +547,7 @@ const StandardPropertyDetailsUI = ({
               property.specifications?.commercial ||
               property.specifications?.plot) && (
               <div className="space-y-6">
-                <h3 className="text-xl font-bold text-gray-600 flex items-center gap-2">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                   Property Specifications
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -998,7 +1007,7 @@ const StandardPropertyDetailsUI = ({
             {property?.location?.coordinates?.lat &&
               property?.location?.coordinates?.lng && (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-gray-600">Location</h3>
+                  <h3 className="text-xl font-bold text-gray-800">Location</h3>
                   <div className="bg-blue-50 rounded-2xl p-2 border border-blue-100">
                     <div className="h-[350px] w-full rounded-xl overflow-hidden relative">
                       <MapContainer
@@ -1010,21 +1019,39 @@ const StandardPropertyDetailsUI = ({
                         scrollWheelZoom={false}
                         style={{ height: "100%", width: "100%" }}
                       >
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                        <Marker
-                          position={[
-                            property.location.coordinates.lat,
-                            property.location.coordinates.lng,
-                          ]}
-                        >
-                          <Popup>
-                            {property.basicInfo?.title || "Untitled"} <br />{" "}
-                            {property.location.city}
-                          </Popup>
-                        </Marker>
+                        <LayersControl position="topright">
+                          <BaseLayer name="Street Map">
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                          </BaseLayer>
+                          <BaseLayer checked name="Satellite View">
+                            <LayerGroup>
+                              <TileLayer
+                                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                              />
+                              <TileLayer
+                                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                                url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                              />
+                            </LayerGroup>
+                          </BaseLayer>
+
+                          <Marker
+                            position={[
+                              property.location.coordinates.lat,
+                              property.location.coordinates.lng,
+                            ]}
+                            icon={CustomIcon}
+                          >
+                            <Popup>
+                              {property.basicInfo?.title || "Untitled"} <br />{" "}
+                              {property.location.city}
+                            </Popup>
+                          </Marker>
+                        </LayersControl>
                       </MapContainer>
 
                       <div className="absolute bottom-4 left-4 z-10">

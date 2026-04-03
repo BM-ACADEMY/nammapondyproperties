@@ -21,16 +21,25 @@ import {
   Marker,
   useMapEvents,
   useMap,
+  LayersControl,
+  LayerGroup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+const { BaseLayer } = LayersControl;
+
+// Custom marker icon for properties
+import customIconUrl from "@/assets/marker-custom.png";
+
+const CustomIcon = L.icon({
+  iconUrl: customIconUrl,
+  iconSize: [38, 48],
+  iconAnchor: [19, 48],
+  popupAnchor: [0, -45],
 });
+
+
 
 // commonAmenities will be fetched from backend starting from this update
 const FALLBACK_AMENITIES = [
@@ -48,7 +57,9 @@ function LocationMarker({ position, setPosition, setValue }) {
       map.flyTo(e.latlng, map.getZoom());
     },
   });
-  return position === null ? null : <Marker position={position}></Marker>;
+  return position === null ? null : (
+    <Marker position={position} icon={CustomIcon}></Marker>
+  );
 }
 
 function RecenterMap({ lat, lng }) {
@@ -768,7 +779,26 @@ const PropertyForm = ({
             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 h-[400px]">
               {mapPosition && (
                 <MapContainer center={mapPosition} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%", borderRadius: "1rem" }}>
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <LayersControl position="topright">
+                    <BaseLayer name="Street Map">
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                    </BaseLayer>
+                    <BaseLayer checked name="Satellite View">
+                      <LayerGroup>
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        />
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                          url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                        />
+                      </LayerGroup>
+                    </BaseLayer>
+                  </LayersControl>
                   <LocationMarker position={mapPosition} setPosition={setMapPosition} setValue={setValue} />
                   <RecenterMap lat={mapPosition.lat} lng={mapPosition.lng} />
                 </MapContainer>
