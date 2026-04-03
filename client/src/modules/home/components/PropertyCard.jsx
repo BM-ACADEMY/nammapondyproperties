@@ -64,6 +64,16 @@ const PropertyCard = ({ property }) => {
           </span>
         </div>
 
+        {/* View Count Badge - Bottom Right */}
+        {property.view_count > 0 && (
+          <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-2 py-1 rounded-md flex items-center gap-1.5 border border-white/20 transition-all group-hover:bg-black/70">
+            <Eye className="w-3.5 h-3.5 text-white/90" />
+            <span className="text-white text-[11px] font-bold tracking-tight">
+              {formatNumber(property.view_count)}
+            </span>
+          </div>
+        )}
+
         {property.isSold && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 pointer-events-none">
             <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider pointer-events-auto">

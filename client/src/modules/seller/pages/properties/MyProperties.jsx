@@ -445,28 +445,13 @@ const MyProperties = () => {
 
                 <div className="mb-6 flex items-center">
                   <div className="bg-white py-2 flex items-center gap-1">
-                    {property.isSold && property.soldPrice ? (
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-400 line-through leading-none mb-1">
-                          {formatPriceRange(
-                            property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
-                            property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
-                            property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
-                          )}
-                        </span>
-                        <span className="text-xl font-medium text-gray-900 leading-none">
-                          {formatIndianPrice(property.soldPrice)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-xl font-medium text-gray-900 leading-none">
-                        {formatPriceRange(
-                          property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
-                          property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
-                          property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
-                        )}
-                      </span>
-                    )}
+                    <span className="text-xl font-medium text-gray-900 leading-none">
+                      {formatPriceRange(
+                        property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                        property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                        property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
+                      )}
+                    </span>
                   </div>
                 </div>
 
@@ -869,25 +854,9 @@ const MyProperties = () => {
                   </div>
                   <div className="text-left md:text-right">
                     <p className="text-sm text-gray-300 mb-1 font-medium">
-                      {selectedProperty.isSold && selectedProperty.soldPrice
-                        ? "Sold Price"
-                        : "Price"}
+                      Price
                     </p>
                     <div className="flex flex-col items-start md:items-end">
-                      {selectedProperty.isSold && selectedProperty.soldPrice ? (
-                        <>
-                          <span className="text-sm text-gray-400 line-through font-normal opacity-80">
-                            {formatPriceRange(
-                              selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
-                              selectedProperty.pricing?.sell?.maxPrice || selectedProperty.pricing?.rent?.maxRent,
-                              selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
-                            )}
-                          </span>
-                          <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-green-400 shadow-sm">
-                            {formatIndianPrice(selectedProperty.soldPrice)}
-                          </span>
-                        </>
-                      ) : (
                         <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white shadow-sm">
                           {formatPriceRange(
                             selectedProperty.pricing?.sell?.minPrice || selectedProperty.pricing?.rent?.minRent,
@@ -895,7 +864,6 @@ const MyProperties = () => {
                             selectedProperty.pricing?.sell?.price || selectedProperty.pricing?.rent?.monthlyRent || 0
                           )}
                         </p>
-                      )}
                     </div>
                   </div>
                 </div>

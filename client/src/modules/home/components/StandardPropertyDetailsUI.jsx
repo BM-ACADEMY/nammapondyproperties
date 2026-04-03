@@ -62,8 +62,6 @@ const StandardPropertyDetailsUI = ({
   handleWhatsAppClick,
   maskPhoneNumber,
   getVideoEmbedUrl,
-  isDescriptionExpanded,
-  setIsDescriptionExpanded,
   showPhoneModal,
   setShowPhoneModal,
   user,
@@ -105,19 +103,9 @@ const StandardPropertyDetailsUI = ({
               <div className="space-y-4">
                 <div className="flex flex-wrap items-baseline gap-4">
                   <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-                    {property.isSold && property.soldPrice ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-lg md:text-xl text-gray-500 font-medium">
-                          Sold Price:
-                        </span>
-                        <span className="text-red-600">
-                          {formatIndianPrice(property.soldPrice)}
-                        </span>
-                      </div>
-                    ) : (
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-lg md:text-xl text-gray-500 font-medium">
-                          {property.isSold ? "Price:" : "Price:"}
+                          Price:
                         </span>
                         <span className="text-gray-900">
                           {formatPriceRange(
@@ -131,7 +119,6 @@ const StandardPropertyDetailsUI = ({
                           )}
                         </span>
                       </div>
-                    )}
                   </h1>
 
                   <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
@@ -175,69 +162,46 @@ const StandardPropertyDetailsUI = ({
             {/* 2. Image Gallery - Clean & Sharp */}
             <div className="space-y-4">
               <div className="relative h-[350px] md:h-[450px] bg-gray-100 rounded-xl overflow-hidden group">
-                {property.isSold && (
-                  <div className="absolute top-6 left-6 z-20">
-                    <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20">
-                      Sold Out
-                    </span>
-                  </div>
-                )}
-                {mainImage === "MAP_LOCATION" ? (
-                  <div className="w-full h-full relative z-0">
-                    <MapContainer
-                      center={[
-                        property.location?.coordinates?.lat || 0,
-                        property.location?.coordinates?.lng || 0,
-                      ]}
-                      zoom={15}
-                      scrollWheelZoom={false}
-                      className="h-full w-full"
-                    >
-                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                      <Marker
-                        position={[
-                          property.location?.coordinates?.lat || 0,
-                          property.location?.coordinates?.lng || 0,
-                        ]}
-                      />
-                    </MapContainer>
-                    <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-gray-100 flex items-center gap-2">
-                      <MapPin size={14} className="text-blue-500" />
-                      <span className="text-xs font-bold text-gray-800">Property Location</span>
+                {/* Badges Container - Top Left */}
+                <div className="absolute top-6 left-6 z-20 flex flex-col gap-3">
+                  {property.isSold && (
+                    <div className="w-fit">
+                      <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20 whitespace-nowrap">
+                        Sold Out
+                      </span>
                     </div>
-                  </div>
-                ) : (
-                  <img
-                    src={getImageUrl(mainImage)}
-                    alt={property.basicInfo?.title || "Property"}
-                    className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
-                  />
-                )}
+                  )}
+
+                  {(property.seller?.badgeVerified ||
+                    property.seller?.role_id?.role_name === "admin") && (
+                    <div className="bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center gap-2 shadow-sm border border-green-200 w-fit whitespace-nowrap">
+                      <img
+                        src="/Logo/badge.png"
+                        alt="Verified"
+                        className="w-5 h-5 object-contain"
+                      />
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Verified Seller
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <img
+                  src={getImageUrl(mainImage)}
+                  alt={property.basicInfo?.title || "Property"}
+                  className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
+                />
+
                 <div className="absolute top-4 right-4 z-10">
                   <WishlistButton propertyId={property._id} />
                 </div>
-                {/* Verified Badge - Top Left */}
-                {(property.seller?.badgeVerified ||
-                  property.seller?.role_id?.role_name === "admin") && (
-                  <div className="absolute top-6 left-6 z-20 bg-green-100 text-green-700 px-3 py-1.5 rounded-md flex items-center gap-2 shadow-sm border border-green-200">
-                    <img
-                      src="/Logo/badge.png"
-                      alt="Verified"
-                      className="w-5 h-5 object-contain"
-                    />
-                    <span className="text-xs font-bold uppercase tracking-widest">
-                      Verified Seller
-                    </span>
-                  </div>
-                )}
               </div>
 
               {/* Thumbnails */}
               {(() => {
                 const thumbnails = [...(property.media?.images || [])];
-                if (thumbnails.length > 0 && property.location?.coordinates?.lat) {
-                  thumbnails.splice(1, 0, "MAP_LOCATION");
-                }
+                
                 if (thumbnails.length > 1) {
                   return (
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -251,18 +215,11 @@ const StandardPropertyDetailsUI = ({
                               : "border-transparent opacity-60 hover:opacity-100"
                           }`}
                         >
-                          {img === "MAP_LOCATION" ? (
-                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-slate-100 text-slate-500">
-                              <MapPin size={24} />
-                              <span className="text-[10px] font-bold">MAP</span>
-                            </div>
-                          ) : (
-                            <img
-                              src={getImageUrl(img)}
-                              alt="thumbnail"
-                              className="w-full h-full object-cover"
-                            />
-                          )}
+                          <img
+                            src={getImageUrl(img)}
+                            alt="thumbnail"
+                            className="w-full h-full object-cover"
+                          />
                         </button>
                       ))}
                     </div>
@@ -565,29 +522,15 @@ const StandardPropertyDetailsUI = ({
                   className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? "max-h-[90px] line-clamp-3" : "max-h-[2000px]"}`}
                 > */}
                 <div
-                  className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden ${!isDescriptionExpanded ? "max-h-[90px] line-clamp-3" : "max-h-[2000px]"}`}
+                  className={`prose prose-lg max-w-none text-gray-600 leading-relaxed transition-all duration-500 overflow-hidden`}
                 >
                   <p className="whitespace-pre-line text-slate-700">
                     {property.basicInfo?.description ||
                       "No description provided."}
                   </p>
                 </div>
-
-                {!isDescriptionExpanded && (
-                  <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-                )}
               </div>
 
-              {!isDescriptionExpanded && (
-                <div className="flex justify-center pt-2">
-                  <button
-                    onClick={() => setIsDescriptionExpanded(true)}
-                    className="px-10 py-2.5 rounded-full border border-blue-200 text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-colors"
-                  >
-                    Read More
-                  </button>
-                </div>
-              )}
             </div>
 
             {/* Detailed Specifications Section */}

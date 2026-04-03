@@ -331,12 +331,10 @@ const FavoritesPage = () => {
                     <div className="flex flex-wrap items-end justify-between gap-4 mt-auto pt-4 border-t border-gray-100">
                       <div>
                         <p className="text-[10px] uppercase tracking-widest font-semibold text-[#38526e] mb-1">
-                          {property.isSold && property.soldPrice ? "Sold Price" : "Price"}
+                          Price
                         </p>
                         <p className="text-xl font-bold text-[#0e182b] leading-none">
-                          {property.isSold && property.soldPrice
-                            ? formatIndianPrice(property.soldPrice)
-                            : formatPriceRange(
+                          {formatPriceRange(
                                 property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
                                 property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
                                 property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0,

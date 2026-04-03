@@ -2,11 +2,12 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, MapPin, Eye, ArrowRight, Phone, MessageSquare } from "lucide-react";
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
+import { formatNumber } from "../../../utils/formatNumber";
 import { getImageUrl } from "@/utils/imageUrl";
 import moment from "moment";
 import WishlistButton from "../../../components/Common/WishlistButton";
 
-const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
+const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) => {
     const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
     const locality = property.location?.locality || property.location?.city || "Pondicherry";
     const city = property.location?.city || "";
@@ -33,7 +34,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
             {/* Left: Image Section */}
             <div className="w-full xl:w-2/5 h-48 xl:h-auto min-h-[192px] relative shrink-0 overflow-hidden">
                 <Link
-                    to={`/properties/${property.slug || property._id}`}
+                    to={`/properties/${property.slug || property._id}${linkQuery}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="absolute inset-0 z-10"
@@ -58,6 +59,15 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick }) => {
                 <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
                     1/{property.media?.images?.length || 1}
                 </div>
+
+                {property.view_count > 0 && (
+                    <div className="absolute bottom-3 left-3 z-20 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded flex items-center gap-1 border border-white/10 transition-all group-hover:bg-black/70">
+                        <Eye className="w-3 h-3 text-white/90" />
+                        <span className="text-white text-[10px] font-bold tracking-tight">
+                            {formatNumber(property.view_count)}
+                        </span>
+                    </div>
+                )}
             </div>
 
             {/* Right: Content Section */}
