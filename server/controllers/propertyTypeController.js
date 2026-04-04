@@ -2,6 +2,13 @@ const PropertyType = require("../models/PropertyType");
 const fs = require("fs");
 const path = require("path");
 
+const parseBool = (val) => {
+    if (val === "true") return true;
+    if (val === "false") return false;
+    if (val === "undefined" || val === "null") return false;
+    return val; // Let Mongoose handle other types or actual booleans
+};
+
 exports.createPropertyType = async (req, res) => {
     try {
         const typeData = { ...req.body };
@@ -9,6 +16,13 @@ exports.createPropertyType = async (req, res) => {
         if (req.file) {
             typeData.imageUrl = `/uploads/propertyTypes/${req.file.filename}`;
         }
+
+        // Parse boolean strings from FormData
+        ["hasRooms", "hasFloor", "hasPlot", "hasCommercial"].forEach(field => {
+            if (typeData[field] !== undefined) {
+                typeData[field] = parseBool(typeData[field]);
+            }
+        });
 
         const propertyType = new PropertyType(typeData);
         await propertyType.save();
@@ -62,6 +76,13 @@ exports.updatePropertyType = async (req, res) => {
             }
             updateData.imageUrl = `/uploads/propertyTypes/${req.file.filename}`;
         }
+
+        // Parse boolean strings from FormData
+        ["hasRooms", "hasFloor", "hasPlot", "hasCommercial"].forEach(field => {
+            if (updateData[field] !== undefined) {
+                updateData[field] = parseBool(updateData[field]);
+            }
+        });
 
         propertyType = await PropertyType.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true });
         res.json(propertyType);

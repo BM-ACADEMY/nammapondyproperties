@@ -117,7 +117,9 @@ const PropertyTypeManager = () => {
   const onFinish = async (values) => {
     const data = new FormData();
     Object.keys(values).forEach((key) => {
-      data.append(key, values[key]);
+      if (values[key] !== undefined) {
+        data.append(key, values[key]);
+      }
     });
 
     if (fileList[0]?.originFileObj) {
@@ -378,16 +380,16 @@ const PropertyTypeManager = () => {
           <div className="space-y-4 mb-8">
             <Text strong className="text-sm block">Form Configuration</Text>
             <div className="grid grid-cols-2 gap-4">
-              <Form.Item name="hasRooms" valuePropName="checked" noStyle>
+              <Form.Item name="hasRooms" valuePropName="checked" noStyle initialValue={false}>
                 <Checkbox className="text-sm">Rooms / BHK</Checkbox>
               </Form.Item>
-              <Form.Item name="hasFloor" valuePropName="checked" noStyle>
+              <Form.Item name="hasFloor" valuePropName="checked" noStyle initialValue={false}>
                 <Checkbox className="text-sm">Floor Details</Checkbox>
               </Form.Item>
-              <Form.Item name="hasPlot" valuePropName="checked" noStyle>
+              <Form.Item name="hasPlot" valuePropName="checked" noStyle initialValue={false}>
                 <Checkbox className="text-sm">Plot / Area</Checkbox>
               </Form.Item>
-              <Form.Item name="hasCommercial" valuePropName="checked" noStyle>
+              <Form.Item name="hasCommercial" valuePropName="checked" noStyle initialValue={false}>
                 <Checkbox className="text-sm">Commercial</Checkbox>
               </Form.Item>
             </div>
