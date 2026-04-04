@@ -351,14 +351,35 @@ exports.getProperties = async (req, res) => {
 
     // 6. Price Range
     if (minPrice || maxPrice) {
-      const priceQuery = {};
-      if (minPrice) priceQuery.$gte = Number(minPrice);
-      if (maxPrice) priceQuery.$lte = Number(maxPrice);
+      const min = Number(minPrice) || 0;
+      const max = maxPrice ? Number(maxPrice) : 999999999999; // Very high value if not provided
 
       queryConditions.push({
         $or: [
-          { "pricing.sell.price": priceQuery },
-          { "pricing.rent.monthlyRent": priceQuery }
+          // Sell logic (Price overlaps with user range)
+          {
+            $or: [
+              { "pricing.sell.price": { $gte: min, $lte: max } },
+              {
+                $and: [
+                  { "pricing.sell.minPrice": { $lte: max } },
+                  { "pricing.sell.maxPrice": { $gte: min } }
+                ]
+              }
+            ]
+          },
+          // Rent logic
+          {
+            $or: [
+              { "pricing.rent.monthlyRent": { $gte: min, $lte: max } },
+              {
+                $and: [
+                  { "pricing.rent.minRent": { $lte: max } },
+                  { "pricing.rent.maxRent": { $gte: min } }
+                ]
+              }
+            ]
+          }
         ]
       });
     }
@@ -467,61 +488,80 @@ exports.getFilters = async (req, res) => {
 
     const priceStats = await Property.aggregate([
       {
+        $project: {
+          effectiveMaxPrice: {
+            $max: [
+              { $ifNull: ["$pricing.sell.price", 0] },
+              { $ifNull: ["$pricing.sell.maxPrice", 0] },
+              { $ifNull: ["$pricing.rent.monthlyRent", 0] },
+              { $ifNull: ["$pricing.rent.maxRent", 0] }
+            ]
+          }
+        }
+      },
+      {
         $group: {
           _id: null,
-          maxPrice: {
-            $max: {
-              $cond: [
-                { $ifNull: ["$pricing.sell.price", false] },
-                "$pricing.sell.price",
-                { $ifNull: ["$pricing.rent.monthlyRent", 0] }
-              ]
-            }
-          },
-        },
-      },
+          maxPrice: { $max: "$effectiveMaxPrice" }
+        }
+      }
     ]);
 
     const maxPrice = priceStats[0]?.maxPrice || 10000000;
+
+    // Use a capped max for generating specific ranges to avoid huge arrays.
+    // Absolute max is returned as maxPrice, but ranges are defined up to a reasonable cap.
+    const rangeCap = 200000000; // 20 Cr
+    const displayMax = Math.min(maxPrice, rangeCap);
 
     // Better: Helper to format Indian currency
     const formatPrice = (price) => {
       if (price >= 10000000) return `${(price / 10000000).toFixed(1)}Cr`;
       if (price >= 100000) return `${(price / 100000).toFixed(0)}L`;
+      if (price >= 1000) return `${(price / 1000).toFixed(0)}K`;
       return `${price.toLocaleString()}`;
     };
 
-    // Custom Logic for Smart Ranges based on user request ("1.1 to 1.4 -> round to 1.5")
-    // Use smaller steps for lower values.
+    // Custom Logic for Smart Ranges
     const priceRanges = [];
 
     const generateRanges = (start, end, step) => {
-      for (let current = start; current < end; current += step) {
-        const next = current + step;
+      for (let current = start; current < end && current < rangeCap; current += step) {
+        const next = Math.min(current + step, rangeCap);
         priceRanges.push({
           label: `${formatPrice(current)} - ${formatPrice(next)}`,
           min: current,
           max: next,
         });
+        if (next >= rangeCap) break;
       }
     };
 
-    if (maxPrice <= 2000000) {
-      // Max is 20L, use 2L steps
-      generateRanges(0, maxPrice + 200000, 200000);
-    } else if (maxPrice <= 5000000) {
-      // Max is 50L.
-      generateRanges(0, 2000000, 200000); // 0-20L in 2L steps (10 items)
-      generateRanges(2000000, maxPrice + 500000, 500000); // 20L+ in 5L steps
+    if (displayMax <= 2000000) {
+      // Max is below 20L, use 2L steps
+      generateRanges(0, displayMax + 200000, 200000);
+    } else if (displayMax <= 5000000) {
+      // Max is below 50L.
+      generateRanges(0, 2000000, 200000); // 0-20L in 2L steps
+      generateRanges(2000000, displayMax + 500000, 500000); // 20L+ in 5L steps
     } else {
       // Max is high.
       generateRanges(0, 2000000, 500000); // 0-20L in 5L steps
       generateRanges(2000000, 5000000, 500000); // 20-50L in 5L steps
-      generateRanges(5000000, Math.min(maxPrice, 20000000), 2500000); // 50L-2Cr in 25L steps
+      generateRanges(5000000, Math.min(displayMax, 20000000), 2500000); // 50L-2Cr in 25L steps
 
-      if (maxPrice > 20000000) {
-        generateRanges(20000000, maxPrice + 5000000, 5000000); // >2Cr in 50L steps
+      if (displayMax > 20000000) {
+        generateRanges(20000000, displayMax, 5000000); // 2Cr - 20Cr in 50L steps
       }
+    }
+
+    // Add "Any" range if there are properties beyond rangeCap
+    if (maxPrice > rangeCap) {
+        priceRanges.push({
+            label: `${formatPrice(rangeCap)}+`,
+            min: rangeCap,
+            max: 999999999999,
+        });
     }
 
     // Filter out null/undefined/empty values
