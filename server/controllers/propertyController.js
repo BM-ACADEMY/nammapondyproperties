@@ -1340,6 +1340,16 @@ exports.getAdminStats = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(50);
 
+    // Pending Seller Properties (Awaiting Approval)
+    const pendingProperties = await Property.find({
+      status: "Pending",
+      seller: { $ne: req.user._id }
+    })
+      .populate("seller", "name phone profile_image")
+      .populate("businessType", "name")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
     res.json({
       summary: {
         totalUsers,
@@ -1356,6 +1366,7 @@ exports.getAdminStats = async (req, res) => {
         totalEnquiries,
       },
       chartData,
+      pendingProperties,
       recentUsers: recentUsers.map((u) => ({
         _id: u._id,
         name: u.name,
