@@ -18,13 +18,13 @@ const initCronJobs = (io) => {
       const allExpiredProperties = await Property.find({
         createdAt: { $lt: twentyOneDaysAgo },
       }).populate({
-        path: "seller_id",
+        path: "seller",
         populate: { path: "role_id" },
       });
 
       // Filter out properties where seller is ADMIN
       const expiredProperties = allExpiredProperties.filter((property) => {
-        const roleName = property.seller_id?.role_id?.role_name?.toUpperCase();
+        const roleName = property.seller?.role_id?.role_name?.toUpperCase();
         return roleName !== "ADMIN";
       });
 
@@ -39,33 +39,40 @@ const initCronJobs = (io) => {
 
       // 2. Cleanup and Notify
       for (const property of expiredProperties) {
+        const title = property.basicInfo?.title || "Untitled Property";
+
         // Notify seller via WebSocket before deletion
-        if (io && property.seller_id) {
-          io.to(`seller-${property.seller_id._id}`).emit("property-expired", {
-            message: `Your property "${property.title}" has expired and has been removed.`,
+        if (io && property.seller) {
+          io.to(`seller-${property.seller._id}`).emit("property-expired", {
+            message: `Your property "${title}" has expired and has been removed.`,
             propertyId: property._id,
-            title: property.title,
+            title: title,
           });
         }
 
         // Cleanup associated image files from the filesystem
-        if (property.images && property.images.length > 0) {
-          for (const img of property.images) {
-            if (img.image_url) {
-              const fileName = path.basename(img.image_url);
-              const filePath = path.join(
-                __dirname,
-                "../uploads/properties",
-                fileName,
-              );
+        const imagesToDelete = [];
+        if (property.media?.featuredImage) imagesToDelete.push(property.media.featuredImage);
+        if (property.media?.images && Array.isArray(property.media.images)) {
+          imagesToDelete.push(...property.media.images);
+        }
+        if (property.media?.floorPlan) imagesToDelete.push(property.media.floorPlan);
 
-              try {
-                if (fs.existsSync(filePath)) {
-                  fs.unlinkSync(filePath);
-                }
-              } catch (err) {
-                console.error(`Error deleting file ${filePath}:`, err);
+        for (const imageUrl of imagesToDelete) {
+          if (imageUrl) {
+            const fileName = path.basename(imageUrl);
+            const filePath = path.join(
+              __dirname,
+              "../uploads/properties",
+              fileName,
+            );
+
+            try {
+              if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
               }
+            } catch (err) {
+              console.error(`Error deleting file ${filePath}:`, err);
             }
           }
         }
