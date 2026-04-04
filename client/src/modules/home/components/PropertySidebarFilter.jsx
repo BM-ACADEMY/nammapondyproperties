@@ -8,7 +8,7 @@ const PropertySidebarFilter = ({
     onFilterChange,
     onClearFilters
 }) => {
-    const { locations, approvalTypes, priceRanges, propertyCategories, businessTypes, propertyTypes } = useNav();
+    const { locations, approvalTypes, priceRanges, propertyCategories, businessTypes, propertyTypes, maxPrice: backendMaxPrice } = useNav();
     const [openSections, setOpenSections] = useState({
         budget: true,
         location: true,
@@ -39,11 +39,27 @@ const PropertySidebarFilter = ({
         if (!val && val !== 0) return "";
         if (val >= 10000000) return `${(val / 10000000).toFixed(1)} Cr`;
         if (val >= 100000) return `${(val / 100000).toFixed(0)} L`;
-        return `${val / 1000} K`;
+        if (val >= 1000) return `${(val / 1000).toFixed(0)} K`;
+        return `${val}`;
     };
 
-    const minPossible = priceRanges.length > 0 ? Math.min(...priceRanges.map(r => r.min)) : 0;
-    const maxPossible = priceRanges.length > 0 ? Math.max(...priceRanges.map(r => r.max)) : 100000000;
+    const minPossible = 0;
+    // Slider cap: 20 Cr to keep it usable, but we use backendMaxPrice for the logical range if it's below that
+    const sliderCap = 200000000;
+    const maxPossible = Math.max(sliderCap, backendMaxPrice || 200000000);
+
+    const handleBudgetChange = (val) => {
+        const min = val[0];
+        let max = val[1];
+
+        // If max is at the very end and there's more in the backend, send null/high value
+        if (max === maxPossible && backendMaxPrice > maxPossible) {
+            // Effectively "Any" price above slider cap
+            onFilterChange({ minPrice: min, maxPrice: "" });
+        } else {
+            onFilterChange({ minPrice: min, maxPrice: max });
+        }
+    };
 
     return (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 sticky top-24 max-h-[calc(100vh-120px)] flex flex-col overflow-hidden">
@@ -75,10 +91,13 @@ const PropertySidebarFilter = ({
                                         Number(filters.minPrice) || minPossible,
                                         Number(filters.maxPrice) || maxPossible
                                     ]}
-                                    onChange={(val) => onFilterChange({ minPrice: val[0], maxPrice: val[1] })}
-                                    onAfterChange={(val) => onFilterChange({ minPrice: val[0], maxPrice: val[1] })}
+                                    onChange={handleBudgetChange}
+                                    onAfterChange={handleBudgetChange}
                                     tooltip={{
-                                        formatter: formatPrice,
+                                        formatter: (val) => {
+                                            if (val === maxPossible && backendMaxPrice > maxPossible) return `${formatPrice(val)}+`;
+                                            return formatPrice(val);
+                                        }
                                     }}
                                 />
                             </ConfigProvider>

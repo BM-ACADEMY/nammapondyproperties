@@ -23,7 +23,9 @@ import {
   Download,
   Home,
   User,
+  Share2,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import L from "leaflet";
@@ -69,6 +71,28 @@ const BuilderPromoterDetailsUI = ({
   fromBuilderList,
   moreProperties = [],
 }) => {
+  const handleShare = async () => {
+    const shareData = {
+      title: property.basicInfo?.title || "Property Details",
+      text: `Check out this property: ${property.basicInfo?.title || "Property"} on Namma Pondy Properties`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    }
+  };
+
   const [activeTab, setActiveTab] = useState("overview");
   const scrollRefs = {
     overview: useRef(null),
@@ -151,6 +175,18 @@ const BuilderPromoterDetailsUI = ({
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+        {/* Action Buttons: Top Right */}
+        <div className="absolute top-6 right-6 z-20 flex flex-col gap-2">
+          <WishlistButton propertyId={property._id} />
+          <button
+            onClick={handleShare}
+            className="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg hover:bg-white transition-all active:scale-95 group/share"
+            title="Share Property"
+          >
+            <Share2 size={20} className="text-gray-600 group-hover/share:text-blue-600" />
+          </button>
+        </div>
 
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 mb-10">
           <div className="container mx-auto max-w-7xl">

@@ -10,6 +10,7 @@ export const NavProvider = ({ children }) => {
     const [locations, setLocations] = useState([]);
     const [approvalTypes, setApprovalTypes] = useState([]);
     const [priceRanges, setPriceRanges] = useState([]);
+    const [maxPrice, setMaxPrice] = useState(10000000);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -27,6 +28,7 @@ export const NavProvider = ({ children }) => {
                 setLocations(filtersRes.data.locations || []);
                 setApprovalTypes(filtersRes.data.approvals || []);
                 setPriceRanges(filtersRes.data.priceRanges || []);
+                setMaxPrice(filtersRes.data.maxPrice || 10000000);
             } catch (error) {
                 console.error("Error fetching navigation data:", error);
             } finally {
@@ -38,7 +40,7 @@ export const NavProvider = ({ children }) => {
     }, []);
 
     return (
-        <NavContext.Provider value={{ businessTypes, propertyCategories, propertyTypes, locations, approvalTypes, priceRanges, isLoading }}>
+        <NavContext.Provider value={{ businessTypes, propertyCategories, propertyTypes, locations, approvalTypes, priceRanges, maxPrice, isLoading }}>
             {children}
         </NavContext.Provider>
     );

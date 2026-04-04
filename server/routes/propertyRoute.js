@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const propertyController = require("../controllers/propertyController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, optionalProtect } = require("../middleware/authMiddleware");
 const propertyUpload = require("../middleware/propertyUploadMiddleware");
 
 // Create a new property
@@ -13,7 +13,7 @@ router.post(
   propertyController.createProperty,
 );
 // Get all properties
-router.get("/fetch-all-property", propertyController.getProperties);
+router.get("/fetch-all-property", optionalProtect, propertyController.getProperties);
 // Get a property by ID
 router.get("/fetch-property-by-id/:id", propertyController.getPropertyById);
 // Get a property by Slug

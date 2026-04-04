@@ -20,7 +20,9 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
+  Share2,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import {
   MapContainer,
   TileLayer,
@@ -77,6 +79,27 @@ const StandardPropertyDetailsUI = ({
   submitEnquiry,
   selectedEnquiryProperty,
 }) => {
+  const handleShare = async () => {
+    const shareData = {
+      title: property.basicInfo?.title || "Property Details",
+      text: `Check out this property: ${property.basicInfo?.title || "Property"} on Namma Pondy Properties`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!");
+      }
+    }
+  };
 
   return (
     <div className="bg-white min-h-screen py-8 font-sans text-gray-900">
@@ -202,8 +225,15 @@ const StandardPropertyDetailsUI = ({
                   className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
                 />
 
-                <div className="absolute top-4 right-4 z-10">
+                <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
                   <WishlistButton propertyId={property._id} />
+                  <button
+                    onClick={handleShare}
+                    className="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg hover:bg-white transition-all active:scale-95 group/share"
+                    title="Share Property"
+                  >
+                    <Share2 size={20} className="text-gray-600 group-hover/share:text-blue-600" />
+                  </button>
                 </div>
               </div>
 

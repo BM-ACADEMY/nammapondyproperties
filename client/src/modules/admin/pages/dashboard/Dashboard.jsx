@@ -53,6 +53,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 import Loader from "../../../../components/Common/Loader";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -147,14 +148,6 @@ const Dashboard = () => {
       path: "/admin/properties?status=sold&seller=me",
     },
     {
-      title: "Pending Approvals",
-      value: data.summary.pendingApprovals,
-      icon: <FileCheck size={24} className="text-orange-500" />,
-      color: "#fff7e6",
-      desc: "Requires Verification",
-      path: "/admin/properties?verified=false",
-    },
-    {
       title: "Marketing Leads",
       value: data.summary.marketingLeadsCount,
       icon: <TrendingUp size={24} className="text-pink-500" />,
@@ -217,7 +210,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid - Robust responsiveness using auto-fit */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
         {statCardsData.map((stat, index) => (
           <Link
             to={stat.path}
@@ -478,7 +471,70 @@ const Dashboard = () => {
             </div>
           </Card>
         </Col>
+
+        {/* Moved Pending Approvals to the side */}
+        <Col xs={24} lg={8}>
+          <Card
+            title={
+              <div className="flex justify-between items-center w-full">
+                <span className="text-sm font-semibold">Pending Approvals</span>
+                <Link to="/admin/seller-listings">
+                  <Button type="link" size="small" className="p-0 text-blue-600 text-xs font-medium">View All</Button>
+                </Link>
+              </div>
+            }
+            className="shadow-sm rounded-2xl h-full border-0"
+            styles={{ body: { padding: '12px' } }}
+          >
+            <List
+              itemLayout="horizontal"
+              dataSource={data.pendingProperties || []}
+              renderItem={(record) => (
+                <List.Item 
+                  className="px-0 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50/50 transition-colors rounded-lg px-2 group"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <img 
+                      src={getImageUrl(record.media?.images?.[0])}
+                      alt="Property"
+                      className="w-12 h-12 object-cover rounded-lg shrink-0 shadow-sm"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <Text className="font-semibold text-gray-800 text-[13px] truncate block leading-none mb-1.5">
+                        {record.basicInfo?.title || 'Untitled'}
+                      </Text>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Avatar size="small" className="bg-amber-100 text-amber-600 text-[8px] font-bold w-4 h-4 min-w-4 flex items-center justify-center">
+                            {record.seller?.name?.charAt(0).toUpperCase() || 'S'}
+                          </Avatar>
+                          <Text type="secondary" className="text-[10px] truncate max-w-[80px]">{record.seller?.name || 'Unknown'}</Text>
+                        </div>
+                        <span className="w-1 h-1 rounded-full bg-gray-200" />
+                        <Tag className="text-[9px] px-1 bg-gray-100 border-0 text-gray-400 rounded m-0">
+                          {new Date(record.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                        </Tag>
+                      </div>
+                    </div>
+                    <Link to={`/admin/seller-listings`}>
+                      <Button type="text" size="small" className="text-blue-500 hover:bg-blue-50">
+                        <ArrowRight size={14} />
+                      </Button>
+                    </Link>
+                  </div>
+                </List.Item>
+              )}
+            />
+            {(!data.pendingProperties || data.pendingProperties.length === 0) && (
+              <div className="py-8 text-center bg-gray-50/50 rounded-xl">
+                <CheckCircle size={32} className="text-green-500 opacity-20 mx-auto mb-2" />
+                <Text type="secondary" className="text-xs">No pending items</Text>
+              </div>
+            )}
+          </Card>
+        </Col>
       </Row>
+
     </div>
   );
 };

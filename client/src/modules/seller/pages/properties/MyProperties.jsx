@@ -64,18 +64,18 @@ const { Title, Text } = Typography;
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
 
-const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
+const CountdownTimer = ({ createdAt, approvedAt, status, validityDays = 21, isAdmin = false }) => {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin || status === "Pending") {
       return;
     }
 
     const calculateTimeLeft = () => {
-      const createdDate = new Date(createdAt);
+      const baseDate = approvedAt ? new Date(approvedAt) : new Date(createdAt);
       const expiryDate = new Date(
-        createdDate.getTime() + validityDays * 24 * 60 * 60 * 1000,
+        baseDate.getTime() + validityDays * 24 * 60 * 60 * 1000,
       );
       const now = new Date();
       const difference = expiryDate - now;
@@ -103,11 +103,11 @@ const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
     const timer = setInterval(calculateTimeLeft, 1000); // Update every second
 
     return () => clearInterval(timer);
-  }, [createdAt, validityDays, isAdmin]);
+  }, [createdAt, approvedAt, status, validityDays, isAdmin]);
 
-  const displayTime = isAdmin ? "No Expiry" : timeLeft;
+  const displayTime = isAdmin ? "No Expiry" : (status === "Pending" ? "Pending Approval" : timeLeft);
 
-  if (!isAdmin && displayTime === "Expired") return null;
+  if (!isAdmin && status !== "Pending" && displayTime === "Expired") return null;
   if (!isAdmin && !displayTime) return null;
 
   return (
@@ -389,11 +389,13 @@ const MyProperties = () => {
                 {/* Status Badges Overlay */}
                 <div className="absolute top-4 right-4 flex flex-row gap-2 z-10">
                   <div className={`px-3 py-1.5 rounded-full text-[10px] font-medium tracking-wider uppercase backdrop-blur-md border ${
-                    property.status === "available" 
+                    property.status === "Active" || property.status === "available"
                       ? "bg-green-500/80 text-white border-green-400/50" 
+                      : property.status === "Pending"
+                      ? "bg-amber-500/80 text-white border-amber-400/50"
                       : "bg-red-600 text-white border-red-400/50"
                   }`}>
-                    {property.status}
+                    {property.status === "Pending" ? "Awaiting Approval" : property.status}
                   </div>
                   {property.isSold && (
                     <div className="px-3 py-1.5 rounded-full text-[10px] font-medium tracking-wider uppercase bg-red-600 text-white border border-red-500/50 shadow-lg">
@@ -415,6 +417,8 @@ const MyProperties = () => {
                   <div className="scale-90 origin-bottom-right">
                     <CountdownTimer
                       createdAt={property.createdAt}
+                      approvedAt={property.approvedAt}
+                      status={property.status}
                       isAdmin={
                         user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
                         user?.role?.name?.toUpperCase() === "ADMIN"
@@ -483,6 +487,7 @@ const MyProperties = () => {
                         const request = marketingRequests.find(
                           (r) => r.property_id?._id === property._id,
                         );
+                        const isPending = property.status === "Pending";
                         const hasActiveRequest =
                           request &&
                           ["pending", "contacted"].includes(request.status);
@@ -490,19 +495,19 @@ const MyProperties = () => {
                         return (
                           <Button
                             block
-                            disabled={hasActiveRequest}
-                            icon={hasActiveRequest ? <CheckCircle size={16} /> : <Sparkles size={16} />}
+                            disabled={hasActiveRequest || isPending}
+                            icon={hasActiveRequest ? <CheckCircle size={16} /> : isPending ? <Clock size={16} /> : <Sparkles size={16} />}
                             onClick={() => {
                               setSelectedProperty(property);
                               setIsMarketingModalOpen(true);
                             }}
                             className={`h-10 rounded-none font-medium border-none shadow-sm transition-all flex items-center justify-center gap-2 ${
-                              hasActiveRequest 
+                              hasActiveRequest || isPending
                                 ? "bg-indigo-50 text-indigo-400" 
                                 : "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200"
                             }`}
                           >
-                            {hasActiveRequest ? "Promoted" : "Promote"}
+                            {hasActiveRequest ? "Promoted" : isPending ? "Wait for Approval" : "Promote"}
                           </Button>
                         );
                       })()}
