@@ -32,9 +32,9 @@ import {
   Search
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
-const API_URL = import.meta.env.VITE_API_URL.replace("/api", "");
 
 const PropertyTypeManager = () => {
   const [types, setTypes] = useState([]);
@@ -85,7 +85,7 @@ const PropertyTypeManager = () => {
           uid: "-1",
           name: "Current Image",
           status: "done",
-          url: `${API_URL}${record.imageUrl}`,
+          url: getImageUrl(record.imageUrl),
         },
       ]);
     } else {
@@ -155,7 +155,7 @@ const PropertyTypeManager = () => {
           <div className={`p-2 rounded-lg ${record.usageType === "Residential" ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"}`}>
             {record.imageUrl ? (
               <img 
-                src={`${API_URL}${record.imageUrl}`} 
+                src={getImageUrl(record.imageUrl)} 
                 alt={text} 
                 className="w-8 h-8 object-cover rounded"
               />
