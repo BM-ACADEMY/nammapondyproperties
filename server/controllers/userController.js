@@ -7,9 +7,6 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const { OAuth2Client } = require("google-auth-library");
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT
 const generateToken = (id) => {
@@ -380,48 +377,4 @@ exports.createUserByAdmin = async (req, res) => {
   }
 };
 
-exports.googleLogin = async (req, res) => {
-  const { credential } = req.body;
-  if (!credential) return res.status(400).json({ error: "Google credential is required" });
 
-  try {
-    // Verify Google ID token
-    const ticket = await googleClient.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const { email, name, picture, sub: googleId } = payload;
-
-    // Find or create user
-    let user = await User.findOne({ email }).populate("role_id");
-
-    if (!user) {
-      const userRole = await Role.findOne({ role_name: "user" });
-      const customId = `USER-${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
-      user = await User.create({
-        email,
-        name,
-        googleId,
-        profile_image: picture,
-        role_id: userRole?._id,
-        isVerified: true,
-        customId,
-      });
-      user = await User.findById(user._id).populate("role_id");
-    } else if (!user.googleId) {
-      // Link Google account to existing email user
-      user.googleId = googleId;
-      if (!user.profile_image) user.profile_image = picture;
-      await user.save();
-      user = await User.findById(user._id).populate("role_id");
-    }
-
-    const token = generateToken(user._id);
-    res.json({ success: true, message: "Google login successful", user, token });
-  } catch (error) {
-    console.error("Google Login Error:", error);
-    res.status(401).json({ error: "Invalid Google credential" });
-  }
-};

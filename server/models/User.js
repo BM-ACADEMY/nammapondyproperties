@@ -9,9 +9,7 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     name: { type: String, required: false },
-    phone: { type: String, unique: true, sparse: true }, // optional for Google users
-    email: { type: String, unique: true, sparse: true },
-    googleId: { type: String, unique: true, sparse: true },
+    phone: { type: String, unique: true, sparse: true }, // unique for phone-base users
     status: { type: String, default: "active" },
     otp: { type: String },
     otpExpires: { type: Date },

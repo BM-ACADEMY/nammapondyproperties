@@ -27,10 +27,9 @@ exports.createRequest = async (req, res) => {
 exports.getAllRequests = async (req, res) => {
   try {
     const requests = await SellerRequest.find()
-      .sort({ createdAt: -1 })
       .populate({
         path: "seller_id",
-        select: "name email phone profile_image",
+        select: "name phone profile_image",
       });
     res.json(requests);
   } catch (error) {

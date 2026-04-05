@@ -12,7 +12,7 @@ exports.getAdvertisedProperties = async (req, res) => {
         })
             .populate({
                 path: "seller",
-                select: "name email phone business_type customId",
+                select: "name phone business_type customId",
             })
             .sort({ createdAt: -1 }); // Most recent first
 

@@ -141,7 +141,7 @@ exports.getSellerRequests = async (req, res) => {
 exports.getAdminRequests = async (req, res) => {
   try {
     const requests = await MarketingRequest.find()
-      .populate("seller_id", "name email phone customId")
+      .populate("seller_id", "name phone customId")
       .populate("property_id", "title images price location")
       .populate("plan_id", "name price")
       .sort({ createdAt: -1 });

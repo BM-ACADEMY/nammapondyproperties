@@ -271,8 +271,7 @@ exports.getProperties = async (req, res) => {
           const matchingSellers = await User.find({
             $or: [
               { name: tokenRegex },
-              { phone: tokenRegex },
-              { email: tokenRegex }
+              { phone: tokenRegex }
             ]
           }).distinct("_id");
 
@@ -1125,7 +1124,7 @@ exports.getSellerStats = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(50)
       .populate("property_id", "basicInfo.title")
-      .populate("user_id", "name email phoneNumber");
+      .populate("user_id", "name phoneNumber");
 
     // 6. Top Properties
     const topProperties = properties
@@ -1323,7 +1322,7 @@ exports.getAdminStats = async (req, res) => {
     const recentUsers = await User.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .select("name email role_id createdAt")
+      .select("name role_id createdAt")
       .populate("role_id", "role_name");
 
     // Recent Properties (Increased limit for dashboard selector)
@@ -1336,7 +1335,7 @@ exports.getAdminStats = async (req, res) => {
     // Recent Enquiries
     const recentEnquiries = await Enquiry.find({ seller_id: req.user._id })
       .populate("property_id", "basicInfo.title")
-      .populate("user_id", "name email")
+      .populate("user_id", "name")
       .sort({ createdAt: -1 })
       .limit(50);
 
@@ -1370,7 +1369,6 @@ exports.getAdminStats = async (req, res) => {
       recentUsers: recentUsers.map((u) => ({
         _id: u._id,
         name: u.name,
-        email: u.email,
         role: u.role_id?.role_name || "Unknown",
         joinedAt: u.createdAt,
       })),
@@ -1438,11 +1436,10 @@ exports.getSellerOverviewStats = async (req, res) => {
           totalViews: 1,
           soldCount: 1,
           name: "$sellerDetails.name",
-          email: "$sellerDetails.email",
-          phone: "$sellerDetails.phone",
-          isVerified: "$sellerDetails.is_verified"
-        }
-      },
+        phone: "$sellerDetails.phone",
+        isVerified: "$sellerDetails.is_verified"
+      }
+    },
       { $sort: { propertyCount: -1 } }
     ]);
 
