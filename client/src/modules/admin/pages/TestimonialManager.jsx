@@ -12,6 +12,9 @@ import {
   Statistic,
   Dropdown,
   Modal,
+  Form,
+  Input,
+  Rate,
 } from "antd";
 import { 
   CheckCircle, 
@@ -21,7 +24,8 @@ import {
   MoreVertical, 
   MessageSquare,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Plus
 } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -32,6 +36,9 @@ const TestimonialManager = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTestimonial, setSelectedTestimonial] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [form] = Form.useForm();
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchTestimonials();
@@ -95,6 +102,27 @@ const TestimonialManager = () => {
   const handleView = (record) => {
     setSelectedTestimonial(record);
     setIsModalOpen(true);
+  };
+
+  const handleAdd = async (values) => {
+    try {
+      setSubmitting(true);
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/testimonials`,
+        { ...values, status: "approved" },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      );
+      message.success("Testimonial added successfully");
+      setIsAddModalOpen(false);
+      form.resetFields();
+      fetchTestimonials();
+    } catch (error) {
+      message.error("Failed to add testimonial");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const columns = [
@@ -238,6 +266,14 @@ const TestimonialManager = () => {
           <Title level={3} className="mb-1!">Testimonials</Title>
           <Text type="secondary">Review and manage user feedback appearing on the public website</Text>
         </div>
+        <Button 
+          type="primary" 
+          icon={<Plus size={18} />} 
+          onClick={() => setIsAddModalOpen(true)}
+          className="h-11 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 border-none shadow-md flex items-center gap-2 font-semibold"
+        >
+          Add Testimonial
+        </Button>
       </div>
 
       <Row gutter={[24, 24]} className="mb-8">
@@ -324,6 +360,76 @@ const TestimonialManager = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Add Testimonial Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 pb-4 border-b border-gray-200">
+            <Plus size={20} className="text-blue-600" />
+            <span>Add New Testimonial</span>
+          </div>
+        }
+        open={isAddModalOpen}
+        onCancel={() => {
+          setIsAddModalOpen(false);
+          form.resetFields();
+        }}
+        centered
+        footer={null}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleAdd}
+          initialValues={{ rating: 5, role: "User" }}
+          className="py-4"
+        >
+          <Form.Item
+            name="name"
+            label="User Name"
+            rules={[{ required: true, message: "Please enter the name" }]}
+          >
+            <Input placeholder="e.g. John Doe" />
+          </Form.Item>
+
+          <Form.Item
+            name="role"
+            label="Role/Designation"
+          >
+            <Input placeholder="e.g. Home Buyer, Seller, etc." />
+          </Form.Item>
+
+          <Form.Item
+            name="rating"
+            label="Rating"
+            rules={[{ required: true }]}
+          >
+            <Rate />
+          </Form.Item>
+
+          <Form.Item
+            name="content"
+            label="Review Content"
+            rules={[{ required: true, message: "Please enter the testimonial content" }]}
+          >
+            <Input.TextArea rows={4} placeholder="What did they say?" />
+          </Form.Item>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button onClick={() => setIsAddModalOpen(false)} className="rounded-lg h-10 px-6">
+              Cancel
+            </Button>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={submitting}
+              className="rounded-lg h-10 px-6 bg-blue-600 hover:bg-blue-700"
+            >
+              Add Testimonial
+            </Button>
+          </div>
+        </Form>
       </Modal>
     </div>
   );

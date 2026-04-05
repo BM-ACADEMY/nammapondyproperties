@@ -147,40 +147,7 @@ const LoginModal = ({ open, onCancel }) => {
                                 </button>
                             </form>
 
-                            <div className="flex items-center my-6">
-                                <div className="flex-1 h-[1px] bg-gray-200"></div>
-                                <span className="px-4 text-gray-400 text-sm font-medium">OR</span>
-                                <div className="flex-1 h-[1px] bg-gray-200"></div>
-                            </div>
 
-                            <div className="flex justify-center mb-6">
-                                <GoogleLogin
-                                    onSuccess={async (credentialResponse) => {
-                                        setLoading(true);
-                                        try {
-                                            const res = await axios.post(`${API}/users/google-login`, {
-                                                credential: credentialResponse.credential
-                                            });
-                                            if (res.data.success) {
-                                                login(res.data.user, res.data.token);
-                                                toast.success("Login successful!");
-                                                resetModal();
-                                                onCancel();
-                                            }
-                                        } catch (error) {
-                                            toast.error(error.response?.data?.error || "Google login failed");
-                                        } finally {
-                                            setLoading(false);
-                                        }
-                                    }}
-                                    onError={() => {
-                                        toast.error("Google Login Failed");
-                                    }}
-                                    useOneTap
-                                    shape="rectangular"
-                                    width="100%"
-                                />
-                            </div>
 
                             <p className="text-left text-[14px] text-gray-500 mt-8">
                                 By clicking you agree to{" "}
