@@ -82,8 +82,8 @@ exports.getEnquiries = async (req, res) => {
     // 1. Fetch Enquiries
     const enquiries = await Enquiry.find(filter)
       .populate("property_id", "basicInfo location media")
-      .populate("user_id", "name email phone")
-      .populate("seller_id", "name email phone")
+      .populate("user_id", "name phone")
+      .populate("seller_id", "name phone")
       .lean();
 
     // 2. Fetch WhatsappLeads (Legacy)
@@ -91,8 +91,8 @@ exports.getEnquiries = async (req, res) => {
         filter.seller_id ? { seller_id: filter.seller_id } : {}
       )
       .populate("property_id", "title location images")
-      .populate("user_id", "name email phone")
-      .populate("seller_id", "name email")
+      .populate("user_id", "name phone")
+      .populate("seller_id", "name")
       .lean();
 
     // 3. Normalize WhatsappLeads to match Enquiry structure
@@ -120,8 +120,8 @@ exports.getAllEnquiriesAdmin = async (req, res) => {
   try {
     const enquiries = await Enquiry.find()
       .populate("property_id", "basicInfo location media")
-      .populate("user_id", "name email phone")
-      .populate("seller_id", "name email phone")
+      .populate("user_id", "name phone")
+      .populate("seller_id", "name phone")
       .sort({ createdAt: -1 });
     res.json(enquiries);
   } catch (error) {

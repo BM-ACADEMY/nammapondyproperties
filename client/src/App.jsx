@@ -9,12 +9,9 @@ import { Toaster } from "react-hot-toast";
 
 import ScrollToTop from "./components/Common/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-
 function App() {
   return (
     <HelmetProvider>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
         <div>
           <Toaster
             position="top-center"
@@ -36,7 +33,6 @@ function App() {
             </LocationProvider>
           </AuthProvider>
         </div>
-      </GoogleOAuthProvider>
     </HelmetProvider>
   );
 }

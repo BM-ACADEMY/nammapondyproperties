@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-hot-toast";
 import axios from "axios";
-import { GoogleLogin } from "@react-oauth/google";
 
 const API = import.meta.env.VITE_API_URL;
 
