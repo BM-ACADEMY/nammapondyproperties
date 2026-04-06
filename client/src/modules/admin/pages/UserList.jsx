@@ -25,7 +25,8 @@ import {
   Users, 
   UserCheck, 
   UserX, 
-  ShieldCheck 
+  ShieldCheck,
+  ShieldAlert
 } from "lucide-react";
 import api from "@/services/api";
 
@@ -34,6 +35,16 @@ const { Title } = Typography;
 const UserList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState([]);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await api.get("/roles/fetch-all-role");
+      setRoles(response.data);
+    } catch (error) {
+      console.error("Failed to fetch roles", error);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -51,6 +62,7 @@ const UserList = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchRoles();
   }, []);
 
   const handleDelete = (id) => {
@@ -201,6 +213,44 @@ const UserList = () => {
               <div className="flex items-center gap-2" onClick={() => handleDelete(record._id)}>
                 <Trash2 size={14} />
                 <span>Delete User</span>
+              </div>
+            ),
+          },
+          {
+            type: "divider",
+          },
+          {
+            key: "makeAdmin",
+            label: (
+              <div
+                className="flex items-center gap-2 text-indigo-600 font-medium"
+                onClick={() => {
+                  const adminRole = roles.find(r => r.role_name === "admin");
+                  if (!adminRole) return message.error("Admin role not found");
+
+                  Modal.confirm({
+                    title: "Promote to Admin?",
+                    icon: <ShieldAlert className="text-indigo-500" />,
+                    content: `Are you sure you want to give administrative privileges to ${record.name || "this user"}?`,
+                    okText: "Yes, Promote",
+                    okType: "primary",
+                    okButtonProps: { className: "bg-indigo-600" },
+                    onOk: async () => {
+                      try {
+                        await api.put(`/users/update-user-by-id/${record._id}`, {
+                          role_id: adminRole._id,
+                        });
+                        message.success("User promoted to Admin successfully");
+                        fetchUsers();
+                      } catch (error) {
+                        message.error("Failed to promote user");
+                      }
+                    },
+                  });
+                }}
+              >
+                <ShieldAlert size={14} />
+                <span>Make Admin</span>
               </div>
             ),
           },

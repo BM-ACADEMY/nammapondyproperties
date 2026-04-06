@@ -25,7 +25,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 404)) {
+    if (error.response && error.response.status === 401) {
       const token = localStorage.getItem("token");
       if (token) {
         // Only clear if we actually had a session

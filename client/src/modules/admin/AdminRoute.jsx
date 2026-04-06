@@ -24,6 +24,8 @@ import ViewCountManager from "./pages/properties/ViewCountManager";
 import CallRequests from "./pages/forms/CallRequests";
 import ContactMessages from "./pages/forms/ContactMessages";
 import FailedRegistrations from "./pages/FailedRegistrations";
+import AdminList from "./pages/AdminList";
+
 const AdminRoute = () => {
   return (
     <Routes>
@@ -35,6 +37,7 @@ const AdminRoute = () => {
         {/* Changed to UserList */}
         <Route path="sellers" element={<SellerList />} />{" "}
         <Route path="failed-registrations" element={<FailedRegistrations />} />{" "}
+        <Route path="admins" element={<AdminList />} />{" "}
         {/* Added failed-registrations route */}
         <Route path="profile" element={<AdminProfile />} />
         <Route path="properties" element={<AdminProperties mode="admin" />} />

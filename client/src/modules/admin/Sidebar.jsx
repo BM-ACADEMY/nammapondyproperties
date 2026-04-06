@@ -151,6 +151,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           onClick: () => handleMenuClick("/admin/users"),
         },
         {
+          key: "/admin/admins",
+          label: "Admin List",
+          onClick: () => handleMenuClick("/admin/admins"),
+        },
+        {
           key: "/admin/sellers",
           label: "Seller List",
           onClick: () => handleMenuClick("/admin/sellers"),
