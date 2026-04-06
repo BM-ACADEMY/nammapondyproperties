@@ -33,7 +33,8 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-
+  const [activeBusinessDropdown, setActiveBusinessDropdown] = useState(null);
+  const [expandedMobileBusiness, setExpandedMobileBusiness] = useState(null);
   const { businessTypes, propertyCategories = [] } = useNav();
 
   const userMenuRef = useRef(null);
@@ -259,13 +260,49 @@ const Header = () => {
                         ? type.name
                         : type.name?.name || "Unknown";
                     return (
-                      <Link
+                      <div
                         key={id}
-                        to={`/business-user-list/${id}`}
-                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize"
+                        className="relative group py-2"
+                        onMouseEnter={() => setActiveBusinessDropdown(id)}
+                        onMouseLeave={() => setActiveBusinessDropdown(null)}
                       >
-                        {name}
-                      </Link>
+                        <button
+                          className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none"
+                        >
+                          <span>{name}</span>
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${activeBusinessDropdown === id ? "rotate-180" : ""}`} />
+                        </button>
+
+                        <AnimatePresence>
+                          {activeBusinessDropdown === id && (
+                            <motion.div
+                              variants={dropdownVariants}
+                              initial="hidden"
+                              animate="visible"
+                              exit="exit"
+                              className="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden"
+                            >
+                              <div className="px-2 space-y-0.5">
+                                <Link
+                                  to={`/business-user-list/${id}`}
+                                  className="flex items-center px-4 py-2 text-sm font-bold text-[#166aa8] hover:bg-blue-50 rounded-lg transition-colors capitalize"
+                                >
+                                  {name}
+                                </Link>
+                                <button
+                                  onClick={handlePostProperty}
+                                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors group/post"
+                                >
+                                  <span>Post Property</span>
+                                  <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded leading-none ml-2.5">
+                                    FREE
+                                  </span>
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     );
                   })}
 
@@ -756,15 +793,48 @@ const Header = () => {
                       typeof type.name === "string"
                         ? type.name
                         : type.name?.name || "Unknown";
+                    const isExpanded = expandedMobileBusiness === id;
+
                     return (
-                      <Link
-                        key={id}
-                        to={`/business-user-list/${id}`}
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px] capitalize"
-                      >
-                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name}
-                      </Link>
+                      <div key={id} className="space-y-1">
+                        <button
+                          onClick={() => setExpandedMobileBusiness(isExpanded ? null : id)}
+                          className="flex items-center justify-between w-full px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px] capitalize"
+                        >
+                          <div className="flex items-center">
+                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name}
+                          </div>
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                        </button>
+
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden pl-6 space-y-1"
+                            >
+                              <Link
+                                to={`/business-user-list/${id}`}
+                                onClick={() => setIsMenuOpen(false)}
+                                className="flex items-center px-4 py-2.5 text-sm font-bold text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all capitalize"
+                              >
+                                {name}
+                              </Link>
+                              <button
+                                onClick={handlePostProperty}
+                                className="w-full flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                              >
+                                <span>Post Property</span>
+                                <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded leading-none ml-2.5">
+                                  FREE
+                                </span>
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     );
                   })}
 
