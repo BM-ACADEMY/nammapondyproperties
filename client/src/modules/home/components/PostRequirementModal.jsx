@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import realtorImg from "@/assets/realtor.png";
+
 
 const PostRequirementModal = () => {
   const [isOpen, setIsOpen] = useState(false);
