@@ -2,6 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Header from "./Header";
 import Footer from "./Footer";
 import LoginModal from "@/components/Auth/LoginModal";
+import PostRequirementModal from "../components/PostRequirementModal";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 
@@ -25,12 +26,13 @@ const HomeLayout = () => {
         open={isLoginModalOpen}
         onCancel={() => setLoginModalOpen(false)}
       />
+      <PostRequirementModal />
       <main
         id="main-content"
-        className="flex-grow overflow-y-auto scroll-smooth"
+        className="grow overflow-y-auto scroll-smooth"
       >
         <div className="min-h-full flex flex-col">
-          <div className="flex-grow">
+          <div className="grow">
             <Outlet />
           </div>
           <Footer />

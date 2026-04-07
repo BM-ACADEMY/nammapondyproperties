@@ -190,7 +190,7 @@ const Header = () => {
             ? isScrolled
               ? "bg-[#166aa8] shadow-lg py-2"
               : "bg-[white] lg:bg-transparent lg:border-transparent py-2 lg:py-4"
-            : "bg-[#166aa8] py-2"
+            : "bg-[#166aa8] shadow-lg py-2"
           }`}
       >
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

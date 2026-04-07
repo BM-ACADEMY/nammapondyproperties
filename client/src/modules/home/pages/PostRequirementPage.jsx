@@ -5,9 +5,9 @@ import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import {
-  Zap,
-  ShieldCheck,
-  LayoutGrid,
+  Timer,
+  UserCheck,
+  ListChecks,
   MapPin,
   Phone,
   Mail,
@@ -90,13 +90,12 @@ const PostRequirementPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Hero Section with Gradient */}
-      <div className="bg-linear-to-r from-[#166aa8] to-[#4ea8de] pt-20 pb-32 px-4 text-center text-white">
-        <h1 className="text-3xl md:text-5xl font-bold mb-4">
+      <div className="bg-linear-to-r from-[#1e3a8a] to-[#06b6d4] pt-28 md:pt-36 lg:pt-48 pb-20 md:pb-28 lg:pb-32 px-4 text-center text-white">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold mb-4">
           Let Us Know What You Need
         </h1>
-        <p className="text-lg md:text-xl text-blue-50 opacity-90 max-w-2xl mx-auto">
-          Just complete these simple steps. Get custom solutions and quotes from
-          our verified property experts.
+        <p className="text-base md:text-lg lg:text-xl text-blue-50 opacity-90 max-w-2xl mx-auto">
+          Just complete these simple steps. Get Instant quotes from Verified Suppliers
         </p>
       </div>
 
@@ -107,20 +106,18 @@ const PostRequirementPage = () => {
           <div className="lg:w-2/3 p-6 md:p-10 border-r border-gray-100">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                <FileText className="text-[#166aa8]" size={24} />
                 Requirement Details
               </h2>
-              <div className="h-1 w-20 bg-[#166aa8] mt-2 rounded-full" />
+              <div className="h-1 w-20 bg-[#f15b22] mt-2 rounded-full" />
             </div>
 
             <Form
               form={form}
               layout="vertical"
               onFinish={onFinish}
-              requiredMark="optional"
               size="large"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
                 <Form.Item
                   name="fullName"
                   label={<span className="font-semibold">Full Name</span>}
@@ -202,23 +199,32 @@ const PostRequirementPage = () => {
                 <Form.Item
                   name="preferredLocation"
                   label={<span className="font-semibold">Preferred Location</span>}
-                  className="md:col-span-2"
+                  className="lg:col-span-2"
+                  rules={[{ required: true, message: "Please enter your preferred location" }]}
                 >
                   <Input placeholder="e.g. Heritage Town, Pondicherry" />
                 </Form.Item>
 
                 <Form.Item
                   label={<span className="font-semibold">Approx. Budget Range</span>}
-                  className="md:col-span-2"
+                  className="lg:col-span-2"
                 >
                   <div className="flex gap-4">
-                    <Form.Item name="minBudget" style={{ flex: 1, margin: 0 }}>
+                    <Form.Item 
+                      name="minBudget" 
+                      style={{ flex: 1, margin: 0 }}
+                      rules={[{ required: true, message: "Required" }]}
+                    >
                       <InputNumber
                         style={{ width: "100%" }}
                         placeholder="Min Budget"
                       />
                     </Form.Item>
-                    <Form.Item name="maxBudget" style={{ flex: 1, margin: 0 }}>
+                    <Form.Item 
+                      name="maxBudget" 
+                      style={{ flex: 1, margin: 0 }}
+                      rules={[{ required: true, message: "Required" }]}
+                    >
                       <InputNumber
                         style={{ width: "100%" }}
                         placeholder="Max Budget"
@@ -228,56 +234,56 @@ const PostRequirementPage = () => {
                 </Form.Item>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-gray-100">
+              <div className="mt-8 pt-6 flex flex-col items-center justify-center border-t border-gray-100">
                 <Button
                   type="primary"
                   htmlType="submit"
                   loading={loading}
-                  className="w-full md:w-auto px-12 h-14 bg-[#fb2c36] hover:bg-[#e7000b] border-none text-lg font-bold rounded-xl shadow-lg shadow-red-500/20"
+                  className="w-full md:w-auto px-16 h-14 bg-[#f15b22]! hover:bg-[#d84315]! border-none text-lg font-bold rounded-xl shadow-lg shadow-orange-500/20"
                 >
                   Submit Requirement
                 </Button>
-                <p className="text-xs text-slate-400 mt-4 text-center md:text-left">
-                  By clicking Submit, I accept the T&C and Privacy Policy.
+                <p className="text-xs text-slate-400 mt-4">
+                  By clicking Submit Requirement, I accept the <span className="underline cursor-pointer">T&C</span> and <span className="underline cursor-pointer">Privacy Policy</span>
                 </p>
               </div>
             </Form>
           </div>
 
           {/* Right Section: Advantages */}
-          <div className="lg:w-1/3 p-8 md:p-10 bg-gray-50/50 flex flex-col gap-10">
+          <div className="lg:w-1/3 p-6 md:p-10 bg-gray-50/50 flex flex-col gap-10">
             <div>
-              <h2 className="text-xl font-bold text-slate-800 border-b-2 border-[#fb2c36] w-fit pb-2 mb-8">
+              <h2 className="text-xl font-bold text-slate-800 border-b-2 border-[#f15b22] w-fit pb-2 mb-8">
                 Buyers Advantages?
               </h2>
 
               <div className="space-y-8">
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#166aa8]">
-                    <Zap size={24} />
+                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
+                    <Timer size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800">Immediate Responses</h3>
-                    <p className="text-sm text-slate-500 mt-1">Get Instant Feedback from our local property experts.</p>
+                    <h3 className="font-bold text-slate-800">Immediate Matches</h3>
+                    <p className="text-sm text-slate-500 mt-1">Get contacted by property owners and verified agents instantly.</p>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#166aa8]">
-                    <ShieldCheck size={24} />
+                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
+                    <UserCheck size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800">Verified Agents</h3>
-                    <p className="text-sm text-slate-500 mt-1">Accredited Professionals that meet your specific needs.</p>
+                    <h3 className="font-bold text-slate-800">Verified Listings</h3>
+                    <p className="text-sm text-slate-500 mt-1">High-quality, verified properties tailored to your specific needs.</p>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#166aa8]">
-                    <LayoutGrid size={24} />
+                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
+                    <ListChecks size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800">Multiple Choices</h3>
+                    <h3 className="font-bold text-slate-800">Curated Choices</h3>
                     <p className="text-sm text-slate-500 mt-1">Get the power to choose from the best handpicked properties.</p>
                   </div>
                 </div>
