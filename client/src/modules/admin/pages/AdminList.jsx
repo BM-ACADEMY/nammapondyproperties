@@ -143,6 +143,16 @@ const AdminList = () => {
       ),
     },
     {
+      title: "Created By",
+      dataIndex: "createdBy",
+      key: "createdBy",
+      render: (createdBy) => (
+        <span className="text-gray-600 font-medium whitespace-nowrap">
+          {createdBy?.name || "System"}
+        </span>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",

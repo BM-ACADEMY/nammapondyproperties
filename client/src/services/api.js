@@ -37,4 +37,9 @@ api.interceptors.response.use(
   },
 );
 
+export const postRequirement = (data) => api.post("/requirements", data);
+export const getRequirements = () => api.get("/requirements");
+export const updateRequirementStatus = (id, status) => api.patch(`/requirements/${id}`, { status });
+export const deleteRequirement = (id) => api.delete(`/requirements/${id}`);
+
 export default api;

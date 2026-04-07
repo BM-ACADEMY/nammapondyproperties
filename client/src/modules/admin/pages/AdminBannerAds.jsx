@@ -206,6 +206,16 @@ const AdminBannerAds = () => {
             },
         },
         {
+            title: "Created By",
+            dataIndex: "createdBy",
+            key: "createdBy",
+            render: (createdBy) => (
+                <span className="text-gray-600 font-medium">
+                    {createdBy?.name || "System"}
+                </span>
+            ),
+        },
+        {
             title: "Display Status",
             dataIndex: "isActive",
             key: "isActive",

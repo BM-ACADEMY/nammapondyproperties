@@ -14,7 +14,8 @@ import {
   Briefcase,
   BarChart3,
   Image,
-  Sliders
+  Sliders,
+  ClipboardList
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -172,6 +173,12 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <LibraryBig size={20} />,
       label: "Enquiry Leads",
       onClick: () => handleMenuClick("/admin/enquiries"),
+    },
+    {
+      key: "/admin/requirements",
+      icon: <ClipboardList size={20} />,
+      label: "Posted Requirements",
+      onClick: () => handleMenuClick("/admin/requirements"),
     },
     {
       key: "forms-sub",
