@@ -131,14 +131,22 @@ const PostRequirementPage = () => {
                   label={<span className="font-semibold">Mobile Number</span>}
                   rules={[{ required: true, message: "Required" }]}
                 >
-                  <Input placeholder="Phone number" />
+                  <InputNumber 
+                    style={{ width: "100%" }}
+                    placeholder="Phone number" 
+                    controls={false}
+                    onKeyPress={(event) => {
+                      if (!/[0-9]/.test(event.key)) {
+                        event.preventDefault();
+                      }
+                    }}
+                  />
                 </Form.Item>
 
                 <Form.Item
                   name="email"
                   label={<span className="font-semibold">Email Address</span>}
                   rules={[
-                    { required: true, message: "Please enter your email" },
                     { type: "email", message: "Please enter a valid email address" },
                   ]}
                 >
@@ -218,6 +226,12 @@ const PostRequirementPage = () => {
                       <InputNumber
                         style={{ width: "100%" }}
                         placeholder="Min Budget"
+                        controls={false}
+                        onKeyPress={(event) => {
+                          if (!/[0-9]/.test(event.key)) {
+                            event.preventDefault();
+                          }
+                        }}
                       />
                     </Form.Item>
                     <Form.Item 
@@ -228,6 +242,12 @@ const PostRequirementPage = () => {
                       <InputNumber
                         style={{ width: "100%" }}
                         placeholder="Max Budget"
+                        controls={false}
+                        onKeyPress={(event) => {
+                          if (!/[0-9]/.test(event.key)) {
+                            event.preventDefault();
+                          }
+                        }}
                       />
                     </Form.Item>
                   </div>
