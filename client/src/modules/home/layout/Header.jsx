@@ -289,6 +289,24 @@ const Header = () => {
                                 >
                                   {name}
                                 </Link>
+                                {name.toLowerCase().includes("agent") && (
+                                  <Link
+                                    to="/agent-info"
+                                    onClick={() => setActiveBusinessDropdown(null)}
+                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                  >
+                                    Agent Info
+                                  </Link>
+                                )}
+                                {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
+                                  <Link
+                                    to="/builder-info"
+                                    onClick={() => setActiveBusinessDropdown(null)}
+                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                  >
+                                    Builder Info
+                                  </Link>
+                                )}
                                 <button
                                   onClick={handlePostProperty}
                                   className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors group/post"
@@ -822,6 +840,24 @@ const Header = () => {
                               >
                                 {name}
                               </Link>
+                              {name.toLowerCase().includes("agent") && (
+                                <Link
+                                  to="/agent-info"
+                                  onClick={() => setIsMenuOpen(false)}
+                                  className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                >
+                                  Agent Info
+                                </Link>
+                              )}
+                              {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
+                                <Link
+                                  to="/builder-info"
+                                  onClick={() => setIsMenuOpen(false)}
+                                  className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                >
+                                  Builder Info
+                                </Link>
+                              )}
                               <button
                                 onClick={handlePostProperty}
                                 className="w-full flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
