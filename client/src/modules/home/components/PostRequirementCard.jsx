@@ -1,76 +1,42 @@
-import React, { useState } from "react";
-import { Modal } from "antd";
-import { ListTodo, ArrowRight, ClipboardPlus } from "lucide-react";
-import PostRequirementForm from "./PostRequirementForm";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const PostRequirementCard = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const showModal = () => {
-    setIsModalVisible(true);
+  const navigate = useNavigate();
+  const handlePostClick = () => {
+    navigate("/post-requirement");
   };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleSuccess = () => {
-    setIsModalVisible(false);
-  };
-
   return (
-    <>
-      <div 
-        onClick={showModal}
-        className="group relative bg-white border border-slate-200 rounded-xl p-5 shadow-sm overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-md hover:border-blue-200"
-      >
-        {/* Decorative elements */}
-        <div className="absolute -right-4 -top-4 w-20 h-20 bg-blue-50 rounded-full opacity-50 transition-transform group-hover:scale-150 group-hover:bg-blue-100/50" />
-        
-        <div className="relative z-10 flex flex-col gap-3">
-          <div className="w-10 h-10 flex items-center justify-center bg-blue-50 text-[#166aa8] rounded-lg group-hover:bg-[#166aa8] group-hover:text-white transition-colors duration-300">
-            <ClipboardPlus size={22} />
-          </div>
-          
-          <div>
-            <h3 className="text-[17px] font-bold text-slate-800 mb-1 group-hover:text-[#166aa8] transition-colors">
-              Can't Find Your Property?
-            </h3>
-            <p className="text-[13px] text-slate-500 leading-snug pr-4">
-              Post your requirement and let our experts find the perfect match for you.
-            </p>
-          </div>
-          
-          <div className="flex items-center text-[13px] font-semibold text-[#166aa8] mt-1 group-hover:gap-2 transition-all">
-            <span>Post Requirement</span>
-            <ArrowRight size={14} className="ml-1 transition-transform group-hover:translate-x-1" />
-          </div>
-        </div>
-      </div>
+    <div
+      onClick={handlePostClick}
+      className="group relative bg-linear-to-br from-[#ffffff93] to-[#e6e5e9] rounded-2xl p-6 shadow-lg overflow-hidden cursor-pointer transition-all duration-300 border border-[#e6e5e99f]"
+    >
+      {/* Decorative elements */}
+      <div className="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-2xl transition-transform" />
+      <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-blue-400/10 rounded-full blur-3xl" />
 
-      <Modal
-        title={
-          <div className="flex items-center gap-2 py-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#166aa8] flex items-center justify-center">
-              <ClipboardPlus size={18} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-slate-800 m-0">Post Your Requirement</h3>
-              <p className="text-xs text-slate-500 font-normal mt-0.5">Fill in the details below and we'll help you find your dream property.</p>
-            </div>
-          </div>
-        }
-        open={isModalVisible}
-        onCancel={handleCancel}
-        footer={null}
-        width={720}
-        centered
-        className="requirement-modal"
-        destroyOnClose
-      >
-        <PostRequirementForm onSuccess={handleSuccess} onCancel={handleCancel} />
-      </Modal>
-    </>
+      <div className="relative z-10 flex flex-col gap-4">
+        <div>
+          <h3 className="text-xl font-bold text-[#5b5e65] mb-2 leading-tight">
+            Can't Find Your Property?
+          </h3>
+          <p className="text-[14px] text-[#5b5e65]/90 leading-relaxed pr-2">
+            Post your requirement and let our experts find the perfect match
+            for you.
+          </p>
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePostClick();
+          }}
+          className="bg-[#fb2c36] hover:bg-[#e7000b] text-white font-bold py-2 px-4 md:py-3 md:px-8 rounded-xl shadow-sm transition-all text-xs md:text-[14px] w-fit active:scale-95"
+        >
+          Post Requirement
+        </button>
+      </div>
+    </div>
   );
 };
 

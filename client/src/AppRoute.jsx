@@ -16,6 +16,7 @@ import TermsAndConditions from "./modules/home/pages/TermsAndConditions";
 import PrivacyPolicy from "./modules/home/pages/PrivacyPolicy";
 import Loader from "./components/Common/Loader";
 import AddProperty from "./modules/seller/pages/properties/AddProperty";
+import PostRequirementPage from "./modules/home/pages/PostRequirementPage";
 
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
 const LoginPage = lazy(() => import("./modules/home/pages/LoginPage"));
@@ -31,6 +32,7 @@ const AppRoutes = () => {
         <Route path="/terms-and-condition" element={<TermsAndConditions />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/favorites" element={<FavoritesPage />} />
+        <Route path="/post-requirement" element={<PostRequirementPage />} />
       </Route>
 
       {/* User Routes */}

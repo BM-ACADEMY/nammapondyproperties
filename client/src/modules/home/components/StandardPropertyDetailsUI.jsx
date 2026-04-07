@@ -53,6 +53,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import PropertyCard from "../components/PropertyCard";
+import PostRequirementCard from "./PostRequirementCard";
 
 // Custom marker icon
 import customMarkerIcon from "@/assets/marker-custom.png";
@@ -1165,6 +1166,9 @@ const StandardPropertyDetailsUI = ({
                     </>
                   )}
                 </button>
+              </div>
+              <div className="mt-4">
+                <PostRequirementCard />
               </div>
             </div>
           </div>

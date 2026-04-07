@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Form, Input, Select, InputNumber, Button, message, Checkbox } from "antd";
 import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import { useNav } from "@/context/NavContext";
 import { MapPin, Phone, Mail, User, MessageCircle, FileText } from "lucide-react";
 
 const { Option } = Select;
@@ -12,6 +13,20 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [showOtherType, setShowOtherType] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const { propertyTypes } = useNav();
+
+  const usageType = Form.useWatch("usageType", form);
+
+  // Filter property types based on usage type
+  const filteredPropertyTypes = propertyTypes.filter(type => type.usageType === usageType);
+
+  // Reset property type when usage type changes
+  useEffect(() => {
+    if (usageType) {
+      form.setFieldsValue({ propertyType: undefined });
+      setShowOtherType(false);
+    }
+  }, [usageType, form]);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -110,7 +125,9 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
           label="Usage Type"
           rules={[{ required: true, message: "Please select usage type" }]}
         >
-          <Select placeholder="Residential or Commercial?">
+          <Select 
+            placeholder="Residential or Commercial?"
+          >
             <Option value="Residential">Residential</Option>
             <Option value="Commercial">Commercial</Option>
           </Select>
@@ -122,14 +139,14 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
           label="Property Type"
           rules={[{ required: true, message: "Please select property type" }]}
         >
-          <Select placeholder="Select type" onChange={handlePropertyTypeChange}>
-            <Option value="Apartment">Apartment</Option>
-            <Option value="Independent House/Villa">Independent House/Villa</Option>
-            <Option value="Plot/Land">Plot/Land</Option>
-            <Option value="Office Space">Office Space</Option>
-            <Option value="Shop/Showroom">Shop/Showroom</Option>
-            <Option value="Warehouse/Godown">Warehouse/Godown</Option>
-            <Option value="Industrial Building">Industrial Building</Option>
+          <Select 
+            placeholder="Select type" 
+            onChange={handlePropertyTypeChange}
+            disabled={!usageType}
+          >
+            {filteredPropertyTypes.map((type) => (
+              <Option key={type._id} value={type.name}>{type.name}</Option>
+            ))}
             <Option value="Others">Others</Option>
           </Select>
         </Form.Item>
