@@ -84,7 +84,7 @@ const HowItWorks = () => {
                   key={index} 
                   className="w-full md:w-1/2 shrink-0 px-4"
                 >
-                  <div className="bg-white rounded-2xl p-8 h-full shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col items-start text-left group transition-all duration-500 hover:shadow-2xl">
+                  <div className="bg-white rounded-2xl p-8 h-full shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col items-start text-left group transition-all duration-500 hover:shadow-2xl cursor-pointer">
                     
                     {/* Icon Container */}
                     <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -113,7 +113,7 @@ const HowItWorks = () => {
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`transition-all duration-300 rounded-full ${
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
                   currentIndex === index 
                   ? "w-8 h-2 bg-[#c19b48]" 
                   : "w-2 h-2 bg-[#c19b48] opacity-20"

@@ -36,11 +36,11 @@ export const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-2">
-              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 group leading-none">
+              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 group leading-none">
                 Get Demo
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-white border border-gray-100 text-[#38526e] text-base font-bold rounded-xl hover:bg-gray-50 transition-all transform hover:-translate-y-1 active:scale-95 leading-none shadow-sm">
+              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-white border border-gray-100 cursor-pointer text-[#38526e] text-base font-bold rounded-xl hover:bg-gray-50 transition-all transform hover:-translate-y-1 active:scale-95 leading-none shadow-sm">
                 Contact Now
               </button>
             </div>

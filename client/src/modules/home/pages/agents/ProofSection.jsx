@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Users, MapPin, Camera } from 'lucide-react';
+import { ShieldCheck, Users, MapPin, Camera, MousePointerClick } from 'lucide-react';
 import siteVisit1 from '../../../../assets/site_visit_1.png';
 import siteVisit2 from '../../../../assets/site_visit_2.png';
 
@@ -98,7 +98,7 @@ const ProofSection = () => {
                   <button
                     key={i}
                     onClick={() => setCurrentIndex(i)}
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                    className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
                       currentIndex === i ? 'w-6 bg-[#c19b48]' : 'w-2 bg-[#c19b48] opacity-20'
                     }`}
                   />
@@ -108,6 +108,17 @@ const ProofSection = () => {
             </div>
           </div>
 
+        </div>
+        
+        {/* Added CTA Button at the bottom */}
+        <div className="mt-16 flex flex-col items-center gap-4">
+            <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2">
+                <MousePointerClick className="w-6 h-6" />
+                Get Buyers Now - Post FREE
+            </button>
+            <p className="text-[#38526e] font-bold text-base flex items-center gap-2">
+                Join 100+ Pondicherry Agents Today!
+            </p>
         </div>
 
       </div>

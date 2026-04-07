@@ -31,7 +31,7 @@ const BuilderPricing = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-8 -mt-20 z-20">
           
           {/* --- CARD 1: Basic --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col group">
+          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col group cursor-pointer">
             {/* Top Icon Area (Orange House) */}
             <div className="mb-5">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -66,13 +66,13 @@ const BuilderPricing = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-sm font-bold text-[14px] hover:bg-[#c5a059] transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
+            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-sm font-bold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
               Get Basic
             </button>
           </div>
 
           {/* --- CARD 2: Pro --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_12px_32px_rgba(0,0,0,0.12)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col relative group">
+          <div className="bg-white border border-[#0078DB] rounded shadow-[0_12px_32px_rgba(0,0,0,0.12)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col relative group cursor-pointer">
             
             {/* Top Icon Area (Green House) */}
             <div className="mb-5">
@@ -109,13 +109,13 @@ const BuilderPricing = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
+            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
               Choose Pro
             </button>
           </div>
 
           {/* --- CARD 3: Premium --- */}
-          <div className="bg-white border border-[#0078DB] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col group relative">
+          <div className="bg-white border border-[#0078DB] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col group relative cursor-pointer">
             
             {/* Top Icon Area (Purple House) */}
             <div className="mb-5">
@@ -152,7 +152,7 @@ const BuilderPricing = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
+            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
               Get Premium Leads
             </button>
           </div>
@@ -163,7 +163,7 @@ const BuilderPricing = () => {
         {/* BOTTOM SECTION (Consistency Check) */}
         <div className="mt-20 flex flex-col items-center text-center">
             <p className="text-[#091E42] font-semibold text-lg mb-4">Want a custom plan for your project?</p>
-            <button className="flex items-center gap-2 bg-[#1aa554] text-white px-10 py-4 rounded-xl font-bold text-xl hover:bg-[#168a44] transition-all transform hover:-translate-y-1 shadow-lg active:scale-95">
+            <button className="flex items-center gap-2 bg-[#1aa554] text-white px-10 py-4 rounded-xl font-bold text-xl hover:bg-[#168a44] cursor-pointer transition-all transform hover:-translate-y-1 shadow-lg active:scale-95">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.21-2.21a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>

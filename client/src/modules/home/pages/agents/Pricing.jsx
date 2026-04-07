@@ -32,7 +32,7 @@ const DealerPlanBanner = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-8 -mt-20 z-20">
           
           {/* --- CARD 1: Sachet Pack --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col">
+          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col cursor-pointer">
             {/* Top Icon */}
             <div className="mb-5">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -68,13 +68,13 @@ const DealerPlanBanner = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] transition duration-200 mt-auto">
+            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
               Get Started
             </button>
           </div>
 
           {/* --- CARD 2: Standard --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col relative">
+          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col relative cursor-pointer">
             
 
             {/* Top Icon */}
@@ -112,13 +112,13 @@ const DealerPlanBanner = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] transition duration-200 mt-auto">
+            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
               Choose Standard
             </button>
           </div>
 
           {/* --- CARD 3: Premium Pack --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col">
+          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col cursor-pointer">
             {/* Top Icon */}
             <div className="mb-5">
               <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -155,7 +155,7 @@ const DealerPlanBanner = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] transition duration-200 mt-auto">
+            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
               Get Premium Leads
             </button>
           </div>

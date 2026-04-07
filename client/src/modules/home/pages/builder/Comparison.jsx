@@ -69,7 +69,7 @@ const Comparison = () => {
 
         {/* Footer CTA - Exact Hero Button Style */}
         <div className="mt-16 flex flex-col items-center gap-4">
-            <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2">
+            <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2">
                 <MousePointerClick className="w-6 h-6" />
                 Get Verified Leads Now
             </button>

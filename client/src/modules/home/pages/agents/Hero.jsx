@@ -80,7 +80,7 @@ const HeroSection = () => {
 
             {/* CTA Button Block */}
             <div className="pt-2 space-y-3">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none">
+              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none">
                 Get Buyers Now - Post FREE
               </button>
               <div className="text-[#38526e] font-bold text-base flex items-center gap-2">
