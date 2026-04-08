@@ -8,6 +8,7 @@ import SellerEnquiries from "../pages/enquiries/SellerEnquiries";
 import RequestLimit from "../pages/properties/RequestLimit";
 import AddAttributes from "../pages/properties/AddAttributes";
 import UpgradePlan from "../pages/UpgradePlan";
+import SellerPaymentHistory from "../pages/payments/SellerPaymentHistory";
 
 const SellerRoute = () => {
   return (
@@ -22,6 +23,7 @@ const SellerRoute = () => {
         <Route path="profile" element={<Profile />} />
         <Route path="enquiries" element={<SellerEnquiries />} />
         <Route path="upgrade-plan" element={<UpgradePlan />} />
+        <Route path="payment-history" element={<SellerPaymentHistory />} />
       </Route>
     </Routes>
   );

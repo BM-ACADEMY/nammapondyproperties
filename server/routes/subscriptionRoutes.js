@@ -9,6 +9,7 @@ router.get("/plans", subscriptionPlanController.getAllPlans);
 router.get("/my-subscription", authMiddleware, subscriptionController.getUserSubscription);
 router.post("/create-order", authMiddleware, subscriptionController.createOrder);
 router.post("/verify-payment", authMiddleware, subscriptionController.verifyPayment);
+router.get("/my-history", authMiddleware, subscriptionController.getMyPaymentHistory);
 
 // Admin Routes
 router.get("/admin/plans", authMiddleware, adminMiddleware, subscriptionPlanController.adminGetAllPlans);

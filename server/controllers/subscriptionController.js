@@ -137,3 +137,14 @@ exports.getPaymentHistory = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+// 5. Seller: Get My Payment History
+exports.getMyPaymentHistory = async (req, res) => {
+  try {
+    const history = await PaymentHistory.find({ user: req.user._id })
+      .populate("plan", "name price")
+      .sort({ transactionDate: -1 });
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

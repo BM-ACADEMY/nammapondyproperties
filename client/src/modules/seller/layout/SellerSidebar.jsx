@@ -7,8 +7,12 @@ import {
   MessageSquare,
   Megaphone,
   LogOut,
+  Lock,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import { useState, useEffect } from "react";
+import api from "../../../services/api";
 
 const { Sider } = Layout;
 
@@ -16,11 +20,25 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { logout } = useAuth();
+  const [hasActivePlan, setHasActivePlan] = useState(false);
 
   // Automatically expand the "Properties" menu if the current path matches
   const defaultOpenKeys = pathname.includes("properties") ? ["properties"] : [];
 
-  const handleMenuClick = (path) => {
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const res = await api.get("/subscriptions/my-subscription");
+        setHasActivePlan(!!res.data);
+      } catch (error) {
+        console.error("Sidebar sub check error:", error);
+      }
+    };
+    checkSubscription();
+  }, [pathname]);
+
+  const handleMenuClick = (path, isLocked = false) => {
+    if (isLocked) return;
     navigate(path);
     if (isMobile) {
       setCollapsed(true);
@@ -56,6 +74,19 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <MessageSquare size={20} />,
       label: "Enquiry Property",
       onClick: () => handleMenuClick("/seller/enquiries"),
+    },
+    {
+      key: "/seller/payment-history",
+      icon: hasActivePlan ? <CreditCard size={20} /> : <Lock size={20} className="text-gray-500" />,
+      label: (
+        <div className="flex items-center justify-between gap-2">
+          <span>Payment History</span>
+          {!hasActivePlan && <Lock size={12} className="opacity-50" />}
+        </div>
+      ),
+      disabled: !hasActivePlan,
+      onClick: () => handleMenuClick("/seller/payment-history", !hasActivePlan),
+      className: !hasActivePlan ? "opacity-60 cursor-not-allowed" : "",
     },
     {
       key: "/seller/profile",

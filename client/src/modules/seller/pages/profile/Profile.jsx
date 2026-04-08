@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Form,
   Input,
@@ -12,7 +13,9 @@ import {
   Upload,
   Select,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, Award, Globe, Tags, Banknote } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, CreditCard, IndianRupee } from "lucide-react";
+import { Table, Tag } from "antd";
+import moment from "moment";
 import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -24,9 +27,11 @@ const { Title, Text } = Typography;
 const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const { user, refreshUser, refetchUser } = useAuth();
   const [fileList, setFileList] = useState([]);
+  const [activeSub, setActiveSub] = useState(null);
 
   const [hasInitialImage, setHasInitialImage] = useState(false);
   const [imageSize, setImageSize] = useState(null);
@@ -59,7 +64,17 @@ const Profile = () => {
         setLoading(false);
       }
     };
+    const fetchSubscriptionData = async () => {
+      try {
+        const subRes = await api.get("/subscriptions/my-subscription");
+        setActiveSub(subRes.data);
+      } catch (error) {
+        console.error("Failed to fetch subscription data", error);
+      }
+    };
+
     fetchProfile();
+    fetchSubscriptionData();
   }, [form]);
 
   const handleUpdateProfile = async (values) => {
@@ -70,12 +85,6 @@ const Profile = () => {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("phone", values.phone);
-      
-      // Professional Metadata
-      if (values.experience) formData.append("experience", values.experience);
-      if (values.startingPrice) formData.append("startingPrice", values.startingPrice);
-      if (values.expertise) formData.append("expertise", JSON.stringify(values.expertise));
-      if (values.languages) formData.append("languages", JSON.stringify(values.languages));
 
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append("profile_image", fileList[0].originFileObj);
@@ -152,6 +161,14 @@ const Profile = () => {
         <Text type="secondary">
           Manage your account details and security settings
         </Text>
+        {activeSub && (
+          <div className="mt-4 flex items-center gap-2">
+            <Text className="text-gray-500">Current Plan:</Text>
+            <Tag color={activeSub.plan?.name === "Premium" ? "gold" : activeSub.plan?.name === "Standard" ? "blue" : "default"} className="rounded-full px-4 font-bold uppercase tracking-wider">
+              {activeSub.plan?.name || "Free"}
+            </Tag>
+          </div>
+        )}
       </div>
 
       <Row gutter={[24, 24]} justify="start">
@@ -271,67 +288,7 @@ const Profile = () => {
                 />
               </Form.Item>
 
-              {/* Professional Metadata Section */}
-              <div className="mt-8 pt-6 border-t border-slate-100">
-                <Title level={5} className="mb-4 flex items-center gap-2">
-                    <Award size={18} className="text-[#174685]" />
-                    Professional Details
-                </Title>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Form.Item
-                        name="experience"
-                        label="Years of Experience"
-                        rules={[{ required: true, message: "Please enter experience" }]}
-                    >
-                        <Input
-                            type="number"
-                            prefix={<Clock size={18} className="text-gray-400" />}
-                            placeholder="e.g. 5"
-                            size="large"
-                        />
-                    </Form.Item>
 
-                    <Form.Item
-                        name="startingPrice"
-                        label="Starting Price (Label)"
-                    >
-                        <Input
-                            prefix={<Banknote size={18} className="text-gray-400" />}
-                            placeholder="e.g. 25 Lakh"
-                            size="large"
-                        />
-                    </Form.Item>
-                </div>
-
-                <Form.Item
-                    name="expertise"
-                    label="Expertise / Specializations"
-                >
-                    <Select
-                        mode="tags"
-                        style={{ width: '100%' }}
-                        placeholder="Type and press enter (e.g. Luxury Villas)"
-                        size="large"
-                        className="rounded-xl"
-                        suffixIcon={<Tags size={16} className="text-gray-400" />}
-                    />
-                </Form.Item>
-
-                <Form.Item
-                    name="languages"
-                    label="Languages Spoken"
-                >
-                    <Select
-                        mode="tags"
-                        style={{ width: '100%' }}
-                        placeholder="e.g. Tamil, English"
-                        size="large"
-                        className="rounded-xl"
-                        suffixIcon={<Globe size={16} className="text-gray-400" />}
-                    />
-                </Form.Item>
-              </div>
 
               <div className="flex justify-between items-center pt-8 border-t border-gray-200 mt-4">
                 <div className="flex flex-col">
@@ -381,6 +338,55 @@ const Profile = () => {
               </div>
             </Form>
           </Card>
+        </Col>
+
+        {/* Subscription Section */}
+        <Col xs={24} md={24} lg={12}>
+          <div className="space-y-6">
+            <Card
+              title={
+                <div className="flex items-center gap-2">
+                  <CreditCard className="text-blue-600" size={20} />
+                  <span>Subscription Status</span>
+                </div>
+              }
+              className="shadow-xl shadow-slate-100/50 border-gray-100 rounded-3xl overflow-hidden"
+              headStyle={{ padding: '24px', fontSize: '18px', fontWeight: '500' }}
+              bodyStyle={{ padding: '24px' }}
+            >
+              <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100 mb-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold text-blue-900 mb-1">
+                      {activeSub?.plan?.name || "Free Plan"}
+                    </h3>
+                    <p className="text-blue-600 text-sm font-medium">
+                      {activeSub?.plan?.propertyLimit === -1 ? "Unlimited" : activeSub?.plan?.propertyLimit || 3} Properties Upload Limit
+                    </p>
+                  </div>
+                  <Tag color="green" className="rounded-full px-3 py-0.5 border-none font-bold uppercase text-[10px] tracking-widest">
+                    ACTIVE
+                  </Tag>
+                </div>
+                {activeSub?.endDate && (
+                   <div className="flex items-center gap-2 text-gray-500 text-sm italic">
+                    <Clock size={14} />
+                    Expires on {moment(activeSub.endDate).format("DD MMM YYYY")}
+                   </div>
+                )}
+              </div>
+              
+              <Button 
+                 type="primary" 
+                 ghost 
+                 block 
+                 className="rounded-xl h-12 border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold"
+                 onClick={() => navigate("/seller/upgrade-plan")}
+              >
+                Upgrade or Renew Plan
+              </Button>
+            </Card>
+          </div>
         </Col>
       </Row>
     </div>
