@@ -16,7 +16,7 @@ import {
 
 const Footer = () => {
   const [socialLinks, setSocialLinks] = useState([]);
-  const { businessTypes } = useNav();
+  const { businessTypes, propertyCategories = [] } = useNav();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -103,10 +103,20 @@ const Footer = () => {
                   All Properties
                 </Link>
               </li>
+              {propertyCategories.map((category) => (
+                <li key={category}>
+                  <Link
+                    to={`/properties?category=${encodeURIComponent(category)}`}
+                    className="text-gray-400 hover:text-white transition-colors capitalize underline-offset-4 hover:underline"
+                  >
+                    {category}
+                  </Link>
+                </li>
+              ))}
               {businessTypes.map((type) => (
                 <li key={type._id}>
                   <Link
-                    to={`/properties?businessType=${type._id}`}
+                    to={`/business-user-list/${type._id}`}
                     className="text-gray-400 hover:text-white transition-colors capitalize underline-offset-4 hover:underline"
                   >
                     {type.name}
@@ -248,20 +258,19 @@ const Footer = () => {
 
         {/* Footer Bottom */}
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-6">
+          {/* Copyright & Credits */}
+          <div className="text-[11px] text-gray-500 font-medium whitespace-nowrap">
+            &copy; {new Date().getFullYear()} Namma Pondy Properties. All rights reserved. | Designed by <a href="https://bmtechx.in" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">BM TechX</a>
+          </div>
+
           {/* Payment Methods */}
           <div className="flex items-center gap-3 text-[11px] text-gray-400 tracking-wider">
-            <div className="flex items-center gap-2.5">
-              <img src="/icons/upi.svg" alt="UPI" className="h-3.5 w-auto object-contain opacity-80" />
-              <img src="/icons/payment.svg" alt="RuPay" className="h-3.5 w-auto object-contain opacity-80" />
-              <img src="/icons/visa.svg" alt="Visa" className="h-3.5 w-auto object-contain opacity-80" />
-              <img src="/icons/mastercard.svg" alt="Mastercard" className="h-3.5 w-auto object-contain opacity-80" />
+            <div className="flex items-center gap-4">
+              <img src="/icons/upi.svg" alt="UPI" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/payment.svg" alt="RuPay" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/visa.svg" alt="Visa" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/mastercard.svg" alt="Mastercard" className="h-5 w-auto object-contain opacity-90" />
             </div>
-            <span>Net Banking</span>
-          </div>
-          
-          {/* Copyright & Credits */}
-          <div className="text-[11px] text-gray-500 font-medium">
-            &copy; {new Date().getFullYear()} Namma Pondy Properties. All rights reserved. | Designed by <a href="https://bmtechx.in" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">BM TechX</a>
           </div>
         </div>
       </div>
