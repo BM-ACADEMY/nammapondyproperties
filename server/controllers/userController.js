@@ -129,7 +129,9 @@ exports.getUsers = async (req, res) => {
       query.isVerified = verified === "true";
     }
 
-    const users = await User.find(query).populate("role_id");
+    const users = await User.find(query)
+      .populate("role_id")
+      .populate("createdBy", "name");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -367,7 +369,8 @@ exports.createUserByAdmin = async (req, res) => {
       name,
       phone,
       role_id,
-      isVerified: true // Admin-created users are pre-verified
+      isVerified: true, // Admin-created users are pre-verified
+      createdBy: req.user.id
     });
 
     await user.save();

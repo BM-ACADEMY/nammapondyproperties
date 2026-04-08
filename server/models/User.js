@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema(
     customId: { type: String, unique: true, sparse: true },
     userId: { type: String, unique: true, sparse: true },
     referralCode: { type: String, unique: true, sparse: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },
 );

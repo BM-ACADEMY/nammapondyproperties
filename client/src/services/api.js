@@ -25,7 +25,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 404)) {
+    if (error.response && error.response.status === 401) {
       const token = localStorage.getItem("token");
       if (token) {
         // Only clear if we actually had a session
@@ -36,5 +36,10 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export const postRequirement = (data) => api.post("/requirements", data);
+export const getRequirements = () => api.get("/requirements");
+export const updateRequirementStatus = (id, status) => api.patch(`/requirements/${id}`, { status });
+export const deleteRequirement = (id) => api.delete(`/requirements/${id}`);
 
 export default api;
