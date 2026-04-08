@@ -7,6 +7,8 @@ import NotFound from "../../common-pages/NotFound";
 import UserPropertiesPage from "../pages/UserPropertiesPage";
 import PostPropertyLanding from "../pages/PostPropertyLanding";
 import BusinessUserList from "../pages/BusinessUserList";
+import { AgentInfo } from "../pages/agents/AgentLandingPage";
+import { BuilderInfo } from "../pages/builder/Builderinfo";
 
 const HomePageRoute = () => {
   return (
@@ -18,6 +20,8 @@ const HomePageRoute = () => {
         <Route path="business-user-list/:businessTypeId" element={<BusinessUserList />} />
         <Route path="properties/:slug" element={<PropertyDetails />} />
         <Route path="post-property" element={<PostPropertyLanding />} />
+        <Route path="agent-info" element={<AgentInfo />} />
+        <Route path="builder-info" element={<BuilderInfo />} />
 
         {/* Dynamic Routes for User Properties */}
         <Route
