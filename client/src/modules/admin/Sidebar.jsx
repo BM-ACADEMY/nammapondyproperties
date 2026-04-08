@@ -15,7 +15,8 @@ import {
   BarChart3,
   Image,
   Sliders,
-  ClipboardList
+  ClipboardList,
+  CreditCard
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -202,6 +203,23 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <Image size={20} />,
       label: "Banner Ads",
       onClick: () => handleMenuClick("/admin/banner-ads"),
+    },
+    {
+      key: "subscriptions-sub",
+      icon: <CreditCard size={20} />,
+      label: "Subscriptions",
+      children: [
+        {
+          key: "/admin/subscription-plans",
+          label: "Subscription Plans",
+          onClick: () => handleMenuClick("/admin/subscription-plans"),
+        },
+        {
+          key: "/admin/payment-history",
+          label: "Payment History",
+          onClick: () => handleMenuClick("/admin/payment-history"),
+        },
+      ],
     },
     {
       key: "property-settings-sub",

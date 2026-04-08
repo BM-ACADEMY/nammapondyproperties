@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Form, Input, Select, InputNumber, Button, message } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
@@ -264,7 +264,7 @@ const PostRequirementPage = () => {
                   Submit Requirement
                 </Button>
                 <p className="text-xs text-slate-400 mt-4">
-                  By clicking Submit Requirement, I accept the <span className="underline cursor-pointer">T&C</span> and <span className="underline cursor-pointer">Privacy Policy</span>
+                  By clicking Submit Requirement, I accept the <Link to="/terms-and-condition" className="underline! cursor-pointer hover:text-orange-500!">T&C</Link> and <Link to="/privacy-policy" className="underline! cursor-pointer hover:text-orange-500!">Privacy Policy</Link>
                 </p>
               </div>
             </Form>

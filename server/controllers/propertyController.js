@@ -9,6 +9,8 @@ const PropertyType = require("../models/PropertyType");
 const ApprovalType = require("../models/ApprovalType");
 const User = require("../models/User");
 const BusinessType = require("../models/BusinessType");
+const Subscription = require("../models/Subscription");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 
 const parseJSON = (data) => {
   if (typeof data === "string") {
@@ -32,17 +34,30 @@ exports.createProperty = async (req, res) => {
       req.user.role_id &&
       req.user.role_id.role_name === "seller"
     ) {
+      // Get current upload limit from subscription
+      let propertyLimit = 3; // Default for Free plan
+      let planName = "Free";
+
+      if (req.user.activeSubscription) {
+        const subscription = await Subscription.findById(req.user.activeSubscription).populate("plan");
+        if (subscription && subscription.status === "active" && subscription.plan) {
+          propertyLimit = subscription.plan.propertyLimit;
+          planName = subscription.plan.name;
+        }
+      }
+
       const propertyCount = await Property.countDocuments({
         seller: req.user._id,
       });
-      if (propertyCount >= 5) {
-        // Delete uploaded files if any, to avoid accumulating garbage
-        if (req.files && req.files.length > 0) {
-          req.files.forEach((file) => {
+
+      // propertyLimit of -1 or very high means unlimited
+      if (propertyLimit !== -1 && propertyCount >= propertyLimit) {
+        // Delete uploaded files to avoid garbage
+        if (req.files) {
+          const filesToDelete = [...(req.files.images || []), ...(req.files.floorPlan || [])];
+          filesToDelete.forEach((file) => {
             try {
-              fs.unlinkSync(
-                path.join(__dirname, "../uploads/properties", file.filename),
-              );
+              fs.unlinkSync(path.join(__dirname, "../uploads/properties", file.filename));
             } catch (err) {
               console.error("Error deleting file:", err);
             }
@@ -50,7 +65,12 @@ exports.createProperty = async (req, res) => {
         }
         return res
           .status(403)
-          .json({ error: "You can only upload 5 properties." });
+          .json({ 
+            error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
+            limitReached: true,
+            currentCount: propertyCount,
+            limit: propertyLimit
+          });
       }
     }
 

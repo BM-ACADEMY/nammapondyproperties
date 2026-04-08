@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
     userId: { type: String, unique: true, sparse: true },
     referralCode: { type: String, unique: true, sparse: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    activeSubscription: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
   },
   { timestamps: true },
 );

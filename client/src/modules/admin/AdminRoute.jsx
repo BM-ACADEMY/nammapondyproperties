@@ -26,6 +26,8 @@ import ContactMessages from "./pages/forms/ContactMessages";
 import FailedRegistrations from "./pages/FailedRegistrations";
 import AdminList from "./pages/AdminList";
 import RequirementList from "./pages/RequirementList";
+import SubscriptionPlanManager from "./pages/SubscriptionPlanManager";
+import PaymentHistory from "./pages/PaymentHistory";
 
 const AdminRoute = () => {
   return (
@@ -62,6 +64,8 @@ const AdminRoute = () => {
         <Route path="forms/call-requests" element={<CallRequests />} />
         <Route path="forms/contact-messages" element={<ContactMessages />} />
         <Route path="requirements" element={<RequirementList />} />
+        <Route path="subscription-plans" element={<SubscriptionPlanManager />} />
+        <Route path="payment-history" element={<PaymentHistory />} />
 
         {/* Settings route can be placeholder too if needed */}
       </Route>

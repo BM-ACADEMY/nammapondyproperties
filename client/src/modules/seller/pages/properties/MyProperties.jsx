@@ -54,6 +54,8 @@ import {
   Clock,
   AlertCircle,
   FileText,
+  CreditCard,
+  ArrowUpCircle
 } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
@@ -139,6 +141,8 @@ const MyProperties = () => {
   const [mainImage, setMainImage] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [subscription, setSubscription] = useState(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
 
   const handleViewDetail = (property) => {
     setSelectedProperty(property);
@@ -171,9 +175,22 @@ const MyProperties = () => {
     }
   }, [user]);
 
+  const fetchSubscription = async () => {
+    setLoadingSubscription(true);
+    try {
+      const res = await api.get("/subscriptions/my-subscription");
+      setSubscription(res.data);
+    } catch (error) {
+      console.error("Failed to fetch subscription:", error);
+    } finally {
+      setLoadingSubscription(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchProperties();
+      fetchSubscription();
     }
   }, [user, fetchProperties]);
 
@@ -300,8 +317,51 @@ const MyProperties = () => {
     );
   });
 
+    const planName = subscription?.plan?.name || "Free";
+    const propertyLimit = subscription?.plan?.propertyLimit || 3;
+    const isLimitReached = propertyLimit !== -1 && properties.length >= propertyLimit;
+
   return (
     <div className="space-y-6">
+      {/* Subscription Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg overflow-hidden relative group">
+        <div className="absolute -right-10 -top-10 bg-white/10 w-40 h-40 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
+              <CreditCard size={28} className="text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-white/80 uppercase tracking-wider">Current Plan</span>
+                <Tag color="cyan" className="rounded-full px-3 py-0.5 border-none font-bold uppercase text-[10px]">
+                  {planName}
+                </Tag>
+              </div>
+              <h2 className="text-2xl font-bold mt-1">
+                {isLimitReached ? "Property Limit Reached" : `${properties.length} / ${propertyLimit === -1 ? "∞" : propertyLimit} Properties Used`}
+              </h2>
+              <p className="text-blue-100 text-sm mt-1">
+                {planName === "Free" 
+                  ? "On Free plan you can upload up to 3 properties." 
+                  : planName === "Standard" 
+                    ? "On Standard plan you can upload up to 10 properties."
+                    : "On Premium plan you can upload unlimited properties."}
+              </p>
+            </div>
+          </div>
+          
+          <Button
+            type="primary"
+            size="large"
+            icon={<ArrowUpCircle size={20} />}
+            onClick={() => navigate("/seller/upgrade-plan")}
+            className="bg-white text-blue-700 border-none hover:bg-blue-50 h-auto py-3 px-8 rounded-xl font-bold shadow-xl transition-all hover:scale-105 flex items-center gap-2"
+          >
+            Upgrade Plan
+          </Button>
+        </div>
+      </div>
       {/* Header & Add Button */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
         <div>
@@ -316,19 +376,20 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            if (properties.length >= 5) {
-              navigate("/seller/request-limit");
+            if (isLimitReached) {
+              message.warning(`You have reached your limit of ${propertyLimit} properties. Please upgrade!`);
+              navigate("/seller/upgrade-plan");
               return;
             }
             navigate("/seller/add-property");
           }}
-          className={`h-10 px-6 rounded-xl flex items-center gap-2 border-none transition-all shadow-sm ${
-            properties.length >= 5
+          className={`h-11 px-8 rounded-xl font-bold flex items-center gap-2 border-none transition-all shadow-md hover:scale-105 ${
+            isLimitReached
               ? "bg-orange-600 hover:bg-orange-700"
               : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {properties.length >= 5 ? "Request Limit" : "Add Property"}
+          {isLimitReached ? "Upgrade to Add More" : "Add New Property"}
         </Button>
       </div>
 
