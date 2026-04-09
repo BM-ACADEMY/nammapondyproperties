@@ -21,7 +21,8 @@ const paymentHistorySchema = new mongoose.Schema(
       enum: ["completed", "failed", "refunded"], 
       default: "completed" 
     },
-    transactionDate: { type: Date, default: Date.now }
+    transactionDate: { type: Date, default: Date.now },
+    expiryDate: { type: Date }
   },
   { timestamps: true }
 );

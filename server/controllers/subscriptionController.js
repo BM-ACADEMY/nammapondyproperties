@@ -66,6 +66,13 @@ exports.verifyPayment = async (req, res) => {
       endDate = new Date();
       endDate.setDate(startDate.getDate() + plan.duration);
     }
+    
+    console.log("--- Subscription Debug ---");
+    console.log("Plan Name:", plan.name);
+    console.log("Duration (Days):", plan.duration);
+    console.log("Start Date (Raw):", startDate);
+    console.log("End Date (Calculated):", endDate);
+    console.log("--------------------------");
 
     // Remove old active subscriptions for this user (as requested)
     await Subscription.deleteMany({ user: req.user._id });
@@ -94,7 +101,8 @@ exports.verifyPayment = async (req, res) => {
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       paymentStatus: "completed",
-      transactionDate: new Date()
+      transactionDate: new Date(),
+      expiryDate: endDate
     });
 
     await paymentHistory.save();
@@ -118,6 +126,18 @@ exports.getUserSubscription = async (req, res) => {
       user: req.user._id, 
       status: "active" 
     }).populate("plan");
+    
+    // On-the-fly expiry check
+    if (subscription && subscription.endDate && new Date(subscription.endDate) < new Date()) {
+      subscription.status = "expired";
+      await subscription.save();
+      
+      await User.findByIdAndUpdate(req.user._id, {
+        activeSubscription: null
+      });
+      
+      return res.json(null);
+    }
     
     res.json(subscription);
   } catch (error) {

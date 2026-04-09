@@ -21,6 +21,7 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const { pathname } = useLocation();
   const { logout } = useAuth();
   const [hasActivePlan, setHasActivePlan] = useState(false);
+  const [hasHistory, setHasHistory] = useState(false);
 
   // Automatically expand the "Properties" menu if the current path matches
   const defaultOpenKeys = pathname.includes("properties") ? ["properties"] : [];
@@ -28,8 +29,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   useEffect(() => {
     const checkSubscription = async () => {
       try {
-        const res = await api.get("/subscriptions/my-subscription");
-        setHasActivePlan(!!res.data);
+        const [subRes, historyRes] = await Promise.all([
+          api.get("/subscriptions/my-subscription"),
+          api.get("/subscriptions/my-history")
+        ]);
+        setHasActivePlan(!!subRes.data);
+        setHasHistory(historyRes.data?.length > 0);
       } catch (error) {
         console.error("Sidebar sub check error:", error);
       }
@@ -77,16 +82,15 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
     },
     {
       key: "/seller/payment-history",
-      icon: hasActivePlan ? <CreditCard size={20} /> : <Lock size={20} className="text-gray-500" />,
+      icon: <CreditCard size={20} />,
       label: (
-        <div className="flex items-center justify-between gap-2">
+        <div className={`flex items-center justify-between gap-2 ${!hasHistory ? "cursor-not-allowed" : ""}`}>
           <span>Payment History</span>
-          {!hasActivePlan && <Lock size={12} className="opacity-50" />}
+          {!hasHistory && <Lock size={12} className="text-white" />}
         </div>
       ),
-      disabled: !hasActivePlan,
-      onClick: () => handleMenuClick("/seller/payment-history", !hasActivePlan),
-      className: !hasActivePlan ? "opacity-60 cursor-not-allowed" : "",
+      onClick: () => handleMenuClick("/seller/payment-history", !hasHistory),
+      className: !hasHistory ? "!cursor-not-allowed" : "",
     },
     {
       key: "/seller/profile",
@@ -151,7 +155,7 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         onClose={() => setCollapsed(true)}
         open={!collapsed}
         styles={{ body: { padding: 0, background: "#001529" } }}
-        width={250}
+        size={250}
       >
         {SidebarContent}
       </Drawer>

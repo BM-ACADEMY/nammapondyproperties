@@ -95,6 +95,19 @@ const PaymentHistory = () => {
       },
       sorter: (a, b) => new Date(a.transactionDate || a.createdAt) - new Date(b.transactionDate || b.createdAt),
     },
+    {
+      title: "Expire Date",
+      key: "expiryDate",
+      render: (_, record) => {
+        const date = record.expiryDate;
+        if (!date) return <span className="text-xs text-gray-400 font-medium italic">N/A</span>;
+        return (
+          <div className="flex flex-col text-xs text-red-500 font-bold bg-red-50/50 p-1 rounded-lg text-center">
+            <span>{moment(date).format("DD MMM YYYY")}</span>
+          </div>
+        );
+      },
+    },
   ];
 
   return (
