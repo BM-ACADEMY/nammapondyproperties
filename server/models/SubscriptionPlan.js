@@ -20,6 +20,8 @@ const subscriptionPlanSchema = new mongoose.Schema(
       default: 30 
     }, // Duration in days
     features: [{ type: String }],
+    notIncluded: [{ type: String }],
+    isPopular: { type: Boolean, default: false },
     status: { 
       type: String, 
       enum: ["active", "inactive"], 

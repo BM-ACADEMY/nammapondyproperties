@@ -61,62 +61,81 @@ const SellerPaymentHistory = () => {
 
   const columns = [
     {
-      title: "Date",
+      title: "Transaction Date",
       dataIndex: "transactionDate",
       key: "date",
       render: (date) => (
-        <span className="text-gray-500 font-medium">
-          {moment(date).format("MMM DD, YYYY")}
-        </span>
+        <div className="flex flex-col">
+          <span className="text-gray-800 font-semibold text-sm">
+            {moment(date).format("MMM DD, YYYY")}
+          </span>
+          <span className="text-gray-400 text-xs flex items-center gap-1">
+            <Clock size={10} /> {moment(date).format("hh:mm A")}
+          </span>
+        </div>
       ),
     },
     {
-      title: "Description",
+      title: "Plan Details",
       dataIndex: "planName",
       key: "description",
-      render: (name, record) => (
-        <span className="font-semibold text-gray-700 capitalize">
-          {name}
-        </span>
+      render: (name) => (
+        <div className="flex flex-col">
+          <span className="font-bold text-gray-700 capitalize text-sm">
+            {name} Plan
+          </span>
+        </div>
       ),
     },
     {
-      title: "Amount",
+      title: "Amount Paid",
       dataIndex: "amountPaid",
       key: "amountPaid",
       render: (val) => (
-        <span className="font-bold text-gray-900 flex items-center">
-          <IndianRupee size={12} className="mr-0.5" />
-          {parseFloat(val).toLocaleString('en-IN')}.00
+        <span className="font-bold text-gray-900 flex items-center text-base">
+          <IndianRupee size={14} className="mr-0.5 text-gray-700" />
+          {parseFloat(val).toLocaleString('en-IN')}
         </span>
       ),
     },
     {
-      title: "Status",
+      title: "Payment Status",
       dataIndex: "paymentStatus",
       key: "status",
       render: (status) => {
         const isSuccess = status === "completed" || status === "success";
         return (
           <Tag
-            icon={isSuccess ? <CheckCircle2 size={12} className="mr-1" /> : <AlertCircle size={12} className="mr-1" />}
             color={isSuccess ? "green" : "red"}
-            className="rounded-full px-3 py-0.5 border-none font-bold flex items-center w-fit capitalize"
+            className="rounded-full px-3 py-1 border-none font-bold flex items-center w-fit capitalize text-[10px]"
           >
-            {isSuccess ? "Paid" : "Failed"}
+            {isSuccess ? "Paid Success" : "Failed"}
           </Tag>
         );
       },
     },
     {
-      title: "Expiry",
+      title: "Expiration Details",
       dataIndex: "expiryDate",
       key: "expiry",
-      render: (date) => (
-        <span className={date ? "text-red-500 font-bold" : "text-gray-400 italic"}>
-          {date ? moment(date).format("DD MMM YYYY") : "N/A"}
-        </span>
-      ),
+      render: (date) => {
+        if (!date) return <span className="text-gray-400 italic font-medium">Lifetime Access</span>;
+        
+        const isExpired = moment(date).isBefore(moment());
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className={`font-bold text-sm ${isExpired ? "text-red-500" : "text-blue-600"}`}>
+                {moment(date).format("MMM DD, YYYY")}
+              </span>
+              
+            </div>
+            <span className="text-gray-400 text-xs flex items-center gap-1 font-medium italic">
+               Expires at {moment(date).format("hh:mm A")}
+            </span>
+          </div>
+        );
+      },
     },
   ];
 
@@ -194,27 +213,52 @@ const SellerPaymentHistory = () => {
 
           {/* Usage Summary Card */}
           <Col xs={24} lg={12} xl={10}>
-            <Card className="rounded-3xl border-gray-200/60 shadow-sm h-full hover:shadow-md transition-all">
-                <Text className="text-gray-400 font-semibold uppercase tracking-widest text-xs mb-6 block">Usage Summary</Text>
+            <Card className="rounded-3xl border-gray-200/60 shadow-sm h-full hover:shadow-md transition-all group">
+                <div className="flex flex-col h-full">
+                    <Text className="text-gray-400 font-semibold uppercase tracking-widest text-[10px] mb-6 block">Usage Summary</Text>
 
-                <div className="space-y-8">
-                    <div>
-                        <div className="flex justify-between items-end mb-3">
-                            <div>
-                                <span className="text-2xl font-bold text-gray-900">{propertyCount}</span>
-                                <span className="text-gray-400 text-lg font-medium"> / {propertyLimit === -1 ? "Unlimited" : propertyLimit}</span>
+                    <div className="flex items-center justify-between gap-4 py-2">
+                        <div className="flex-1">
+                            <div className="mb-1 flex items-baseline gap-1">
+                                <span className={propertyLimit !== -1 && usagePercent > 90 ? "text-3xl font-bold text-red-500" : "text-3xl font-bold text-gray-900"}>
+                                    {propertyCount}
+                                </span>
+                                <span className="text-gray-400 text-lg font-medium">/ {propertyLimit === -1 ? "∞" : propertyLimit}</span>
                             </div>
-                            <span className="text-xs font-bold text-blue-500 uppercase tracking-wider">{propertyLimit === -1 ? "Optimal" : `${Math.round(usagePercent)}% USED`}</span>
+                            <Text className="text-gray-500 text-sm font-semibold block mb-4">Properties Uploaded</Text>
+                            
+                            <div className="flex flex-col gap-2">
+                                <Tag color={propertyLimit === -1 ? "blue" : usagePercent > 90 ? "red" : "blue"} className="w-fit rounded-full px-3 font-bold border-none uppercase text-[10px]">
+                                    {propertyLimit === -1 ? "Unlimited Plan" : `${Math.round(usagePercent)}% Utilization`}
+                                </Tag>
+                                {propertyLimit !== -1 && propertyLimit - propertyCount > 0 && (
+                                    <Text className="text-[10px] text-gray-400 font-medium italic">
+                                        You can still upload {propertyLimit - propertyCount} more properties
+                                    </Text>
+                                )}
+                            </div>
                         </div>
-                        <Progress
-                            percent={propertyLimit === -1 ? 100 : usagePercent}
-                            showInfo={false}
-                            railColor="#F1F5F9"
-                            strokeColor={propertyLimit === -1 ? "#3B82F6" : usagePercent > 90 ? "#EF4444" : "#3B82F6"}
-                            size={10}
-                            className="rounded-full"
-                        />
-                        <Text className="text-gray-400 text-xs mt-2 block font-medium">Properties Uploaded</Text>
+
+                        <div className="relative flex items-center justify-center shrink-0">
+                            <Progress
+                                type="dashboard"
+                                percent={propertyLimit === -1 ? 100 : Math.min(100, usagePercent)}
+                                strokeColor={{
+                                    '0%': propertyLimit === -1 ? '#3B82F6' : usagePercent > 90 ? '#EF4444' : '#60A5FA',
+                                    '100%': propertyLimit === -1 ? '#2563EB' : usagePercent > 90 ? '#DC2626' : '#2563EB',
+                                }}
+                                strokeWidth={12}
+                                size={120}
+                                trailColor="#F1F5F9"
+                                format={(percent) => (
+                                    <div className="flex flex-col items-center">
+                                        <span className={`text-xl font-black ${propertyLimit === -1 ? "text-blue-600" : usagePercent > 90 ? "text-red-500" : "text-gray-900"}`}>
+                                            {propertyLimit === -1 ? "∞" : `${percent}%`}
+                                        </span>
+                                    </div>
+                                )}
+                            />
+                        </div>
                     </div>
                 </div>
             </Card>

@@ -23,18 +23,18 @@ exports.adminGetAllPlans = async (req, res) => {
 // Admin: Create/Update Plan
 exports.savePlan = async (req, res) => {
   try {
-    const { id, name, price, propertyLimit, duration, features, status } = req.body;
+    const { id, name, price, propertyLimit, duration, features, notIncluded, isPopular, status } = req.body;
     
     if (id) {
       const plan = await SubscriptionPlan.findByIdAndUpdate(
         id,
-        { name, price, propertyLimit, duration, features, status },
+        { name, price, propertyLimit, duration, features, notIncluded, isPopular, status },
         { new: true }
       );
       return res.json({ message: "Plan updated successfully", plan });
     }
 
-    const plan = new SubscriptionPlan({ name, price, propertyLimit, duration, features, status });
+    const plan = new SubscriptionPlan({ name, price, propertyLimit, duration, features, notIncluded, isPopular, status });
     await plan.save();
     res.status(201).json({ message: "Plan created successfully", plan });
   } catch (error) {

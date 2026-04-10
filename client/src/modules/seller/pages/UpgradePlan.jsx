@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Card, Button, message, Tag, Spin } from "antd";
-import { Check, Zap, Award, Star, IndianRupee, ShieldCheck } from "lucide-react";
+import { Card, Button, message, Spin, Row, Col } from "antd";
+import { Check, X, Zap, Award, Star, IndianRupee, ShieldCheck } from "lucide-react";
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -13,16 +13,45 @@ const UpgradePlan = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Static Free Plan definition
+  const freePlan = {
+    _id: "static_free",
+    name: "BASIC",
+    price: 0,
+    duration: 0,
+    propertyLimit: 3,
+    description: "Start listing for free",
+    features: [
+      "Upload up to 3 properties",
+      "Medium visibility",
+      "Properties appear in normal listing order"
+    ],
+    notIncluded: [
+      "Leads available on seller dashboard",
+      "WhatsApp lead integration",
+      "Priority listing / top placement",
+      "Advanced analytics"
+    ],
+    isPopular: false
+  };
+
   const fetchPlans = async () => {
     setLoading(true);
     try {
       const res = await api.get("/subscriptions/plans");
-      // Filter out Free plan from upgrade options if needed, 
-      // but usually good to show all. 
-      // Backend should prevent "upgrading" to a lower plan if applicable.
-      setPlans(res.data);
+      // Filter out any "Free" plans from backend to ensure only static one shows
+      const dynamicPlans = res.data.filter(p => p.price > 0).map(p => ({
+        ...p,
+        name: p.name.toUpperCase(), 
+        features: p.features || [],
+        notIncluded: p.notIncluded || [],
+        isPopular: p.isPopular || false
+      }));
+      
+      setPlans([freePlan, ...dynamicPlans]);
     } catch {
       message.error("Failed to load plans");
+      setPlans([freePlan]); // Still show free plan
     } finally {
       setLoading(false);
     }
@@ -68,12 +97,10 @@ const UpgradePlan = () => {
     }
 
     try {
-      // 1. Create Order
       const { data: order } = await api.post("/subscriptions/create-order", {
         planId: plan._id,
       });
 
-      // 2. Open Razorpay
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -83,7 +110,6 @@ const UpgradePlan = () => {
         order_id: order.orderId,
         handler: async (response) => {
           try {
-            // 3. Verify Payment
             const verifyRes = await api.post("/subscriptions/verify-payment", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -120,94 +146,137 @@ const UpgradePlan = () => {
   if (loading) return <div className="flex justify-center items-center h-64"><Spin size="large" /></div>;
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
-      <div className="text-center mb-12">
-        <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">Choose Your Perfect Plan</h1>
-        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
-          Scale your real estate business with our premium subscription plans. More visibility, more leads, more sales.
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#F1F5F9] py-16 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Upgrade Your Plan</h1>
+          <p className="text-gray-500 text-lg max-w-2xl mx-auto font-medium">
+            Scale your real estate business with our premium subscription plans. More visibility, more leads, more sales.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {plans.map((plan) => {
-          const isCurrent = currentSubscription?.plan?._id === plan._id;
-          const isBestValue = plan.name === "Standard";
-          const isUnlimited = plan.propertyLimit === -1;
+        <Row gutter={[32, 32]} justify="center" className="flex flex-wrap">
+          {plans.map((plan, index) => {
+            const isCurrent = currentSubscription?.plan?._id === plan._id || (plan._id === 'static_free' && !currentSubscription);
+            const isPopular = plan.isPopular;
+            const isPremium = plan.name === "PREMIUM" || index === plans.length - 1;
 
-          return (
-            <Card
-              key={plan._id}
-              className={`relative rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl border-2 ${
-                isBestValue ? "border-blue-500 shadow-xl" : "border-gray-100"
-              }`}
-              styles={{ body: { padding: 0 } }}
-            >
-              {isBestValue && (
-                <div className="bg-blue-500 text-white text-center py-2 text-xs font-bold uppercase tracking-widest">
-                  Best Value
-                </div>
-              )}
-
-              <div className="p-8">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
-                    <p className="text-gray-500 text-sm mt-1">{plan.description}</p>
-                  </div>
-                  <div className={`p-3 rounded-2xl ${isBestValue ? "bg-blue-50 text-blue-600" : "bg-gray-50 text-gray-600"}`}>
-                    {plan.name === "Free" ? <Star size={24} /> : plan.name === "Standard" ? <Zap size={24} /> : <Award size={24} />}
-                  </div>
-                </div>
-
-                <div className="flex items-baseline gap-1 mb-8">
-                  <span className="text-4xl font-black text-gray-900 flex items-center">
-                    <IndianRupee size={28} /> {plan.price}
-                  </span>
-                  <span className="text-gray-400 font-medium">/ {plan.duration ? `${plan.duration} Days` : "Lifetime"}</span>
-                </div>
-
-                <div className="space-y-4 mb-8">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-green-100 text-green-600 p-1 rounded-full">
-                      <Check size={14} />
-                    </div>
-                    <span className="text-gray-700 font-medium">
-                        {isUnlimited ? "Unlimited" : plan.propertyLimit} Property Uploads
-                    </span>
-                  </div>
-                  {plan.features?.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      <div className="bg-green-100 text-green-600 p-1 rounded-full">
-                        <Check size={14} />
-                      </div>
-                      <span className="text-gray-700">{feature}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <Button
-                  type={isBestValue ? "primary" : "default"}
-                  block
-                  size="large"
-                  loading={processingId === plan._id}
-                  disabled={isCurrent || plan.price === 0}
-                  onClick={() => handleUpgrade(plan)}
-                  className={`h-12 rounded-xl font-bold flex items-center justify-center gap-2 ${
-                    isBestValue ? "bg-blue-600 hover:bg-blue-700 shadow-blue-200" : ""
-                  }`}
+            return (
+              <Col xs={24} sm={12} lg={8} key={plan._id} className="flex">
+                <Card
+                  className={`relative w-full h-full rounded-2xl border-none shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col overflow-hidden bg-white`}
+                  styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } }}
                 >
-                  {isCurrent ? "Current Plan" : plan.price === 0 ? "Default Plan" : "Upgrade Now"}
-                </Button>
-              </div>
+                  {/* Ribbon for Popular */}
+                  {isPopular && (
+                    <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20">
+                      <div className="absolute top-5 -left-10 w-40 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-lg">
+                        Popular
+                      </div>
+                    </div>
+                  )}
 
-              <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-500">
-                <ShieldCheck size={14} className="text-green-500" />
-                Secure payment via Razorpay
-              </div>
-            </Card>
-          );
-        })}
+                  {/* Header */}
+                  <div className={`py-6 text-center border-b border-gray-50 bg-white`}>
+                    <h2 className="text-3xl font-black text-[#002B49] tracking-widest">{plan.name}</h2>
+                  </div>
+
+                  {/* Price Banner */}
+                  <div className={`py-4 text-center ${
+                    isPopular ? "bg-[#f97316]" : "bg-[#002B49]"
+                  }`}>
+                    <div className="flex items-center justify-center text-white gap-1">
+                      {plan.price === 0 ? (
+                        <span className="text-xl font-bold uppercase tracking-wider">Free</span>
+                      ) : (
+                        <>
+                          <IndianRupee size={18} strokeWidth={3} />
+                          <span className="text-2xl font-black">{plan.price}</span>
+                          <span className="text-xs font-bold opacity-70">/ {plan.duration} Days</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Feature List */}
+                  <div className="p-8 flex-1">
+                    <div className="space-y-5">
+                      {/* Checkmarks */}
+                      {plan.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-4 group">
+                          <Check size={18} className="text-green-500 shrink-0" strokeWidth={3} />
+                          <span className="text-gray-700 font-semibold text-sm leading-tight">{feature}</span>
+                        </div>
+                      ))}
+                      
+                      {/* Dynamic notIncluded crossmarks */}
+                      {plan.notIncluded?.map((feature, idx) => (
+                        <div key={`not-${idx}`} className="flex items-center gap-4 opacity-30">
+                          <X size={18} className="text-red-500 shrink-0" strokeWidth={3} />
+                          <span className="text-gray-500 font-medium text-sm line-through">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Button Section */}
+                  <div className="p-8 mt-auto pt-0">
+                    <Button
+                      type={isPopular ? "primary" : "default"}
+                      block
+                      size="large"
+                      loading={processingId === plan._id}
+                      disabled={isCurrent || (plan.price === 0 && !currentSubscription)}
+                      onClick={() => handleUpgrade(plan)}
+                      className={`h-14 rounded-md font-black text-sm uppercase tracking-widest transition-all ${
+                        isPopular 
+                          ? "premium-orange-btn border-none shadow-lg shadow-orange-100" 
+                          : "premium-navy-btn border-2"
+                      }`}
+                    >
+                      {isCurrent ? "Active Now" : plan.price === 0 ? "Default Plan" : "Upgrade"}
+                    </Button>
+                  </div>
+
+                  <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-auto">
+                    <ShieldCheck size={14} className="text-green-500" />
+                    SECURE CHECKOUT
+                  </div>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
       </div>
+      
+      <style>{`
+        .ant-card {
+            border-radius: 12px !important;
+        }
+        .premium-orange-btn {
+            background-color: #f97316 !important;
+            color: #ffffff !important;
+        }
+        .premium-orange-btn:hover:not(:disabled) {
+            background-color: #ea580c !important;
+            color: #ffffff !important;
+            transform: scale(1.02);
+        }
+        .premium-navy-btn {
+            border-color: #002B49 !important;
+            color: #002B49 !important;
+            background: transparent !important;
+        }
+        .premium-navy-btn:hover:not(:disabled) {
+            background-color: #002B49 !important;
+            color: #ffffff !important;
+            transform: scale(1.02);
+        }
+        .ant-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+      `}</style>
     </div>
   );
 };

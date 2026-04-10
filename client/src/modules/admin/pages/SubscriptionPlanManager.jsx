@@ -10,9 +10,11 @@ import {
   Popconfirm,
   Tag,
   InputNumber,
-  Dropdown
+  Dropdown,
+  Switch,
+  Checkbox
 } from "antd";
-import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck } from "lucide-react";
+import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck, XCircle, Star } from "lucide-react";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
@@ -54,6 +56,7 @@ const SubscriptionPlanManager = () => {
     form.setFieldsValue({
       ...record,
       features: record.features?.join("\n"),
+      notIncluded: record.notIncluded?.join("\n"),
     });
     setIsModalOpen(true);
   };
@@ -82,6 +85,10 @@ const SubscriptionPlanManager = () => {
         features: values.features
           ? values.features.split("\n").filter((f) => f.trim())
           : [],
+        notIncluded: values.notIncluded
+          ? values.notIncluded.split("\n").filter((f) => f.trim())
+          : [],
+        isPopular: !!values.isPopular,
       };
 
       await axios.post(`${API}/subscriptions/admin/plans`, payload, config);
@@ -104,6 +111,11 @@ const SubscriptionPlanManager = () => {
           <Tag color={plan.status === "active" ? "green" : "red"} className="rounded-lg px-3 py-1 border-none shadow-sm capitalize">
             {plan.status}
           </Tag>
+          {plan.isPopular && (
+            <Tag color="gold" className="rounded-lg px-3 py-1 border-none shadow-sm flex items-center gap-1">
+              <Star size={12} fill="currentColor" /> Popular
+            </Tag>
+          )}
         </div>
         <div className="flex flex-col gap-1 text-sm text-gray-500">
           <div className="flex items-center gap-2">
@@ -169,6 +181,12 @@ const SubscriptionPlanManager = () => {
             <li key={idx} className="flex items-start gap-3">
               <CheckCircle size={18} className="text-green-500 shrink-0 mt-0.5" />
               <span className="text-gray-600 text-sm leading-relaxed">{feature}</span>
+            </li>
+          ))}
+          {plan.notIncluded?.map((feature, idx) => (
+            <li key={`not-${idx}`} className="flex items-start gap-3 opacity-60">
+              <XCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
+              <span className="text-gray-500 text-sm leading-relaxed line-through">{feature}</span>
             </li>
           ))}
         </ul>
@@ -266,8 +284,24 @@ const SubscriptionPlanManager = () => {
             name="features"
             label="Features (one per line)"
           >
-            <Input.TextArea rows={4} placeholder="3 Property Uploads&#10;Basic Support" />
+            <Input.TextArea rows={3} placeholder="3 Property Uploads&#10;Basic Support" />
           </Form.Item>
+
+          <Form.Item
+            name="notIncluded"
+            label="Not Included Features (one per line)"
+          >
+            <Input.TextArea rows={3} placeholder="Advanced Analytics&#10;Dedicated Support" />
+          </Form.Item>
+
+          <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
+            <span className="font-semibold text-gray-700 flex items-center gap-2">
+              <Star size={18} className="text-amber-500" /> Mark as Popular
+            </span>
+            <Form.Item name="isPopular" valuePropName="checked" className="mb-0">
+              <Switch />
+            </Form.Item>
+          </div>
 
           <Form.Item name="status" label="Status" initialValue="active">
             <Select>
