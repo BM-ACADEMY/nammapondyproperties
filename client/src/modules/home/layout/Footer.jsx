@@ -91,7 +91,7 @@ const Footer = () => {
 
           {/* Column 2: Properties */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">
+            <h4 className="text-white text-lg font-bold uppercase mb-6 tracking-wide">
               Properties
             </h4>
             <ul className="space-y-4 text-sm">
@@ -123,12 +123,12 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-              <li className="pt-4">
+              <li className="pt-0">
                 <button
                   onClick={handlePostProperty}
-                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline flex items-center gap-2 text-sm"
+                  className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 text-sm group"
                 >
-                  <span>Post Property</span>
+                  <span className="underline-offset-4 group-hover:underline">Post Property</span>
                   <span className="bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded">
                     FREE
                   </span>
@@ -139,7 +139,7 @@ const Footer = () => {
 
           {/* Column 3: Company */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">
+            <h4 className="text-white text-lg font-bold mb-6 uppercase tracking-wide">
               Company
             </h4>
             <ul className="space-y-4 text-sm">
@@ -149,6 +149,30 @@ const Footer = () => {
                   className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
                 >
                   Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/about"
+                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/agent-info"
+                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
+                >
+                  Agent Info
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/builder-info"
+                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
+                >
+                  Builder Info
                 </Link>
               </li>
               <li>
@@ -183,60 +207,36 @@ const Footer = () => {
                   Terms & Conditions
                 </Link>
               </li>
-              <li>
-                <Link
-                  to="/about"
-                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/agent-info"
-                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
-                >
-                  Agent Info
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/builder-info"
-                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
-                >
-                  Builder Info
-                </Link>
-              </li>
             </ul>
           </div>
 
           {/* Column 4: Get in Touch & Connect */}
           <div>
-            <h4 className="text-white text-lg font-bold mb-6 tracking-wide">
+            <h4 className="text-white text-lg font-bold uppercase mb-6 tracking-wide">
               Get in Touch
             </h4>
             <ul className="space-y-5 text-sm text-gray-400 mb-10">
               <li className="flex items-start justify-start gap-4">
-                <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
+                {/* <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" /> */}
                 <span className="underline-offset-4 hover:underline cursor-pointer">
                   123, Anna Salai, Pondicherry - 605001
                 </span>
               </li>
               <li className="flex items-center justify-start gap-4">
-                <Phone className="w-5 h-5 text-gray-400 shrink-0" />
+                {/* <Phone className="w-5 h-5 text-gray-400 shrink-0" /> */}
                 <span className="underline-offset-4 hover:underline cursor-pointer">
                   +91 94038 92971
                 </span>
               </li>
               <li className="flex items-center justify-start gap-4">
-                <Mail className="w-5 h-5 text-gray-400 shrink-0" />
-                <span className="underline-offset-4 hover:underline cursor-pointer underline decoration-gray-600">
+                {/* <Mail className="w-5 h-5 text-gray-400 shrink-0" /> */}
+                <span className="underline-offset-4 hover:underline cursor-pointer">
                   info@nammapondy.com
                 </span>
               </li>
             </ul>
             
-            <h5 className="text-white text-sm font-bold mb-6">Connect with Us</h5>
+            <h5 className="text-white text-sm font-bold uppercase tracking-wide mb-6">Connect with Us</h5>
             <div className="flex flex-wrap gap-4">
               {socialLinks.map((link) => (
                 <a
@@ -267,6 +267,7 @@ const Footer = () => {
           <div className="flex items-center gap-3 text-[11px] text-gray-400 tracking-wider">
             <div className="flex items-center gap-4">
               <img src="/icons/upi.svg" alt="UPI" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/gpay.svg" alt="GPay" className="h-5 w-auto object-contain opacity-90" />
               <img src="/icons/payment.svg" alt="RuPay" className="h-5 w-auto object-contain opacity-90" />
               <img src="/icons/visa.svg" alt="Visa" className="h-5 w-auto object-contain opacity-90" />
               <img src="/icons/mastercard.svg" alt="Mastercard" className="h-5 w-auto object-contain opacity-90" />
