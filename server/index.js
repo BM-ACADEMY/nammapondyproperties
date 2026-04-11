@@ -31,6 +31,7 @@ const bannerAdRoutes = require("./routes/bannerAdRoute");
 const formRoutes = require("./routes/formRoutes");
 const requirementRoutes = require("./routes/requirementRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const leadRoutes = require("./routes/leadRoutes");
 const app = express();
 app.set("trust proxy", true);
 
@@ -108,6 +109,7 @@ app.use("/api/banner-ads", bannerAdRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/requirements", requirementRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/shared-leads", leadRoutes);
 /* ===============================
    404 Handler (must be last route)
 ================================ */

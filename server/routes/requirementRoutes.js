@@ -23,4 +23,14 @@ router.patch("/:id", protect, admin, requirementController.updateRequirementStat
 // @access  Admin
 router.delete("/:id", protect, admin, requirementController.deleteRequirement);
 
+// @route   GET /api/requirements/subscription-stats
+// @desc    Get subscription stats for lead sharing
+// @access  Admin
+router.get("/subscription-stats", protect, admin, requirementController.getSubscriptionStats);
+
+// @route   POST /api/requirements/:id/share
+// @desc    Share requirement with a subscription plan
+// @access  Admin
+router.post("/:id/share", protect, admin, requirementController.shareRequirement);
+
 module.exports = router;

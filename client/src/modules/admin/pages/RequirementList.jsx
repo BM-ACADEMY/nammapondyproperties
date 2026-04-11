@@ -24,9 +24,17 @@ import {
   Mail,
   Phone,
   MapPin,
-  ClipboardList
+  ClipboardList,
+  Share2,
+  Info
 } from "lucide-react";
-import { getRequirements, updateRequirementStatus, deleteRequirement } from "@/services/api";
+import { 
+  getRequirements, 
+  updateRequirementStatus, 
+  deleteRequirement,
+  getSubscriptionStats,
+  shareRequirement
+} from "@/services/api";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -37,6 +45,10 @@ const RequirementList = () => {
   const [searchText, setSearchText] = useState("");
   const [selectedRequirement, setSelectedRequirement] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [subscriptionStats, setSubscriptionStats] = useState([]);
+  const [sharingLoading, setSharingLoading] = useState(false);
+  const [fetchingStats, setFetchingStats] = useState(false);
 
   const fetchRequirements = async () => {
     setLoading(true);
@@ -87,6 +99,37 @@ const RequirementList = () => {
   const showDetails = (record) => {
     setSelectedRequirement(record);
     setIsDetailModalOpen(true);
+  };
+
+  const showShareModal = async (record) => {
+    setSelectedRequirement(record);
+    setIsShareModalOpen(true);
+    fetchStats();
+  };
+
+  const fetchStats = async () => {
+    setFetchingStats(true);
+    try {
+      const response = await getSubscriptionStats();
+      setSubscriptionStats(response.data.data);
+    } catch (error) {
+      message.error("Failed to load subscription statistics");
+    } finally {
+      setFetchingStats(false);
+    }
+  };
+
+  const handleShare = async (planId) => {
+    setSharingLoading(true);
+    try {
+      await shareRequirement(selectedRequirement._id, planId);
+      message.success("Lead shared successfully!");
+      setIsShareModalOpen(false);
+    } catch (error) {
+      message.error(error.response?.data?.message || "Failed to share lead");
+    } finally {
+      setSharingLoading(false);
+    }
   };
 
   const filteredData = requirements.filter((item) => {
@@ -150,6 +193,28 @@ const RequirementList = () => {
       ),
     },
     {
+      title: "Accepted Seller",
+      key: "acceptedSeller",
+      render: (_, record) => {
+        if (record.acceptedBy) {
+          return (
+            <div className="flex flex-col">
+              <Tag color="green" icon={<CheckCircle size={10} />} className="m-0 flex items-center justify-center">
+                {record.acceptedBy.name}
+              </Tag>
+              <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-1">
+                <Phone size={10} /> {record.acceptedBy.phone}
+              </div>
+            </div>
+          );
+        }
+        if (record.isShared) {
+          return <Tag color="orange" icon={<Clock size={10} />} className="flex items-center justify-center">Shared (Pending)</Tag>;
+        }
+        return <Tag className="border-none bg-slate-100 text-slate-400 text-[10px] font-bold uppercase tracking-wider">Not Shared</Tag>;
+      },
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -189,6 +254,14 @@ const RequirementList = () => {
               type="text" 
               icon={<Eye size={18} className="text-blue-500" />} 
               onClick={() => showDetails(record)}
+            />
+          </Tooltip>
+          <Tooltip title={record.acceptedBy ? "Deal Closed" : record.isShared ? "Reshare Lead" : "Share Lead"}>
+            <Button 
+              type="text" 
+              icon={<Share2 size={18} className={record.acceptedBy ? "text-slate-300" : "text-indigo-500"} />} 
+              onClick={() => showShareModal(record)}
+              disabled={!!record.acceptedBy}
             />
           </Tooltip>
           <Tooltip title="Delete">
@@ -330,6 +403,84 @@ const RequirementList = () => {
             </Row>
           </div>
         )}
+      </Modal>
+
+      {/* Share Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 border-b pb-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Share2 size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold m-0">Share Lead with Sellers</h3>
+              <Text type="secondary" className="text-xs">Distribute this requirement to sellers based on their plan.</Text>
+            </div>
+          </div>
+        }
+        open={isShareModalOpen}
+        onCancel={() => setIsShareModalOpen(false)}
+        footer={[
+          <Button key="close" onClick={() => setIsShareModalOpen(false)}>
+            Cancel
+          </Button>
+        ]}
+        width={500}
+        destroyOnClose
+      >
+        <div className="py-2">
+          {fetchingStats ? (
+            <div className="flex flex-col items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+              <p className="mt-4 text-slate-500">Loading subscription plans...</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {subscriptionStats.map((plan) => (
+                <div 
+                  key={plan.planId} 
+                  className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors bg-white shadow-sm"
+                >
+                  <div className="flex flex-col">
+                    <Text strong className="text-base text-slate-800">{plan.planName} Plan</Text>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Tag color={plan.sellerCount > 0 ? "green" : "default"}>
+                        {plan.sellerCount} Sellers Active
+                      </Tag>
+                      {plan.sellerCount > 0 && (
+                        <Tooltip 
+                          title={
+                            <div>
+                                <p className="font-bold border-b border-white/20 pb-1 mb-1">Active Sellers:</p>
+                                {plan.sellers.map(s => <div key={s.id} className="text-xs"> {s.name} ({s.phone})</div>)}
+                            </div>
+                          } 
+                          trigger={["hover", "click"]}
+                        >
+                          <Info size={14} className="text-slate-400 cursor-pointer" />
+                        </Tooltip>
+                      )}
+                    </div>
+                  </div>
+                  <Button 
+                    type="primary" 
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                    disabled={plan.sellerCount === 0 || sharingLoading}
+                    loading={sharingLoading}
+                    onClick={() => handleShare(plan.planId)}
+                  >
+                    Send Lead
+                  </Button>
+                </div>
+              ))}
+              {subscriptionStats.length === 0 && !fetchingStats && (
+                <div className="text-center py-6 bg-slate-50 rounded-xl">
+                  <Text type="secondary">No active subscription plans found.</Text>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

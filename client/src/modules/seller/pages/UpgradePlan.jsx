@@ -146,11 +146,11 @@ const UpgradePlan = () => {
   if (loading) return <div className="flex justify-center items-center h-64"><Spin size="large" /></div>;
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] py-16 px-4">
+    <div className="bg-[#F1F5F9] py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 uppercase tracking-tight">Upgrade Your Plan</h1>
-          <p className="text-gray-500 text-lg max-w-2xl mx-auto font-medium">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 uppercase tracking-tight">Upgrade Your Plan</h1>
+          <p className="text-gray-500 text-sm max-w-2xl mx-auto font-medium">
             Scale your real estate business with our premium subscription plans. More visibility, more leads, more sales.
           </p>
         </div>
@@ -177,12 +177,12 @@ const UpgradePlan = () => {
                   )}
 
                   {/* Header */}
-                  <div className={`py-6 text-center border-b border-gray-50 bg-white`}>
-                    <h2 className="text-3xl font-black text-[#002B49] tracking-widest">{plan.name}</h2>
+                  <div className={`py-4 text-center border-b border-gray-50 bg-white`}>
+                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.name}</h2>
                   </div>
 
                   {/* Price Banner */}
-                  <div className={`py-4 text-center ${
+                  <div className={`py-3 text-center ${
                     isPopular ? "bg-[#f97316]" : "bg-[#002B49]"
                   }`}>
                     <div className="flex items-center justify-center text-white gap-1">
@@ -199,8 +199,8 @@ const UpgradePlan = () => {
                   </div>
 
                   {/* Feature List */}
-                  <div className="p-8 flex-1">
-                    <div className="space-y-5">
+                  <div className="p-6 flex-1">
+                    <div className="space-y-3">
                       {/* Checkmarks */}
                       {plan.features.map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-4 group">
@@ -220,7 +220,7 @@ const UpgradePlan = () => {
                   </div>
 
                   {/* Button Section */}
-                  <div className="p-8 mt-auto pt-0">
+                  <div className="p-5 mt-auto pt-0">
                     <Button
                       type={isPopular ? "primary" : "default"}
                       block

@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Layout, Menu, Drawer, Button } from "antd";
+import { Layout, Menu, Drawer, Button, message } from "antd";
 import {
   LayoutDashboard,
   Building,
@@ -9,6 +9,7 @@ import {
   LogOut,
   Lock,
   CreditCard,
+  ClipboardList
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { useState, useEffect } from "react";
@@ -23,8 +24,8 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const [hasActivePlan, setHasActivePlan] = useState(false);
   const [hasHistory, setHasHistory] = useState(false);
 
-  // Automatically expand the "Properties" menu if the current path matches
-  const defaultOpenKeys = pathname.includes("properties") ? ["properties"] : [];
+  // Set "Properties" menu to be open by default
+  const defaultOpenKeys = ["properties"];
 
   useEffect(() => {
     const checkSubscription = async () => {
@@ -81,6 +82,24 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       onClick: () => handleMenuClick("/seller/enquiries"),
     },
     {
+      key: "/seller/leads-overview",
+      icon: <ClipboardList size={20} />,
+      label: (
+        <div className={`flex items-center justify-between gap-2 ${!hasActivePlan ? "cursor-not-allowed" : ""}`}>
+          <span>Leads Overview</span>
+          {!hasActivePlan && <Lock size={12} className="text-white" />}
+        </div>
+      ),
+      onClick: () => {
+        if (!hasActivePlan) {
+          navigate("/seller/upgrade-plan");
+        } else {
+          handleMenuClick("/seller/leads-overview");
+        }
+      },
+      className: !hasActivePlan ? "!cursor-not-allowed" : "",
+    },
+    {
       key: "/seller/payment-history",
       icon: <CreditCard size={20} />,
       label: (
@@ -89,7 +108,13 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
           {!hasHistory && <Lock size={12} className="text-white" />}
         </div>
       ),
-      onClick: () => handleMenuClick("/seller/payment-history", !hasHistory),
+      onClick: () => {
+        if (!hasHistory) {
+          message.warning("Please upgrade your plan to access payment history");
+        } else {
+          handleMenuClick("/seller/payment-history");
+        }
+      },
       className: !hasHistory ? "!cursor-not-allowed" : "",
     },
     {
