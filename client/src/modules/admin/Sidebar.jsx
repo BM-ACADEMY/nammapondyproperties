@@ -94,11 +94,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Seller Listings",
           onClick: () => handleMenuClick("/admin/seller-listings"),
         },
-        {
-          key: "/admin/seller-requests",
-          label: "Seller Requests",
-          onClick: () => handleMenuClick("/admin/seller-requests"),
-        },
+        // {
+        //   key: "/admin/seller-requests",
+        //   label: "Seller Requests",
+        //   onClick: () => handleMenuClick("/admin/seller-requests"),
+        // },
       ],
     },
     {

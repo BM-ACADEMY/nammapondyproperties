@@ -3,7 +3,7 @@ import { Form, Input, Select, InputNumber, Button, message, Checkbox } from "ant
 import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
-import { MapPin, Phone, Mail, User, MessageCircle, FileText } from "lucide-react";
+import { MapPin, Phone, User, MessageCircle, FileText } from "lucide-react";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -32,7 +32,6 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
     if (isAuthenticated && user) {
       form.setFieldsValue({
         fullName: user.name || "",
-        email: user.email || "",
         phoneNumber: user.phone || ""
       });
     }
@@ -95,17 +94,7 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
           <Input prefix={<Phone size={16} className="text-gray-400" />} placeholder="9876543210" />
         </Form.Item>
 
-        {/* Email Address */}
-        <Form.Item
-          name="email"
-          label="Email Address"
-          rules={[
-            { required: true, message: "Please enter your email" },
-            { type: "email", message: "Please enter a valid email address" }
-          ]}
-        >
-          <Input prefix={<Mail size={16} className="text-gray-400" />} placeholder="john@example.com" />
-        </Form.Item>
+
 
         {/* Category */}
         <Form.Item

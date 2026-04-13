@@ -282,6 +282,8 @@ exports.shareRequirement = async (req, res) => {
             usageType: requirement.usageType,
             propertyType: requirement.propertyType,
             preferredLocation: requirement.preferredLocation,
+            propertyPreferences: requirement.propertyPreferences,
+            message: requirement.message,
           },
         });
       });

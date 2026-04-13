@@ -47,7 +47,6 @@ const PostRequirementPage = () => {
     if (isAuthenticated && user) {
       form.setFieldsValue({
         fullName: user.name || "",
-        email: user.email || "",
         phoneNumber: user.phone || "",
       });
     }
@@ -143,15 +142,6 @@ const PostRequirementPage = () => {
                   />
                 </Form.Item>
 
-                <Form.Item
-                  name="email"
-                  label={<span className="font-semibold">Email Address</span>}
-                  rules={[
-                    { type: "email", message: "Please enter a valid email address" },
-                  ]}
-                >
-                  <Input placeholder="Enter your email address" />
-                </Form.Item>
 
                 <Form.Item
                   name="category"
@@ -207,7 +197,7 @@ const PostRequirementPage = () => {
                 <Form.Item
                   name="preferredLocation"
                   label={<span className="font-semibold">Preferred Location</span>}
-                  className="lg:col-span-2"
+                  className=""
                   rules={[{ required: true, message: "Please enter your preferred location" }]}
                 >
                   <Input placeholder="e.g. Heritage Town, Pondicherry" />
@@ -251,6 +241,22 @@ const PostRequirementPage = () => {
                       />
                     </Form.Item>
                   </div>
+                </Form.Item>
+
+                <Form.Item
+                  name="propertyPreferences"
+                  label={<span className="font-semibold">Property Preferences</span>}
+                  className="lg:col-span-2"
+                >
+                  <TextArea rows={2} placeholder="e.g. 3 BHK, Semi-furnished, Gated Community, Near Metro station..." />
+                </Form.Item>
+
+                <Form.Item
+                  name="message"
+                  label={<span className="font-semibold">Message Box</span>}
+                  className="lg:col-span-2"
+                >
+                  <TextArea rows={3} placeholder="Any additional details or specific requirements..." />
                 </Form.Item>
               </div>
 

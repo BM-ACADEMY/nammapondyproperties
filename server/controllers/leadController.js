@@ -29,7 +29,7 @@ exports.getSharedLeads = async (req, res) => {
     })
       .populate({
         path: "requirement",
-        select: "category usageType propertyType preferredLocation minBudget maxBudget propertyPreferences createdAt",
+        select: "category usageType propertyType preferredLocation minBudget maxBudget propertyPreferences message createdAt" ,
       })
       .populate("acceptedBy", "name")
       .sort({ createdAt: -1 });

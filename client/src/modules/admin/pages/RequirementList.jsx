@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
   Button,
@@ -21,12 +22,12 @@ import {
   Clock, 
   XCircle,
   Search,
-  Mail,
   Phone,
   MapPin,
   ClipboardList,
   Share2,
-  Info
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { 
   getRequirements, 
@@ -49,6 +50,13 @@ const RequirementList = () => {
   const [subscriptionStats, setSubscriptionStats] = useState([]);
   const [sharingLoading, setSharingLoading] = useState(false);
   const [fetchingStats, setFetchingStats] = useState(false);
+  const [expandedPlans, setExpandedPlans] = useState([]);
+
+  const togglePlan = (planId) => {
+    setExpandedPlans((prev) => 
+      prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
+    );
+  };
 
   const fetchRequirements = async () => {
     setLoading(true);
@@ -136,7 +144,6 @@ const RequirementList = () => {
     const searchLower = searchText.toLowerCase();
     return (
       item.fullName?.toLowerCase().includes(searchLower) ||
-      item.email?.toLowerCase().includes(searchLower) ||
       item.phoneNumber?.includes(searchText) ||
       item.propertyType?.toLowerCase().includes(searchLower) ||
       item.preferredLocation?.toLowerCase().includes(searchLower)
@@ -151,9 +158,6 @@ const RequirementList = () => {
         <div className="flex flex-col">
           <Text strong>{record.fullName}</Text>
           <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
-            <Mail size={12} /> {record.email}
-          </div>
-          <div className="flex items-center gap-1 text-xs text-slate-500">
             <Phone size={12} /> {record.phoneNumber}
           </div>
         </div>
@@ -199,17 +203,21 @@ const RequirementList = () => {
         if (record.acceptedBy) {
           return (
             <div className="flex flex-col">
-              <Tag color="green" icon={<CheckCircle size={10} />} className="m-0 flex items-center justify-center">
-                {record.acceptedBy.name}
+              <Tag color="green" className="m-0 text-[13px] font-semibold flex items-center justify-center w-fit px-2.5 py-1">
+                 {record.acceptedBy.name}
               </Tag>
-              <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-1">
-                <Phone size={10} /> {record.acceptedBy.phone}
+              <div className="flex items-center gap-1.5 text-[12px] text-slate-500 mt-1.5 ml-1">
+                <Phone size={12} /> {record.acceptedBy.phone}
               </div>
             </div>
           );
         }
         if (record.isShared) {
-          return <Tag color="orange" icon={<Clock size={10} />} className="flex items-center justify-center">Shared (Pending)</Tag>;
+          return (
+            <Tag color="orange" className="flex items-center justify-center gap-1 w-fit px-2 py-0.5">
+              <Clock size={12} /> Shared (Pending)
+            </Tag>
+          );
         }
         return <Tag className="border-none bg-slate-100 text-slate-400 text-[10px] font-bold uppercase tracking-wider">Not Shared</Tag>;
       },
@@ -277,22 +285,22 @@ const RequirementList = () => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 md:p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <Title level={3} className="m-0! flex items-center gap-2">
+          <Title level={3} className="m-0! flex items-center gap-2 text-xl md:text-2xl">
             <ClipboardList size={28} className="text-indigo-600" />
             Property Requirements
           </Title>
-          <p className="text-slate-500 mt-1">Manage and track user property requirements and leads.</p>
+          <p className="text-slate-500 mt-1 text-sm">Manage and track user property requirements and leads.</p>
         </div>
-        <div className="w-72">
+        <div className="w-full md:w-72">
           <Input
             placeholder="Search requirements..."
             prefix={<Search size={16} className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="rounded-lg"
+            className="rounded-lg w-full"
           />
         </div>
       </div>
@@ -304,14 +312,14 @@ const RequirementList = () => {
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10 }}
-          scroll={{ x: true }}
+          scroll={{ x: "max-content" }}
         />
       </Card>
 
       {/* Detail Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 border-b pb-3 mb-4">
+          <div className="flex items-center gap-2 border-b border-gray-200 pb-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <ClipboardList size={20} />
             </div>
@@ -345,14 +353,11 @@ const RequirementList = () => {
         {selectedRequirement && (
           <div className="py-2">
             <Row gutter={[24, 24]}>
-              <Col span={12}>
+              <Col xs={24} md={12}>
                 <div className="mb-4">
                   <Text type="secondary" className="text-xs uppercase font-semibold">User Information</Text>
                   <p className="m-0 font-bold text-base">{selectedRequirement.fullName}</p>
                   <p className="m-0 text-slate-600 flex items-center gap-2 mt-1">
-                    <Mail size={14} /> {selectedRequirement.email}
-                  </p>
-                  <p className="m-0 text-slate-600 flex items-center gap-2">
                     <Phone size={14} /> {selectedRequirement.phoneNumber}
                   </p>
                 </div>
@@ -365,7 +370,7 @@ const RequirementList = () => {
                 </div>
               </Col>
               
-              <Col span={12}>
+              <Col xs={24} md={12}>
                 <div className="mb-4">
                   <Text type="secondary" className="text-xs uppercase font-semibold">Property Type</Text>
                   <div className="mt-1">
@@ -408,20 +413,20 @@ const RequirementList = () => {
       {/* Share Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 border-b pb-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Share2 size={20} />
+          <div className="flex items-center gap-4 border-b border-gray-200 pb-5 mb-1">
+            <div className="w-12 h-12 rounded-[14px] bg-[#f0efff] text-[#6366f1] flex items-center justify-center shrink-0">
+              <Share2 size={24} strokeWidth={2} />
             </div>
             <div>
-              <h3 className="text-lg font-bold m-0">Share Lead with Sellers</h3>
-              <Text type="secondary" className="text-xs">Distribute this requirement to sellers based on their plan.</Text>
+              <h3 className="text-[18px] font-bold m-0 text-slate-800">Share Lead with Sellers</h3>
+              <Text type="secondary" className="text-[13.5px] text-slate-500">Distribute this requirement to sellers based on their plan.</Text>
             </div>
           </div>
         }
         open={isShareModalOpen}
         onCancel={() => setIsShareModalOpen(false)}
         footer={[
-          <Button key="close" onClick={() => setIsShareModalOpen(false)}>
+          <Button key="close" onClick={() => setIsShareModalOpen(false)} className="rounded-lg h-9 px-5 border-gray-200 text-slate-700 font-medium">
             Cancel
           </Button>
         ]}
@@ -436,43 +441,77 @@ const RequirementList = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {subscriptionStats.map((plan) => (
+              {subscriptionStats.map((plan) => {
+                const isExpanded = expandedPlans.includes(plan.planId);
+                const hasSellers = plan.sellerCount > 0;
+                
+                return (
                 <div 
                   key={plan.planId} 
-                  className="flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition-colors bg-white shadow-sm"
+                  className="flex flex-col rounded-2xl border border-gray-200 bg-white overflow-hidden"
                 >
-                  <div className="flex flex-col">
-                    <Text strong className="text-base text-slate-800">{plan.planName} Plan</Text>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Tag color={plan.sellerCount > 0 ? "green" : "default"}>
-                        {plan.sellerCount} Sellers Active
-                      </Tag>
-                      {plan.sellerCount > 0 && (
-                        <Tooltip 
-                          title={
-                            <div>
-                                <p className="font-bold border-b border-white/20 pb-1 mb-1">Active Sellers:</p>
-                                {plan.sellers.map(s => <div key={s.id} className="text-xs"> {s.name} ({s.phone})</div>)}
-                            </div>
-                          } 
-                          trigger={["hover", "click"]}
+                  <div className="flex items-center justify-between p-5">
+                    <div className="flex flex-col">
+                      <Text strong className="text-[15px] font-bold text-slate-800 mb-1.5">{plan.planName} Plan</Text>
+                      <div className="flex items-center gap-3">
+                        <Tag 
+                          className={`m-0 rounded-md border-none px-2 py-0.5 text-xs font-medium ${hasSellers ? 'bg-[#ecfdf5] text-[#10b981]' : 'bg-[#f1f5f9] text-gray-500'}`}
                         >
-                          <Info size={14} className="text-slate-400 cursor-pointer" />
-                        </Tooltip>
-                      )}
+                          {plan.sellerCount} Sellers Active
+                        </Tag>
+                        {hasSellers && (
+                          <div 
+                            className="flex items-center gap-1 text-[13px] text-[#4f46e5] cursor-pointer font-medium select-none"
+                            onClick={() => togglePlan(plan.planId)}
+                          >
+                            {isExpanded ? "Hide Sellers" : "View Sellers"}
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    <Button 
+                      type={hasSellers ? "primary" : "default"}
+                      className={`h-9 px-5 rounded-lg shadow-none font-medium ${hasSellers ? 'bg-[#2563eb] text-white border-none shrink-0' : 'bg-slate-50 border-gray-200 text-gray-400 shrink-0'}`}
+                      disabled={!hasSellers || sharingLoading}
+                      loading={sharingLoading}
+                      onClick={() => handleShare(plan.planId)}
+                    >
+                      Send Lead
+                    </Button>
                   </div>
-                  <Button 
-                    type="primary" 
-                    className="bg-indigo-600 hover:bg-indigo-700"
-                    disabled={plan.sellerCount === 0 || sharingLoading}
-                    loading={sharingLoading}
-                    onClick={() => handleShare(plan.planId)}
-                  >
-                    Send Lead
-                  </Button>
+                  
+                  {/* Expanded Dropdown Content */}
+                  <AnimatePresence>
+                    {isExpanded && hasSellers && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="bg-[#f8fafc] border-t border-gray-100 p-5">
+                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Active Sellers ({plan.sellerCount})</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {plan.sellers.map(s => (
+                              <div key={s.id} className="bg-white p-3 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-xs">
+                                <div className="w-12 h-12 rounded-full bg-[#eff6ff] text-[#2563eb] font-bold flex items-center justify-center text-[15px] shrink-0">
+                                  {s.name.substring(0, 2).toUpperCase()}
+                                </div>
+                                <div className="flex flex-col overflow-hidden">
+                                  <span className="font-bold text-slate-800 text-[15px] truncate">{s.name}</span>
+                                  <span className="text-slate-400 text-[12px] flex items-center gap-1.5 mt-0.5 whitespace-nowrap"><Phone size={11}/> {s.phone}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              ))}
+              )})}
               {subscriptionStats.length === 0 && !fetchingStats && (
                 <div className="text-center py-6 bg-slate-50 rounded-xl">
                   <Text type="secondary">No active subscription plans found.</Text>

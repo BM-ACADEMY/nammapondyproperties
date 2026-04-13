@@ -25,7 +25,8 @@ import {
   ShieldCheck,
   User,
   Lock,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import api, { getMySharedLeads, acceptSharedLead } from "@/services/api";
@@ -193,6 +194,32 @@ const LeadsOverview = () => {
                       <MapPin size={14} /> {lead.requirement.preferredLocation || "Any Location"}
                     </div>
                   </div>
+                  
+                  <div className="mb-4 space-y-3">
+                    {lead.requirement.propertyPreferences && (
+                      <div className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ClipboardList size={14} className="text-indigo-600" />
+                          <Text type="secondary" className="text-[10px] font-bold uppercase tracking-wider text-indigo-700">Preferences</Text>
+                        </div>
+                        <Paragraph className="m-0 text-slate-600 text-[13px] leading-relaxed" ellipsis={{ rows: 2, expandable: true, symbol: 'more' }}>
+                          "{lead.requirement.propertyPreferences}"
+                        </Paragraph>
+                      </div>
+                    )}
+
+                    {lead.requirement.message && (
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MessageSquare size={14} className="text-slate-500" />
+                          <Text type="secondary" className="text-[10px] font-bold uppercase tracking-wider">Customer Message</Text>
+                        </div>
+                        <Paragraph className="m-0 text-slate-600 text-[13px] leading-relaxed" ellipsis={{ rows: 3, expandable: true, symbol: 'more' }}>
+                          {lead.requirement.message}
+                        </Paragraph>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="bg-slate-50 p-2 rounded-lg">
@@ -225,12 +252,6 @@ const LeadsOverview = () => {
                             <Phone size={14} className="text-emerald-600" />
                           </div>
                           <Text className="font-semibold text-slate-700">{lead.requirement.phoneNumber}</Text>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                            <Mail size={14} className="text-emerald-600" />
-                          </div>
-                          <Text className="text-slate-600 whitespace-nowrap overflow-hidden text-ellipsis">{lead.requirement.email}</Text>
                         </div>
                       </div>
                     </div>

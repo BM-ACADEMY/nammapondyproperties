@@ -12,9 +12,10 @@ import {
   InputNumber,
   Dropdown,
   Switch,
-  Checkbox
+  Checkbox,
+  Card
 } from "antd";
-import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck, XCircle, Star } from "lucide-react";
+import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck, XCircle, Star, Check, X } from "lucide-react";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
@@ -101,36 +102,25 @@ const SubscriptionPlanManager = () => {
     }
   };
 
-  const PlanCard = ({ plan }) => (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 flex flex-col overflow-hidden h-full group">
-      <div className="p-6 pb-4 border-b border-gray-50 relative">
-        <div className="flex items-center gap-3 mb-2">
-          <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-            {plan.name}
-          </h3>
-          <Tag color={plan.status === "active" ? "green" : "red"} className="rounded-lg px-3 py-1 border-none shadow-sm capitalize">
-            {plan.status}
-          </Tag>
-          {plan.isPopular && (
-            <Tag color="gold" className="rounded-lg px-3 py-1 border-none shadow-sm flex items-center gap-1">
-              <Star size={12} fill="currentColor" /> Popular
-            </Tag>
-          )}
-        </div>
-        <div className="flex flex-col gap-1 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <ShieldCheck size={14} className="text-blue-500" />
-            <span>Limit: {plan.propertyLimit === -1 ? "Unlimited" : `${plan.propertyLimit} Properties`}</span>
-          </div>
-          {plan.duration && (
-            <div className="flex items-center gap-2">
-              <CheckCircle size={14} className="text-green-500" />
-              <span>Duration: {plan.duration} Days</span>
-            </div>
-          )}
-        </div>
+  const PlanCard = ({ plan }) => {
+    const isPopular = plan.isPopular;
 
-        <div className="absolute top-4 right-4">
+    return (
+      <Card
+        className={`relative w-full h-full rounded-2xl border-none shadow-xl transition-all duration-300 flex flex-col overflow-hidden bg-white`}
+        styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } }}
+      >
+        {/* Ribbon for Popular */}
+        {isPopular && (
+          <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20">
+            <div className="absolute top-5 -left-10 w-40 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-lg">
+              Popular
+            </div>
+          </div>
+        )}
+
+        {/* Dropdown for Edit/Delete (Admin Action) */}
+        <div className="absolute top-4 right-4 z-30">
           <Dropdown
             menu={{
               items: [
@@ -158,41 +148,75 @@ const SubscriptionPlanManager = () => {
             }}
             trigger={["click"]}
           >
-            <Button type="text" icon={<MoreVertical size={18} />} className="hover:bg-gray-100 rounded-full flex items-center justify-center p-0 w-8 h-8" />
+            <Button
+              type="text"
+              icon={<MoreVertical size={18} className="text-gray-400" />}
+              className="hover:bg-gray-100 rounded-full flex items-center justify-center p-0 w-8 h-8 bg-white/50 backdrop-blur-sm shadow-sm"
+            />
           </Dropdown>
         </div>
-      </div>
 
-      <div className="px-6 py-4 bg-gray-50/50">
-        <div className="flex items-baseline gap-1">
-          <IndianRupee size={20} className="text-gray-900" />
-          <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-          {plan.duration && <span className="text-gray-400 text-sm ml-1">/ {plan.duration} days</span>}
-          {!plan.duration && <span className="text-gray-400 text-sm ml-1">/ Lifetime</span>}
+        {/* Status Tag */}
+        <div className={`absolute top-4 ${isPopular ? 'left-16' : 'left-4'} z-30`}>
+          <Tag color={plan.status === "active" ? "green" : "red"} className="rounded-lg px-2 py-0.5 border-none shadow-sm capitalize text-[10px] font-bold">
+            {plan.status}
+          </Tag>
         </div>
-      </div>
 
-      <div className="p-6 grow">
-        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
-          Features
-        </h4>
-        <ul className="space-y-3">
-          {plan.features?.map((feature, idx) => (
-            <li key={idx} className="flex items-start gap-3">
-              <CheckCircle size={18} className="text-green-500 shrink-0 mt-0.5" />
-              <span className="text-gray-600 text-sm leading-relaxed">{feature}</span>
-            </li>
-          ))}
-          {plan.notIncluded?.map((feature, idx) => (
-            <li key={`not-${idx}`} className="flex items-start gap-3 opacity-60">
-              <XCircle size={18} className="text-red-400 shrink-0 mt-0.5" />
-              <span className="text-gray-500 text-sm leading-relaxed line-through">{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+        {/* Header */}
+        <div className={`py-4 text-center border-b border-gray-50 bg-white pt-10`}>
+          <h2 className="text-2xl font-black text-[#002B49] tracking-widest uppercase">{plan.name}</h2>
+        </div>
+
+        {/* Price Banner */}
+        <div className={`py-3 text-center ${
+          isPopular ? "bg-[#f97316]" : "bg-[#002B49]"
+        }`}>
+          <div className="flex items-center justify-center text-white gap-1">
+            {plan.price === 0 ? (
+              <span className="text-xl font-bold uppercase tracking-wider">Free</span>
+            ) : (
+              <>
+                <IndianRupee size={18} strokeWidth={3} />
+                <span className="text-2xl font-black">{plan.price}</span>
+                <span className="text-xs font-bold opacity-70">/ {plan.duration ? `${plan.duration} Days` : "Lifetime"}</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Feature List */}
+        <div className="p-6 flex-1">
+          <div className="mb-4 text-xs font-bold text-gray-500 flex items-center gap-2">
+            <ShieldCheck size={14} className="text-blue-500" />
+            <span>Limit: {plan.propertyLimit === -1 ? "Unlimited" : `${plan.propertyLimit} Properties`}</span>
+          </div>
+
+          <div className="space-y-3">
+            {/* Checkmarks */}
+            {plan.features?.map((feature, idx) => (
+              <div key={idx} className="flex items-center gap-4 group">
+                <Check size={18} className="text-green-500 shrink-0" strokeWidth={3} />
+                <span className="text-gray-700 font-semibold text-sm leading-tight">{feature}</span>
+              </div>
+            ))}
+            
+            {/* Dynamic notIncluded crossmarks */}
+            {plan.notIncluded?.map((feature, idx) => (
+              <div key={`not-${idx}`} className="flex items-center gap-4 opacity-30">
+                <X size={18} className="text-red-500 shrink-0" strokeWidth={3} />
+                <span className="text-gray-500 font-medium text-sm line-through">{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-auto">
+          <ShieldCheck size={14} className="text-green-500" />
+          SECURE PLAN
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="p-4 md:p-6">
@@ -215,7 +239,7 @@ const SubscriptionPlanManager = () => {
           onClick={handleAdd}
           className="bg-blue-600 hover:bg-blue-700 h-auto py-2.5 px-6 rounded-xl font-semibold shadow-md flex items-center gap-2 transition-all hover:scale-[1.02]"
         >
-          Add New Subscription Plan
+          Add Plan
         </Button>
       </div>
 
@@ -324,6 +348,12 @@ const SubscriptionPlanManager = () => {
           </div>
         </Form>
       </Modal>
+
+      <style>{`
+        .ant-card {
+            border-radius: 12px !important;
+        }
+      `}</style>
     </div>
   );
 };

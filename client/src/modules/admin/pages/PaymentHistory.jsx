@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Table, Tag, message, Card } from "antd";
-import { CreditCard, IndianRupee, User, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Table, Tag, message, Card, Input } from "antd";
+import { CreditCard, IndianRupee, User, Calendar, CheckCircle, XCircle, Clock, Search } from "lucide-react";
 import axios from "axios";
 import moment from "moment";
 
@@ -9,6 +9,16 @@ const API = import.meta.env.VITE_API_URL;
 const PaymentHistory = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  const filteredHistory = history.filter((record) => {
+    const searchLower = searchText.toLowerCase();
+    const nameMatch = record.user?.name?.toLowerCase().includes(searchLower);
+    const phoneMatch = record.user?.phone?.toLowerCase().includes(searchLower);
+    const txMatch = record.razorpayPaymentId?.toLowerCase().includes(searchLower);
+    const planMatch = record.plan?.name?.toLowerCase().includes(searchLower);
+    return nameMatch || phoneMatch || txMatch || planMatch;
+  });
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -52,9 +62,9 @@ const PaymentHistory = () => {
       title: "Amount",
       key: "amount",
       render: (_, record) => (
-        <div className="flex items-center gap-1 font-bold text-gray-900">
+        <div className="flex items-center gap-1 font-bold text-gray-900 whitespace-nowrap">
           <IndianRupee size={14} />
-          {record.amountPaid || record.plan?.price || 0}
+          <span>{record.amountPaid || record.plan?.price || 0}</span>
         </div>
       ),
     },
@@ -64,13 +74,12 @@ const PaymentHistory = () => {
       key: "paymentStatus",
       render: (status) => {
         let color = "orange";
-        let icon = <Clock size={14} />;
-        if (status === "completed") { color = "green"; icon = <CheckCircle size={14} />; }
-        if (status === "failed") { color = "red"; icon = <XCircle size={14} />; }
+        if (status === "completed") { color = "green"; }
+        if (status === "failed") { color = "red"; }
         
         return (
-          <Tag color={color} className="flex items-center gap-1 w-fit rounded-lg px-3 py-1 border-none shadow-sm capitalize font-semibold">
-            {icon} {status}
+          <Tag color={color} className="w-fit rounded-lg px-3 py-1 border-none shadow-sm capitalize font-semibold whitespace-nowrap">
+            <span>{status}</span>
           </Tag>
         );
       },
@@ -112,26 +121,40 @@ const PaymentHistory = () => {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-xl shadow-inner">
-            <Calendar size={24} />
-          </div>
-          Payment History
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Overview of all subscription transactions across the platform
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl shadow-inner">
+              <Calendar size={24} />
+            </div>
+            Payment History
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Overview of all subscription transactions across the platform
+          </p>
+        </div>
+
+        <div className="w-full md:w-80">
+          <Input
+            placeholder="Search by name, phone, plan or ID..."
+            prefix={<Search size={16} className="text-gray-400 mr-2" />}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className="rounded-xl px-4 py-2 border-gray-200 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 h-10"
+            allowClear
+          />
+        </div>
       </div>
 
-      <Card className="rounded-2xl border-none shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border-none shadow-sm overflow-hidden" styles={{ body: { padding: 0 } }}>
         <Table
           columns={columns}
-          dataSource={history}
+          dataSource={filteredHistory}
           loading={loading}
           rowKey="_id"
           pagination={{ pageSize: 10, position: ["bottomCenter"] }}
-          className="admin-table"
+          className="admin-table border-t border-gray-100"
+          rowClassName="hover:bg-gray-50/50 transition-colors"
           scroll={{ x: true }}
         />
       </Card>

@@ -32,18 +32,16 @@ const BannerAdSection = () => {
 
   if (loading)
     return (
-      <section className="py-12">
-        <div className="container mx-auto px-4 max-w-7xl">
-          <div className="w-full aspect-[21/6] md:aspect-[21/4] lg:aspect-[21/4] bg-gray-200 animate-pulse rounded-[24px]"></div>
-        </div>
+      <section className="w-full my-4 md:my-8">
+        <div className="w-full h-[250px] md:h-[350px] lg:h-[450px] bg-gray-200 animate-pulse"></div>
       </section>
     );
 
   if (activeAds.length === 0) return null;
 
   return (
-    <section className="py-12">
-      <div className="container mx-auto px-4 max-w-[1400px]">
+    <section className="container mx-auto px-4 sm:px-6 lg:px-8 my-4 md:my-8">
+      <div className="w-full overflow-hidden rounded-xl md:rounded-2xl">
         <Swiper
           modules={[Autoplay, Pagination]}
           spaceBetween={0}
@@ -58,10 +56,10 @@ const BannerAdSection = () => {
             clickable: true,
             dynamicBullets: true,
           }}
-          className="rounded-[24px] overflow-hidden"
+          className="w-full overflow-hidden"
         >
           {activeAds.map((ad) => (
-            <SwiperSlide key={ad._id}>
+            <SwiperSlide key={ad._id} className="!w-full !m-0 !p-0">
               <div
                 className={`relative w-full h-full duration-500 ${ad.linkUrl?.trim() ? "hover:shadow-2xl cursor-pointer" : ""}`}
               >
@@ -70,7 +68,7 @@ const BannerAdSection = () => {
                     href={ad.linkUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block w-full h-full"
                   >
                     <AdContent ad={ad} />
                   </a>
@@ -87,11 +85,11 @@ const BannerAdSection = () => {
 };
 
 const AdContent = ({ ad }) => (
-  <div className="relative w-full overflow-hidden rounded-[24px]">
+  <div className="relative w-full h-[250px] md:h-[350px] lg:h-[450px] overflow-hidden">
     <img
       src={getImageUrl(ad.imageUrl)}
       alt={ad.title}
-      className="w-full h-auto block transition-transform duration-700"
+      className="w-full h-full object-cover block transition-transform duration-700"
     />
   </div>
 );

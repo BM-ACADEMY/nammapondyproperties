@@ -44,7 +44,7 @@ exports.createBannerAd = async (req, res) => {
 exports.getBannerAds = async (req, res) => {
     try {
         const bannerAds = await BannerAd.find()
-            .populate("createdBy", "name")
+            .populate("createdBy", "name phone")
             .sort({ createdAt: -1 });
 
         res.status(200).json({
