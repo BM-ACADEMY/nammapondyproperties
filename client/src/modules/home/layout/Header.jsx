@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 import PropertySearchBar from "../components/PropertySearchBar";
+import TopAnnouncementBar from "@/components/Common/TopAnnouncementBar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -188,11 +189,12 @@ const Header = () => {
             : "fixed top-0 left-0 right-0"}
           ${isHomePage
             ? isScrolled
-              ? "bg-[#166aa8] shadow-lg py-2"
-              : "bg-[white] lg:bg-transparent lg:border-transparent py-2 lg:py-4"
-            : "bg-[#166aa8] shadow-lg py-2"
+              ? "bg-[#166aa8] shadow-lg py-1"
+              : "bg-[white] lg:bg-transparent lg:border-transparent py-0 lg:py-0"
+            : "bg-[#166aa8] shadow-lg py-1"
           }`}
       >
+        <TopAnnouncementBar />
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
