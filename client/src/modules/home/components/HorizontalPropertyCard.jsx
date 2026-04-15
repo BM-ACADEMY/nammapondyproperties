@@ -71,7 +71,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
 
     return (
         <div 
-            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative xl:h-64"
+            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative xl:h-64 top-6"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
         >

@@ -62,7 +62,7 @@ const PropertySidebarFilter = ({
     };
 
     return (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 sticky top-24 max-h-[calc(100vh-120px)] flex flex-col overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 sticky top-30 max-h-[calc(100vh-120px)] flex flex-col overflow-hidden">
             <div className="flex-1 p-6 space-y-8 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                 {/* Budget Range Section */}
                 <div className="space-y-4">
