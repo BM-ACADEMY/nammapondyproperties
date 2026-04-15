@@ -2,6 +2,7 @@
 const User = require("../models/User");
 const Role = require("../models/Role");
 const BusinessType = require("../models/BusinessType");
+const BuilderProfile = require("../models/BuilderProfile");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
@@ -104,7 +105,7 @@ exports.verifyOtp = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id).populate(["role_id", "businessType", "builderProfile"]);
     res.status(200).json({
       success: true,
       user,
@@ -130,7 +131,7 @@ exports.getUsers = async (req, res) => {
     }
 
     const users = await User.find(query)
-      .populate("role_id")
+      .populate(["role_id", "businessType", "builderProfile"])
       .populate("createdBy", "name");
     res.json(users);
   } catch (error) {
@@ -149,8 +150,8 @@ exports.getPublicUsers = async (req, res) => {
     if (sellerRole) query.role_id = sellerRole._id;
 
     const users = await User.find(query)
-      .select("name phone profile_image role_id isVerified badgeVerified")
-      .populate("role_id")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .populate(["role_id", "builderProfile", "businessType"])
       .limit(parseInt(limit) || 20);
 
     res.json(users);
@@ -162,8 +163,8 @@ exports.getPublicUsers = async (req, res) => {
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name phone profile_image role_id isVerified badgeVerified")
-      .populate("role_id");
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .populate(["role_id", "builderProfile", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -173,7 +174,7 @@ exports.getPublicUserById = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate("role_id");
+    const user = await User.findById(req.params.id).populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -186,26 +187,73 @@ exports.updateUser = async (req, res) => {
     const userId = req.params.id;
     let updateData = { ...req.body };
 
-    if (req.file) {
-      updateData.profile_image = `/uploads/profiles/${req.file.filename}`;
-      const oldUser = await User.findById(userId);
-      if (oldUser && oldUser.profile_image) {
-        const oldImagePath = path.join(__dirname, "..", oldUser.profile_image);
-        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+    // Restriction: Badge-verified sellers cannot change their businessType
+    const existingUser = await User.findById(userId).populate("builderProfile");
+    if (!existingUser) return res.status(404).json({ error: "User not found" });
+
+    if (existingUser.badgeVerified && updateData.businessType && String(updateData.businessType) !== String(existingUser.businessType)) {
+      return res.status(403).json({ error: "Badge-verified sellers cannot change their Business Type" });
+    }
+
+    // Handle File Uploads (profile_image and company_logo)
+    if (req.files) {
+      if (req.files.profile_image) {
+        updateData.profile_image = `/uploads/profiles/${req.files.profile_image[0].filename}`;
+        if (existingUser.profile_image) {
+          const oldImagePath = path.join(__dirname, "..", existingUser.profile_image);
+          if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+        }
       }
-    } else if (req.body.remove_image === "true") {
-      const oldUser = await User.findById(userId);
-      if (oldUser && oldUser.profile_image) {
-        const oldImagePath = path.join(__dirname, "..", oldUser.profile_image);
-        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      if (req.files.company_logo) {
+        updateData.company_logo = `/uploads/profiles/${req.files.company_logo[0].filename}`;
+        if (existingUser.builderProfile && existingUser.builderProfile.companyLogo) {
+          const oldLogoPath = path.join(__dirname, "..", existingUser.builderProfile.companyLogo);
+          if (fs.existsSync(oldLogoPath)) fs.unlinkSync(oldLogoPath);
+        }
       }
+    }
+
+    // Handle Image Deletions
+    if (req.body.remove_image === "true" && existingUser.profile_image) {
+      const oldImagePath = path.join(__dirname, "..", existingUser.profile_image);
+      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
       updateData.profile_image = null;
+    }
+    if (req.body.remove_company_logo === "true" && existingUser.builderProfile && existingUser.builderProfile.companyLogo) {
+      const oldLogoPath = path.join(__dirname, "..", existingUser.builderProfile.companyLogo);
+      if (fs.existsSync(oldLogoPath)) fs.unlinkSync(oldLogoPath);
+      updateData.company_logo = null;
+    }
+
+    // BuilderProfile Upsert Logic
+    const isBuilderOrPromoter = existingUser.businessType && 
+      (req.user.businessType || existingUser.businessType).name?.match(/Builder|Promoter/i);
+
+    // If we have builder-specific fields or the user is identified as such
+    if (req.body.builderDetail) {
+      const builderData = typeof req.body.builderDetail === 'string' 
+        ? JSON.parse(req.body.builderDetail) 
+        : req.body.builderDetail;
+      
+      if (updateData.company_logo !== undefined) {
+        builderData.companyLogo = updateData.company_logo;
+      }
+      if (updateData.profile_image !== undefined) {
+          builderData.profileImage = updateData.profile_image;
+      }
+
+      const bp = await BuilderProfile.findOneAndUpdate(
+        { user: userId },
+        { ...builderData, user: userId },
+        { upsert: true, new: true, runValidators: true }
+      );
+      updateData.builderProfile = bp._id;
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, { 
       new: true,
       runValidators: true 
-    }).populate("role_id");
+    }).populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -290,7 +338,7 @@ exports.upgradeToSeller = async (req, res) => {
       name,
       phone,
       businessType
-    }, { new: true }).populate("role_id");
+    }, { new: true }).populate(["role_id", "businessType"]);
 
     res.json({ success: true, message: "Upgraded successfully", user });
   } catch (error) {
@@ -300,7 +348,7 @@ exports.upgradeToSeller = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id).populate(["role_id", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json({ success: true, token: generateToken(user._id), user });
   } catch (error) {

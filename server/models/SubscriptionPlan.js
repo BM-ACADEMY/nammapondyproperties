@@ -5,8 +5,11 @@ const subscriptionPlanSchema = new mongoose.Schema(
     name: { 
       type: String, 
       required: true, 
-      unique: true, 
-      enum: ["Free", "Standard", "Premium"] 
+    },
+    businessType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessType",
+      required: true
     },
     price: { type: Number, required: true },
     propertyLimit: { 

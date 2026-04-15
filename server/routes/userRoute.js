@@ -25,7 +25,10 @@ router.get("/get-user-by-id/:id", protect, userController.getUserById);
 router.put(
   "/update-user-by-id/:id",
   protect,
-  upload.single("profile_image"),
+  upload.fields([
+    { name: "profile_image", maxCount: 1 },
+    { name: "company_logo", maxCount: 1 },
+  ]),
   userController.updateUser,
 );
 router.put("/upgrade-to-seller", protect, userController.upgradeToSeller);
