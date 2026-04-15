@@ -5,6 +5,7 @@ import { message, Button, Spin } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import PhoneUpdateModal from "../../../../components/Common/PhoneUpdateModal";
+import BusinessTypeModal from "../../../../components/Common/BusinessTypeModal";
 
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
@@ -19,12 +20,18 @@ const AddProperty = () => {
   const { user, refetchUser } = useAuth();
 
   // Mobile number prompt state
+  // Business Type modal state
+  const [showBusinessTypeModal, setShowBusinessTypeModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
+
   useEffect(() => {
-    // Show modal if user is logged in but has no phone number (only for new properties)
+    // Show phone modal if user is logged in but has no phone number (only for new properties)
     if (user && !user.phone && !editId) {
       setShowPhoneModal(true);
+    } else if (user && !user.businessType && !editId) {
+      // Show business type modal if missing
+      setShowBusinessTypeModal(true);
     }
   }, [user, editId]);
 
@@ -169,9 +176,21 @@ const AddProperty = () => {
         isOpen={showPhoneModal}
         onClose={() => {
           setShowPhoneModal(false);
-          navigate(-1);
+          // navigate(-1);
         }}
         onSuccess={() => setShowPhoneModal(false)}
+      />
+
+      <BusinessTypeModal
+        open={showBusinessTypeModal}
+        onCancel={() => {
+          setShowBusinessTypeModal(false);
+          navigate(-1);
+        }}
+        onSuccess={() => {
+          setShowBusinessTypeModal(false);
+          refetchUser(); // Refresh user info to get the new role and businessType
+        }}
       />
     </div>
   );

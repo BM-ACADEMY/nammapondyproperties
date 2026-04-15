@@ -104,7 +104,7 @@ exports.verifyOtp = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id).populate("role_id").populate("businessType");
     res.status(200).json({
       success: true,
       user,
@@ -131,6 +131,7 @@ exports.getUsers = async (req, res) => {
 
     const users = await User.find(query)
       .populate("role_id")
+      .populate("businessType")
       .populate("createdBy", "name");
     res.json(users);
   } catch (error) {
@@ -200,6 +201,17 @@ exports.updateUser = async (req, res) => {
         if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
       }
       updateData.profile_image = null;
+    }
+
+    // Locking logic: If user is verified, prevent changing businessType or role_id
+    const currentUser = await User.findById(userId);
+    if (currentUser && currentUser.badgeVerified) {
+      if (updateData.businessType && updateData.businessType.toString() !== currentUser.businessType?.toString()) {
+        return res.status(403).json({ error: "Cannot change Business Type once verified by admin." });
+      }
+      if (updateData.role_id && updateData.role_id.toString() !== currentUser.role_id?.toString()) {
+        return res.status(403).json({ error: "Cannot change Role once verified by admin." });
+      }
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, { 
@@ -277,16 +289,28 @@ exports.upgradeToSeller = async (req, res) => {
     const userId = req.user.id;
     const { businessType, name, phone } = req.body;
 
-    const sellerRole = await Role.findOne({ role_name: "seller" });
-    if (!sellerRole) return res.status(500).json({ error: "Seller role missing" });
+    if (!businessType) return res.status(400).json({ error: "Business Type is required" });
 
-    if (businessType) {
-      const btExists = await BusinessType.findById(businessType);
-      if (!btExists) return res.status(400).json({ error: "Invalid Business Type" });
+    const btDoc = await BusinessType.findById(businessType);
+    if (!btDoc) return res.status(400).json({ error: "Invalid Business Type" });
+
+    // Mapping Business Type names to Role names
+    // Agent -> agent, Owner -> owner, Builders / Promoter -> builder
+    let targetRoleName = "seller"; // Fallback
+    if (btDoc.name === "Agent") targetRoleName = "agent";
+    else if (btDoc.name === "Owner") targetRoleName = "owner";
+    else if (btDoc.name === "Builders / Promoter") targetRoleName = "builder";
+
+    const targetRole = await Role.findOne({ role_name: targetRoleName });
+    if (!targetRole) return res.status(500).json({ error: `Role '${targetRoleName}' missing` });
+
+    const currentUser = await User.findById(userId);
+    if (currentUser.badgeVerified) {
+      return res.status(403).json({ error: "Role is locked as you are already verified by admin." });
     }
 
     const user = await User.findByIdAndUpdate(userId, {
-      role_id: sellerRole._id,
+      role_id: targetRole._id,
       name,
       phone,
       businessType

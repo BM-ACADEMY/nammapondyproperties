@@ -120,6 +120,19 @@ const SellerList = () => {
       ),
     },
     {
+      title: "Business Type",
+      dataIndex: "businessType",
+      key: "businessType",
+      render: (type) => (
+        <Tag color="cyan" className="rounded-full px-3 border-cyan-100">
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-semibold">
+            <Briefcase size={12} />
+            {type?.name || "NOT SET"}
+          </span>
+        </Tag>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",

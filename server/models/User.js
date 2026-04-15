@@ -31,6 +31,23 @@ const userSchema = new mongoose.Schema(
     referralCode: { type: String, unique: true, sparse: true },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     activeSubscription: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
+    businessType: { type: mongoose.Schema.Types.ObjectId, ref: "BusinessType" },
+
+    // Builder / Promoter Specific Fields
+    builderName: { type: String },
+    companyName: { type: String },
+    companyLogo: { type: String },
+    gstNumber: { type: String },
+    officeAddress: { type: String },
+    experienceYears: { type: String },
+    aboutCompany: { type: String },
+    reraNumber: { type: String },
+    socialLinks: {
+      instagram: { type: String },
+      facebook: { type: String },
+      linkedin: { type: String },
+      website: { type: String },
+    },
   },
   { timestamps: true },
 );
