@@ -244,14 +244,7 @@ const PropertyForm = ({
 
   const categoryWatch = watch("basicInfo.category");
   const usageTypeWatch = watch("basicInfo.usageType");
-  useEffect(() => {
-    if (user?.businessType) {
-      setValue("businessType", typeof user.businessType === 'object' ? user.businessType._id : user.businessType);
-    }
-  }, [user, setValue]);
-
   const propertyTypeWatch = watch("basicInfo.propertyType");
-
 
   const selectedCountry = watch("location.country");
   const selectedState = watch("location.state");
@@ -665,18 +658,16 @@ const PropertyForm = ({
                     ))}
                   </select>
                 </div>
-                {!user?.businessType && (
-                  <div>
-                    <label className="block text-sm font-bold mb-2">Business Type <span className="text-red-500">*</span></label>
-                    <select {...register("businessType", { required: "Business type is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}>
-                      <option value="">Select Business Type</option>
-                      {businessTypes.map(type => (
-                        <option key={type._id} value={type._id}>{type.name}</option>
-                      ))}
-                    </select>
-                    {errors.businessType && <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>}
-                  </div>
-                )}
+                <div>
+                  <label className="block text-sm font-bold mb-2">Business Type <span className="text-red-500">*</span></label>
+                  <select {...register("businessType", { required: "Business type is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}>
+                    <option value="">Select Business Type</option>
+                    {businessTypes.map(type => (
+                      <option key={type._id} value={type._id}>{type.name}</option>
+                    ))}
+                  </select>
+                  {errors.businessType && <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>}
+                </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Status</label>
                   <div className="flex gap-4">

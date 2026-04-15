@@ -130,7 +130,6 @@ exports.createProperty = async (req, res) => {
       },
       status: "Pending",
       isVerified: false,
-      businessType: req.body.businessType || (req.user && req.user.businessType ? req.user.businessType : undefined),
     };
 
     const property = new Property(propertyData);

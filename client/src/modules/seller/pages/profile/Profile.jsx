@@ -13,7 +13,7 @@ import {
   Upload,
   Select,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, CreditCard, IndianRupee, Edit3, X, Briefcase } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, CreditCard, IndianRupee, Edit3, X } from "lucide-react";
 import { Table, Tag } from "antd";
 import moment from "moment";
 import ImgCrop from "antd-img-crop";
@@ -88,25 +88,6 @@ const Profile = () => {
       formData.append("name", values.name);
       formData.append("phone", values.phone);
 
-      // Builder fields
-      if (user?.role_id?.role_name === "builder") {
-        formData.append("builderName", values.builderName || "");
-        formData.append("companyName", values.companyName || "");
-        formData.append("gstNumber", values.gstNumber || "");
-        formData.append("officeAddress", values.officeAddress || "");
-        formData.append("experienceYears", values.experienceYears || "");
-        formData.append("aboutCompany", values.aboutCompany || "");
-        formData.append("reraNumber", values.reraNumber || "");
-        
-        const socialLinks = {
-          instagram: values.instagram || "",
-          facebook: values.facebook || "",
-          linkedin: values.linkedin || "",
-          website: values.website || "",
-        };
-        formData.append("socialLinks", JSON.stringify(socialLinks));
-      }
-
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append("profile_image", fileList[0].originFileObj);
       } else if (fileList.length === 0 && hasInitialImage) {
@@ -125,6 +106,12 @@ const Profile = () => {
 
       if (response.data) {
         message.success("Profile updated successfully!");
+        // Update local state to reflect change
+        if (fileList.length > 0) {
+          setHasInitialImage(true);
+        } else if (formData.get("remove_image")) {
+          setHasInitialImage(false);
+        }
         if (refreshUser) refreshUser(response.data);
         setIsEditing(false);
       }
@@ -193,29 +180,11 @@ const Profile = () => {
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 bg-[#fcfcfd] min-h-screen font-sans">
       {/* Header Section */}
-      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <Title level={1} className="!text-3xl !mb-2 !font-semibold text-slate-800">
-            {user?.role_id?.role_name === "builder" ? "Builder Profile" : "Seller Profile"}
-          </Title>
-          <Text className="text-slate-500 text-base">
-            Manage your {user?.role_id?.role_name || "seller"} account details and business identity
-          </Text>
-        </div>
-        <div className="flex items-center gap-3">
-          {user?.businessType?.name && (
-            <Tag color="blue" className="!px-4 !py-1 !rounded-full !text-sm font-bold border-2 border-blue-100 flex items-center gap-2">
-              <Briefcase size={14} />
-              {user.businessType.name}
-            </Tag>
-          )}
-          {user?.badgeVerified && (
-            <Tag color="gold" className="!px-4 !py-1 !rounded-full !text-sm font-bold border-2 border-amber-100 flex items-center gap-2">
-              <ShieldCheck size={14} className="text-amber-600" />
-              Verified Seller
-            </Tag>
-          )}
-        </div>
+      <div className="mb-10">
+        <Title level={1} className="!text-3xl !mb-2 !font-semibold text-slate-800">Seller Profile</Title>
+        <Text className="text-slate-500 text-base">
+          Manage your account details and security settings
+        </Text>
         {activeSub && (
           <div className="mt-4 flex items-center gap-2">
             <span className="text-slate-600 font-medium">Current Plan:</span>
@@ -291,114 +260,60 @@ const Profile = () => {
 
             {/* Inputs Section */}
             <div className="space-y-5">
+              <Form.Item
+                name="name"
+                label={<span className="text-slate-600 font-medium">Full Name</span>}
+                rules={[{ required: true, message: "Please enter your name" }]}
+                required={false}
+                className="!mb-0"
+              >
+                <Input
+                  disabled={!isEditing}
+                  prefix={<User size={18} className="text-slate-400 mr-2" />}
+                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                />
+              </Form.Item>
+
               <Row gutter={20}>
                 <Col span={12}>
-                  <Form.Item
-                    name="name"
-                    label={<span className="text-slate-600 font-medium">Full Name / Display Name</span>}
-                    rules={[{ required: true, message: "Please enter your name" }]}
-                    required={false}
-                  >
+                  <Form.Item name="userId" label={<span className="text-slate-600 font-medium">User ID</span>} className="!mb-0">
                     <Input
-                      disabled={!isEditing || user?.badgeVerified}
-                      prefix={<User size={18} className="text-slate-400 mr-2" />}
-                      className={`h-12 rounded-xl border-slate-200 ${(!isEditing || user?.badgeVerified) ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                      prefix={<Hash size={18} className="text-slate-400 mr-2" />}
+                      disabled
+                      className="h-12 rounded-xl border-slate-200 bg-slate-50 text-slate-500 font-medium cursor-not-allowed"
                     />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item
-                    name="phone"
-                    label={<span className="text-slate-600 font-medium">Phone Number</span>}
-                    rules={[
-                      { required: true, message: "Please enter phone number" },
-                      { pattern: /^\d{10}$/, message: "Must be 10 digits" },
-                    ]}
-                    required={false}
-                  >
+                  <Form.Item name="referralCode" label={<span className="text-slate-600 font-medium">Referral ID</span>} className="!mb-0">
                     <Input
-                      disabled={!isEditing || user?.badgeVerified}
-                      prefix={<Phone size={18} className="text-slate-400 mr-2" />}
-                      placeholder="Phone Number"
-                      className={`h-12 rounded-xl border-slate-200 ${(!isEditing || user?.badgeVerified) ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
-                      maxLength={10}
-                      onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
+                      prefix={<Share2 size={18} className="text-slate-400 mr-2" />}
+                      disabled
+                      className="h-12 rounded-xl border-slate-200 bg-slate-50 text-slate-500 font-medium cursor-not-allowed"
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
-              {user?.role_id?.role_name === "builder" && (
-                <div className="pt-4 space-y-6">
-                  <div className="border-t border-slate-100 pt-6">
-                    <Title level={5} className="!text-blue-600 !mb-4">Company Details</Title>
-                    <Row gutter={[20, 20]}>
-                      <Col span={12}>
-                        <Form.Item name="companyName" label={<span className="text-slate-600 font-medium">Company Name</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name="builderName" label={<span className="text-slate-600 font-medium">Builder/Founder Name</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name="gstNumber" label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name="reraNumber" label={<span className="text-slate-600 font-medium">RERA Number (Optional)</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name="experienceYears" label={<span className="text-slate-600 font-medium">Years of Experience</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={24}>
-                        <Form.Item name="officeAddress" label={<span className="text-slate-600 font-medium">Office Address</span>}>
-                          <Input.TextArea disabled={!isEditing} rows={3} className="rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={24}>
-                        <Form.Item name="aboutCompany" label={<span className="text-slate-600 font-medium">About Company</span>}>
-                          <Input.TextArea disabled={!isEditing} rows={4} className="rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </div>
-
-                  <div className="border-t border-slate-100 pt-6">
-                    <Title level={5} className="!text-blue-600 !mb-4">Social & Web Links</Title>
-                    <Row gutter={[20, 20]}>
-                      <Col span={12}>
-                        <Form.Item name={["socialLinks", "website"]} label={<span className="text-slate-600 font-medium">Website URL</span>}>
-                          <Input disabled={!isEditing} prefix={<Save size={14} className="mr-2" />} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name={["socialLinks", "instagram"]} label={<span className="text-slate-600 font-medium">Instagram URL</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name={["socialLinks", "facebook"]} label={<span className="text-slate-600 font-medium">Facebook URL</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
-                        <Form.Item name={["socialLinks", "linkedin"]} label={<span className="text-slate-600 font-medium">LinkedIn URL</span>}>
-                          <Input disabled={!isEditing} className="h-12 rounded-xl border-slate-200" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </div>
-                </div>
-              )}
-
+              <Form.Item
+                name="phone"
+                label={<span className="text-slate-600 font-medium">Phone Number</span>}
+                rules={[
+                  { required: true, message: "Please enter phone number" },
+                  { pattern: /^\d{10}$/, message: "Must be 10 digits" },
+                ]}
+                required={false}
+                className="!mb-0"
+              >
+                <Input
+                  disabled={!isEditing}
+                  prefix={<Phone size={18} className="text-slate-400 mr-2" />}
+                  placeholder="8270652229"
+                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                  maxLength={10}
+                  onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
+                />
+              </Form.Item>
             </div>
 
             {/* Verification & Save Row */}
