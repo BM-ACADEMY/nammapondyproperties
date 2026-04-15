@@ -59,6 +59,7 @@ import {
 import { formatNumber } from "../../../utils/formatNumber";
 import WishlistButton from "../../../components/Common/WishlistButton";
 import PropertyCard from "../components/PropertyCard";
+import PostRequirementCard from "./PostRequirementCard";
 
 const BuilderPromoterDetailsUI = ({
   property,
@@ -685,6 +686,9 @@ const BuilderPromoterDetailsUI = ({
                                  </>
                                )}
                              </button>
+                           </div>
+                           <div className="mt-4">
+                             <PostRequirementCard />
                            </div>
             </div>
           </div>

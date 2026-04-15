@@ -21,6 +21,7 @@ exports.createBannerAd = async (req, res) => {
             linkUrl,
             expiryDate,
             imageUrl: `/uploads/banners/${req.file.filename}`,
+            createdBy: req.user._id,
         });
 
         res.status(201).json({
@@ -42,7 +43,9 @@ exports.createBannerAd = async (req, res) => {
 // @access  Private/Admin
 exports.getBannerAds = async (req, res) => {
     try {
-        const bannerAds = await BannerAd.find().sort({ createdAt: -1 });
+        const bannerAds = await BannerAd.find()
+            .populate("createdBy", "name phone")
+            .sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,

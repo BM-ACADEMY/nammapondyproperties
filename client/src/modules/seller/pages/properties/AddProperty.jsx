@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import PropertyForm from "../../../../components/Property/PropertyForm";
 import axios from "axios";
-import { message, Button } from "antd";
+import { message, Button, Spin } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import PhoneUpdateModal from "../../../../components/Common/PhoneUpdateModal";
 
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
+  const [verifyingLimit, setVerifyingLimit] = useState(true);
+  const warnedRef = React.useRef(false);
   const navigate = useNavigate();
 
   const [searchParams] = useSearchParams();
@@ -28,14 +30,34 @@ const AddProperty = () => {
 
   const checkLimit = React.useCallback(async () => {
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/properties/fetch-all-property?seller_id=${user._id}`,
-      );
-      if (res.data.properties && res.data.properties.length >= 5) {
-        navigate("/seller/request-limit");
+      setVerifyingLimit(true);
+      // Fetch both subscription and properties
+      const [subRes, propRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_URL}/subscriptions/my-subscription`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }),
+        axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?seller_id=${user._id}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        })
+      ]);
+
+      const subscription = subRes.data;
+      const properties = propRes.data.properties || [];
+      
+      const propertyLimit = subscription?.plan?.propertyLimit || 3;
+      
+      if (propertyLimit !== -1 && properties.length >= propertyLimit) {
+        if (!warnedRef.current) {
+          message.warning(`You have reached your limit of ${propertyLimit} properties. Please upgrade!`);
+          warnedRef.current = true;
+        }
+        navigate("/seller/upgrade-plan");
+        return;
       }
     } catch (error) {
       console.error("Error checking limit:", error);
+    } finally {
+      setVerifyingLimit(false);
     }
   }, [user, navigate]);
 
@@ -110,6 +132,14 @@ const AddProperty = () => {
       setLoading(false);
     }
   };
+
+  if (verifyingLimit && !editId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50/50">
+        <Spin size="large" tip="Verifying your plan limits..." />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 mt-18 md:p-8 bg-gray-50/50 min-h-screen">

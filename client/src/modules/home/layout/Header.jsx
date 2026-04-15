@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 import PropertySearchBar from "../components/PropertySearchBar";
+import TopAnnouncementBar from "@/components/Common/TopAnnouncementBar";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -188,11 +189,12 @@ const Header = () => {
             : "fixed top-0 left-0 right-0"}
           ${isHomePage
             ? isScrolled
-              ? "bg-[#166aa8] shadow-lg py-2"
-              : "bg-[white] lg:bg-transparent lg:border-transparent py-2 lg:py-4"
-            : "bg-[#166aa8] py-2"
+              ? "bg-[#166aa8] shadow-lg py-1"
+              : "bg-[white] lg:bg-transparent lg:border-transparent py-0 lg:py-0"
+            : "bg-[#166aa8] shadow-lg py-1"
           }`}
       >
+        <TopAnnouncementBar />
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
@@ -289,6 +291,24 @@ const Header = () => {
                                 >
                                   {name}
                                 </Link>
+                                {name.toLowerCase().includes("agent") && (
+                                  <Link
+                                    to="/agent-info"
+                                    onClick={() => setActiveBusinessDropdown(null)}
+                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                  >
+                                    Agent Info
+                                  </Link>
+                                )}
+                                {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
+                                  <Link
+                                    to="/builder-info"
+                                    onClick={() => setActiveBusinessDropdown(null)}
+                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                  >
+                                    Builder Info
+                                  </Link>
+                                )}
                                 <button
                                   onClick={handlePostProperty}
                                   className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors group/post"
@@ -374,7 +394,7 @@ const Header = () => {
                             setIsContactMenuOpen(false);
                             setIsCallbackModalOpen(true);
                           }}
-                          className="w-full border-2 border-[#3070fc] text-[#3070fc] hover:bg-[#3070fc] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
+                          className="w-full bg-[#166aa8] text-white hover:bg-[#0078d7] hover:text-white transition-colors duration-300 rounded-lg py-2.5 font-bold flex items-center justify-center space-x-2 text-[15px]"
                         >
                           <PhoneCall className="h-4 w-4" />
                           <span>Request a Call Back</span>
@@ -822,6 +842,24 @@ const Header = () => {
                               >
                                 {name}
                               </Link>
+                              {name.toLowerCase().includes("agent") && (
+                                <Link
+                                  to="/agent-info"
+                                  onClick={() => setIsMenuOpen(false)}
+                                  className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                >
+                                  Agent Info
+                                </Link>
+                              )}
+                              {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
+                                <Link
+                                  to="/builder-info"
+                                  onClick={() => setIsMenuOpen(false)}
+                                  className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                >
+                                  Builder Info
+                                </Link>
+                              )}
                               <button
                                 onClick={handlePostProperty}
                                 className="w-full flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"

@@ -129,7 +129,9 @@ exports.getUsers = async (req, res) => {
       query.isVerified = verified === "true";
     }
 
-    const users = await User.find(query).populate("role_id");
+    const users = await User.find(query)
+      .populate("role_id")
+      .populate("createdBy", "name");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -183,28 +185,6 @@ exports.updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
     let updateData = { ...req.body };
-
-    // Handle array fields that might come as strings from FormData
-    if (typeof updateData.expertise === "string") {
-      try {
-        updateData.expertise = JSON.parse(updateData.expertise);
-      } catch (e) {
-        updateData.expertise = updateData.expertise.split(",").map(item => item.trim()).filter(Boolean);
-      }
-    }
-
-    if (typeof updateData.languages === "string") {
-      try {
-        updateData.languages = JSON.parse(updateData.languages);
-      } catch (e) {
-        updateData.languages = updateData.languages.split(",").map(item => item.trim()).filter(Boolean);
-      }
-    }
-
-    // Handle numeric fields
-    if (updateData.experience) {
-      updateData.experience = Number(updateData.experience);
-    }
 
     if (req.file) {
       updateData.profile_image = `/uploads/profiles/${req.file.filename}`;
@@ -367,7 +347,8 @@ exports.createUserByAdmin = async (req, res) => {
       name,
       phone,
       role_id,
-      isVerified: true // Admin-created users are pre-verified
+      isVerified: true, // Admin-created users are pre-verified
+      createdBy: req.user.id
     });
 
     await user.save();

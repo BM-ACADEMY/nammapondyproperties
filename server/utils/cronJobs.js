@@ -1,5 +1,7 @@
 const cron = require("node-cron");
 const Property = require("../models/Property");
+const Subscription = require("../models/Subscription");
+const User = require("../models/User");
 const fs = require("fs");
 const path = require("path");
 
@@ -90,9 +92,46 @@ const initCronJobs = (io) => {
       console.error("❌ Error in property cleanup cron job:", error);
     }
   });
+  
+  // Schedule task to run every day at 00:05 AM for subscription expiry
+  cron.schedule("5 0 * * *", async () => {
+    console.log("🕒 Running daily check for expired subscriptions...");
+    try {
+      const now = new Date();
+      // 1. Find all active subscriptions that have passed their end date
+      const expiredSubscriptions = await Subscription.find({
+        status: "active",
+        endDate: { $lt: now }
+      });
+
+      if (expiredSubscriptions.length === 0) {
+        // console.log("✅ No expired subscriptions found.");
+        return;
+      }
+
+      console.log(`Found ${expiredSubscriptions.length} expired subscriptions. Processing...`);
+
+      for (const sub of expiredSubscriptions) {
+        // 2. Mark subscription as expired
+        sub.status = "expired";
+        await sub.save();
+
+        // 3. Update user: set activeSubscription to null (fall back to default)
+        await User.findByIdAndUpdate(sub.user, {
+          activeSubscription: null
+        });
+        
+        console.log(`User ${sub.user} subscription expired and moved to default plan.`);
+      }
+
+      console.log(`✅ Successfully processed ${expiredSubscriptions.length} expired subscriptions.`);
+    } catch (error) {
+      console.error("❌ Error in subscription expiry cron job:", error);
+    }
+  });
 
   console.log(
-    "🚀 Property cleanup cron job initialized (21-day validity, Daily at midnight)",
+    "🚀 Property & Subscription cron jobs initialized.",
   );
 };
 module.exports = { initCronJobs };

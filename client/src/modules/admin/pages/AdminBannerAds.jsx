@@ -32,6 +32,7 @@ import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
 import dayjs from "dayjs";
 
+
 const { Title, Text } = Typography;
 
 const AdminBannerAds = () => {
@@ -204,6 +205,16 @@ const AdminBannerAds = () => {
                     </div>
                 );
             },
+        },
+        {
+            title: "Created By",
+            dataIndex: "createdBy",
+            key: "createdBy",
+            render: (createdBy) => (
+                <span className="text-gray-600 font-medium">
+                    {createdBy?.name || createdBy?.phone || "System"}
+                </span>
+            ),
         },
         {
             title: "Display Status",

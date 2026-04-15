@@ -10,6 +10,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
+import PostRequirementCard from "./PostRequirementCard";
 
 const PropertyTypeList = () => {
   const navigate = useNavigate();
@@ -168,7 +169,7 @@ const PropertyTypeList = () => {
         </div>
 
         {/* Right Section: Sidebar */}
-        <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-6 lg:mt-[76px]">
+        <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-6 lg:mt-29.5">
           
           {/* Activity Widget - Only for guests */}
           {!isAuthenticated && (
@@ -195,6 +196,11 @@ const PropertyTypeList = () => {
                 & see your activities across browsers & devices...
               </p>
             </div>
+          )}
+
+          {/* Post by Requirement - Only for authenticated users */}
+          {isAuthenticated && (
+            <PostRequirementCard />
           )}
 
           {/* Promo Widget - At Bottom */}

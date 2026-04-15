@@ -14,7 +14,9 @@ import {
   Briefcase,
   BarChart3,
   Image,
-  Sliders
+  Sliders,
+  ClipboardList,
+  CreditCard
 } from "lucide-react";
 
 const { Sider } = Layout;
@@ -92,11 +94,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           label: "Seller Listings",
           onClick: () => handleMenuClick("/admin/seller-listings"),
         },
-        {
-          key: "/admin/seller-requests",
-          label: "Seller Requests",
-          onClick: () => handleMenuClick("/admin/seller-requests"),
-        },
+        // {
+        //   key: "/admin/seller-requests",
+        //   label: "Seller Requests",
+        //   onClick: () => handleMenuClick("/admin/seller-requests"),
+        // },
       ],
     },
     {
@@ -151,6 +153,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           onClick: () => handleMenuClick("/admin/users"),
         },
         {
+          key: "/admin/admins",
+          label: "Admin List",
+          onClick: () => handleMenuClick("/admin/admins"),
+        },
+        {
           key: "/admin/sellers",
           label: "Seller List",
           onClick: () => handleMenuClick("/admin/sellers"),
@@ -167,6 +174,12 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <LibraryBig size={20} />,
       label: "Enquiry Leads",
       onClick: () => handleMenuClick("/admin/enquiries"),
+    },
+    {
+      key: "/admin/requirements",
+      icon: <ClipboardList size={20} />,
+      label: "Posted Requirements",
+      onClick: () => handleMenuClick("/admin/requirements"),
     },
     {
       key: "forms-sub",
@@ -190,6 +203,23 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <Image size={20} />,
       label: "Banner Ads",
       onClick: () => handleMenuClick("/admin/banner-ads"),
+    },
+    {
+      key: "subscriptions-sub",
+      icon: <CreditCard size={20} />,
+      label: "Subscriptions",
+      children: [
+        {
+          key: "/admin/subscription-plans",
+          label: "Subscription Plans",
+          onClick: () => handleMenuClick("/admin/subscription-plans"),
+        },
+        {
+          key: "/admin/payment-history",
+          label: "Payment History",
+          onClick: () => handleMenuClick("/admin/payment-history"),
+        },
+      ],
     },
     {
       key: "property-settings-sub",

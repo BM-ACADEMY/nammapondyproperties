@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Heart, MapPin, Eye, ArrowRight, Phone, MessageSquare } from "lucide-react";
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
@@ -8,7 +8,47 @@ import moment from "moment";
 import WishlistButton from "../../../components/Common/WishlistButton";
 
 const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) => {
-    const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
+    const images = property.media?.images && property.media.images.length > 0 
+        ? property.media.images 
+        : [property.media?.featuredImage].filter(Boolean);
+        
+    const displayImages = images.length > 1 ? [...images, images[0]] : images;
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [isHovering, setIsHovering] = useState(false);
+    const [useTransition, setUseTransition] = useState(true);
+
+    useEffect(() => {
+        if (!isHovering || images.length <= 1) {
+            setCurrentImageIndex(0);
+            setUseTransition(true);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => prev + 1);
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [isHovering, images.length]);
+
+    // Handle Infinite Loop teleporting
+    useEffect(() => {
+        if (currentImageIndex === images.length && images.length > 1) {
+            // Wait for the slide animation to the clone to finish (700ms)
+            const jumpTimer = setTimeout(() => {
+                setUseTransition(false); // Disable animation for the jump
+                setCurrentImageIndex(0); // Teleport back to start
+                
+                // Re-enable animation for next cycle
+                setTimeout(() => {
+                    setUseTransition(true);
+                }, 50);
+            }, 700);
+            
+            return () => clearTimeout(jumpTimer);
+        }
+    }, [currentImageIndex, images.length]);
+
     const locality = property.location?.locality || property.location?.city || "Pondicherry";
     const city = property.location?.city || "";
     const posterType = property.businessType?.name || (typeof property.businessType === 'string' ? property.businessType : null) || property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
@@ -30,20 +70,39 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
     const areaLabel = (minArea || maxArea) ? "Area Range" : (property.specifications?.area?.totalArea ? "Total Area" : "Built Area");
 
     return (
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative h-full">
+        <div 
+            className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative xl:h-64"
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+        >
             {/* Left: Image Section */}
-            <div className="w-full xl:w-2/5 h-48 xl:h-auto min-h-[192px] relative shrink-0 overflow-hidden">
+            <div className="w-full xl:w-[35%] h-48 xl:h-full relative shrink-0 overflow-hidden">
                 <Link
                     to={`/properties/${property.slug || property._id}${linkQuery}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute inset-0 z-10"
+                    className="absolute inset-0 z-30"
                 />
-                <img
-                    src={imgUrl}
-                    alt={property.basicInfo?.title || "Property"}
-                    className="w-full h-full object-cover transition-transform duration-500"
-                />
+                
+                {/* Sliding Image Strip */}
+                <div 
+                    className={`flex flex-nowrap h-full w-full ${useTransition ? 'transition-transform duration-700 ease-in-out' : ''}`}
+                    style={{ 
+                        transform: `translateX(-${currentImageIndex * 100}%)`,
+                        willChange: 'transform'
+                    }}
+                >
+                    {displayImages.map((img, idx) => (
+                        <div key={idx} className="w-full h-full shrink-0 relative overflow-hidden">
+                            <img
+                                src={getImageUrl(img)}
+                                alt={`${property.basicInfo?.title || "Property"} - ${idx + 1}`}
+                                className="w-full h-full object-cover scale-[1.03]"
+                            />
+                        </div>
+                    ))}
+                </div>
+
                 <div className="absolute top-3 right-3 z-20">
                     <WishlistButton propertyId={property._id} />
                 </div>
@@ -57,7 +116,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                 )}
 
                 <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
-                    1/{property.media?.images?.length || 1}
+                    {(currentImageIndex % images.length) + 1}/{images.length || 1}
                 </div>
 
                 {property.view_count > 0 && (
@@ -71,76 +130,74 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
             </div>
 
             {/* Right: Content Section */}
-            <div className="flex-1 p-4 md:p-6 flex flex-col">
+            <div className="flex-1 p-4 md:px-6 md:py-4 flex flex-col min-w-0">
                 {/* Header: Title & Tag */}
-                <div className="flex justify-between items-start">
-                    <div className="flex flex-col flex-1">
-                        <h3 className="text-lg md:text-xl font-bold text-slate-800 truncate">
+                <div className="flex justify-between items-start gap-2">
+                    <div className="flex flex-col flex-1 min-w-0">
+                        <h3 className="text-lg md:text-xl font-bold text-slate-800 truncate line-clamp-1">
                             {property.basicInfo?.title || "Untitled Property"}
                         </h3>
-                        <p className="text-sm text-slate-500 font-medium">
+                        <p className="text-sm text-slate-500 font-medium truncate">
                             <MapPin className="w-3 h-3 inline mr-1" />
                             {locality}{city ? `, ${city}` : ""}
                         </p>
                     </div>
-                    <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0 ml-2">
+                    <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0">
                         {property.basicInfo?.category === "Rent" ? "FOR RENT" : "SELL/BUY"}
                     </span>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-4 py-4 my-2">
-                    <div className="flex-1 min-w-[30%] flex flex-col">
-                        <span className="text-base font-bold text-slate-800 break-words">
+                <div className="flex items-center gap-4 py-3 my-1 border-y border-slate-50">
+                    <div className="flex-1 min-w-0 flex flex-col">
+                        <span className="text-base font-bold text-slate-800 truncate">
                             {formatPriceRange(
                                 property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
                                 property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
                                 property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
                             )}
                         </span>
-                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
+                        <span className="text-[11px] text-slate-400 font-medium truncate">
                             {property.pricing?.sell?.pricePerSqft ? `₹${property.pricing.sell.pricePerSqft.toLocaleString()}/sqft` : "Price"}
                         </span>
                     </div>
 
-                    <div className="hidden sm:block h-10 w-px bg-gray-100 shrink-0" />
+                    <div className="h-8 w-px bg-gray-100 shrink-0" />
 
-                    <div className="flex-1 min-w-[30%] flex flex-col">
-                        <span className="text-base font-bold text-slate-800 break-words">
+                    <div className="flex-1 min-w-0 flex flex-col">
+                        <span className="text-base font-bold text-slate-800 truncate">
                             {areaDisplay}
                         </span>
-                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5">
+                        <span className="text-[11px] text-slate-400 font-medium truncate">
                             {areaLabel}
                         </span>
                     </div>
 
-                    <div className="hidden sm:block h-10 w-px bg-gray-100 shrink-0" />
+                    <div className="h-8 w-px bg-gray-100 shrink-0 hidden sm:block" />
 
-                    <div className="flex-1 min-w-[20%] flex flex-col">
-                        <span className="text-lg font-bold text-slate-800">
+                    <div className="flex-1 min-w-0 flex flex-col hidden sm:flex">
+                        <span className="text-base font-bold text-slate-800">
                             Status
                         </span>
-                        <span className="text-[11px] text-slate-400 font-medium leading-none mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                        <span className="text-[11px] text-slate-400 font-medium truncate">
                             {property.legal?.propertyStatus || "Ready to Move"}
                         </span>
                     </div>
                 </div>
 
-                <div className="h-px w-full bg-slate-50 mb-4" />
-
                 {/* Excerpt */}
-                <div className="mb-4 relative group/excerpt">
-                    <p className="text-sm text-slate-500 line-clamp-1 pr-6 leading-relaxed italic">
+                <div className="mb-4 relative group/excerpt flex-1 flex items-center">
+                    <p className="text-sm text-slate-500 line-clamp-2 pr-6 leading-relaxed italic">
                         Located in {locality}, {city}, this {bedrooms > 0 ? `${bedrooms} BHK ` : ""}{property.basicInfo?.propertyType?.toLowerCase()}...
                     </p>
                     <ChevronRight className="w-4 h-4 text-slate-300 absolute right-0 top-1/2 -translate-y-1/2" />
                 </div>
 
                 {/* Footer Bar */}
-                <div className="mt-auto flex items-end justify-between pt-2">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                     <div className="flex flex-col">
-                        <span className="text-[11px] text-slate-400 font-medium">{timeAgo}</span>
-                        <span className="text-[13px] font-bold text-slate-700 capitalize">{posterType}</span>
+                        <span className="text-[11px] text-slate-400 font-medium leading-none">{timeAgo}</span>
+                        <span className="text-[13px] font-bold text-slate-700 capitalize mt-1 leading-none">{posterType}</span>
                     </div>
 
                     <button

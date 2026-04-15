@@ -24,6 +24,11 @@ import ViewCountManager from "./pages/properties/ViewCountManager";
 import CallRequests from "./pages/forms/CallRequests";
 import ContactMessages from "./pages/forms/ContactMessages";
 import FailedRegistrations from "./pages/FailedRegistrations";
+import AdminList from "./pages/AdminList";
+import RequirementList from "./pages/RequirementList";
+import SubscriptionPlanManager from "./pages/SubscriptionPlanManager";
+import PaymentHistory from "./pages/PaymentHistory";
+
 const AdminRoute = () => {
   return (
     <Routes>
@@ -35,6 +40,7 @@ const AdminRoute = () => {
         {/* Changed to UserList */}
         <Route path="sellers" element={<SellerList />} />{" "}
         <Route path="failed-registrations" element={<FailedRegistrations />} />{" "}
+        <Route path="admins" element={<AdminList />} />{" "}
         {/* Added failed-registrations route */}
         <Route path="profile" element={<AdminProfile />} />
         <Route path="properties" element={<AdminProperties mode="admin" />} />
@@ -57,6 +63,9 @@ const AdminRoute = () => {
         <Route path="view-count-manager" element={<ViewCountManager />} />
         <Route path="forms/call-requests" element={<CallRequests />} />
         <Route path="forms/contact-messages" element={<ContactMessages />} />
+        <Route path="requirements" element={<RequirementList />} />
+        <Route path="subscription-plans" element={<SubscriptionPlanManager />} />
+        <Route path="payment-history" element={<PaymentHistory />} />
 
         {/* Settings route can be placeholder too if needed */}
       </Route>

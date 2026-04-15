@@ -21,18 +21,16 @@ const userSchema = new mongoose.Schema(
       default: "none",
     },
     profile_image: { type: String }, // URL or path to image
-    experience: { type: Number, default: 5 }, // Years of experience
-    expertise: { type: [String], default: ["Residential", "Commercial"] },
     rating: { type: Number, default: 4.5 },
     testimonialCount: { type: Number, default: 0 },
-    languages: { type: [String], default: ["English", "Tamil"] },
-    startingPrice: { type: String }, // e.g., "12.5L"
     availabilityStatus: { type: String, default: "Available" },
     nextAvailableSlot: { type: Date },
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     customId: { type: String, unique: true, sparse: true },
     userId: { type: String, unique: true, sparse: true },
     referralCode: { type: String, unique: true, sparse: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    activeSubscription: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
   },
   { timestamps: true },
 );

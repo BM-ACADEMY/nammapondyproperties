@@ -1,5 +1,5 @@
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Layout, Menu, Drawer, Button } from "antd";
+import { Layout, Menu, Drawer, Button, message } from "antd";
 import {
   LayoutDashboard,
   Building,
@@ -7,8 +7,13 @@ import {
   MessageSquare,
   Megaphone,
   LogOut,
+  Lock,
+  CreditCard,
+  ClipboardList
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import { useState, useEffect } from "react";
+import api from "../../../services/api";
 
 const { Sider } = Layout;
 
@@ -16,11 +21,30 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { logout } = useAuth();
+  const [hasActivePlan, setHasActivePlan] = useState(false);
+  const [hasHistory, setHasHistory] = useState(false);
 
-  // Automatically expand the "Properties" menu if the current path matches
-  const defaultOpenKeys = pathname.includes("properties") ? ["properties"] : [];
+  // Set "Properties" menu to be open by default
+  const defaultOpenKeys = ["properties"];
 
-  const handleMenuClick = (path) => {
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const [subRes, historyRes] = await Promise.all([
+          api.get("/subscriptions/my-subscription"),
+          api.get("/subscriptions/my-history")
+        ]);
+        setHasActivePlan(!!subRes.data);
+        setHasHistory(historyRes.data?.length > 0);
+      } catch (error) {
+        console.error("Sidebar sub check error:", error);
+      }
+    };
+    checkSubscription();
+  }, [pathname]);
+
+  const handleMenuClick = (path, isLocked = false) => {
+    if (isLocked) return;
     navigate(path);
     if (isMobile) {
       setCollapsed(true);
@@ -56,6 +80,42 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <MessageSquare size={20} />,
       label: "Enquiry Property",
       onClick: () => handleMenuClick("/seller/enquiries"),
+    },
+    {
+      key: "/seller/leads-overview",
+      icon: <ClipboardList size={20} />,
+      label: (
+        <div className={`flex items-center justify-between gap-2 ${!hasActivePlan ? "cursor-not-allowed" : ""}`}>
+          <span>Leads Overview</span>
+          {!hasActivePlan && <Lock size={12} className="text-white" />}
+        </div>
+      ),
+      onClick: () => {
+        if (!hasActivePlan) {
+          navigate("/seller/upgrade-plan");
+        } else {
+          handleMenuClick("/seller/leads-overview");
+        }
+      },
+      className: !hasActivePlan ? "!cursor-not-allowed" : "",
+    },
+    {
+      key: "/seller/payment-history",
+      icon: <CreditCard size={20} />,
+      label: (
+        <div className={`flex items-center justify-between gap-2 ${!hasHistory ? "cursor-not-allowed" : ""}`}>
+          <span>Payment History</span>
+          {!hasHistory && <Lock size={12} className="text-white" />}
+        </div>
+      ),
+      onClick: () => {
+        if (!hasHistory) {
+          message.warning("Please upgrade your plan to access payment history");
+        } else {
+          handleMenuClick("/seller/payment-history");
+        }
+      },
+      className: !hasHistory ? "!cursor-not-allowed" : "",
     },
     {
       key: "/seller/profile",
@@ -120,7 +180,7 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         onClose={() => setCollapsed(true)}
         open={!collapsed}
         styles={{ body: { padding: 0, background: "#001529" } }}
-        width={250}
+        size={250}
       >
         {SidebarContent}
       </Drawer>
