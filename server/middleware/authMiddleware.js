@@ -17,7 +17,7 @@ const protect = async (req, res, next) => {
 
       // Get user from the token
       req.user = await User.findById(decoded.id)
-        .populate("role_id");
+        .populate(["role_id", "businessType"]);
 
       next();
     } catch (error) {

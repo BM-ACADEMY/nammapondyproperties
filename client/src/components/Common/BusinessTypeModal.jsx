@@ -88,7 +88,7 @@ const BusinessTypeModal = ({ open, onCancel, onSuccess }) => {
           </button>
           <h2 className="text-3xl font-bold mb-2">Select Business Type</h2>
           <p className="text-blue-100 opacity-90">
-            Choose how you want to represent yourself on Namma Pondy Properties. 
+            Choose how you want to represent yourself on Namma Pondy Properties.
             This will customize your profile and property listings.
           </p>
         </div>
@@ -111,7 +111,7 @@ const BusinessTypeModal = ({ open, onCancel, onSuccess }) => {
                     <CheckCircle2 className="w-5 h-5 fill-[#166aa8] text-white" />
                   </div>
                 )}
-                
+
                 <div className={`mb-4 p-4 rounded-xl transition-colors duration-300 ${
                   selectedType?._id === type._id ? "bg-[#166aa8] text-white" : "bg-gray-100 text-gray-500 group-hover:bg-blue-100 group-hover:text-[#166aa8]"
                 }`}>

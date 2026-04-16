@@ -12,8 +12,9 @@ import {
   Col,
   Upload,
   Select,
+  InputNumber,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, CreditCard, IndianRupee, Edit3, X } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Clock, CheckCircle, XCircle, Hash, Share2, CreditCard, IndianRupee, Edit3, X, Briefcase } from "lucide-react";
 import { Table, Tag } from "antd";
 import moment from "moment";
 import ImgCrop from "antd-img-crop";
@@ -35,7 +36,10 @@ const Profile = () => {
   const [activeSub, setActiveSub] = useState(null);
 
   const [hasInitialImage, setHasInitialImage] = useState(false);
+  const [logoFileList, setLogoFileList] = useState([]);
+  const [hasInitialLogo, setHasInitialLogo] = useState(false);
   const [imageSize, setImageSize] = useState(null);
+  const [logoSize, setLogoSize] = useState(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,7 +47,17 @@ const Profile = () => {
       try {
         const response = await api.get("/users/me");
         if (response.data.success) {
-          form.setFieldsValue(response.data.user);
+          const initialValues = {
+            ...response.data.user,
+            ...response.data.user.builderProfile,
+            languagesKnown: response.data.user.builderProfile?.languagesKnown?.join(", "),
+            website: response.data.user.builderProfile?.socialLinks?.website,
+            instagram: response.data.user.builderProfile?.socialLinks?.instagram,
+            facebook: response.data.user.builderProfile?.socialLinks?.facebook,
+            linkedin: response.data.user.builderProfile?.socialLinks?.linkedin,
+          };
+          form.setFieldsValue(initialValues);
+
           // Set initial image if exists
           if (response.data.user.profile_image) {
             setFileList([
@@ -56,7 +70,24 @@ const Profile = () => {
             ]);
             setHasInitialImage(true);
           } else {
+            setFileList([]);
             setHasInitialImage(false);
+          }
+
+          // Set initial logo if exists
+          if (response.data.user.builderProfile?.companyLogo) {
+            setLogoFileList([
+              {
+                uid: "-2",
+                name: "logo.png",
+                status: "done",
+                url: getImageUrl(response.data.user.builderProfile.companyLogo),
+              },
+            ]);
+            setHasInitialLogo(true);
+          } else {
+            setLogoFileList([]);
+            setHasInitialLogo(false);
           }
         }
       } catch (error) {
@@ -88,10 +119,44 @@ const Profile = () => {
       formData.append("name", values.name);
       formData.append("phone", values.phone);
 
+      const isBuilder =
+        user?.businessType?.name?.match(/Builder|Promoter/i);
+
+      if (isBuilder) {
+        const builderDetailResource = {
+          builderName: values.builderName,
+          phonePrimary: values.phonePrimary || values.phone,
+          email: values.email,
+          companyName: values.companyName,
+          gstNumber: values.gstNumber,
+          officeAddress: values.officeAddress,
+          experienceYears: values.experienceYears,
+          aboutCompany: values.aboutCompany,
+          reraNumber: values.reraNumber,
+          nationality: values.nationality,
+          languagesKnown: values.languagesKnown
+            ? values.languagesKnown.split(",").map((s) => s.trim())
+            : [],
+          socialLinks: {
+            website: values.website,
+            instagram: values.instagram,
+            facebook: values.facebook,
+            linkedin: values.linkedin,
+          },
+        };
+        formData.append("builderDetail", JSON.stringify(builderDetailResource));
+      }
+
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append("profile_image", fileList[0].originFileObj);
       } else if (fileList.length === 0 && hasInitialImage) {
         formData.append("remove_image", "true");
+      }
+
+      if (logoFileList.length > 0 && logoFileList[0].originFileObj) {
+        formData.append("company_logo", logoFileList[0].originFileObj);
+      } else if (logoFileList.length === 0 && hasInitialLogo) {
+        formData.append("remove_company_logo", "true");
       }
 
       const response = await api.put(
@@ -124,7 +189,17 @@ const Profile = () => {
   };
 
   const handleCancelEdit = () => {
-    form.setFieldsValue(user);
+    const initialValues = {
+      ...user,
+      ...user.builderProfile,
+      languagesKnown: user.builderProfile?.languagesKnown?.join(", "),
+      website: user.builderProfile?.socialLinks?.website,
+      instagram: user.builderProfile?.socialLinks?.instagram,
+      facebook: user.builderProfile?.socialLinks?.facebook,
+      linkedin: user.builderProfile?.socialLinks?.linkedin,
+    };
+    form.setFieldsValue(initialValues);
+
     if (user?.profile_image) {
       setFileList([
         {
@@ -139,8 +214,40 @@ const Profile = () => {
       setFileList([]);
       setHasInitialImage(false);
     }
+
+    if (user?.builderProfile?.companyLogo) {
+      setLogoFileList([
+        {
+          uid: "-2",
+          name: "logo.png",
+          status: "done",
+          url: getImageUrl(user.builderProfile.companyLogo),
+        },
+      ]);
+      setHasInitialLogo(true);
+    } else {
+      setLogoFileList([]);
+      setHasInitialLogo(false);
+    }
+
     setImageSize(null);
+    setLogoSize(null);
     setIsEditing(false);
+  };
+
+  const onLogoChange = ({ fileList: newFileList }) => {
+    setLogoFileList(newFileList);
+    if (newFileList.length > 0 && newFileList[0].originFileObj) {
+      const file = newFileList[0].originFileObj;
+      const size = file.size / 1024 / 1024; // in MB
+      if (size < 1) {
+        setLogoSize(`${(file.size / 1024).toFixed(2)} KB`);
+      } else {
+        setLogoSize(`${size.toFixed(2)} MB`);
+      }
+    } else {
+      setLogoSize(null);
+    }
   };
 
   const onChange = ({ fileList: newFileList }) => {
@@ -274,6 +381,18 @@ const Profile = () => {
                 />
               </Form.Item>
 
+              <Form.Item
+                label={<span className="text-slate-600 font-medium">Business Type</span>}
+                className="!mb-0"
+              >
+                <Input
+                  prefix={<Briefcase size={18} className="text-slate-400 mr-2" />}
+                  disabled
+                  value={user?.businessType?.name || "---"}
+                  className="h-12 rounded-xl border-slate-200 bg-slate-50 text-slate-500 font-medium cursor-not-allowed shadow-sm"
+                />
+              </Form.Item>
+
               <Row gutter={20}>
                 <Col span={12}>
                   <Form.Item name="userId" label={<span className="text-slate-600 font-medium">User ID</span>} className="!mb-0">
@@ -297,7 +416,7 @@ const Profile = () => {
 
               <Form.Item
                 name="phone"
-                label={<span className="text-slate-600 font-medium">Phone Number</span>}
+                label={<span className="text-slate-600 font-medium">Contact Phone Number</span>}
                 rules={[
                   { required: true, message: "Please enter phone number" },
                   { pattern: /^\d{10}$/, message: "Must be 10 digits" },
@@ -314,6 +433,137 @@ const Profile = () => {
                   onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
                 />
               </Form.Item>
+
+              {/* Builder Specific Fields */}
+              {user?.businessType?.name?.match(/Builder|Promoter/i) && (
+                <>
+                  <div className="pt-8 border-t border-slate-100">
+                    <Title level={4} className="!text-lg !font-bold text-slate-800 mb-6 flex items-center gap-2">
+                       <ShieldCheck size={20} className="text-blue-600" />
+                       Builder Details
+                    </Title>
+                    
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="builderName" label={<span className="text-slate-600 font-medium">Builder Name</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="John Doe" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="email" label={<span className="text-slate-600 font-medium">Email Address (Optional)</span>} className="!mb-4">
+                          <Input disabled={!isEditing} prefix={<Mail size={18} className="text-slate-400 mr-2" />} className="h-12 rounded-xl shadow-sm" placeholder="builder@example.com" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+
+                  <div className="pt-6">
+                    <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Company Information</Title>
+                    
+                    <div className="mb-6 flex flex-col items-center">
+                       <Text className="text-slate-500 text-xs mb-3 font-semibold uppercase">Company Logo</Text>
+                       <ImgCrop rotationSlider aspect={1/1}>
+                         <Upload
+                           action={null}
+                           listType="picture-card"
+                           fileList={logoFileList}
+                           onChange={onLogoChange}
+                           onPreview={onPreview}
+                           disabled={!isEditing}
+                           className="logo-uploader"
+                           maxCount={1}
+                         >
+                           {logoFileList.length < 1 && (
+                             <div className="flex flex-col items-center">
+                               <Camera size={20} className="text-slate-400 mb-2" />
+                               <div className="text-[10px] text-slate-500 font-bold uppercase">Upload Logo</div>
+                             </div>
+                           )}
+                         </Upload>
+                       </ImgCrop>
+                       {isEditing && logoFileList.length > 0 && (
+                          <Button type="text" danger size="small" className="mt-2 text-[10px] font-bold uppercase" onClick={() => setLogoFileList([])}>Remove Logo</Button>
+                       )}
+                    </div>
+
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="companyName" label={<span className="text-slate-600 font-medium">Company Name</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="ABC Constructions" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="gstNumber" label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="22AAAAA0000A1Z5" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Form.Item name="officeAddress" label={<span className="text-slate-600 font-medium">Office Address</span>} className="!mb-4">
+                      <Input.TextArea disabled={!isEditing} rows={2} className="rounded-xl shadow-sm" placeholder="123, Business Park, Chennai" />
+                    </Form.Item>
+
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="experienceYears" label={<span className="text-slate-600 font-medium">Years of Experience</span>} className="!mb-4">
+                          <InputNumber disabled={!isEditing} className="w-full h-12 rounded-xl flex items-center shadow-sm" placeholder="10" min={0} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="reraNumber" label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="TN/01/Building/0001" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Form.Item name="aboutCompany" label={<span className="text-slate-600 font-medium">About Company</span>}>
+                      <Input.TextArea disabled={!isEditing} rows={4} className="rounded-xl shadow-sm" placeholder="Briefly describe your company and achievements..." />
+                    </Form.Item>
+                  </div>
+
+                  <div className="pt-6">
+                    <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Personal Details</Title>
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="nationality" label={<span className="text-slate-600 font-medium">Nationality</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="Indian" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="languagesKnown" label={<span className="text-slate-600 font-medium">Languages Known (comma separated)</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="English, Tamil, Hindi" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+
+                  <div className="pt-10">
+                    <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Social Links</Title>
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="website" label={<span className="text-slate-600 font-medium">Website</span>} className="!mb-4">
+                          <Input disabled={!isEditing} prefix={<Share2 size={16} />} className="h-12 rounded-xl shadow-sm" placeholder="https://abc.com" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="linkedin" label={<span className="text-slate-600 font-medium">LinkedIn</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="linkedin.com/in/builder" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="instagram" label={<span className="text-slate-600 font-medium">Instagram</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="instagram.com/builder" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="facebook" label={<span className="text-slate-600 font-medium">Facebook</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="facebook.com/builder" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Verification & Save Row */}
@@ -479,8 +729,28 @@ const Profile = () => {
           border-radius: 24px !important;
         }
 
-        .profile-uploader.ant-upload-wrapper .ant-upload-list-item-done {
+        .profile-uploader.ant-upload-wrapper .ant-upload-list-item-done,
+        .logo-uploader.ant-upload-wrapper .ant-upload-list-item-done {
            border: 1px solid #e2e8f0 !important;
+        }
+
+        /* Logo Uploader Specifics (Square like Profile) */
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select,
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list-item-container,
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list-item {
+          width: 120px !important;
+          height: 120px !important;
+          border-radius: 16px !important;
+        }
+
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {
+          border: 1px dashed #ced4da !important;
+          background: #f8fbff !important;
+        }
+
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select:hover {
+          border-color: #3b82f6 !important;
+          background: #f0f7ff !important;
         }
 
         .ant-form-item-label label {

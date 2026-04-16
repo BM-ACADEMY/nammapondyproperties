@@ -120,6 +120,19 @@ const SellerList = () => {
       ),
     },
     {
+      title: "Business Type",
+      dataIndex: "businessType",
+      key: "businessType",
+      render: (bt) => (
+        <div className="flex items-center gap-2">
+          <Briefcase size={14} className="text-indigo-400" />
+          <span className="text-sm font-semibold text-indigo-600">
+            {bt?.name || "---"}
+          </span>
+        </div>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",

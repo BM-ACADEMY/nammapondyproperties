@@ -4,9 +4,12 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate, useLocation } from "react-router-dom";
 
+import { useAuth } from "../../../context/AuthContext";
+
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
   const [initialData, setInitialData] = useState(null);
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -92,7 +95,7 @@ const AddProperty = () => {
         loading={loading}
         initialData={initialData}
         isEdit={!!editId}
-        isAdmin={true}
+        user={user}
       />
     </div>
   );

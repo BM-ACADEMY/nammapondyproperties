@@ -120,6 +120,9 @@ exports.createProperty = async (req, res) => {
       amenities,
       location,
       seller: req.user && req.user._id ? req.user._id : req.body.seller,
+      businessType: (req.user && req.user.role_id && req.user.role_id.role_name === "admin") 
+        ? (req.body.businessType || null) 
+        : (req.user && req.user.businessType ? req.user.businessType._id || req.user.businessType : null),
       video: mediaMetadata.video || req.body.video || "",
       floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || "",
       media: {
