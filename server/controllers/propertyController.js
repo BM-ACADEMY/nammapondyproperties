@@ -189,10 +189,14 @@ exports.createProperty = async (req, res) => {
     // Emit socket event for real-time notification in admin panel
     const io = req.app.get("socketio");
     if (io) {
+      const isSellerProperty = req.user?.role_id?.role_name?.toLowerCase() === "seller" || 
+                               req.user?.role?.name?.toLowerCase() === "seller";
+      
       io.to("admin-room").emit("new-property-listed", {
         propertyId: property._id,
         title: property.basicInfo?.title,
         sellerName: req.user?.name || "A Seller",
+        isSellerProperty: isSellerProperty,
         message: `New property listed: ${property.basicInfo?.title}`,
       });
     }
@@ -1720,6 +1724,27 @@ exports.getPropertyViewStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching property view stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPendingSellerPropertiesCount = async (req, res) => {
+  try {
+    // Count properties with "Pending" status that belong to users with "seller" role
+    const Role = require("../models/Role");
+    const sellerRole = await Role.findOne({ role_name: "seller" });
+    
+    if (!sellerRole) {
+      return res.json({ success: true, count: 0 });
+    }
+
+    const count = await Property.countDocuments({ 
+      status: "Pending",
+      seller: { $in: await User.find({ role_id: sellerRole._id }).distinct("_id") }
+    });
+
+    res.json({ success: true, count });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };

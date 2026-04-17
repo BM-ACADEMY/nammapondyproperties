@@ -59,6 +59,9 @@ router.get("/admin-stats", protect, propertyController.getAdminStats);
 // Get Seller Overview Stats (Admin only)
 router.get("/seller-overview-stats", protect, propertyController.getSellerOverviewStats);
 
+// Get Pending Seller Properties Count (Admin only)
+router.get("/get-pending-seller-properties-count", protect, propertyController.getPendingSellerPropertiesCount);
+
 // Get specific property view stats (Admin only)
 router.get("/property-view-stats/:id", protect, propertyController.getPropertyViewStats);
 

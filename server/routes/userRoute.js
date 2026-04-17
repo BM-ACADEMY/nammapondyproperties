@@ -19,6 +19,7 @@ router.get("/public-user/:id", userController.getPublicUserById);
 router.get("/fetch-all-user", protect, userController.getUsers); // Legacy support
 router.get("/get-all-users", protect, userController.getUsers);
 router.get("/get-pending-badge-count", protect, userController.getPendingBadgeRequestsCount);
+router.get("/fetch-notification-counts", protect, userController.getAdminNotificationCounts);
 
 router.get("/fetch-user-by-id/:id", protect, userController.getUserById); // Legacy support
 router.get("/get-user-by-id/:id", protect, userController.getUserById);

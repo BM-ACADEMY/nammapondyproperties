@@ -460,3 +460,53 @@ exports.createUserByAdmin = async (req, res) => {
 };
 
 
+exports.getAdminNotificationCounts = async (req, res) => {
+  try {
+    const Enquiry = require("../models/Enquiry");
+    const Requirement = require("../models/Requirement");
+    const RequestCall = require("../models/RequestCall");
+    const Contact = require("../models/Contact");
+    const Property = require("../models/Property");
+    const Role = require("../models/Role");
+
+    // 1. Pending Badge Requests
+    const badgeRequests = await User.countDocuments({ badgeRequestStatus: "pending" });
+
+    // 2. Pending Seller Properties
+    const sellerRole = await Role.findOne({ role_name: "seller" });
+    let sellerProperties = 0;
+    if (sellerRole) {
+      sellerProperties = await Property.countDocuments({ 
+        status: "Pending",
+        seller: { $in: await User.find({ role_id: sellerRole._id }).distinct("_id") }
+      });
+    }
+
+    // 3. New Enquiries
+    const enquiries = await Enquiry.countDocuments({ status: "new" });
+
+    // 4. Pending Requirements
+    const requirements = await Requirement.countDocuments({ status: "Pending" });
+
+    // 5. New Call Requests
+    const callRequests = await RequestCall.countDocuments({ status: "new" });
+
+    // 6. New Contact Messages
+    const contactMessages = await Contact.countDocuments({ status: "new" });
+
+    res.json({
+      success: true,
+      counts: {
+        badgeRequests,
+        sellerProperties,
+        enquiries,
+        requirements,
+        callRequests,
+        contactMessages
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching notification counts:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

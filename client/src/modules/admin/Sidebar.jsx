@@ -29,17 +29,28 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [pendingBadgeCount, setPendingBadgeCount] = useState(0);
   const [newPropertyCount, setNewPropertyCount] = useState(0);
+  const [newSellerPropertyCount, setNewSellerPropertyCount] = useState(0);
+  const [newEnquiryCount, setNewEnquiryCount] = useState(0);
+  const [newRequirementCount, setNewRequirementCount] = useState(0);
+  const [newCallRequestCount, setNewCallRequestCount] = useState(0);
+  const [newContactCount, setNewContactCount] = useState(0);
 
   // Fetch initial pending counts
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const response = await api.get("/users/get-pending-badge-count");
+        const response = await api.get("/users/fetch-notification-counts");
         if (response.data.success) {
-          setPendingBadgeCount(response.data.count || 0);
+          const { counts } = response.data;
+          setPendingBadgeCount(counts.badgeRequests || 0);
+          setNewSellerPropertyCount(counts.sellerProperties || 0);
+          setNewEnquiryCount(counts.enquiries || 0);
+          setNewRequirementCount(counts.requirements || 0);
+          setNewCallRequestCount(counts.callRequests || 0);
+          setNewContactCount(counts.contactMessages || 0);
         }
       } catch (error) {
-        console.error("Error fetching pending badge count:", error);
+        console.error("Error fetching notification counts:", error);
       }
     };
 
@@ -49,50 +60,61 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   useEffect(() => {
     if (socket) {
       const handleNewBadgeRequest = (data) => {
-        // Increment if not on the sellers page
         if (pathname !== "/admin/sellers") {
           setPendingBadgeCount((prev) => prev + 1);
         }
       };
 
+      const handleNewProperty = (data) => {
+        if (data.isSellerProperty) {
+          if (pathname !== "/admin/seller-listings") {
+            setNewSellerPropertyCount((prev) => prev + 1);
+          }
+        } else {
+          if (!pathname.startsWith("/admin/properties")) {
+            setNewPropertyCount((prev) => prev + 1);
+          }
+        }
+      };
+
+      const handleNewEnquiry = (data) => {
+        if (pathname !== "/admin/enquiries") {
+          setNewEnquiryCount((prev) => prev + 1);
+        }
+      };
+
+      const handleNewRequirement = (data) => {
+        if (pathname !== "/admin/requirements") {
+          setNewRequirementCount((prev) => prev + 1);
+        }
+      };
+
+      const handleNewCallRequest = (data) => {
+        if (pathname !== "/admin/forms/call-requests") {
+          setNewCallRequestCount((prev) => prev + 1);
+        }
+      };
+
+      const handleNewContactMessage = (data) => {
+        if (pathname !== "/admin/forms/contact-messages") {
+          setNewContactCount((prev) => prev + 1);
+        }
+      };
+
       socket.on("badge-verification-requested", handleNewBadgeRequest);
+      socket.on("new-property-listed", handleNewProperty);
+      socket.on("new-enquiry", handleNewEnquiry);
+      socket.on("new-requirement", handleNewRequirement);
+      socket.on("new-call-request", handleNewCallRequest);
+      socket.on("new-contact-message", handleNewContactMessage);
 
       return () => {
         socket.off("badge-verification-requested", handleNewBadgeRequest);
-      };
-    }
-  }, [socket, pathname]);
-
-  useEffect(() => {
-    if (socket) {
-      const handleNewRequest = (data) => {
-        // Only increment if we're not already on the marketing requests page
-        if (pathname !== "/admin/marketing-requests") {
-          setNewLeadsCount((prev) => prev + 1);
-        }
-      };
-
-      socket.on("new-marketing-request", handleNewRequest);
-
-      return () => {
-        socket.off("new-marketing-request", handleNewRequest);
-      };
-    }
-  }, [socket, pathname]);
-
-  useEffect(() => {
-    if (socket) {
-      const handleNewProperty = (data) => {
-        // Increment if not on any of the properties pages
-        if (!pathname.startsWith("/admin/properties") && pathname !== "/admin/seller-listings") {
-          setNewPropertyCount((prev) => prev + 1);
-        }
-      };
-
-      socket.on("new-property-listed", handleNewProperty);
-
-      return () => {
         socket.off("new-property-listed", handleNewProperty);
+        socket.off("new-enquiry", handleNewEnquiry);
+        socket.off("new-requirement", handleNewRequirement);
+        socket.off("new-call-request", handleNewCallRequest);
+        socket.off("new-contact-message", handleNewContactMessage);
       };
     }
   }, [socket, pathname]);
@@ -105,8 +127,23 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     if (pathname === "/admin/sellers") {
       setPendingBadgeCount(0);
     }
-    if (pathname.startsWith("/admin/properties") || pathname === "/admin/seller-listings") {
+    if (pathname.startsWith("/admin/properties")) {
       setNewPropertyCount(0);
+    }
+    if (pathname === "/admin/seller-listings") {
+      setNewSellerPropertyCount(0);
+    }
+    if (pathname === "/admin/enquiries") {
+      setNewEnquiryCount(0);
+    }
+    if (pathname === "/admin/requirements") {
+      setNewRequirementCount(0);
+    }
+    if (pathname === "/admin/forms/call-requests") {
+      setNewCallRequestCount(0);
+    }
+    if (pathname === "/admin/forms/contact-messages") {
+      setNewContactCount(0);
     }
   }, [pathname]);
 
@@ -161,13 +198,22 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       label: (
         <div className="flex items-center gap-2">
           <span>Seller</span>
-          {pendingBadgeCount > 0 && <Badge dot offset={[5, -2]} />}
+          {(pendingBadgeCount > 0 || newSellerPropertyCount > 0) && (
+            <Badge dot offset={[5, -2]} />
+          )}
         </div>
       ),
       children: [
         {
           key: "/admin/seller-listings",
-          label: "Seller Listings",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Seller Listings</span>
+              {newSellerPropertyCount > 0 && (
+                <Badge count={newSellerPropertyCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/seller-listings"),
         },
         // {
@@ -255,28 +301,61 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "/admin/enquiries",
       icon: <LibraryBig size={20} />,
-      label: "Enquiry Leads",
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Enquiry Leads</span>
+          {newEnquiryCount > 0 && <Badge count={newEnquiryCount} size="small" />}
+        </div>
+      ),
       onClick: () => handleMenuClick("/admin/enquiries"),
     },
     {
       key: "/admin/requirements",
       icon: <ClipboardList size={20} />,
-      label: "Posted Requirements",
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Posted Requirements</span>
+          {newRequirementCount > 0 && (
+            <Badge count={newRequirementCount} size="small" />
+          )}
+        </div>
+      ),
       onClick: () => handleMenuClick("/admin/requirements"),
     },
     {
       key: "forms-sub",
       icon: <MessageSquare size={20} />,
-      label: "Forms Data",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Forms Data</span>
+          {(newCallRequestCount > 0 || newContactCount > 0) && (
+            <Badge dot offset={[5, -2]} />
+          )}
+        </div>
+      ),
       children: [
         {
           key: "/admin/forms/call-requests",
-          label: "Call Requests",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Call Requests</span>
+              {newCallRequestCount > 0 && (
+                <Badge count={newCallRequestCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/forms/call-requests"),
         },
         {
           key: "/admin/forms/contact-messages",
-          label: "Contact Messages",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Contact Messages</span>
+              {newContactCount > 0 && (
+                <Badge count={newContactCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/forms/contact-messages"),
         },
       ],

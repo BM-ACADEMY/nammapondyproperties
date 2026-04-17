@@ -35,6 +35,16 @@ exports.createEnquiry = async (req, res) => {
     const enquiry = new Enquiry(enquiryData);
     await enquiry.save();
 
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-enquiry", {
+        enquiryId: enquiry._id,
+        name: enquiryData.enquirer_name,
+        message: `New enquiry received from ${enquiryData.enquirer_name || "a user"}`,
+      });
+    }
+
     res.status(201).json({ message: "Enquiry recorded successfully", enquiry });
   } catch (error) {
     console.error("Error creating enquiry:", error);
