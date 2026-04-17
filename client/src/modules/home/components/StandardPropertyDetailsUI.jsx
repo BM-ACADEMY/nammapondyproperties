@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Share2,
+  Flame,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
@@ -131,33 +132,33 @@ const StandardPropertyDetailsUI = ({
               </div>
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-              {/* LEFT SECTION */}
+            <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+              {/* LEFT SECTION (Price + Urgency) */}
               <div className="space-y-4">
-                <div className="flex flex-wrap items-baseline gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                   <h1 className="text-2xl md:text-3xl font-bold leading-tight">
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-lg md:text-xl text-gray-500 font-medium">
-                          Price:
-                        </span>
-                        <span className="text-gray-900">
-                          {formatPriceRange(
-                            property.pricing?.sell?.minPrice ||
-                              property.pricing?.rent?.minRent,
-                            property.pricing?.sell?.maxPrice ||
-                              property.pricing?.rent?.maxRent,
-                            property.pricing?.sell?.price ||
-                              property.pricing?.rent?.monthlyRent ||
-                              0,
-                          )}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-lg md:text-xl text-gray-500 font-medium">
+                        Price:
+                      </span>
+                      <span className="text-gray-900">
+                        {formatPriceRange(
+                          property.pricing?.sell?.minPrice ||
+                            property.pricing?.rent?.minRent,
+                          property.pricing?.sell?.maxPrice ||
+                            property.pricing?.rent?.maxRent,
+                          property.pricing?.sell?.price ||
+                            property.pricing?.rent?.monthlyRent ||
+                            0,
+                        )}
+                      </span>
+                    </div>
                   </h1>
+                </div>
 
-                  <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
-
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 font-medium">
+                    <span className="text-xs text-gray-500 font-medium uppercase tracking-widest border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
                       {property.basicInfo?.propertyType || "Property"} for{" "}
                       {property.basicInfo?.category === "Rent"
                         ? "Rent"
@@ -166,28 +167,35 @@ const StandardPropertyDetailsUI = ({
                       {property.location?.locality || property.location?.city}
                     </span>
                   </div>
+
+                  {property.view_count >= 1000 ? (
+                    <div className="flex items-center gap-1.5 bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 shadow-sm">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        High Demand: {formatNumber(property.view_count || 0)} views
+                      </span>
+                    </div>
+                  ) : property.view_count > 0 ? (
+                    <div className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg border border-blue-100 shadow-sm">
+                      <Eye size={16} />
+                      <span className="text-xs font-bold tracking-widest">
+                        {formatNumber(property.view_count)} people viewing
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
-              {/* RIGHT SECTION */}
+              {/* RIGHT SECTION (Status & Meta) */}
               <div className="flex flex-col items-start md:items-end gap-2">
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                  Posted on {new Date(property.createdAt).toLocaleDateString()}{" "}
-                  |{" "}
-                  <span className="text-blue-600">
-                    {property.legal?.propertyStatus || "Ready to Move"}
-                  </span>
+                <div className="text-xs text-gray-500 font-bold uppercase tracking-wider">
+                  Posted on {new Date(property.createdAt).toLocaleDateString()}
                 </div>
-                <div
-                  className={`px-4 py-1.5 rounded text-xs font-bold uppercase tracking-wide border ${property.legal?.propertyStatus === "Ready to Move" ? "bg-blue-50 text-blue-600 border-blue-100" : "bg-orange-50 text-orange-600 border-orange-100"}`}
-                >
-                  <div className="flex items-center gap-1.5 rounded-full border border-gray-100 w-fit">
-                    <Eye size={16} className="text-gray-400" />
-                    <span className="font-semibold text-gray-700">
-                      {formatNumber(property.view_count || 0)}
-                    </span>
-                    <span className="text-gray-500">Views</span>
-                  </div>
+                <div className="text-sm font-bold text-blue-600">
+                  {property.legal?.propertyStatus || "Ready to Move"}
                 </div>
               </div>
             </div>
@@ -215,6 +223,15 @@ const StandardPropertyDetailsUI = ({
                       />
                       <span className="text-xs font-bold uppercase tracking-widest">
                         Verified Seller
+                      </span>
+                    </div>
+                  )}
+
+                  {property.view_count >= 1000 && (
+                    <div className="bg-red-50 text-red-600 px-3 py-1.5 rounded-md flex items-center gap-2 shadow-sm border border-red-200 w-fit whitespace-nowrap">
+                      <Flame className="w-4 h-4 text-red-500 fill-red-500" />
+                      <span className="text-xs font-bold uppercase tracking-widest">
+                        Hot Deal
                       </span>
                     </div>
                   )}
@@ -980,67 +997,32 @@ const StandardPropertyDetailsUI = ({
               </div>
             )}
 
-            {/* 5. Amenities / Features - Pills Style */}
-            {property.amenities && property.amenities.length > 0 && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-6 font-sans">
-                  Amenities
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  {property.amenities.map((amenity, idx) => (
-                    <div
-                      key={idx}
-                      className="px-4 py-2 bg-gray-50 rounded-lg text-gray-700 font-medium hover:border-black transition-colors border border-transparent"
-                    >
-                      {amenity}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-
-            {/* Floor Plan Section */}
-            {(property.floorPlan || property.media?.floorPlan) && (
-              <div className="space-y-6">
-                <hr className="border-gray-100" />
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
-                  Floor Plan
-                </h3>
-                <div
-                  className="bg-gray-50 rounded-3xl p-4 border border-gray-100 cursor-pointer group relative"
-                  onClick={() =>
-                    window.open(
-                      getImageUrl(
-                        property.floorPlan || property.media?.floorPlan,
-                      ),
-                      "_blank",
-                    )
-                  }
-                >
-                  <img
-                    src={getImageUrl(
-                      property.floorPlan || property.media?.floorPlan,
-                    )}
-                    alt="Floor Plan"
-                    className="w-full h-auto rounded-2xl shadow-sm"
-                  />
-                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-3xl">
-                    <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
-                      <Eye size={16} /> Click to view full size
-                    </span>
+            {/* 5. Map & Highlights Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
+              {/* Left Column: Amenities & Highlights */}
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col h-full">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 font-sans flex items-center gap-2">
+                    Amenities & Highlights
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {property.amenities.map((amenity, idx) => (
+                      <div
+                        key={idx}
+                        className="px-4 py-2 bg-gray-50 rounded-lg text-gray-700 text-sm font-medium border border-gray-100 hover:border-black transition-colors"
+                      >
+                        {amenity}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* 6. Location Map */}
-            {property?.location?.coordinates?.lat &&
-              property?.location?.coordinates?.lng && (
-                <div className="space-y-4">
-                  <h3 className="text-xl font-bold text-gray-800">Location</h3>
-                  <div className="bg-blue-50 rounded-2xl p-2 border border-blue-100">
-                    <div className="h-[350px] w-full rounded-xl overflow-hidden relative">
+              {/* Right Column: Location Map */}
+              {property?.location?.coordinates?.lat &&
+                property?.location?.coordinates?.lng && (
+                  <div className="bg-white md:bg-blue-50 md:p-2 rounded-[32px] border border-gray-100 md:border-blue-100 shadow-sm h-full min-h-[350px]">
+                    <div className="h-full w-full rounded-[24px] overflow-hidden relative min-h-[350px]">
                       <MapContainer
                         center={[
                           property.location.coordinates.lat,
@@ -1085,7 +1067,7 @@ const StandardPropertyDetailsUI = ({
                         </LayersControl>
                       </MapContainer>
 
-                      <div className="absolute bottom-4 left-4 z-10">
+                      <div className="absolute bottom-4 left-4 z-[400]">
                         <a
                           href={`https://www.google.com/maps/search/?api=1&query=${property.location.coordinates.lat},${property.location.coordinates.lng}`}
                           target="_blank"
@@ -1098,8 +1080,42 @@ const StandardPropertyDetailsUI = ({
                       </div>
                     </div>
                   </div>
+                )}
+            </div>
+
+            {/* 6. Floor Plan Section */}
+            {(property.floorPlan || property.media?.floorPlan) && (
+              <div className="space-y-6 mt-8">
+                <hr className="border-gray-100" />
+                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
+                  Floor Plan
+                </h3>
+                <div
+                  className="bg-gray-50 rounded-3xl p-4 border border-gray-100 cursor-pointer group relative"
+                  onClick={() =>
+                    window.open(
+                      getImageUrl(
+                        property.floorPlan || property.media?.floorPlan,
+                      ),
+                      "_blank",
+                    )
+                  }
+                >
+                  <img
+                    src={getImageUrl(
+                      property.floorPlan || property.media?.floorPlan,
+                    )}
+                    alt="Floor Plan"
+                    className="w-full h-auto rounded-2xl shadow-sm"
+                  />
+                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-3xl">
+                    <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
+                      <Eye size={16} /> Click to view full size
+                    </span>
+                  </div>
                 </div>
-              )}
+              </div>
+            )}
           </div>
 
           {/* RIGHT COLUMN: Sidebar (Preserved Card Style) */}
