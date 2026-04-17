@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { MapPin, Eye } from "lucide-react";
+import { MapPin, Eye, Flame } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
@@ -49,13 +49,24 @@ const PropertyCard = ({ property }) => {
           <WishlistButton propertyId={property._id} />
         </div>
 
-        {/* Verified Badge - Top Left */}
-        {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
-          <div className="absolute top-3 left-3 z-20 bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200">
-            <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
-          </div>
-        )}
+        {/* Top Left Badges */}
+        <div className="absolute top-3 left-3 z-20 flex flex-col gap-2 items-start pointer-events-none">
+          {/* Verified Badge */}
+          {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
+            <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200 pointer-events-auto">
+              <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
+            </div>
+          )}
+
+          {/* Hot Deal Badge */}
+          {property.view_count >= 1000 && (
+            <div className="bg-red-50 text-red-600 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-red-200 pointer-events-auto">
+              <Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+              <span className="text-[10px] font-extrabold uppercase tracking-wider">Hot Deal</span>
+            </div>
+          )}
+        </div>
 
         {/* Price Badge - Bottom Left */}
         <div className="absolute bottom-3 left-3 z-20 bg-white px-3 py-1.5 rounded-lg shadow-md">
