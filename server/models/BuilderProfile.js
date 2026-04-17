@@ -9,7 +9,6 @@ const builderProfileSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
-    builderName: { type: String },
     phonePrimary: { type: String },
     email: { type: String },
     companyName: { type: String },

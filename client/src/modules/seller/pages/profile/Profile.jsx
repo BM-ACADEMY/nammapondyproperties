@@ -124,7 +124,6 @@ const Profile = () => {
 
       if (isBuilder) {
         const builderDetailResource = {
-          builderName: values.builderName,
           phonePrimary: values.phonePrimary || values.phone,
           email: values.email,
           companyName: values.companyName,
@@ -444,12 +443,7 @@ const Profile = () => {
                     </Title>
                     
                     <Row gutter={20}>
-                      <Col span={12}>
-                        <Form.Item name="builderName" label={<span className="text-slate-600 font-medium">Builder Name</span>} className="!mb-4">
-                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="John Doe" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={12}>
+                      <Col span={24}>
                         <Form.Item name="email" label={<span className="text-slate-600 font-medium">Email Address (Optional)</span>} className="!mb-4">
                           <Input disabled={!isEditing} prefix={<Mail size={18} className="text-slate-400 mr-2" />} className="h-12 rounded-xl shadow-sm" placeholder="builder@example.com" />
                         </Form.Item>
@@ -590,6 +584,26 @@ const Profile = () => {
                       icon={<ShieldCheck size={20} className="mr-2" />}
                       className="h-12 px-6 rounded-xl bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold shadow-sm flex items-center transition-all"
                       onClick={async () => {
+                        const isBuilder = user?.businessType?.name?.match(/Builder|Promoter/i);
+                        
+                        if (isBuilder) {
+                          const bp = user.builderProfile;
+                          const missing = [];
+                          if (!bp?.companyName) missing.push("Company Name");
+                          if (!bp?.officeAddress) missing.push("Office Address");
+                          if (!bp?.experienceYears) missing.push("Experience Years");
+                          if (!bp?.companyLogo) missing.push("Company Logo");
+                          
+                          if (missing.length > 0) {
+                            message.error({
+                              content: `Please complete your profile first. Missing fields: ${missing.join(", ")}`,
+                              duration: 4,
+                              style: { marginTop: '10vh' }
+                            });
+                            return;
+                          }
+                        }
+
                         try {
                           const res = await api.post("/users/request-badge");
                           message.success(res.data.message);

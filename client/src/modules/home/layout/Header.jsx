@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { message } from "antd";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import { useLocation as useAppLocation } from "@/context/LocationContext";
@@ -125,6 +126,21 @@ const Header = () => {
       const role =
         user?.role_id?.role_name?.toUpperCase() ||
         user?.role?.name?.toUpperCase();
+
+      // 🛡️ Restriction: Unverified profiles can only list ONE property
+      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+        message.warning({
+          content: "First complete your profile, once verified your profile then only you listing other properties",
+          key: "verification-restricted"
+        });
+        if (role === "SELLER") {
+          navigate("/seller/profile");
+        } else {
+          navigate("/user/profile");
+        }
+        return;
+      }
+
       if (role === "ADMIN") {
         navigate("/admin/properties/add");
       } else if (role === "SELLER") {

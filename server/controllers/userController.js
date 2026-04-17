@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const Property = require("../models/Property");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -106,9 +107,18 @@ exports.verifyOtp = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate(["role_id", "businessType", "builderProfile"]);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Include property count for frontend verification checks
+    const propertyCount = await Property.countDocuments({ seller: user._id });
+    
+    // Add propertyCount to the user object (as a plain object property)
+    const userData = user.toObject();
+    userData.propertyCount = propertyCount;
+
     res.status(200).json({
       success: true,
-      user,
+      user: userData,
     });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
@@ -350,7 +360,12 @@ exports.refreshToken = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate(["role_id", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ success: true, token: generateToken(user._id), user });
+
+    const propertyCount = await Property.countDocuments({ seller: user._id });
+    const userData = user.toObject();
+    userData.propertyCount = propertyCount;
+
+    res.json({ success: true, token: generateToken(user._id), user: userData });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
   }

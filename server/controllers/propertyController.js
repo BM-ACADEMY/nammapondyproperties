@@ -25,6 +25,19 @@ const parseJSON = (data) => {
 
 exports.createProperty = async (req, res) => {
   try {
+    // 🛡️ Restriction: Unverified profiles can only list ONE property
+    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || 
+                    req.user?.role?.name?.toLowerCase() === "admin";
+
+    if (!isAdmin) {
+      const propertyCount = await Property.countDocuments({ seller: req.user._id });
+      if (propertyCount >= 1 && !req.user.badgeVerified) {
+        return res.status(403).json({ 
+          error: "First complete your profile, once verified your profile then only you listing other properties" 
+        });
+      }
+    }
+
     console.log("Create Property Request Body:", req.body);
     console.log("Create Property Files:", req.files);
 
@@ -122,7 +135,7 @@ exports.createProperty = async (req, res) => {
       seller: req.user && req.user._id ? req.user._id : req.body.seller,
       businessType: (req.user && req.user.role_id && req.user.role_id.role_name === "admin") 
         ? (req.body.businessType || null) 
-        : (req.user && req.user.businessType ? req.user.businessType._id || req.user.businessType : null),
+        : (req.user && req.user.businessType ? (req.user.businessType._id || req.user.businessType) : (req.body.businessType || null)),
       video: mediaMetadata.video || req.body.video || "",
       floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || "",
       media: {
@@ -138,18 +151,35 @@ exports.createProperty = async (req, res) => {
     const property = new Property(propertyData);
     await property.save();
 
-    // Role Automation: Upgrade 'user' to 'seller' after first post
+    // Role and BusinessType Automation: Update user profile on first successful listing
     if (req.user && req.user.role_id) {
       const Role = require("../models/Role");
       const currentRole = await Role.findById(req.user.role_id);
+      const isAdmin = currentRole && currentRole.role_name === "admin";
 
-      if (currentRole && currentRole.role_name === "user") {
-        const sellerRole = await Role.findOne({ role_name: "seller" });
-        if (sellerRole) {
-          await User.findByIdAndUpdate(req.user._id, {
-            role_id: sellerRole._id,
-          });
-          console.log(`User ${req.user._id} upgraded to SELLER role`);
+      if (!isAdmin) {
+        const updateData = {};
+        let needsUpdate = false;
+
+        // 1. Upgrade 'user' to 'seller' if they are posting for the first time
+        if (currentRole && currentRole.role_name === "user") {
+          const sellerRole = await Role.findOne({ role_name: "seller" });
+          if (sellerRole) {
+            updateData.role_id = sellerRole._id;
+            needsUpdate = true;
+          }
+        }
+
+        // 2. Set BusinessType on user profile if it's missing but provided in the request
+        // businessType should only be stored once verified/listed (as per user requirement)
+        if (!req.user.businessType && req.body.businessType) {
+          updateData.businessType = req.body.businessType;
+          needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+          await User.findByIdAndUpdate(req.user._id, updateData);
+          console.log(`User profile updated for ${req.user._id}:`, updateData);
         }
       }
     }

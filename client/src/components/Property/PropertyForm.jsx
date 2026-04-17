@@ -1182,9 +1182,9 @@ const PropertyForm = ({
       <BusinessTypeModal 
         isOpen={showBTModal} 
         user={user} 
-        onSelected={(updatedUser) => {
+        onSelected={(id) => {
           setShowBTModal(false);
-          // The updated user will have businessType, which triggers the useEffect to set form value
+          setValue("businessType", id);
         }} 
       />
     </div >
