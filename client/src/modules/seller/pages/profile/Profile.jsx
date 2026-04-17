@@ -22,6 +22,7 @@ import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "../../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
+import { useSocket } from "@/context/SocketContext";
 
 const { Title, Text } = Typography;
 
@@ -40,6 +41,26 @@ const Profile = () => {
   const [hasInitialLogo, setHasInitialLogo] = useState(false);
   const [imageSize, setImageSize] = useState(null);
   const [logoSize, setLogoSize] = useState(null);
+  const socket = useSocket();
+
+  useEffect(() => {
+    if (socket) {
+      const handleBadgeStatusChange = (data) => {
+        if (refetchUser) {
+          refetchUser(); // Ensure user context states are refreshed
+        }
+        if (data && data.message) {
+          message.success(data.message);
+        }
+      };
+      
+      socket.on("badge-status-changed", handleBadgeStatusChange);
+      
+      return () => {
+        socket.off("badge-status-changed", handleBadgeStatusChange);
+      };
+    }
+  }, [socket, refetchUser]);
 
   useEffect(() => {
     const fetchProfile = async () => {

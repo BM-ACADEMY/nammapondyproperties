@@ -18,6 +18,7 @@ import {
   ClipboardList,
   CreditCard
 } from "lucide-react";
+import api from "@/services/api";
 
 const { Sider } = Layout;
 
@@ -26,6 +27,41 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const { pathname } = useLocation();
   const socket = useSocket();
   const [newLeadsCount, setNewLeadsCount] = useState(0);
+  const [pendingBadgeCount, setPendingBadgeCount] = useState(0);
+  const [newPropertyCount, setNewPropertyCount] = useState(0);
+
+  // Fetch initial pending counts
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const response = await api.get("/users/get-pending-badge-count");
+        if (response.data.success) {
+          setPendingBadgeCount(response.data.count || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching pending badge count:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewBadgeRequest = (data) => {
+        // Increment if not on the sellers page
+        if (pathname !== "/admin/sellers") {
+          setPendingBadgeCount((prev) => prev + 1);
+        }
+      };
+
+      socket.on("badge-verification-requested", handleNewBadgeRequest);
+
+      return () => {
+        socket.off("badge-verification-requested", handleNewBadgeRequest);
+      };
+    }
+  }, [socket, pathname]);
 
   useEffect(() => {
     if (socket) {
@@ -44,10 +80,33 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     }
   }, [socket, pathname]);
 
+  useEffect(() => {
+    if (socket) {
+      const handleNewProperty = (data) => {
+        // Increment if not on any of the properties pages
+        if (!pathname.startsWith("/admin/properties") && pathname !== "/admin/seller-listings") {
+          setNewPropertyCount((prev) => prev + 1);
+        }
+      };
+
+      socket.on("new-property-listed", handleNewProperty);
+
+      return () => {
+        socket.off("new-property-listed", handleNewProperty);
+      };
+    }
+  }, [socket, pathname]);
+
   // Reset count when navigating to the marketing requests page
   useEffect(() => {
     if (pathname === "/admin/marketing-requests") {
       setNewLeadsCount(0);
+    }
+    if (pathname === "/admin/sellers") {
+      setPendingBadgeCount(0);
+    }
+    if (pathname.startsWith("/admin/properties") || pathname === "/admin/seller-listings") {
+      setNewPropertyCount(0);
     }
   }, [pathname]);
 
@@ -70,11 +129,23 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "properties-sub",
       icon: <Building size={20} />,
-      label: "Properties",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Properties</span>
+          {newPropertyCount > 0 && <Badge dot offset={[5, -2]} />}
+        </div>
+      ),
       children: [
         {
           key: "/admin/properties",
-          label: "Our Properties",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Our Properties</span>
+              {newPropertyCount > 0 && (
+                <Badge count={newPropertyCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/properties"),
         },
         {
@@ -87,7 +158,12 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "seller-sub",
       icon: <Briefcase size={20} />,
-      label: "Seller",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Seller</span>
+          {pendingBadgeCount > 0 && <Badge dot offset={[5, -2]} />}
+        </div>
+      ),
       children: [
         {
           key: "/admin/seller-listings",
@@ -159,7 +235,14 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
         {
           key: "/admin/sellers",
-          label: "Seller List",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Seller List</span>
+              {pendingBadgeCount > 0 && (
+                <Badge count={pendingBadgeCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/sellers"),
         },
         {

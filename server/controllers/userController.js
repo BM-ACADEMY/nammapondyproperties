@@ -265,6 +265,23 @@ exports.updateUser = async (req, res) => {
       runValidators: true 
     }).populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Emit event if admin updated badgeRequestStatus or badgeVerified
+    if (req.body.badgeRequestStatus !== undefined || req.body.badgeVerified !== undefined) {
+      const io = req.app.get("socketio");
+      if (io) {
+        io.to(`seller-${user._id}`).emit("badge-status-changed", {
+          badgeRequestStatus: user.badgeRequestStatus,
+          badgeVerified: user.badgeVerified,
+          message: `Your badge verification request has been ${user.badgeRequestStatus === "none" ? "updated" : user.badgeRequestStatus}.`,
+        });
+        
+        io.to("admin-room").emit("badge-verification-requested", {
+          sellerId: user._id,
+        }); // Notify other admins
+      }
+    }
+
     res.json(user);
   } catch (error) {
     if (error.code === 11000) {
@@ -392,7 +409,28 @@ exports.requestBadgeVerification = async (req, res) => {
     if (user.badgeRequestStatus === "pending") return res.status(400).json({ error: "Request already pending" });
     user.badgeRequestStatus = "pending";
     await user.save();
+
+    // Emit event to admin room using app instance
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("badge-verification-requested", {
+        sellerId: user._id,
+        sellerName: user.name,
+        sellerPhone: user.phone,
+        message: `New badge verification request from ${user.name || 'Seller'}`,
+      });
+    }
+
     res.json({ message: "Verification request sent", status: "pending" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPendingBadgeRequestsCount = async (req, res) => {
+  try {
+    const count = await User.countDocuments({ badgeRequestStatus: "pending" });
+    res.json({ success: true, count });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

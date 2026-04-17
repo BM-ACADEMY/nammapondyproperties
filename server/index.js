@@ -160,6 +160,11 @@ io.on("connection", (socket) => {
     console.log(`👤 Seller joined room: seller-${sellerId}`);
   });
 
+  socket.on("join-admin-room", () => {
+    socket.join("admin-room");
+    console.log("👑 Admin joined room: admin-room");
+  });
+
   socket.on("disconnect", () => {
     console.log("🔌 Websocket disconnected:", socket.id);
   });

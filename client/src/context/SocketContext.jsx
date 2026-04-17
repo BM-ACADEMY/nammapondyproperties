@@ -32,6 +32,11 @@ export const SocketProvider = ({ children }) => {
       // Join seller-specific room for notifications
       socket.emit("join-seller-room", user._id);
 
+      // Join admin room if user is admin or superadmin
+      if (user.role_id?.role_name === "admin" || user.role_id?.role_name === "superadmin" || user.role === "admin") {
+        socket.emit("join-admin-room");
+      }
+
       // Listen for property expiration notifications
       socket.on("property-expired", (data) => {
         toast.error(data.message, {

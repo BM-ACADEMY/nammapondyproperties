@@ -35,6 +35,7 @@ import {
   Linkedin
 } from "lucide-react";
 import api from "@/services/api";
+import { useSocket } from "@/context/SocketContext";
 
 const { Title } = Typography;
 
@@ -43,6 +44,7 @@ const SellerList = () => {
   const [loading, setLoading] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const socket = useSocket();
 
   const fetchSellers = async () => {
     setLoading(true);
@@ -61,6 +63,25 @@ const SellerList = () => {
   useEffect(() => {
     fetchSellers();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      const handleBadgeRequest = (data) => {
+        // We can just fetch the sellers again, or update the specific seller if we want to be more efficient
+        // For simplicity and to ensure data consistency, we'll fetch sellers
+        fetchSellers();
+        if (data && data.message) {
+           message.info(data.message);
+        }
+      };
+
+      socket.on("badge-verification-requested", handleBadgeRequest);
+
+      return () => {
+        socket.off("badge-verification-requested", handleBadgeRequest);
+      };
+    }
+  }, [socket]);
 
   const handleDelete = (id) => {
     Modal.confirm({
@@ -408,7 +429,9 @@ const SellerList = () => {
             Close
           </Button>
         ]}
-        width={700}
+        width={850}
+        centered
+        styles={{ body: { maxHeight: '75vh', overflowY: 'auto', padding: '24px' } }}
         className="builder-detail-modal"
       >
         {selectedSeller?.builderProfile ? (

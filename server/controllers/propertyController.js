@@ -185,6 +185,17 @@ exports.createProperty = async (req, res) => {
     }
 
     res.status(201).json(property);
+
+    // Emit socket event for real-time notification in admin panel
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-property-listed", {
+        propertyId: property._id,
+        title: property.basicInfo?.title,
+        sellerName: req.user?.name || "A Seller",
+        message: `New property listed: ${property.basicInfo?.title}`,
+      });
+    }
   } catch (error) {
     console.error("Create Property Error:", error); // Log full error
     res.status(500).json({ error: error.message }); // Send 500 with message to see it in frontend
