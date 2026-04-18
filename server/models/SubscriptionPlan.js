@@ -34,4 +34,7 @@ const subscriptionPlanSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Compound unique index for name and businessType
+subscriptionPlanSchema.index({ name: 1, businessType: 1 }, { unique: true });
+
 module.exports = mongoose.model("SubscriptionPlan", subscriptionPlanSchema);

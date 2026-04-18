@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Button, Card, message, InputNumber, Divider } from "antd";
+import { Form, Input, Button, Card, message, InputNumber, Divider, Select } from "antd";
 import { Save } from "lucide-react";
 import axios from "axios";
 
@@ -65,10 +65,22 @@ const GeneralSettings = () => {
                     <Form.Item
                         name="sellerPropertyLimit"
                         label="Max Properties per Seller"
-                        help="Sets the maximum number of properties a seller can list."
+                        help="Sets the maximum number of properties a seller can list on the default plan."
                         initialValue={5}
                     >
                         <InputNumber min={1} className="w-full md:w-1/2" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="defaultPlanName"
+                        label="Default Subscription Plan Name"
+                        help="Choose the default plan to show for sellers without an active subscription."
+                        initialValue="Standard"
+                    >
+                        <Select className="w-full md:w-1/2" placeholder="Select Plan">
+                            <Select.Option value="Standard">Standard</Select.Option>
+                            <Select.Option value="Premium">Premium</Select.Option>
+                        </Select>
                     </Form.Item>
 
                     {/* Hidden fields to preserve structure if backend requires them, or just omit if backend handles partial updates (which it should with findByIdAndUpdate) */}

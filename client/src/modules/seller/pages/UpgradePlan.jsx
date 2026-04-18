@@ -12,17 +12,18 @@ const UpgradePlan = () => {
   const [processingId, setProcessingId] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [settings, setSettings] = useState(null);
 
   // Static Free Plan definition
   const freePlan = {
     _id: "static_free",
-    name: "BASIC",
+    name: (settings?.defaultPlanName || "BASIC").toUpperCase(),
     price: 0,
     duration: 0,
-    propertyLimit: 3,
+    propertyLimit: settings?.sellerPropertyLimit || 3,
     description: "Start listing for free",
     features: [
-      "Upload up to 3 properties",
+      `Upload up to ${settings?.sellerPropertyLimit || 3} properties`,
       "Medium visibility",
       "Properties appear in normal listing order"
     ],
@@ -66,9 +67,21 @@ const UpgradePlan = () => {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get("/website-settings");
+      if (res.data && res.data.length > 0) {
+        setSettings(res.data[0]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch settings:", error);
+    }
+  };
+
   useEffect(() => {
     fetchPlans();
     fetchMySubscription();
+    fetchSettings();
   }, []);
 
   const loadRazorpayScript = () => {
@@ -83,7 +96,7 @@ const UpgradePlan = () => {
 
   const handleUpgrade = async (plan) => {
     if (plan.price === 0) {
-        message.info("Free plan is already your default.");
+        message.info(`${plan.name} plan is already your default.`);
         return;
     }
 

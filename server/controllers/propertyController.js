@@ -11,6 +11,7 @@ const User = require("../models/User");
 const BusinessType = require("../models/BusinessType");
 const Subscription = require("../models/Subscription");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
+const WebsiteSetting = require("../models/WebsiteSetting");
 
 const parseJSON = (data) => {
   if (typeof data === "string") {
@@ -47,9 +48,14 @@ exports.createProperty = async (req, res) => {
       req.user.role_id &&
       req.user.role_id.role_name === "seller"
     ) {
+      // Get site settings for fallbacks
+      const settings = await WebsiteSetting.findOne();
+      const defaultLimit = settings?.sellerPropertyLimit || 3;
+      const defaultName = settings?.defaultPlanName || "FREE";
+
       // Get current upload limit from subscription
-      let propertyLimit = 3; // Default for Free plan
-      let planName = "Free";
+      let propertyLimit = defaultLimit; 
+      let planName = defaultName;
 
       if (req.user.activeSubscription) {
         const subscription = await Subscription.findById(req.user.activeSubscription).populate("plan");

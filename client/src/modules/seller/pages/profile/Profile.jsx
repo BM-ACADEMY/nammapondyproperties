@@ -35,6 +35,7 @@ const Profile = () => {
   const { user, refreshUser, refetchUser } = useAuth();
   const [fileList, setFileList] = useState([]);
   const [activeSub, setActiveSub] = useState(null);
+  const [settings, setSettings] = useState(null);
 
   const [hasInitialImage, setHasInitialImage] = useState(false);
   const [logoFileList, setLogoFileList] = useState([]);
@@ -127,8 +128,20 @@ const Profile = () => {
       }
     };
 
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get("/website-settings");
+        if (res.data && res.data.length > 0) {
+          setSettings(res.data[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      }
+    };
+
     fetchProfile();
     fetchSubscriptionData();
+    fetchSettings();
   }, [form]);
 
   const handleUpdateProfile = async (values) => {
@@ -316,7 +329,7 @@ const Profile = () => {
           <div className="mt-4 flex items-center gap-2">
             <span className="text-slate-600 font-medium">Current Plan:</span>
             <Tag color="#fef3c7" className="!text-amber-700 !border-amber-200 !rounded-md px-3 py-0.5 font-bold text-xs uppercase tracking-wider">
-              {activeSub.plan?.name || "Free"}
+              {activeSub.plan?.name || settings?.defaultPlanName || "BASIC"}
             </Tag>
           </div>
         )}

@@ -154,6 +154,7 @@ const MyProperties = () => {
   const { user } = useAuth();
   const [subscription, setSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
+  const [settings, setSettings] = useState(null);
 
   const handleViewDetail = (property) => {
     setSelectedProperty(property);
@@ -198,10 +199,22 @@ const MyProperties = () => {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get("/website-settings");
+      if (res.data && res.data.length > 0) {
+        setSettings(res.data[0]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch settings:", error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchProperties();
       fetchSubscription();
+      fetchSettings();
     }
   }, [user, fetchProperties]);
 
@@ -328,8 +341,8 @@ const MyProperties = () => {
     );
   });
 
-  const planName = subscription?.plan?.name || "Free";
-  const propertyLimit = subscription?.plan?.propertyLimit || 3;
+  const planName = subscription?.plan?.name || settings?.defaultPlanName || "BASIC";
+  const propertyLimit = subscription?.plan?.propertyLimit || settings?.sellerPropertyLimit || 3;
   const isLimitReached =
     propertyLimit !== -1 && properties.length >= propertyLimit;
 
@@ -372,8 +385,8 @@ const MyProperties = () => {
 
         {/* DESCRIPTION */}
         <p className="text-gray-500 text-sm mt-1">
-          {planName === "Free"
-            ? "Free plan allows up to 3 property listings."
+          {planName === (settings?.defaultPlanName || "BASIC")
+            ? `${planName} plan allows up to ${propertyLimit} property listings.`
             : planName === "Standard"
             ? "Standard plan supports up to 10 listings with better visibility."
             : "Premium plan gives unlimited listings with top priority exposure."}
