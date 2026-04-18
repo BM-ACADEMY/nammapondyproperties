@@ -27,6 +27,15 @@ const sharedLeadSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    matchType: {
+      type: String,
+      enum: ["exact", "not-exact"],
+      default: "not-exact",
+    },
+    matchPriority: {
+      type: Number,
+      default: 3, // 1: Builder Match, 2: Agent Match, 3: No Match
+    },
   },
   {
     timestamps: true,

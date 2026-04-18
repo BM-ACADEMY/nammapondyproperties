@@ -234,8 +234,13 @@ const LeadsOverview = () => {
                     </div>
                   </div>
 
-                  {lead.isAcceptedByMe ? (
-                    <div className="mt-4 bg-emerald-50 border border-emerald-100 p-4 rounded-xl">
+                  {lead.showFullDetails ? (
+                    <div className="mt-4 bg-emerald-50 border border-emerald-100 p-4 rounded-xl relative overflow-hidden">
+                      {lead.matchType === 'exact' && !lead.isAcceptedByMe && (
+                        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">
+                          Priority Match
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mb-3">
                         <ShieldCheck size={18} className="text-emerald-600" />
                         <Title level={5} className="m-0! text-emerald-800">Contact Details</Title>
@@ -258,12 +263,12 @@ const LeadsOverview = () => {
                   ) : (
                     <div className="mt-4 blur-[1px] select-none pointer-events-none opacity-40">
                        <div className="h-20 bg-slate-100 rounded-xl flex flex-col items-center justify-center">
-                          <Text type="secondary" className="text-xs">Accept lead to unlock details</Text>
+                          <Text type="secondary" className="text-xs">{lead.status === 'pending' ? 'Accept lead to unlock details' : 'Deal Closed'}</Text>
                        </div>
                     </div>
                   )}
 
-                  {!lead.isAcceptedByMe && (
+                  {!lead.showFullDetails && (
                     <div className="mt-6">
                       <Button 
                         type="primary" 
@@ -279,7 +284,7 @@ const LeadsOverview = () => {
                     </div>
                   )}
                   
-                  {lead.isAcceptedByMe && (
+                  {lead.showFullDetails && (
                     <div className="mt-6">
                        <Button 
                         block 

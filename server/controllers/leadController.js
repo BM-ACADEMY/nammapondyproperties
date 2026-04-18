@@ -23,53 +23,44 @@ exports.getSharedLeads = async (req, res) => {
     }
 
     // 2. Find leads shared with this plan
-    // We only show leads where the seller was in the "sharedWith" list or if it's open to the plan
     const sharedLeads = await SharedLead.find({
       plan: activeSubscription.plan,
     })
       .populate({
         path: "requirement",
-        select: "category usageType propertyType preferredLocation minBudget maxBudget propertyPreferences message createdAt" ,
+        select: "fullName phoneNumber email category usageType propertyType preferredLocation minBudget maxBudget propertyPreferences message createdAt" ,
       })
       .populate("acceptedBy", "name")
       .sort({ createdAt: -1 });
 
-    // Transform data to hide contact info if not accepted by THIS seller
-    const transformedLeads = sharedLeads.map((lead) => {
-      const isAccepted = lead.status === "accepted" || lead.status === "closed";
-      const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
+    // 3. Fetch current user with business type for visibility logic
+    const currentUser = await User.findById(userId).populate("businessType");
+    const sellerBusinessType = currentUser.businessType?.name || "";
+    const isBuilder = /Builder|Promoter/i.test(sellerBusinessType);
+    const isAgent = /Agent/i.test(sellerBusinessType);
 
-      return {
-        _id: lead._id,
-        requirement: lead.requirement,
-        status: lead.status,
-        acceptedBy: lead.acceptedBy ? lead.acceptedBy.name : null,
-        isAcceptedByMe: !!isAcceptedByMe,
-        // Only show contact info if accepted by me
-        contactInfo: isAcceptedByMe ? {
-          fullName: lead.requirement.fullName, // Note: Need to populate or fetch Requirement again for full details
-          email: lead.requirement.email,
-          phoneNumber: lead.requirement.phoneNumber
-        } : null
-      };
-    });
-
-    // To get contact info, we need to populate full requirement fields but only for the accepted one
-    // Let's refine the population
+    // Transform data to handle visibility logic
     const fullLeads = await Promise.all(sharedLeads.map(async (lead) => {
       const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
       
+      // Visibility Logic:
+      // 1. If accepted by me -> Always show details
+      // 2. If it is an EXACT MATCH and my business type matches the priority -> Show details
+      let showFullDetails = isAcceptedByMe;
+      
+      if (!showFullDetails && lead.matchType === "exact") {
+        if (lead.matchPriority === 1 && isBuilder) showFullDetails = true;
+        if (lead.matchPriority === 2 && isAgent) showFullDetails = true;
+      }
+
       let reqDetails = { ...lead.requirement._doc };
       
-      if (!isAcceptedByMe) {
-        // Remove sensitive fields
-        delete reqDetails.fullName;
-        delete reqDetails.email;
-        delete reqDetails.phoneNumber;
-      } else {
-        // If accepted by me, fetch the actual full requirement to be sure
-        const fullReq = await Requirement.findById(lead.requirement._id);
-        reqDetails = fullReq;
+      if (!showFullDetails) {
+        // Mask sensitive fields
+        reqDetails.fullName = "Contact Masked";
+        reqDetails.email = "masked@example.com";
+        reqDetails.phoneNumber = "XXXXXXXXXX";
+        // Also remove from the object to be safe if client logic depends on presence
       }
 
       return {
@@ -78,6 +69,9 @@ exports.getSharedLeads = async (req, res) => {
         status: lead.status,
         acceptedBy: lead.acceptedBy ? lead.acceptedBy.name : null,
         isAcceptedByMe,
+        matchType: lead.matchType,
+        matchPriority: lead.matchPriority,
+        showFullDetails,
         createdAt: lead.createdAt
       };
     }));

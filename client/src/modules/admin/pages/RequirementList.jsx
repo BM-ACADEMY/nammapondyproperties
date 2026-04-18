@@ -112,13 +112,13 @@ const RequirementList = () => {
   const showShareModal = async (record) => {
     setSelectedRequirement(record);
     setIsShareModalOpen(true);
-    fetchStats();
+    fetchStats(record._id);
   };
 
-  const fetchStats = async () => {
+  const fetchStats = async (requirementId) => {
     setFetchingStats(true);
     try {
-      const response = await getSubscriptionStats();
+      const response = await getSubscriptionStats(requirementId);
       setSubscriptionStats(response.data.data);
     } catch (error) {
       message.error("Failed to load subscription statistics");
@@ -127,12 +127,13 @@ const RequirementList = () => {
     }
   };
 
-  const handleShare = async (planId) => {
+  const handleShare = async (planId, matchType, matchPriority) => {
     setSharingLoading(true);
     try {
-      await shareRequirement(selectedRequirement._id, planId);
+      await shareRequirement(selectedRequirement._id, planId, matchType, matchPriority);
       message.success("Lead shared successfully!");
       setIsShareModalOpen(false);
+      fetchRequirements(); // Refresh list to show shared status
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to share lead");
     } finally {
@@ -410,7 +411,6 @@ const RequirementList = () => {
         )}
       </Modal>
 
-      {/* Share Modal */}
       <Modal
         title={
           <div className="flex items-center gap-4 border-b border-gray-200 pb-5 mb-1">
@@ -419,7 +419,7 @@ const RequirementList = () => {
             </div>
             <div>
               <h3 className="text-[18px] font-bold m-0 text-slate-800">Share Lead with Sellers</h3>
-              <Text type="secondary" className="text-[13.5px] text-slate-500">Distribute this requirement to sellers based on their plan.</Text>
+              <Text type="secondary" className="text-[13.5px] text-slate-500">Distribute this requirement based on priority matching.</Text>
             </div>
           </div>
         }
@@ -430,93 +430,149 @@ const RequirementList = () => {
             Cancel
           </Button>
         ]}
-        width={500}
+        width={550}
         destroyOnClose
       >
         <div className="py-2">
           {fetchingStats ? (
             <div className="flex flex-col items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <p className="mt-4 text-slate-500">Loading subscription plans...</p>
+              <p className="mt-4 text-slate-500">Matching sellers and plans...</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {subscriptionStats.map((plan) => {
-                const isExpanded = expandedPlans.includes(plan.planId);
-                const hasSellers = plan.sellerCount > 0;
+            <div className="space-y-6">
+              {/* MATCHED REQUIREMENTS SECTION */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                   <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+                   <h4 className="text-sm font-bold uppercase tracking-wider text-slate-800 m-0">Match Requirements</h4>
+                </div>
                 
-                return (
-                <div 
-                  key={plan.planId} 
-                  className="flex flex-col rounded-2xl border border-gray-200 bg-white overflow-hidden"
-                >
-                  <div className="flex items-center justify-between p-5">
-                    <div className="flex flex-col">
-                      <Text strong className="text-[15px] font-bold text-slate-800 mb-1.5">{plan.planName} Plan</Text>
-                      <div className="flex items-center gap-3">
-                        <Tag 
-                          className={`m-0 rounded-md border-none px-2 py-0.5 text-xs font-medium ${hasSellers ? 'bg-[#ecfdf5] text-[#10b981]' : 'bg-[#f1f5f9] text-gray-500'}`}
+                <div className="space-y-3">
+                  {(() => {
+                    const hasAnyBuilderMatch = subscriptionStats.some(p => p.hasBuilderMatch);
+                    const hasAnyAgentMatch = subscriptionStats.some(p => p.hasAgentMatch);
+                    
+                    return subscriptionStats.map((plan) => {
+                      const isExpanded = expandedPlans.includes(plan.planId);
+                      const hasSellers = plan.sellerCount > 0;
+                      
+                      // Priority Logic
+                      let isPriorityPlan = false;
+                      let matchPriority = 3;
+                      
+                      if (hasAnyBuilderMatch) {
+                        isPriorityPlan = plan.hasBuilderMatch;
+                        matchPriority = 1;
+                      } else if (hasAnyAgentMatch) {
+                        isPriorityPlan = plan.hasAgentMatch;
+                        matchPriority = 2;
+                      }
+
+                      return (
+                        <div 
+                          key={`match-${plan.planId}`} 
+                          className={`flex flex-col rounded-2xl border ${isPriorityPlan ? 'border-indigo-200 bg-indigo-50/10' : 'border-gray-100 bg-slate-50/50 grayscale opacity-60 pointer-events-none'} overflow-hidden transition-all`}
                         >
-                          {plan.sellerCount} Sellers Active
-                        </Tag>
-                        {hasSellers && (
-                          <div 
-                            className="flex items-center gap-1 text-[13px] text-[#4f46e5] cursor-pointer font-medium select-none"
-                            onClick={() => togglePlan(plan.planId)}
-                          >
-                            {isExpanded ? "Hide Sellers" : "View Sellers"}
-                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <Button 
-                      type={hasSellers ? "primary" : "default"}
-                      className={`h-9 px-5 rounded-lg shadow-none font-medium ${hasSellers ? 'bg-[#2563eb] text-white border-none shrink-0' : 'bg-slate-50 border-gray-200 text-gray-400 shrink-0'}`}
-                      disabled={!hasSellers || sharingLoading}
-                      loading={sharingLoading}
-                      onClick={() => handleShare(plan.planId)}
-                    >
-                      Send Lead
-                    </Button>
-                  </div>
-                  
-                  {/* Expanded Dropdown Content */}
-                  <AnimatePresence>
-                    {isExpanded && hasSellers && (
-                      <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
-                        className="overflow-hidden"
-                      >
-                        <div className="bg-[#f8fafc] border-t border-gray-100 p-5">
-                          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Active Sellers ({plan.sellerCount})</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {plan.sellers.map(s => (
-                              <div key={s.id} className="bg-white p-3 rounded-2xl border border-gray-100 flex items-center gap-4 shadow-xs">
-                                <div className="w-12 h-12 rounded-full bg-[#eff6ff] text-[#2563eb] font-bold flex items-center justify-center text-[15px] shrink-0">
-                                  {s.name.substring(0, 2).toUpperCase()}
-                                </div>
-                                <div className="flex flex-col overflow-hidden">
-                                  <span className="font-bold text-slate-800 text-[15px] truncate">{s.name}</span>
-                                  <span className="text-slate-400 text-[12px] flex items-center gap-1.5 mt-0.5 whitespace-nowrap"><Phone size={11}/> {s.phone}</span>
-                                </div>
+                          <div className="flex items-center justify-between p-4">
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Text strong className="text-[14px] font-bold text-slate-800">{plan.planName} Plan</Text>
+                                {isPriorityPlan && (
+                                  <Tag color="indigo" className="m-0 text-[10px] uppercase font-bold border-none px-2 py-0">Recommended Match</Tag>
+                                )}
                               </div>
-                            ))}
+                              <div className="flex items-center gap-3">
+                                <Text className="text-[12px] text-slate-500 font-medium">{plan.sellerCount} Sellers</Text>
+                                {hasSellers && isPriorityPlan && (
+                                  <div 
+                                    className="flex items-center gap-1 text-[12px] text-[#4f46e5] cursor-pointer font-bold select-none"
+                                    onClick={() => togglePlan(`match-${plan.planId}`)}
+                                  >
+                                    {expandedPlans.includes(`match-${plan.planId}`) ? "Hide" : "View Match"}
+                                    {expandedPlans.includes(`match-${plan.planId}`) ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <Button 
+                              type={isPriorityPlan ? "primary" : "default"}
+                              className={`h-9 px-4 rounded-lg shadow-none font-bold text-xs ${isPriorityPlan ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-none' : 'bg-slate-200 text-slate-400 border-none'}`}
+                              disabled={!isPriorityPlan || sharingLoading}
+                              loading={sharingLoading}
+                              onClick={() => handleShare(plan.planId, "exact", matchPriority)}
+                            >
+                              Send Lead
+                            </Button>
                           </div>
+                          
+                          <AnimatePresence>
+                            {expandedPlans.includes(`match-${plan.planId}`) && isPriorityPlan && (
+                              <motion.div 
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="bg-white border-t border-indigo-100 p-4"
+                              >
+                                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Matching Sellers ({plan.sellers.filter(s => s.isMatch).length})</p>
+                                <div className="grid grid-cols-1 gap-2">
+                                  {plan.sellers.filter(s => s.isMatch).map(s => (
+                                    <div key={s.id} className="bg-slate-50 p-2.5 rounded-xl flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center text-[11px]">
+                                        {s.name.substring(0, 2).toUpperCase()}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="font-bold text-slate-800 text-[13px]">{s.name}</span>
+                                        <span className="text-slate-400 text-[11px] font-medium italic">{s.businessType}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                      );
+                    });
+                  })()}
                 </div>
-              )})}
-              {subscriptionStats.length === 0 && !fetchingStats && (
-                <div className="text-center py-6 bg-slate-50 rounded-xl">
-                  <Text type="secondary">No active subscription plans found.</Text>
+              </div>
+
+              {/* NOT EXACT MATCH SECTION */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                   <div className="w-1.5 h-6 bg-slate-400 rounded-full"></div>
+                   <h4 className="text-sm font-bold uppercase tracking-wider text-slate-600 m-0">Not Exact Match Section (Agents Only)</h4>
                 </div>
-              )}
+                
+                <div className="space-y-3">
+                  {subscriptionStats.map((plan) => {
+                    const hasAgents = plan.sellers.some(s => s.isAgent);
+                    
+                    return (
+                      <div 
+                        key={`not-match-${plan.planId}`} 
+                        className={`flex flex-col rounded-2xl border ${hasAgents ? 'border-gray-200 bg-white' : 'border-gray-100 bg-slate-50/50 grayscale opacity-60 pointer-events-none'} overflow-hidden transition-all`}
+                      >
+                         <div className="flex items-center justify-between p-4">
+                            <div className="flex flex-col">
+                              <Text strong className="text-[14px] font-bold text-slate-700">{plan.planName} Plan</Text>
+                              <Text className="text-[12px] text-slate-500 font-medium">Available for Agents only</Text>
+                            </div>
+                            <Button 
+                              className={`h-9 px-4 rounded-lg shadow-none font-bold text-xs ${hasAgents ? 'bg-slate-800 text-white hover:bg-slate-900 border-none' : 'bg-slate-200 text-slate-400 border-none'}`}
+                              disabled={!hasAgents || sharingLoading}
+                              loading={sharingLoading}
+                              onClick={() => handleShare(plan.planId, "not-exact", 3)}
+                            >
+                              Send to Agents
+                            </Button>
+                          </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </div>

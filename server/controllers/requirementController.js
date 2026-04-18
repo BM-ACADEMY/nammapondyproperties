@@ -3,6 +3,8 @@ const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 const SharedLead = require("../models/SharedLead");
+const Property = require("../models/Property");
+const BusinessType = require("../models/BusinessType");
 
 // Create a new requirement
 exports.createRequirement = async (req, res) => {
@@ -171,6 +173,13 @@ exports.deleteRequirement = async (req, res) => {
 // Get subscription stats for lead sharing (Admin)
 exports.getSubscriptionStats = async (req, res) => {
   try {
+    const { requirementId } = req.query;
+    let requirement = null;
+    
+    if (requirementId) {
+      requirement = await Requirement.findById(requirementId);
+    }
+
     const plans = await SubscriptionPlan.find({ status: "active" });
     
     const stats = await Promise.all(
@@ -180,15 +189,68 @@ exports.getSubscriptionStats = async (req, res) => {
           plan: plan._id,
           status: "active",
           endDate: { $gt: new Date() },
-        }).populate("user", "name email phone");
+        }).populate({
+          path: "user",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
 
-        const sellers = activeSubscriptions
+        const sellers = await Promise.all(activeSubscriptions
           .filter(sub => sub.user)
-          .map(sub => ({
-            id: sub.user._id,
-            name: sub.user.name || "Unnamed Seller",
-            email: sub.user.email,
-            phone: sub.user.phone,
+          .map(async (sub) => {
+            const user = sub.user;
+            const businessType = user.businessType?.name || "";
+            const isBuilder = /Builder|Promoter/i.test(businessType);
+            const isAgent = /Agent/i.test(businessType);
+
+            let isMatch = false;
+            let matchPriority = 3; // Default: No match
+
+            if (requirement) {
+              const isRent = requirement.category === "Rent";
+              const minBudget = requirement.minBudget || 0;
+              const maxBudget = requirement.maxBudget || Infinity;
+
+              const priceField = isRent ? "pricing.rent.monthlyRent" : "pricing.sell.price";
+              const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
+              const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
+
+              // Exact match logic with budget range overlap
+              const matchQuery = {
+                seller: user._id,
+                status: "Active",
+                "basicInfo.category": requirement.category,
+                "basicInfo.usageType": requirement.usageType,
+                "basicInfo.propertyType": requirement.propertyType,
+                $or: [
+                  // Case 1: Static price matches requirement range
+                  { [priceField]: { $gte: minBudget, $lte: maxBudget } },
+                  // Case 2: Property range overlaps with requirement range
+                  {
+                    [minPriceField]: { $lte: maxBudget },
+                    [maxPriceField]: { $gte: minBudget }
+                  }
+                ]
+              };
+
+              const matchingProperty = await Property.findOne(matchQuery);
+              if (matchingProperty) {
+                isMatch = true;
+                matchPriority = isBuilder ? 1 : isAgent ? 2 : 3;
+              }
+            }
+
+            return {
+              id: user._id,
+              name: user.name || "Unnamed Seller",
+              email: user.email,
+              phone: user.phone,
+              businessType: businessType,
+              isBuilder,
+              isAgent,
+              isMatch,
+              matchPriority
+            };
           }));
 
         return {
@@ -196,6 +258,9 @@ exports.getSubscriptionStats = async (req, res) => {
           planName: plan.name,
           sellerCount: sellers.length,
           sellers: sellers,
+          // Plan level metadata
+          hasBuilderMatch: sellers.some(s => s.isBuilder && s.isMatch),
+          hasAgentMatch: sellers.some(s => s.isAgent && s.isMatch),
         };
       })
     );
@@ -217,7 +282,7 @@ exports.getSubscriptionStats = async (req, res) => {
 exports.shareRequirement = async (req, res) => {
   try {
     const { id } = req.params; // Requirement ID
-    const { planId } = req.body;
+    const { planId, matchType, matchPriority } = req.body;
 
     const requirement = await Requirement.findById(id);
     if (!requirement) {
@@ -258,8 +323,6 @@ exports.shareRequirement = async (req, res) => {
     const sellerIds = activeSubscriptions.map(sub => sub.user);
 
     // Create or update SharedLead
-    // If already shared with this plan, we might want to update or error. 
-    // Request says "The lead is shared with all sellers under that selected plan only."
     let sharedLead = await SharedLead.findOne({ requirement: id, plan: planId });
     
     if (sharedLead) {
@@ -274,6 +337,8 @@ exports.shareRequirement = async (req, res) => {
       plan: planId,
       sharedWith: sellerIds,
       status: "pending",
+      matchType: matchType || "not-exact",
+      matchPriority: matchPriority || 3
     });
 
     await sharedLead.save();
