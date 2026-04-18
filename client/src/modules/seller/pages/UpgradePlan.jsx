@@ -101,6 +101,13 @@ const UpgradePlan = () => {
     }
 
     setProcessingId(plan._id);
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!keyId) {
+      message.error("Razorpay Key is missing. Please contact support.");
+      setProcessingId(null);
+      return;
+    }
+
     const resScript = await loadRazorpayScript();
 
     if (!resScript) {
@@ -115,7 +122,7 @@ const UpgradePlan = () => {
       });
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: keyId,
         amount: order.amount,
         currency: order.currency,
         name: "Namma Pondy Properties",
@@ -135,16 +142,42 @@ const UpgradePlan = () => {
               navigate("/seller/my-properties");
             }
           } catch (err) {
-            message.error("Payment verification failed");
+            message.error(err.response?.data?.error || "Payment verification failed");
           }
         },
         prefill: {
-          name: user?.name,
-          contact: user?.phone,
+          name: user?.name || "Customer",
+          contact: user?.phone || "",
+          email: user?.builderProfile?.email || "support@nammapondy.com", // UPI works better with an email
+        },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay via UPI",
+                instruments: [
+                  {
+                    method: "upi",
+                  },
+                ],
+              },
+            },
+            sequence: ["block.upi", "block.card", "block.netbanking"],
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
         },
         theme: {
-          color: "#2563eb",
+          color: "#002B49", // Using the navy color from your design
         },
+        retry: {
+          enabled: true,
+          max_count: 3
+        },
+        modal: {
+          confirm_close: true,
+        }
       };
 
       const paymentObject = new window.Razorpay(options);
