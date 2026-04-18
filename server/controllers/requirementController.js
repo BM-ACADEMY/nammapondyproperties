@@ -41,6 +41,16 @@ exports.createRequirement = async (req, res) => {
 
     const savedRequirement = await newRequirement.save();
 
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-requirement", {
+        requirementId: savedRequirement._id,
+        fullName: savedRequirement.fullName,
+        message: `New requirement posted by ${savedRequirement.fullName}`,
+      });
+    }
+
     res.status(201).json({
       success: true,
       data: savedRequirement,

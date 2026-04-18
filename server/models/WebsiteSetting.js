@@ -7,7 +7,8 @@ const websiteSettingSchema = new mongoose.Schema({
   contact_phone: { type: String },
   address: { type: String },
   footer_text: { type: String },
-  sellerPropertyLimit: { type: Number, default: 5 }
+  sellerPropertyLimit: { type: Number, default: 5 },
+  defaultPlanName: { type: String, default: "BASIC" }
 }, { timestamps: true });
 
 module.exports = mongoose.model('WebsiteSetting', websiteSettingSchema);

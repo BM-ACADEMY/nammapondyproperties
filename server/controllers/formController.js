@@ -8,6 +8,17 @@ exports.createContact = async (req, res) => {
   try {
     const newContact = new Contact(req.body);
     const savedContact = await newContact.save();
+
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-contact-message", {
+        contactId: savedContact._id,
+        name: savedContact.name,
+        message: `New contact message from ${savedContact.name}`,
+      });
+    }
+
     res.status(201).json({
       success: true,
       data: savedContact,
@@ -65,6 +76,17 @@ exports.createRequestCall = async (req, res) => {
   try {
     const newRequest = new RequestCall(req.body);
     const savedRequest = await newRequest.save();
+
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-call-request", {
+        requestId: savedRequest._id,
+        fullName: savedRequest.fullName,
+        message: `New callback request from ${savedRequest.fullName}`,
+      });
+    }
+
     res.status(201).json({
       success: true,
       data: savedRequest,

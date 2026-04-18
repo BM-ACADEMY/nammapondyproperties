@@ -5,8 +5,11 @@ const subscriptionPlanSchema = new mongoose.Schema(
     name: { 
       type: String, 
       required: true, 
-      unique: true, 
-      enum: ["Free", "Standard", "Premium"] 
+    },
+    businessType: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessType",
+      required: true
     },
     price: { type: Number, required: true },
     propertyLimit: { 
@@ -30,5 +33,8 @@ const subscriptionPlanSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound unique index for name and businessType
+subscriptionPlanSchema.index({ name: 1, businessType: 1 }, { unique: true });
 
 module.exports = mongoose.model("SubscriptionPlan", subscriptionPlanSchema);

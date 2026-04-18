@@ -60,6 +60,7 @@ import { formatNumber } from "@/utils/formatNumber";
 
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
+import { useSocket } from "@/context/SocketContext";
 
 const AdminProperties = ({ mode }) => {
   const [properties, setProperties] = useState([]);
@@ -75,6 +76,7 @@ const AdminProperties = ({ mode }) => {
   const [mainImage, setMainImage] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const socket = useSocket();
 
   const handleViewDetail = (property) => {
     setSelectedProperty(property);
@@ -133,6 +135,19 @@ const AdminProperties = ({ mode }) => {
   useEffect(() => {
     fetchProperties();
   }, [fetchProperties]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("new-property-listed", () => {
+        fetchProperties();
+        // Optional: show a small info message or toast
+      });
+
+      return () => {
+        socket.off("new-property-listed");
+      };
+    }
+  }, [socket, fetchProperties]);
 
   const handleDelete = async (id) => {
     try {

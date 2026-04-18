@@ -28,15 +28,23 @@ import {
   Briefcase,
   UserCheck,
   UserX,
-  ShieldCheck
+  ShieldCheck,
+  Globe,
+  Facebook,
+  Instagram,
+  Linkedin
 } from "lucide-react";
 import api from "@/services/api";
+import { useSocket } from "@/context/SocketContext";
 
 const { Title } = Typography;
 
 const SellerList = () => {
   const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedSeller, setSelectedSeller] = useState(null);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const socket = useSocket();
 
   const fetchSellers = async () => {
     setLoading(true);
@@ -55,6 +63,25 @@ const SellerList = () => {
   useEffect(() => {
     fetchSellers();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      const handleBadgeRequest = (data) => {
+        // We can just fetch the sellers again, or update the specific seller if we want to be more efficient
+        // For simplicity and to ensure data consistency, we'll fetch sellers
+        fetchSellers();
+        if (data && data.message) {
+           message.info(data.message);
+        }
+      };
+
+      socket.on("badge-verification-requested", handleBadgeRequest);
+
+      return () => {
+        socket.off("badge-verification-requested", handleBadgeRequest);
+      };
+    }
+  }, [socket]);
 
   const handleDelete = (id) => {
     Modal.confirm({
@@ -120,6 +147,19 @@ const SellerList = () => {
       ),
     },
     {
+      title: "Business Type",
+      dataIndex: "businessType",
+      key: "businessType",
+      render: (bt) => (
+        <div className="flex items-center gap-2">
+          <Briefcase size={14} className="text-indigo-400" />
+          <span className="text-sm font-semibold text-indigo-600">
+            {bt?.name || "---"}
+          </span>
+        </div>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -135,22 +175,42 @@ const SellerList = () => {
       title: "Badge Request",
       dataIndex: "badgeRequestStatus",
       key: "badgeRequestStatus",
-      render: (status) => {
+      render: (status, record) => {
+        const isBuilder = record.businessType?.name?.match(/Builder|Promoter/i);
         let color = "default";
         let icon = null;
         if (status === "pending") { color = "orange"; icon = <Clock size={12} className="mr-1" />; }
         else if (status === "approved") { color = "green"; icon = <CheckCircle size={12} className="mr-1" />; }
         else if (status === "rejected") { color = "error"; icon = <XCircle size={12} className="mr-1" />; }
         
-        if (!status || status === "none") return <span className="text-gray-400 text-xs">NONE</span>;
-        
         return (
-          <Tag color={color} className="rounded-full px-3">
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-              {icon}
-              <span className="leading-none">{status.toUpperCase()}</span>
-            </span>
-          </Tag>
+          <div className="flex items-center gap-3">
+            {status && status !== "none" ? (
+              <Tag color={color} className="rounded-full px-3 m-0">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  {icon}
+                  <span className="leading-none">{status.toUpperCase()}</span>
+                </span>
+              </Tag>
+            ) : (
+              <span className="text-gray-400 text-xs">NONE</span>
+            )}
+            
+            {isBuilder && (
+              <Button 
+                type="primary" 
+                shape="circle" 
+                size="small"
+                className="bg-indigo-600 hover:!bg-indigo-700 shadow-md flex items-center justify-center"
+                icon={<Briefcase size={12} className="text-white" />}
+                onClick={() => {
+                  setSelectedSeller(record);
+                  setIsDetailModalVisible(true);
+                }}
+                title="View Builder Details"
+              />
+            )}
+          </div>
         );
       },
     },
@@ -353,6 +413,139 @@ const SellerList = () => {
           />
         </div>
       </Card>
+
+      {/* Builder Details Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 border-b border-gray-300 pb-4 mb-0">
+            <Briefcase size={20} className="text-indigo-600" />
+            <span className="text-lg font-bold">Builder Professional Profile</span>
+          </div>
+        }
+        open={isDetailModalVisible}
+        onCancel={() => setIsDetailModalVisible(false)}
+        footer={[
+          <Button key="close" onClick={() => setIsDetailModalVisible(false)} className="rounded-lg h-10 px-6">
+            Close
+          </Button>
+        ]}
+        width={850}
+        centered
+        styles={{ body: { maxHeight: '75vh', overflowY: 'auto', padding: '24px' } }}
+        className="builder-detail-modal"
+      >
+        {selectedSeller?.builderProfile ? (
+          <div className="py-2">
+            <div className="flex flex-col sm:flex-row gap-6 mb-8 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+              <div className="flex-shrink-0">
+                <Avatar 
+                  src={getImageUrl(selectedSeller.builderProfile.companyLogo)} 
+                  size={100} 
+                  shape="square"
+                  className="rounded-xl border-2 border-white shadow-md bg-white p-1"
+                >
+                  {selectedSeller.builderProfile.companyName?.charAt(0)}
+                </Avatar>
+              </div>
+              <div className="flex-grow">
+                <h2 className="text-2xl font-bold text-slate-800 mb-1">{selectedSeller.builderProfile.companyName}</h2>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  <Tag color="blue" className="rounded-full px-3 m-0">RERA: {selectedSeller.builderProfile.reraNumber || "N/A"}</Tag>
+                  <Tag color="cyan" className="rounded-full px-3 m-0">GST: {selectedSeller.builderProfile.gstNumber || "N/A"}</Tag>
+                  <Tag color="purple" className="rounded-full px-3 m-0">{selectedSeller.builderProfile.experienceYears} Years Exp.</Tag>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500 text-sm">
+                  <AlertCircle size={14} />
+                  <span>Verified Identity: {selectedSeller.name}</span>
+                </div>
+              </div>
+            </div>
+
+            <Row gutter={[24, 24]}>
+              <Col span={24}>
+                <div className="bg-white p-4 rounded-xl border border-slate-100">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <AlertCircle size={14} className="text-indigo-500" />
+                    Office Address
+                  </div>
+                  <p className="text-slate-700 leading-relaxed mb-0">
+                    {selectedSeller.builderProfile.officeAddress || "No address provided"}
+                  </p>
+                </div>
+              </Col>
+              
+              <Col span={24}>
+                <div className="bg-white p-4 rounded-xl border border-slate-100">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <Briefcase size={14} className="text-indigo-500" />
+                    About Company
+                  </div>
+                  <p className="text-slate-600 leading-relaxed whitespace-pre-line mb-0 italic">
+                    {selectedSeller.builderProfile.aboutCompany || "No bio provided"}
+                  </p>
+                </div>
+              </Col>
+
+              <Col span={12}>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Primary Contact</div>
+                  <div className="text-slate-800 font-semibold">{selectedSeller.builderProfile.phonePrimary || selectedSeller.phone}</div>
+                </div>
+              </Col>
+              
+              <Col span={12}>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 h-full">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Business Email</div>
+                  <div className="text-slate-800 font-semibold">{selectedSeller.builderProfile.email || selectedSeller.email || "N/A"}</div>
+                </div>
+              </Col>
+
+              <Col span={24}>
+                <div className="pt-2">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Social & Web Links</div>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedSeller.builderProfile.socialLinks?.website && (
+                      <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors">
+                        <Globe size={16} />
+                        <span className="font-medium">Website</span>
+                      </a>
+                    )}
+                    {selectedSeller.builderProfile.socialLinks?.linkedin && (
+                      <a href={selectedSeller.builderProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-colors">
+                        <Linkedin size={16} />
+                        <span className="font-medium">LinkedIn</span>
+                      </a>
+                    )}
+                    {selectedSeller.builderProfile.socialLinks?.instagram && (
+                      <a href={selectedSeller.builderProfile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-pink-50 text-pink-600 px-4 py-2 rounded-xl border border-pink-100 hover:bg-pink-100 transition-colors">
+                        <Instagram size={16} />
+                        <span className="font-medium">Instagram</span>
+                      </a>
+                    )}
+                    {selectedSeller.builderProfile.socialLinks?.facebook && (
+                      <a href={selectedSeller.builderProfile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors">
+                        <Facebook size={16} />
+                        <span className="font-medium">Facebook</span>
+                      </a>
+                    )}
+                    {!selectedSeller.builderProfile.socialLinks?.website && 
+                     !selectedSeller.builderProfile.socialLinks?.linkedin && 
+                     !selectedSeller.builderProfile.socialLinks?.instagram && 
+                     !selectedSeller.builderProfile.socialLinks?.facebook && (
+                      <span className="text-slate-400 italic text-sm">No social links provided</span>
+                    )}
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        ) : (
+          <div className="py-12 text-center text-slate-400">
+            <AlertCircle size={40} className="mx-auto mb-4 opacity-20" />
+            <p>No builder details found for this seller.</p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

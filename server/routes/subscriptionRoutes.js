@@ -1,11 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const { protect: authMiddleware, admin: adminMiddleware } = require("../middleware/authMiddleware");
+const { 
+  protect: authMiddleware, 
+  admin: adminMiddleware, 
+  optionalProtect: optionalAuth 
+} = require("../middleware/authMiddleware");
 const subscriptionPlanController = require("../controllers/subscriptionPlanController");
 const subscriptionController = require("../controllers/subscriptionController");
 
 // Public/Seller Routes
-router.get("/plans", subscriptionPlanController.getAllPlans);
+router.get("/plans", optionalAuth, subscriptionPlanController.getAllPlans);
 router.get("/my-subscription", authMiddleware, subscriptionController.getUserSubscription);
 router.post("/create-order", authMiddleware, subscriptionController.createOrder);
 router.post("/verify-payment", authMiddleware, subscriptionController.verifyPayment);

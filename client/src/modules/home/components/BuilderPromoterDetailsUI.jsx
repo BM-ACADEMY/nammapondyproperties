@@ -24,6 +24,7 @@ import {
   Home,
   User,
   Share2,
+  Flame,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -193,11 +194,22 @@ const BuilderPromoterDetailsUI = ({
           <div className="container mx-auto max-w-7xl">
             <div className="flex flex-col md:flex-row justify-between items-end gap-6">
               <div className="space-y-4 text-white max-w-3xl">
-                <span className="bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded w-fit">
-                  {property.basicInfo?.category === "Rent"
-                    ? "For Rent"
-                    : "For Sale"}
-                </span>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded w-fit">
+                    {property.basicInfo?.category === "Rent"
+                      ? "For Rent"
+                      : "For Sale"}
+                  </span>
+                  
+                  {property.view_count >= 1000 && (
+                    <div className="bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1.5 shadow-sm border border-red-200 w-fit whitespace-nowrap">
+                      <Flame className="w-3.5 h-3.5 fill-red-500" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Hot Deal
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
                   {property.basicInfo?.title}
                 </h1>
@@ -229,6 +241,24 @@ const BuilderPromoterDetailsUI = ({
                       0,
                   )}
                 </div>
+                {property.view_count >= 1000 ? (
+                  <div className="mt-2 inline-flex items-center gap-1.5 bg-red-500/20 text-red-100 backdrop-blur-md px-3 py-1.5 rounded-lg border border-red-500/30 shadow-sm ml-auto">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
+                    </span>
+                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">
+                      High Demand: {formatNumber(property.view_count || 0)} views
+                    </span>
+                  </div>
+                ) : property.view_count > 0 ? (
+                  <div className="mt-2 inline-flex items-center gap-1.5 bg-white/10 text-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20 shadow-sm ml-auto">
+                    <Eye size={14} className="text-white/70" />
+                    <span className="text-[10px] md:text-xs font-bold tracking-widest uppercase">
+                      {formatNumber(property.view_count)} people viewing
+                    </span>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -462,54 +492,6 @@ const BuilderPromoterDetailsUI = ({
               )}
             </div>
 
-            {/* LOCATION */}
-            <div id="location" ref={scrollRefs.location} className="space-y-6">
-              <h3 className="text-2xl font-bold text-gray-900">Location</h3>
-              <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm h-[400px]">
-                {property.location?.coordinates?.lat && (
-                  <MapContainer
-                    center={[
-                      property.location.coordinates.lat,
-                      property.location.coordinates.lng,
-                    ]}
-                    zoom={15}
-                    scrollWheelZoom={false}
-                    className="h-full w-full z-10"
-                  >
-                    <LayersControl position="topright">
-                      <BaseLayer name="Street Map">
-                        <TileLayer
-                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-                      </BaseLayer>
-                      <BaseLayer checked name="Satellite View">
-                        <LayerGroup>
-                          <TileLayer
-                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                          />
-                          <TileLayer
-                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                            url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-                          />
-                        </LayerGroup>
-                      </BaseLayer>
-                    </LayersControl>
-                    <Marker
-                      position={[
-                        property.location.coordinates.lat,
-                        property.location.coordinates.lng,
-                      ]}
-                      icon={CustomIcon}
-                    >
-                      <Popup>{property.basicInfo?.title}</Popup>
-                    </Marker>
-                  </MapContainer>
-                )}
-              </div>
-            </div>
-
             {/* FLOOR PLANS */}
             {hasFloorPlan && (
               <div id="plans" ref={scrollRefs.plans} className="space-y-6">
@@ -528,68 +510,130 @@ const BuilderPromoterDetailsUI = ({
               </div>
             )}
 
-            {/* AMENITIES */}
-            <div
-              id="amenities"
-              ref={scrollRefs.amenities}
-              className="space-y-6"
-            >
-              <h3 className="text-2xl font-bold text-gray-900">Amenities</h3>
-              <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap gap-3">
-                {property.amenities?.map((amenity, i) => (
+            {/* MAP + HIGHLIGHTS GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+              {/* Left Column: Amenities & Highlights */}
+              <div className="space-y-8 flex flex-col h-full">
+                {property.amenities && property.amenities.length > 0 && (
                   <div
-                    key={i}
-                    className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full flex items-center gap-2 group hover:bg-red-50 transition-all"
+                    id="amenities"
+                    ref={scrollRefs.amenities}
+                    className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full"
                   >
-                    <CheckCircle2
-                      size={14}
-                      className="text-green-500 group-hover:text-red-500"
-                    />
-                    <span className="text-sm font-bold text-gray-700 group-hover:text-red-700">
-                      {amenity}
-                    </span>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                      Amenities
+                    </h3>
+                    <div className="flex flex-wrap gap-3 mt-auto">
+                      {property.amenities?.map((amenity, i) => (
+                        <div
+                          key={i}
+                          className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full flex items-center gap-2 group hover:bg-red-50 transition-all"
+                        >
+                          <CheckCircle2
+                            size={14}
+                            className="text-green-500 group-hover:text-red-500"
+                          />
+                          <span className="text-sm font-bold text-gray-700 group-hover:text-red-700">
+                            {amenity}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
 
-            {/* HIGHLIGHTS / UTILITIES */}
-            <div
-              id="highlights"
-              ref={scrollRefs.highlights}
-              className="space-y-6"
-            >
-              <h3 className="text-2xl font-bold text-gray-900">
-                Essential Utilities
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {property.specifications?.utilities?.waterSupply && (
-                  <div className="p-6 bg-white border border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-center shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
-                      <Droplet size={24} />
+                {(property.specifications?.utilities?.waterSupply ||
+                  property.specifications?.utilities?.powerBackup) && (
+                  <div
+                    id="highlights"
+                    ref={scrollRefs.highlights}
+                    className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm"
+                  >
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                      Essential Utilities
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {property.specifications?.utilities?.waterSupply && (
+                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 text-center shadow-sm hover:shadow-md transition-shadow">
+                          <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
+                            <Droplet size={20} />
+                          </div>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                            Water Supply
+                          </span>
+                          <span className="text-sm font-bold text-gray-800 leading-none">
+                            {property.specifications.utilities.waterSupply}
+                          </span>
+                        </div>
+                      )}
+                      {property.specifications?.utilities?.powerBackup && (
+                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 text-center shadow-sm hover:shadow-md transition-shadow">
+                          <div className="w-10 h-10 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center">
+                            <Zap size={20} />
+                          </div>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">
+                            Power Backup
+                          </span>
+                          <span className="text-sm font-bold text-gray-800 leading-none">
+                            Available
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      Water Supply
-                    </span>
-                    <span className="text-sm font-bold text-gray-800">
-                      {property.specifications.utilities.waterSupply}
-                    </span>
-                  </div>
-                )}
-                {property.specifications?.utilities?.powerBackup && (
-                  <div className="p-6 bg-white border border-gray-100 rounded-2xl flex flex-col items-center gap-3 text-center shadow-sm hover:shadow-md transition-shadow">
-                    <div className="w-12 h-12 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center">
-                      <Zap size={24} />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                      Power Backup
-                    </span>
-                    <span className="text-sm font-bold text-gray-800">
-                      Available
-                    </span>
                   </div>
                 )}
               </div>
+
+              {/* Right Column: Location Map */}
+              {property.location?.coordinates?.lat && (
+                <div
+                  id="location"
+                  ref={scrollRefs.location}
+                  className="bg-white md:bg-blue-50 md:p-2 rounded-[32px] border border-gray-100 md:border-blue-100 shadow-sm h-full min-h-[400px]"
+                >
+                  <div className="h-full w-full rounded-[24px] overflow-hidden relative min-h-[400px]">
+                    <MapContainer
+                      center={[
+                        property.location.coordinates.lat,
+                        property.location.coordinates.lng,
+                      ]}
+                      zoom={15}
+                      scrollWheelZoom={false}
+                      className="h-full w-full z-10"
+                    >
+                      <LayersControl position="topright">
+                        <BaseLayer name="Street Map">
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                        </BaseLayer>
+                        <BaseLayer checked name="Satellite View">
+                          <LayerGroup>
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            />
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                            />
+                          </LayerGroup>
+                        </BaseLayer>
+                      </LayersControl>
+                      <Marker
+                        position={[
+                          property.location.coordinates.lat,
+                          property.location.coordinates.lng,
+                        ]}
+                        icon={CustomIcon}
+                      >
+                        <Popup>{property.basicInfo?.title}</Popup>
+                      </Marker>
+                    </MapContainer>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* GALLERY */}

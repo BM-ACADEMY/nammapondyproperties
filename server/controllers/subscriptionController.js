@@ -53,6 +53,9 @@ exports.verifyPayment = async (req, res) => {
       .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
+      console.error("Razorpay Signature Mismatch!");
+      console.error("Expected:", expectedSignature);
+      console.error("Received:", razorpay_signature);
       return res.status(400).json({ error: "Invalid signature" });
     }
 

@@ -26,6 +26,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import BusinessTypeModal from "./BusinessTypeModal";
 
 const { BaseLayer } = LayersControl;
 
@@ -203,6 +204,24 @@ const PropertyForm = ({
   const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES);
   const [businessTypes, setBusinessTypes] = useState([]);
   const [mapPosition, setMapPosition] = useState(null);
+  const [showBTModal, setShowBTModal] = useState(false);
+
+  const isAdmin = user?.role_id?.role_name?.toLowerCase() === "admin";
+
+  useEffect(() => {
+    // Show Business Type modal if non-admin user doesn't have it set
+    if (user && !isAdmin && !user.businessType && !isEdit) {
+      setShowBTModal(true);
+    }
+  }, [user, isAdmin, isEdit]);
+
+  useEffect(() => {
+    // Set form businessType from user profile if not admin
+    if (!isAdmin && user?.businessType) {
+      const btId = typeof user.businessType === 'string' ? user.businessType : user.businessType._id;
+      setValue("businessType", btId);
+    }
+  }, [user, isAdmin, setValue]);
 
   useEffect(() => {
     const fetchAmenities = async () => {
@@ -434,6 +453,9 @@ const PropertyForm = ({
 
     if (data.businessType) {
       formData.append("businessType", data.businessType);
+    } else if (!isAdmin && user?.businessType) {
+      const btId = typeof user.businessType === 'string' ? user.businessType : user.businessType._id;
+      formData.append("businessType", btId);
     }
 
     images.forEach((image) => {
@@ -456,7 +478,9 @@ const PropertyForm = ({
 
   const nextStep = async () => {
     const fieldsToValidate = {
-      1: ["basicInfo.title", "basicInfo.description", "businessType"],
+      1: isAdmin 
+        ? ["basicInfo.title", "basicInfo.description", "businessType"] 
+        : ["basicInfo.title", "basicInfo.description"],
       2: ["location.addressLine1", "location.locality", "location.pincode"],
       3: categoryWatch === "Sell/Buy" 
         ? ["pricing.sell.minPrice", "pricing.sell.maxPrice", "specifications.area.minArea"] 
@@ -658,16 +682,18 @@ const PropertyForm = ({
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Business Type <span className="text-red-500">*</span></label>
-                  <select {...register("businessType", { required: "Business type is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}>
-                    <option value="">Select Business Type</option>
-                    {businessTypes.map(type => (
-                      <option key={type._id} value={type._id}>{type.name}</option>
-                    ))}
-                  </select>
-                  {errors.businessType && <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>}
-                </div>
+                {isAdmin && (
+                  <div>
+                    <label className="block text-sm font-bold mb-2">Business Type <span className="text-red-500">*</span></label>
+                    <select {...register("businessType", { required: "Business type is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}>
+                      <option value="">Select Business Type</option>
+                      {businessTypes.map(type => (
+                        <option key={type._id} value={type._id}>{type.name}</option>
+                      ))}
+                    </select>
+                    {errors.businessType && <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>}
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Status</label>
                   <div className="flex gap-4">
@@ -1152,6 +1178,15 @@ const PropertyForm = ({
           )}
         </div>
       </form>
+
+      <BusinessTypeModal 
+        isOpen={showBTModal} 
+        user={user} 
+        onSelected={(id) => {
+          setShowBTModal(false);
+          setValue("businessType", id);
+        }} 
+      />
     </div >
   );
 };

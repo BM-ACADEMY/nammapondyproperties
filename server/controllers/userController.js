@@ -2,11 +2,13 @@
 const User = require("../models/User");
 const Role = require("../models/Role");
 const BusinessType = require("../models/BusinessType");
+const BuilderProfile = require("../models/BuilderProfile");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const Property = require("../models/Property");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -104,10 +106,19 @@ exports.verifyOtp = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id).populate(["role_id", "businessType", "builderProfile"]);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Include property count for frontend verification checks
+    const propertyCount = await Property.countDocuments({ seller: user._id });
+    
+    // Add propertyCount to the user object (as a plain object property)
+    const userData = user.toObject();
+    userData.propertyCount = propertyCount;
+
     res.status(200).json({
       success: true,
-      user,
+      user: userData,
     });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
@@ -130,7 +141,7 @@ exports.getUsers = async (req, res) => {
     }
 
     const users = await User.find(query)
-      .populate("role_id")
+      .populate(["role_id", "businessType", "builderProfile"])
       .populate("createdBy", "name");
     res.json(users);
   } catch (error) {
@@ -149,8 +160,8 @@ exports.getPublicUsers = async (req, res) => {
     if (sellerRole) query.role_id = sellerRole._id;
 
     const users = await User.find(query)
-      .select("name phone profile_image role_id isVerified badgeVerified")
-      .populate("role_id")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .populate(["role_id", "builderProfile", "businessType"])
       .limit(parseInt(limit) || 20);
 
     res.json(users);
@@ -162,8 +173,8 @@ exports.getPublicUsers = async (req, res) => {
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name phone profile_image role_id isVerified badgeVerified")
-      .populate("role_id");
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .populate(["role_id", "builderProfile", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -173,7 +184,7 @@ exports.getPublicUserById = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate("role_id");
+    const user = await User.findById(req.params.id).populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -186,27 +197,91 @@ exports.updateUser = async (req, res) => {
     const userId = req.params.id;
     let updateData = { ...req.body };
 
-    if (req.file) {
-      updateData.profile_image = `/uploads/profiles/${req.file.filename}`;
-      const oldUser = await User.findById(userId);
-      if (oldUser && oldUser.profile_image) {
-        const oldImagePath = path.join(__dirname, "..", oldUser.profile_image);
-        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+    // Restriction: Badge-verified sellers cannot change their businessType
+    const existingUser = await User.findById(userId).populate("builderProfile");
+    if (!existingUser) return res.status(404).json({ error: "User not found" });
+
+    if (existingUser.badgeVerified && updateData.businessType && String(updateData.businessType) !== String(existingUser.businessType)) {
+      return res.status(403).json({ error: "Badge-verified sellers cannot change their Business Type" });
+    }
+
+    // Handle File Uploads (profile_image and company_logo)
+    if (req.files) {
+      if (req.files.profile_image) {
+        updateData.profile_image = `/uploads/profiles/${req.files.profile_image[0].filename}`;
+        if (existingUser.profile_image) {
+          const oldImagePath = path.join(__dirname, "..", existingUser.profile_image);
+          if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+        }
       }
-    } else if (req.body.remove_image === "true") {
-      const oldUser = await User.findById(userId);
-      if (oldUser && oldUser.profile_image) {
-        const oldImagePath = path.join(__dirname, "..", oldUser.profile_image);
-        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      if (req.files.company_logo) {
+        updateData.company_logo = `/uploads/profiles/${req.files.company_logo[0].filename}`;
+        if (existingUser.builderProfile && existingUser.builderProfile.companyLogo) {
+          const oldLogoPath = path.join(__dirname, "..", existingUser.builderProfile.companyLogo);
+          if (fs.existsSync(oldLogoPath)) fs.unlinkSync(oldLogoPath);
+        }
       }
+    }
+
+    // Handle Image Deletions
+    if (req.body.remove_image === "true" && existingUser.profile_image) {
+      const oldImagePath = path.join(__dirname, "..", existingUser.profile_image);
+      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
       updateData.profile_image = null;
+    }
+    if (req.body.remove_company_logo === "true" && existingUser.builderProfile && existingUser.builderProfile.companyLogo) {
+      const oldLogoPath = path.join(__dirname, "..", existingUser.builderProfile.companyLogo);
+      if (fs.existsSync(oldLogoPath)) fs.unlinkSync(oldLogoPath);
+      updateData.company_logo = null;
+    }
+
+    // BuilderProfile Upsert Logic
+    const isBuilderOrPromoter = existingUser.businessType && 
+      (req.user.businessType || existingUser.businessType).name?.match(/Builder|Promoter/i);
+
+    // If we have builder-specific fields or the user is identified as such
+    if (req.body.builderDetail) {
+      const builderData = typeof req.body.builderDetail === 'string' 
+        ? JSON.parse(req.body.builderDetail) 
+        : req.body.builderDetail;
+      
+      if (updateData.company_logo !== undefined) {
+        builderData.companyLogo = updateData.company_logo;
+      }
+      if (updateData.profile_image !== undefined) {
+          builderData.profileImage = updateData.profile_image;
+      }
+
+      const bp = await BuilderProfile.findOneAndUpdate(
+        { user: userId },
+        { ...builderData, user: userId },
+        { upsert: true, new: true, runValidators: true }
+      );
+      updateData.builderProfile = bp._id;
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, { 
       new: true,
       runValidators: true 
-    }).populate("role_id");
+    }).populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Emit event if admin updated badgeRequestStatus or badgeVerified
+    if (req.body.badgeRequestStatus !== undefined || req.body.badgeVerified !== undefined) {
+      const io = req.app.get("socketio");
+      if (io) {
+        io.to(`seller-${user._id}`).emit("badge-status-changed", {
+          badgeRequestStatus: user.badgeRequestStatus,
+          badgeVerified: user.badgeVerified,
+          message: `Your badge verification request has been ${user.badgeRequestStatus === "none" ? "updated" : user.badgeRequestStatus}.`,
+        });
+        
+        io.to("admin-room").emit("badge-verification-requested", {
+          sellerId: user._id,
+        }); // Notify other admins
+      }
+    }
+
     res.json(user);
   } catch (error) {
     if (error.code === 11000) {
@@ -290,7 +365,7 @@ exports.upgradeToSeller = async (req, res) => {
       name,
       phone,
       businessType
-    }, { new: true }).populate("role_id");
+    }, { new: true }).populate(["role_id", "businessType"]);
 
     res.json({ success: true, message: "Upgraded successfully", user });
   } catch (error) {
@@ -300,9 +375,14 @@ exports.upgradeToSeller = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate("role_id");
+    const user = await User.findById(req.user.id).populate(["role_id", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ success: true, token: generateToken(user._id), user });
+
+    const propertyCount = await Property.countDocuments({ seller: user._id });
+    const userData = user.toObject();
+    userData.propertyCount = propertyCount;
+
+    res.json({ success: true, token: generateToken(user._id), user: userData });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });
   }
@@ -329,7 +409,28 @@ exports.requestBadgeVerification = async (req, res) => {
     if (user.badgeRequestStatus === "pending") return res.status(400).json({ error: "Request already pending" });
     user.badgeRequestStatus = "pending";
     await user.save();
+
+    // Emit event to admin room using app instance
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("badge-verification-requested", {
+        sellerId: user._id,
+        sellerName: user.name,
+        sellerPhone: user.phone,
+        message: `New badge verification request from ${user.name || 'Seller'}`,
+      });
+    }
+
     res.json({ message: "Verification request sent", status: "pending" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getPendingBadgeRequestsCount = async (req, res) => {
+  try {
+    const count = await User.countDocuments({ badgeRequestStatus: "pending" });
+    res.json({ success: true, count });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -359,3 +460,53 @@ exports.createUserByAdmin = async (req, res) => {
 };
 
 
+exports.getAdminNotificationCounts = async (req, res) => {
+  try {
+    const Enquiry = require("../models/Enquiry");
+    const Requirement = require("../models/Requirement");
+    const RequestCall = require("../models/RequestCall");
+    const Contact = require("../models/Contact");
+    const Property = require("../models/Property");
+    const Role = require("../models/Role");
+
+    // 1. Pending Badge Requests
+    const badgeRequests = await User.countDocuments({ badgeRequestStatus: "pending" });
+
+    // 2. Pending Seller Properties
+    const sellerRole = await Role.findOne({ role_name: "seller" });
+    let sellerProperties = 0;
+    if (sellerRole) {
+      sellerProperties = await Property.countDocuments({ 
+        status: "Pending",
+        seller: { $in: await User.find({ role_id: sellerRole._id }).distinct("_id") }
+      });
+    }
+
+    // 3. New Enquiries
+    const enquiries = await Enquiry.countDocuments({ status: "new" });
+
+    // 4. Pending Requirements
+    const requirements = await Requirement.countDocuments({ status: "Pending" });
+
+    // 5. New Call Requests
+    const callRequests = await RequestCall.countDocuments({ status: "new" });
+
+    // 6. New Contact Messages
+    const contactMessages = await Contact.countDocuments({ status: "new" });
+
+    res.json({
+      success: true,
+      counts: {
+        badgeRequests,
+        sellerProperties,
+        enquiries,
+        requirements,
+        callRequests,
+        contactMessages
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching notification counts:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -14,6 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 import Sidebar from "./Sidebar";
 import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
+import { useSocket } from "@/context/SocketContext";
 
 const { Header, Content } = Layout;
 
@@ -24,6 +25,7 @@ const AdminLayout = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const socket = useSocket();
 
   // Get theme tokens for dynamic styling
   const {
@@ -43,10 +45,18 @@ const AdminLayout = () => {
     };
 
     fetchPendingCount();
-    // Refresh count every minute
+
+    if (socket) {
+      socket.on("new-property-listed", fetchPendingCount);
+      return () => {
+        socket.off("new-property-listed", fetchPendingCount);
+      };
+    }
+
+    // Refresh count every minute as fallback
     const interval = setInterval(fetchPendingCount, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [socket]);
 
   // Handle mobile responsiveness
   useEffect(() => {

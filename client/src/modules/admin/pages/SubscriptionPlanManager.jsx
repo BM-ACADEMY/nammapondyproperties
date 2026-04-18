@@ -25,6 +25,7 @@ const SubscriptionPlanManager = () => {
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
+  const [businessTypes, setBusinessTypes] = useState([]);
   const [form] = Form.useForm();
 
   const fetchPlans = async () => {
@@ -42,8 +43,20 @@ const SubscriptionPlanManager = () => {
     }
   };
 
+  const fetchBusinessTypes = async () => {
+    try {
+      const res = await axios.get(`${API}/business-types?status=active`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setBusinessTypes(res.data);
+    } catch {
+      console.error("Failed to fetch business types");
+    }
+  };
+
   useEffect(() => {
     fetchPlans();
+    fetchBusinessTypes();
   }, []);
 
   const handleAdd = () => {
@@ -56,6 +69,7 @@ const SubscriptionPlanManager = () => {
     setEditingPlan(record);
     form.setFieldsValue({
       ...record,
+      businessType: record.businessType?._id,
       features: record.features?.join("\n"),
       notIncluded: record.notIncluded?.join("\n"),
     });
@@ -164,8 +178,13 @@ const SubscriptionPlanManager = () => {
         </div>
 
         {/* Header */}
-        <div className={`py-4 text-center border-b border-gray-50 bg-white pt-10`}>
+        <div className={`py-4 text-center border-b border-gray-50 bg-white pt-10 px-4`}>
           <h2 className="text-2xl font-black text-[#002B49] tracking-widest uppercase">{plan.name}</h2>
+          <div className="mt-1">
+            <Tag color="blue" className="rounded-md border-none bg-blue-50 text-blue-600 font-bold text-[10px] uppercase">
+              {plan.businessType?.name || "Global"}
+            </Tag>
+          </div>
         </div>
 
         {/* Price Banner */}
@@ -266,87 +285,104 @@ const SubscriptionPlanManager = () => {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={500}
+        width={700}
+        centered
       >
-        <Form layout="vertical" form={form} onFinish={onFinish}>
-          <Form.Item
-            name="name"
-            label="Plan Name"
-            rules={[{ required: true }]}
-          >
-            <Select placeholder="Select plan type">
-              <Select.Option value="Standard">Standard</Select.Option>
-              <Select.Option value="Premium">Premium</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="price"
-            label="Price (₹)"
-            rules={[{ required: true }]}
-          >
-            <InputNumber className="w-full" placeholder="0" />
-          </Form.Item>
-
-          <Form.Item
-            name="propertyLimit"
-            label="Property Limit (-1 for unlimited)"
-            rules={[{ required: true }]}
-          >
-            <InputNumber className="w-full" placeholder="3" />
-          </Form.Item>
-
-          <Form.Item
-            name="duration"
-            label="Duration (Days) - Leave empty for lifetime"
-            rules={[{ required: false }]}
-          >
-            <InputNumber className="w-full" placeholder="30" />
-          </Form.Item>
-
-          <Form.Item
-            name="features"
-            label="Features (one per line)"
-          >
-            <Input.TextArea rows={3} placeholder="3 Property Uploads&#10;Basic Support" />
-          </Form.Item>
-
-          <Form.Item
-            name="notIncluded"
-            label="Not Included Features (one per line)"
-          >
-            <Input.TextArea rows={3} placeholder="Advanced Analytics&#10;Dedicated Support" />
-          </Form.Item>
-
-          <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
-            <span className="font-semibold text-gray-700 flex items-center gap-2">
-              <Star size={18} className="text-amber-500" /> Mark as Popular
-            </span>
-            <Form.Item name="isPopular" valuePropName="checked" className="mb-0">
-              <Switch />
-            </Form.Item>
-          </div>
-
-          <Form.Item name="status" label="Status" initialValue="active">
-            <Select>
-              <Select.Option value="active">Active</Select.Option>
-              <Select.Option value="inactive">Inactive</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <div className="flex justify-end gap-3 pt-6">
-            <Button onClick={() => setIsModalOpen(false)} className="rounded-xl px-6">
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              className="bg-blue-600 rounded-xl px-8 font-semibold shadow-md"
+        <div style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: '8px' }}>
+          <Form layout="vertical" form={form} onFinish={onFinish}>
+            <Form.Item
+              name="name"
+              label="Plan Name"
+              rules={[{ required: true }]}
             >
-              {editingPlan ? "Update Plan" : "Create Plan"}
-            </Button>
-          </div>
-        </Form>
+              <Select placeholder="Select plan name">
+                <Select.Option value="Standard">Standard</Select.Option>
+                <Select.Option value="Premium">Premium</Select.Option>
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="businessType"
+              label="Business Type"
+              rules={[{ required: true, message: "Please select a business type" }]}
+            >
+              <Select placeholder="Select business type">
+                {businessTypes.map((type) => (
+                  <Select.Option key={type._id} value={type._id}>
+                    {type.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="price"
+              label="Price (₹)"
+              rules={[{ required: true }]}
+            >
+              <InputNumber className="w-full" placeholder="0" />
+            </Form.Item>
+
+            <Form.Item
+              name="propertyLimit"
+              label="Property Limit (-1 for unlimited)"
+              rules={[{ required: true }]}
+            >
+              <InputNumber className="w-full" placeholder="3" />
+            </Form.Item>
+
+            <Form.Item
+              name="duration"
+              label="Duration (Days) - Leave empty for lifetime"
+              rules={[{ required: false }]}
+            >
+              <InputNumber className="w-full" placeholder="30" />
+            </Form.Item>
+
+            <Form.Item
+              name="features"
+              label="Features (one per line)"
+            >
+              <Input.TextArea rows={3} placeholder="3 Property Uploads&#10;Basic Support" />
+            </Form.Item>
+
+            <Form.Item
+              name="notIncluded"
+              label="Not Included Features (one per line)"
+            >
+              <Input.TextArea rows={3} placeholder="Advanced Analytics&#10;Dedicated Support" />
+            </Form.Item>
+
+            <div className="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-xl">
+              <span className="font-semibold text-gray-700 flex items-center gap-2">
+                <Star size={18} className="text-amber-500" /> Mark as Popular
+              </span>
+              <Form.Item name="isPopular" valuePropName="checked" className="mb-0">
+                <Switch />
+              </Form.Item>
+            </div>
+
+            <Form.Item name="status" label="Status" initialValue="active">
+              <Select>
+                <Select.Option value="active">Active</Select.Option>
+                <Select.Option value="inactive">Inactive</Select.Option>
+              </Select>
+            </Form.Item>
+
+            <div className="flex justify-end gap-3 pt-6">
+              <Button onClick={() => setIsModalOpen(false)} className="rounded-xl px-6">
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                htmlType="submit"
+                className="bg-blue-600 rounded-xl px-8 font-semibold shadow-md"
+              >
+                {editingPlan ? "Update Plan" : "Create Plan"}
+              </Button>
+            </div>
+          </Form>
+        </div>
       </Modal>
 
       <style>{`

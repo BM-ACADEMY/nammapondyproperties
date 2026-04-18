@@ -18,6 +18,8 @@ router.get("/public-user/:id", userController.getPublicUserById);
 // User Management Routes (Protected)
 router.get("/fetch-all-user", protect, userController.getUsers); // Legacy support
 router.get("/get-all-users", protect, userController.getUsers);
+router.get("/get-pending-badge-count", protect, userController.getPendingBadgeRequestsCount);
+router.get("/fetch-notification-counts", protect, userController.getAdminNotificationCounts);
 
 router.get("/fetch-user-by-id/:id", protect, userController.getUserById); // Legacy support
 router.get("/get-user-by-id/:id", protect, userController.getUserById);
@@ -25,7 +27,10 @@ router.get("/get-user-by-id/:id", protect, userController.getUserById);
 router.put(
   "/update-user-by-id/:id",
   protect,
-  upload.single("profile_image"),
+  upload.fields([
+    { name: "profile_image", maxCount: 1 },
+    { name: "company_logo", maxCount: 1 },
+  ]),
   userController.updateUser,
 );
 router.put("/upgrade-to-seller", protect, userController.upgradeToSeller);

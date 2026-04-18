@@ -22,11 +22,24 @@ const AddProperty = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
   useEffect(() => {
+    // 🛡️ Restriction: Unverified profiles can only list ONE property
+    if (user && !editId) {
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+      if (role !== "ADMIN" && user.propertyCount >= 1 && !user.badgeVerified) {
+        message.warning({
+          content: "First complete your profile, once verified your profile then only you listing other properties",
+          key: "verification-restricted"
+        });
+        navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
+        return;
+      }
+    }
+
     // Show modal if user is logged in but has no phone number (only for new properties)
     if (user && !user.phone && !editId) {
       setShowPhoneModal(true);
     }
-  }, [user, editId]);
+  }, [user, editId, navigate]);
 
   const checkLimit = React.useCallback(async () => {
     try {

@@ -12,17 +12,18 @@ const UpgradePlan = () => {
   const [processingId, setProcessingId] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [settings, setSettings] = useState(null);
 
   // Static Free Plan definition
   const freePlan = {
     _id: "static_free",
-    name: "BASIC",
+    name: (settings?.defaultPlanName || "BASIC").toUpperCase(),
     price: 0,
     duration: 0,
-    propertyLimit: 3,
+    propertyLimit: settings?.sellerPropertyLimit || 3,
     description: "Start listing for free",
     features: [
-      "Upload up to 3 properties",
+      `Upload up to ${settings?.sellerPropertyLimit || 3} properties`,
       "Medium visibility",
       "Properties appear in normal listing order"
     ],
@@ -66,9 +67,21 @@ const UpgradePlan = () => {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const res = await api.get("/website-settings");
+      if (res.data && res.data.length > 0) {
+        setSettings(res.data[0]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch settings:", error);
+    }
+  };
+
   useEffect(() => {
     fetchPlans();
     fetchMySubscription();
+    fetchSettings();
   }, []);
 
   const loadRazorpayScript = () => {
@@ -83,11 +96,18 @@ const UpgradePlan = () => {
 
   const handleUpgrade = async (plan) => {
     if (plan.price === 0) {
-        message.info("Free plan is already your default.");
+        message.info(`${plan.name} plan is already your default.`);
         return;
     }
 
     setProcessingId(plan._id);
+    const keyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!keyId) {
+      message.error("Razorpay Key is missing. Please contact support.");
+      setProcessingId(null);
+      return;
+    }
+
     const resScript = await loadRazorpayScript();
 
     if (!resScript) {
@@ -102,7 +122,7 @@ const UpgradePlan = () => {
       });
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: keyId,
         amount: order.amount,
         currency: order.currency,
         name: "Namma Pondy Properties",
@@ -122,16 +142,42 @@ const UpgradePlan = () => {
               navigate("/seller/my-properties");
             }
           } catch (err) {
-            message.error("Payment verification failed");
+            message.error(err.response?.data?.error || "Payment verification failed");
           }
         },
         prefill: {
-          name: user?.name,
-          contact: user?.phone,
+          name: user?.name || "Customer",
+          contact: user?.phone || "",
+          email: user?.builderProfile?.email || "support@nammapondy.com", // UPI works better with an email
+        },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay via UPI",
+                instruments: [
+                  {
+                    method: "upi",
+                  },
+                ],
+              },
+            },
+            sequence: ["block.upi", "block.card", "block.netbanking"],
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
         },
         theme: {
-          color: "#2563eb",
+          color: "#002B49", // Using the navy color from your design
         },
+        retry: {
+          enabled: true,
+          max_count: 3
+        },
+        modal: {
+          confirm_close: true,
+        }
       };
 
       const paymentObject = new window.Razorpay(options);
