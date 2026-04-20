@@ -433,19 +433,19 @@ const BusinessUserList = () => {
                 /* ─── Builder Profile Grid ─── */
                 <div>
                   {/* ─── SuperAgent CTA Banner ─── */}
-                  <div className="mb-12 bg-[#E9EAF5] rounded-xl overflow-hidden relative shadow-sm border border-[#D1D5DB]/30">
-                    <div className="flex flex-col lg:flex-row items-center py-6">
-                      <div className="flex-1 px-8 lg:px-12 py-6 text-left z-10">
-                        <h2 className="text-3xl lg:text-4xl font-bold text-[#2C334E] mb-4 tracking-tight">
+                  <div className="mb-12 bg-[#E9EAF5] rounded-xl overflow-hidden relative shadow-sm border border-[#D1D5DB]/30 mx-0 sm:mx-0">
+                    <div className="flex flex-col lg:flex-row items-center py-2 lg:py-6">
+                      <div className="flex-1 px-6 lg:px-12 py-8 lg:py-6 text-left z-10">
+                        <h2 className="text-2xl lg:text-4xl font-bold text-[#2C334E] mb-3 lg:mb-4 tracking-tight">
                           Trusted Builders & Promoters
                         </h2>
-                        <p className="text-[#5E6D8E] text-lg mb-8 max-w-lg leading-relaxed font-medium">
+                        <p className="text-[#5E6D8E] text-base lg:text-lg mb-6 lg:mb-8 max-w-lg leading-relaxed font-medium">
                           Partner with verified professionals who deliver quality and transparency. 
                           The most responsive experts for your next big project.
                         </p>
                         <button 
                           onClick={() => navigate("/builder-info")}
-                          className="px-10 py-3 bg-[#174685] text-white rounded-xl text-base font-bold hover:bg-[#123a6d] transition-all shadow-lg hover:shadow-[#174685]/20 active:scale-95 cursor-pointer"
+                          className="w-full sm:w-auto px-10 py-3 bg-[#174685] text-white rounded-xl text-base font-bold hover:bg-[#123a6d] transition-all shadow-lg hover:shadow-[#174685]/20 active:scale-95 cursor-pointer"
                         >
                           Learn more
                         </button>
@@ -453,8 +453,8 @@ const BusinessUserList = () => {
                       <div className="flex-1 relative w-full h-[240px] lg:h-[300px]">
                         <img 
                           src="/builder/agent.png" 
-                          alt="Partner Agents" 
-                          className="w-full h-full object-contain object-right-bottom scale-125 lg:translate-x-4 translate-y-2 opacity-95"
+                          alt="Trusted Builders" 
+                          className="w-full h-full object-contain object-right-bottom scale-125 lg:translate-x-4 translate-y-2 opacity-95 transition-all duration-700 hover:scale-[1.3] pointer-events-none"
                         />
                       </div>
                     </div>
@@ -669,49 +669,52 @@ const BusinessUserList = () => {
                             </div>
                           </div>
 
-                          {/* Brokerage Sidebar */}
-                          <div className="w-full lg:w-[240px] shrink-0 flex flex-col items-center lg:items-end justify-center border-t lg:border-t-0 lg:border-l border-white/10 pt-8 lg:pt-0 lg:pl-10">
-                            <div className="w-32 h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-6 shadow-2xl flex items-center justify-center mb-5 hover:scale-105 transition-transform duration-500">
-                              {selectedSeller?.builderProfile?.companyLogo ? (
-                                <img
-                                  src={getImageUrl(selectedSeller.builderProfile.companyLogo)}
-                                  className="max-h-full max-w-full object-contain"
-                                  alt="company logo"
-                                />
-                              ) : (
-                                <Building2 size={32} className="text-slate-200" />
+                          {/* Brokerage Sidebar - Only show if any data exists */}
+                          {(selectedSeller?.builderProfile?.companyLogo || selectedSeller?.builderProfile?.companyName || (selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link))) && (
+                            <div className="w-full lg:w-[240px] shrink-0 flex flex-col items-start lg:items-end justify-center border-t lg:border-t-0 lg:border-l border-white/10 pt-8 lg:pt-0 lg:pl-10">
+                              {selectedSeller?.builderProfile?.companyLogo && (
+                                <div className="w-32 h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-6 shadow-2xl flex items-center justify-center mb-5 hover:scale-105 transition-transform duration-500">
+                                  <img
+                                    src={getImageUrl(selectedSeller.builderProfile.companyLogo)}
+                                    className="max-h-full max-w-full object-contain"
+                                    alt="company logo"
+                                  />
+                                </div>
+                              )}
+                              
+                              {selectedSeller?.builderProfile?.companyName && (
+                                <h4 className="text-white font-bold text-base lg:text-lg text-left lg:text-right leading-tight mb-2">
+                                  {selectedSeller.builderProfile.companyName}
+                                </h4>
+                              )}
+                              
+                              {/* Social Media Links in Sidebar */}
+                              {selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link) && (
+                                <div className="flex flex-wrap justify-start lg:justify-end gap-3 mt-6">
+                                  {selectedSeller.builderProfile.socialLinks.website && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Website">
+                                      <Globe size={16} />
+                                    </a>
+                                  )}
+                                  {selectedSeller.builderProfile.socialLinks.linkedin && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="LinkedIn">
+                                      <Linkedin size={16} />
+                                    </a>
+                                  )}
+                                  {selectedSeller.builderProfile.socialLinks.instagram && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Instagram">
+                                      <Instagram size={16} />
+                                    </a>
+                                  )}
+                                  {selectedSeller.builderProfile.socialLinks.facebook && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Facebook">
+                                      <Facebook size={16} />
+                                    </a>
+                                  )}
+                                </div>
                               )}
                             </div>
-                            <h4 className="text-white font-bold text-base lg:text-lg text-center lg:text-right leading-tight mb-2">
-                              {selectedSeller?.builderProfile?.companyName || "Independent"}
-                            </h4>
-                            
-                            {/* Social Media Links in Sidebar */}
-                            {selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link) && (
-                              <div className="flex flex-wrap justify-center lg:justify-end gap-3 mt-6">
-                                {selectedSeller.builderProfile.socialLinks.website && (
-                                  <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Website">
-                                    <Globe size={16} />
-                                  </a>
-                                )}
-                                {selectedSeller.builderProfile.socialLinks.linkedin && (
-                                  <a href={selectedSeller.builderProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="LinkedIn">
-                                    <Linkedin size={16} />
-                                  </a>
-                                )}
-                                {selectedSeller.builderProfile.socialLinks.instagram && (
-                                  <a href={selectedSeller.builderProfile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Instagram">
-                                    <Instagram size={16} />
-                                  </a>
-                                )}
-                                {selectedSeller.builderProfile.socialLinks.facebook && (
-                                  <a href={selectedSeller.builderProfile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Facebook">
-                                    <Facebook size={16} />
-                                  </a>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                          )}
                         </div>
 
                       </div>
