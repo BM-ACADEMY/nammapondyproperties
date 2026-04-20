@@ -394,8 +394,8 @@ exports.getSellersByPropertyBusinessType = async (req, res) => {
     const Property = require("../models/Property");
     const sellersIds = await Property.find({ businessType: businessTypeId }).distinct("seller");
     const sellers = await User.find({ _id: { $in: sellersIds } })
-      .select("name phone profile_image role_id isVerified badgeVerified")
-      .populate("role_id");
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .populate(["role_id", "builderProfile", "businessType"]);
     res.json(sellers);
   } catch (error) {
     res.status(500).json({ error: error.message });
