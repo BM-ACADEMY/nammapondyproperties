@@ -49,20 +49,30 @@ exports.getSharedLeads = async (req, res) => {
     const isBuilder = /Builder|Promoter/i.test(sellerBusinessType);
     const isAgent = /Agent/i.test(sellerBusinessType);
 
-    // Transform data to handle visibility logic
-    const fullLeads = await Promise.all(sharedLeads.map(async (lead) => {
+    // Filter and Transform data
+    const filteredLeads = sharedLeads.filter(lead => {
+      // 1. If it's already accepted by someone else or closed, don't show it at all
+      if (lead.status !== "pending" && (!lead.acceptedBy || lead.acceptedBy._id.toString() !== userId.toString())) {
+        return false;
+      }
+
+      // 2. Strict Role Matching Logic:
+      // Priority 1: Builders Only
+      if (lead.matchPriority === 1 && !isBuilder) return false;
+      // Priority 2 & 3: Agents Only
+      if ((lead.matchPriority === 2 || lead.matchPriority === 3) && !isAgent) return false;
+
+      return true;
+    });
+
+    const fullLeads = await Promise.all(filteredLeads.map(async (lead) => {
       const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
       
       // Visibility Logic:
       // 1. If accepted by me -> Always show details
-      // 2. If it is an EXACT MATCH and my business type matches the priority -> Show details
-      let showFullDetails = isAcceptedByMe;
+      // 2. If it is an EXACT MATCH -> Show details
+      let showFullDetails = isAcceptedByMe || lead.matchType === "exact";
       
-      if (!showFullDetails && lead.matchType === "exact") {
-        if (lead.matchPriority === 1 && isBuilder) showFullDetails = true;
-        if (lead.matchPriority === 2 && isAgent) showFullDetails = true;
-      }
-
       let reqDetails = { ...lead.requirement._doc };
       
       if (!showFullDetails) {
@@ -123,6 +133,19 @@ exports.acceptLead = async (req, res) => {
         success: false,
         message: "You do not have an active subscription for this plan.",
       });
+    }
+
+    // 1.5 Verify Business Type matches lead priority
+    const user = await User.findById(userId).populate("businessType");
+    const businessType = user.businessType?.name || "";
+    const isBuilder = /Builder|Promoter/i.test(businessType);
+    const isAgent = /Agent/i.test(businessType);
+
+    if (lead.matchPriority === 1 && !isBuilder) {
+      return res.status(403).json({ success: false, message: "This lead is exclusively for Builders." });
+    }
+    if ((lead.matchPriority === 2 || lead.matchPriority === 3) && !isAgent) {
+      return res.status(403).json({ success: false, message: "This lead is reserved for Agents." });
     }
 
     // 2. Atomically accept the lead

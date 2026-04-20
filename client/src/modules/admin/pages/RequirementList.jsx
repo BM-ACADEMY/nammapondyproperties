@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Popover,
+  Checkbox,
 } from "antd";
 import { 
   Trash2, 
@@ -28,7 +29,10 @@ import {
   ClipboardList,
   Share2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  CheckSquare,
+  Square,
+  CheckCircle2
 } from "lucide-react";
 import { 
   getRequirements, 
@@ -53,6 +57,7 @@ const RequirementList = () => {
   const [sharingLoading, setSharingLoading] = useState(false);
   const [fetchingStats, setFetchingStats] = useState(false);
   const [expandedPlans, setExpandedPlans] = useState([]);
+  const [selectedPlanIds, setSelectedPlanIds] = useState([]);
 
   const togglePlan = (planId) => {
     setExpandedPlans((prev) => 
@@ -130,19 +135,55 @@ const RequirementList = () => {
     }
   };
 
-  const handleShare = async (planId, matchType, matchPriority) => {
+  const handleShare = async (planIdOrIds, matchType, matchPriority) => {
     setSharingLoading(true);
+    const data = Array.isArray(planIdOrIds)
+      ? { planIds: planIdOrIds, matchType, matchPriority }
+      : { planId: planIdOrIds, matchType, matchPriority };
+
     try {
-      await shareRequirement(selectedRequirement._id, planId, matchType, matchPriority);
+      await shareRequirement(selectedRequirement._id, data);
       message.success("Lead shared successfully!");
       setIsShareModalOpen(false);
-      fetchRequirements(); // Refresh list to show shared status
+      setSelectedPlanIds([]); // Reset selection
+      fetchRequirements(); 
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to share lead");
     } finally {
       setSharingLoading(false);
     }
   };
+
+  const togglePlanSelection = (planId) => {
+    setSelectedPlanIds(prev => 
+      prev.includes(planId) ? prev.filter(id => id !== planId) : [...prev, planId]
+    );
+  };
+
+  const selectAllMatches = (plans) => {
+    const matchedIds = plans
+      .filter(plan => hasGlobalBuilderMatch 
+        ? plan.sellers.some(s => s.isBuilder && s.isMatch)
+        : plan.sellers.some(s => s.isAgent && s.isMatch)
+      )
+      .map(p => p.planId);
+    setSelectedPlanIds(matchedIds);
+  };
+
+  const selectAllFallbacks = (plans) => {
+    const agentsIds = plans
+      .filter(plan => plan.sellers.some(s => s.isAgent))
+      .map(p => p.planId);
+    setSelectedPlanIds(agentsIds);
+  };
+
+  const isInMatchMode = subscriptionStats.some(plan => {
+    if (hasGlobalBuilderMatch) {
+      return plan.sellers.some(s => s.isBuilder && s.isMatch);
+    } else {
+      return plan.sellers.some(s => s.isAgent && s.isMatch);
+    }
+  });
 
   const filteredData = requirements.filter((item) => {
     const searchLower = searchText.toLowerCase();
@@ -431,7 +472,22 @@ const RequirementList = () => {
         footer={[
           <Button key="close" onClick={() => setIsShareModalOpen(false)} className="rounded-lg h-9 px-5 border-gray-200 text-slate-700 font-medium">
             Cancel
-          </Button>
+          </Button>,
+          selectedPlanIds.length > 0 && (
+            <Button 
+              key="share-selected" 
+              type="primary" 
+              className="bg-indigo-600 hover:bg-indigo-700 h-9 px-6 rounded-lg font-bold"
+              loading={sharingLoading}
+              onClick={() => handleShare(
+                selectedPlanIds, 
+                isInMatchMode ? "exact" : "not-exact", 
+                isInMatchMode ? (hasGlobalBuilderMatch ? 1 : 2) : 3
+              )}
+            >
+              Share with {selectedPlanIds.length} Plan{selectedPlanIds.length > 1 ? 's' : ''}
+            </Button>
+          )
         ]}
         width={600}
         destroyOnClose
@@ -454,9 +510,20 @@ const RequirementList = () => {
                }) ? (
                 <div>
                   <div className="flex items-center justify-between mb-4 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm shadow-indigo-200"></div>
-                        <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-indigo-900 m-0">MATCH REQUIREMENT</h4>
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm shadow-indigo-200"></div>
+                            <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-indigo-900 m-0">MATCH REQUIREMENT</h4>
+                        </div>
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<CheckCircle2 size={14} />}
+                          className="text-indigo-600 font-bold text-[11px] hover:bg-indigo-100/50 flex items-center gap-1.5 px-2 bg-indigo-50/50 rounded-lg"
+                          onClick={() => selectAllMatches(subscriptionStats)}
+                        >
+                          Select All Matches
+                        </Button>
                     </div>
                     <Tag color="indigo" className="m-0 border-none font-bold uppercase text-[10px] scale-90 origin-right">
                       {hasGlobalBuilderMatch ? "Priority: Builder" : "Priority: Agent"}
@@ -475,10 +542,19 @@ const RequirementList = () => {
                       return (
                         <div 
                           key={`match-${plan.planId}`} 
-                          className="flex flex-col rounded-[20px] border border-indigo-200 bg-white shadow-sm transition-all duration-300"
+                          className={`flex flex-col rounded-[20px] border transition-all duration-300 ${selectedPlanIds.includes(plan.planId) ? 'border-indigo-500 bg-indigo-50/30' : 'border-indigo-200 bg-white shadow-sm'}`}
+                          onClick={() => togglePlanSelection(plan.planId)}
                         >
-                          <div className="flex items-center justify-between p-5">
+                          <div className="flex items-center justify-between p-5 cursor-pointer">
                             <div className="flex items-center gap-4">
+                              <div className="shrink-0 pt-0.5">
+                                <Checkbox 
+                                  checked={selectedPlanIds.includes(plan.planId)} 
+                                  className="scale-110 custom-indigo-checkbox"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={() => togglePlanSelection(plan.planId)}
+                                />
+                              </div>
                               <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white shadow-md shadow-indigo-100">
                                 {plan.planName.charAt(0)}
                               </div>
@@ -506,9 +582,22 @@ const RequirementList = () => {
                                             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[10px] shrink-0">
                                               {s.name.substring(0, 2).toUpperCase()}
                                             </div>
-                                            <div className="flex flex-col min-w-0">
+                                            <div className="flex flex-col min-w-0 flex-1">
                                               <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
-                                              <span className="text-slate-400 text-[9px] font-medium">{s.businessType}</span>
+                                              <span className="text-slate-400 text-[9px] font-medium mb-1">{s.businessType}</span>
+                                              {s.matchingProperties && s.matchingProperties.length > 0 && (
+                                                <div className="flex flex-col gap-1 mt-0.5 pt-1 border-t border-slate-100">
+                                                  <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">Matching Properties:</span>
+                                                  {s.matchingProperties.slice(0, 3).map((title, idx) => (
+                                                    <span key={idx} className="text-[10px] text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-100 truncate shadow-sm">
+                                                      • {title}
+                                                    </span>
+                                                  ))}
+                                                  {s.matchingProperties.length > 3 && (
+                                                    <span className="text-[9px] text-slate-400 ml-1 italic">+{s.matchingProperties.length - 3} more...</span>
+                                                  )}
+                                                </div>
+                                              )}
                                             </div>
                                           </div>
                                         ))}
@@ -523,6 +612,7 @@ const RequirementList = () => {
                                     type="text" 
                                     size="small"
                                     className="text-indigo-600 font-bold text-[11px] hover:bg-indigo-50"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     Review
                                   </Button>
@@ -532,7 +622,10 @@ const RequirementList = () => {
                                   className="h-9 px-4 rounded-xl shadow-none font-bold text-xs bg-indigo-600 hover:bg-indigo-700 border-none"
                                   disabled={sharingLoading}
                                   loading={sharingLoading}
-                                  onClick={() => handleShare(plan.planId, "exact", hasGlobalBuilderMatch ? 1 : 2)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShare(plan.planId, "exact", hasGlobalBuilderMatch ? 1 : 2);
+                                  }}
                                 >
                                   Share Now
                                 </Button>
@@ -556,9 +649,20 @@ const RequirementList = () => {
                   </div>
 
                   <div className="flex items-center justify-between mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200">
-                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-6 bg-slate-500 rounded-full shadow-sm shadow-slate-200"></div>
-                        <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-slate-700 m-0">NOT MATCH REQUIREMENT</h4>
+                     <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                           <div className="w-2 h-6 bg-slate-500 rounded-full shadow-sm shadow-slate-200"></div>
+                           <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-slate-700 m-0">NOT MATCH REQUIREMENT</h4>
+                        </div>
+                        <Button 
+                          type="text" 
+                          size="small" 
+                          icon={<CheckCircle2 size={14} />}
+                          className="text-slate-600 font-bold text-[11px] hover:bg-slate-200/50 flex items-center gap-1.5 px-2 bg-slate-200/50 rounded-lg"
+                          onClick={() => selectAllFallbacks(subscriptionStats)}
+                        >
+                          Select All Agents
+                        </Button>
                      </div>
                      <Tag className="m-0 border-none bg-slate-600 text-white font-bold uppercase text-[9px] rounded-md py-0.5">Agents Only</Tag>
                   </div>
@@ -571,11 +675,22 @@ const RequirementList = () => {
                       return (
                         <div 
                           key={`not-match-${plan.planId}`} 
-                          className={`flex flex-col rounded-[20px] border transition-all duration-300 ${hasAgents ? 'border-slate-200 bg-white shadow-sm' : 'border-slate-100 bg-slate-50 opacity-40 grayscale pointer-events-none'}`}
+                          className={`flex flex-col rounded-[20px] border transition-all duration-300 ${hasAgents ? (selectedPlanIds.includes(plan.planId) ? 'border-slate-500 bg-slate-50' : 'border-slate-200 bg-white shadow-sm') : 'border-slate-100 bg-slate-50 opacity-40 grayscale pointer-events-none'}`}
+                          onClick={() => hasAgents && togglePlanSelection(plan.planId)}
                         >
-                           <div className="flex items-center justify-between p-5">
+                           <div className="flex items-center justify-between p-5 cursor-pointer">
                               <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasAgents ? 'bg-slate-700 text-white shadow-md shadow-slate-100' : 'bg-slate-200 text-slate-400'}`}>
+                                {hasAgents && (
+                                  <div className="shrink-0 pt-0.5">
+                                    <Checkbox 
+                                      checked={selectedPlanIds.includes(plan.planId)} 
+                                      className="scale-110 custom-slate-checkbox"
+                                      onClick={(e) => e.stopPropagation()}
+                                      onChange={() => togglePlanSelection(plan.planId)}
+                                    />
+                                  </div>
+                                )}
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasAgents ? (selectedPlanIds.includes(plan.planId) ? 'bg-slate-800' : 'bg-slate-700') + ' text-white shadow-md shadow-slate-100' : 'bg-slate-200 text-slate-400'}`}>
                                    {plan.planName.charAt(0)}
                                 </div>
                                 <div className="flex flex-col">
@@ -623,7 +738,10 @@ const RequirementList = () => {
                                   className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs transition-all ${hasAgents ? 'bg-slate-800 text-white hover:bg-slate-900 border-none' : 'bg-slate-200 text-slate-400 border-none'}`}
                                   disabled={!hasAgents || sharingLoading}
                                   loading={sharingLoading}
-                                  onClick={() => handleShare(plan.planId, "not-exact", 3)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShare(plan.planId, "not-exact", 3);
+                                  }}
                                 >
                                   Send Fallback
                                 </Button>
