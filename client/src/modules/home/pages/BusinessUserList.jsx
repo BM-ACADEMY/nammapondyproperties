@@ -2,6 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import {
+  Globe,
+  Instagram,
+  Facebook,
+  Linkedin,
   User,
   ArrowRight,
   Building2,
@@ -417,47 +421,66 @@ const BusinessUserList = () => {
                     {sellers.map((user) => (
                       <motion.div
                         key={user._id}
-                        whileHover={{ scale: 1.02 }}
                         onClick={() => setSelectedSeller(user)}
-                        className="flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all group relative overflow-hidden h-auto sm:h-[180px]"
+                        className="flex flex-col sm:flex-row bg-white rounded-[24px] shadow-[0_2px_12px_rgb(0,0,0,0.04)] border border-slate-100 cursor-pointer hover:shadow-lg hover:border-slate-200 transition-all group overflow-hidden h-auto sm:h-[220px] relative"
                       >
-                        {/* Left Section: Image */}
-                        <div className="w-full sm:w-1/3 h-48 sm:h-full shrink-0 overflow-hidden relative">
+                        {/* Company Logo Badge Top Right */}
+                        {user.builderProfile?.companyLogo && (
+                          <div className="absolute top-0 right-0 w-[90px] h-20 lg:w-[110px] lg:h-24 bg-[#F8FAFC] flex flex-col items-center justify-center z-10 rounded-bl-[20px] border-l border-b border-slate-100 p-2">
+                            <img 
+                              src={getImageUrl(user.builderProfile.companyLogo)} 
+                              className="max-h-full max-w-full object-contain" 
+                              alt="company logo" 
+                            />
+                          </div>
+                        )}
+
+                        {/* Left Section: Profile Photo */}
+                        <div className="w-full sm:w-[220px] h-64 sm:h-full shrink-0 overflow-hidden relative border-r border-slate-50">
                           {user.profile_image ? (
                             <img
                               src={getImageUrl(user.profile_image)}
                               alt={user.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-4xl font-bold">
-                              {user.name?.charAt(0).toUpperCase()}
+                            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-[#174685] text-6xl font-extrabold uppercase">
+                              {user.name?.charAt(0)}
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/5" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent sm:hidden" />
                         </div>
 
                         {/* Right Section: Info */}
-                        <div className="flex-1 p-5 flex flex-col justify-start min-w-0">
-                          <h3 className="text-xl font-bold text-[#174685] mb-1 truncate">
-                            {user.name}
-                          </h3>
-                          <p className="text-sm text-slate-500 font-medium mb-3">
-                            {businessType?.name || "Professional"}
-                          </p>
-
-                          <div className="flex items-center gap-2">
+                        <div className="flex-1 p-6 sm:p-7 pr-12 lg:pr-[140px] flex flex-col justify-center min-w-0">
+                          {/* Name and Verified */}
+                          <div className="flex flex-col gap-2 mb-5">
+                            <h3 className="text-[22px] lg:text-2xl font-bold text-slate-800 truncate leading-none">
+                              {user.name}
+                            </h3>
                             {(user.badgeVerified ||
                               user.role_id?.role_name === "admin") && (
-                              <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-green-100 text-green-700 rounded-md border border-green-200">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-[8px] w-fit">
                                 <img
                                   src="/Logo/badge.png"
                                   alt="Verified"
-                                  className="w-3.5 h-3.5 object-contain"
+                                  className="w-[15px] h-[15px] object-contain"
                                 />
-                                <span className="text-[10px] font-extrabold uppercase tracking-widest">
+                                <span className="text-[12px] font-black uppercase tracking-widest leading-none text-[#2E7D32] mt-0.5">
                                   Verified
                                 </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Bottom: Type and Exp Pill */}
+                          <div className="flex flex-wrap gap-2">
+                            <div className="inline-block bg-[#F3E8FF] text-[#6B21A8] px-3 py-1.5 rounded-xl text-[13px] font-semibold w-fit truncate">
+                              {businessType?.name || "Professional"}
+                            </div>
+                            {user.builderProfile?.experienceYears && (
+                              <div className="inline-block bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl text-[13px] font-semibold w-fit border border-amber-100">
+                                {user.builderProfile.experienceYears} Yrs Experience
                               </div>
                             )}
                           </div>
@@ -562,9 +585,9 @@ const BusinessUserList = () => {
                                 {selectedSeller?.name}
                               </h2>
 
-                              {/* Professional Meta Info (Existing Data Only) */}
-                              <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-6">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl">
+                              {/* Professional Meta Info */}
+                              <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
                                   <Building2
                                     size={14}
                                     className="text-[#174685]"
@@ -576,7 +599,7 @@ const BusinessUserList = () => {
                                     Properties
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                                     Type:
                                   </span>
@@ -584,7 +607,63 @@ const BusinessUserList = () => {
                                     {businessType?.name || "Professional"}
                                   </span>
                                 </div>
+                                {selectedSeller?.builderProfile?.experienceYears && (
+                                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                      Exp:
+                                    </span>
+                                    <span className="text-sm font-bold text-slate-700">
+                                      {selectedSeller.builderProfile.experienceYears} Years
+                                    </span>
+                                  </div>
+                                )}
                               </div>
+                              {selectedSeller?.builderProfile?.companyName && (
+                                <div className="mt-4 flex flex-col sm:flex-row gap-4 justify-center sm:justify-start text-sm text-slate-600">
+                                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+                                    {selectedSeller.builderProfile.companyLogo && (
+                                      <img src={getImageUrl(selectedSeller.builderProfile.companyLogo)} className="w-6 h-6 object-contain rounded-md border border-slate-100" alt="company logo" />
+                                    )}
+                                    <span className="font-semibold text-slate-400 uppercase text-xs tracking-wider">Company</span>
+                                    <span className="font-bold text-slate-800">{selectedSeller.builderProfile.companyName}</span>
+                                  </div>
+                                  {selectedSeller?.builderProfile?.officeAddress && (
+                                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm max-w-sm shrink-0 truncate">
+                                      <span className="font-semibold text-slate-400 uppercase text-xs tracking-wider">Location</span>
+                                      <span className="font-bold text-slate-800 truncate" title={selectedSeller.builderProfile.officeAddress}>{selectedSeller.builderProfile.officeAddress}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {selectedSeller?.builderProfile?.aboutCompany && (
+                                <p className="mt-4 text-sm text-slate-500 text-center sm:text-left max-w-2xl leading-relaxed">
+                                  {selectedSeller.builderProfile.aboutCompany}
+                                </p>
+                              )}
+                              {selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link) && (
+                                <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-5">
+                                  {selectedSeller.builderProfile.socialLinks.website && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#174685]/10 hover:border-[#174685]/20 hover:text-[#174685] transition-colors text-slate-500">
+                                      <Globe className="w-5 h-5" />
+                                    </a>
+                                  )}
+                                  {selectedSeller.builderProfile.socialLinks.linkedin && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/20 hover:text-[#0A66C2] transition-colors text-slate-500">
+                                      <Linkedin className="w-5 h-5" />
+                                    </a>
+                                  )}
+                                  {selectedSeller.builderProfile.socialLinks.instagram && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#E1306C]/10 hover:border-[#E1306C]/20 hover:text-[#E1306C] transition-colors text-slate-500">
+                                      <Instagram className="w-5 h-5" />
+                                    </a>
+                                  )}
+                                  {selectedSeller.builderProfile.socialLinks.facebook && (
+                                    <a href={selectedSeller.builderProfile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#1877F2]/10 hover:border-[#1877F2]/20 hover:text-[#1877F2] transition-colors text-slate-500">
+                                      <Facebook className="w-5 h-5" />
+                                    </a>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
