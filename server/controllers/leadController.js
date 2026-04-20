@@ -2,6 +2,7 @@ const SharedLead = require("../models/SharedLead");
 const Subscription = require("../models/Subscription");
 const Requirement = require("../models/Requirement");
 const User = require("../models/User");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 
 // Get leads shared with the seller's current plan
 exports.getSharedLeads = async (req, res) => {
@@ -23,9 +24,17 @@ exports.getSharedLeads = async (req, res) => {
       });
     }
 
-    // 2. Find leads shared with this plan
+    // Identify all plan variants with the same name as the seller's plan
+    const sellerPlan = await SubscriptionPlan.findById(activeSubscription.plan);
+    const allMatchingPlans = await SubscriptionPlan.find({ 
+      name: sellerPlan.name,
+      status: "active" 
+    });
+    const planIds = allMatchingPlans.map(p => p._id);
+
+    // 2. Find leads shared with any of these plan variants
     const sharedLeads = await SharedLead.find({
-      plan: activeSubscription.plan,
+      plan: { $in: planIds },
     })
       .populate({
         path: "requirement",

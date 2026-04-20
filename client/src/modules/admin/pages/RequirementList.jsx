@@ -138,7 +138,57 @@ const RequirementList = () => {
       setIsShareModalOpen(false);
       fetchRequirements(); // Refresh list to show shared status
     } catch (error) {
-      message.error(error.response?.data?.message || "Failed to share lead");
+      const errorMsg = error.response?.data?.message || "Failed to share lead";
+      message.error(errorMsg);
+    } finally {
+      setSharingLoading(false);
+    }
+  };
+
+  const handleShareAll = async (sectionType) => {
+    if (!selectedRequirement) return;
+    setSharingLoading(true);
+    let successCount = 0;
+    
+    try {
+      const plansToShare = subscriptionStats.filter(plan => {
+        if (sectionType === 'exact') {
+          const matchedSellers = hasGlobalBuilderMatch 
+            ? plan.sellers.filter(s => s.isBuilder && s.isMatch)
+            : plan.sellers.filter(s => s.isAgent && s.isMatch);
+          return matchedSellers.length > 0;
+        } else {
+          const agents = plan.sellers.filter(s => s.isAgent);
+          return agents.length > 0;
+        }
+      });
+
+      if (plansToShare.length === 0) {
+        message.warning("No eligible plans found to share with.");
+        setSharingLoading(false);
+        return;
+      }
+
+      const priority = sectionType === 'exact' ? (hasGlobalBuilderMatch ? 1 : 2) : 3;
+
+      for (const plan of plansToShare) {
+        try {
+          await shareRequirement(selectedRequirement._id, plan.planId, sectionType, priority);
+          successCount++;
+        } catch (err) {
+          // If it fails (e.g. already shared), just skip quietly or log it
+          console.log(`Failed to share with ${plan.planName}:`, err);
+        }
+      }
+
+      if (successCount > 0) {
+        message.success(`Successfully shared lead with ${successCount} plan categories.`);
+        fetchStats(selectedRequirement._id);
+      } else {
+        message.info("No new plans were shared (they may have already been shared).");
+      }
+    } catch (error) {
+      message.error("Failed to share with all plans.");
     } finally {
       setSharingLoading(false);
     }
@@ -446,15 +496,25 @@ const RequirementList = () => {
             <div className="space-y-8">
               {/* MATCHED REQUIREMENTS SECTION */}
               <div>
-                <div className="flex items-center justify-between mb-4 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
-                   <div className="flex items-center gap-2">
-                      <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm shadow-indigo-200"></div>
-                      <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-indigo-900 m-0">MATCH REQUIREMENT</h4>
-                   </div>
-                   <Tag color="indigo" className="m-0 border-none font-bold uppercase text-[10px] scale-90 origin-right">
-                     {hasGlobalBuilderMatch ? "Priority: Builder" : "Priority: Agent"}
-                   </Tag>
-                </div>
+                 <div className="flex items-center justify-between mb-4 bg-indigo-50/50 p-3 rounded-xl border border-indigo-100">
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-6 bg-indigo-600 rounded-full shadow-sm shadow-indigo-200"></div>
+                       <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-indigo-900 m-0">MATCH REQUIREMENT</h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Tag color="indigo" className="m-0 border-none font-bold uppercase text-[10px] scale-90 origin-right">
+                        {hasGlobalBuilderMatch ? "Priority: Builder" : "Priority: Agent"}
+                      </Tag>
+                      <Button 
+                        size="small" 
+                        className="bg-indigo-600 text-white hover:bg-indigo-700 border-none rounded-lg text-[9px] h-7 font-black uppercase px-3 shadow-sm"
+                        onClick={() => handleShareAll('exact')}
+                        loading={sharingLoading}
+                      >
+                        Share with All Plans
+                      </Button>
+                    </div>
+                 </div>
                 
                 <div className="space-y-4">
                   {subscriptionStats.map((plan) => {
@@ -556,13 +616,23 @@ const RequirementList = () => {
 
               {/* NOT EXACT MATCH SECTION */}
               <div>
-                <div className="flex items-center justify-between mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200">
-                   <div className="flex items-center gap-2">
-                      <div className="w-2 h-6 bg-slate-500 rounded-full shadow-sm shadow-slate-200"></div>
-                      <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-slate-700 m-0">NOT MATCH REQUIREMENT</h4>
-                   </div>
-                   <Tag className="m-0 border-none bg-slate-600 text-white font-bold uppercase text-[9px] rounded-md py-0.5">Agents Only</Tag>
-                </div>
+                 <div className="flex items-center justify-between mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200">
+                    <div className="flex items-center gap-2">
+                       <div className="w-2 h-6 bg-slate-500 rounded-full shadow-sm shadow-slate-200"></div>
+                       <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-slate-700 m-0">NOT MATCH REQUIREMENT</h4>
+                    </div>
+                    <div className="flex items-center gap-2">
+                       <Tag className="m-0 border-none bg-slate-600 text-white font-bold uppercase text-[9px] rounded-md py-0.5">Agents Only</Tag>
+                       <Button 
+                        size="small" 
+                        className="bg-slate-700 text-white hover:bg-slate-800 border-none rounded-lg text-[9px] h-7 font-black uppercase px-3"
+                        onClick={() => handleShareAll('not-exact')}
+                        loading={sharingLoading}
+                      >
+                        Send Fallback to All
+                      </Button>
+                    </div>
+                 </div>
                 
                 <div className="space-y-4">
                   {subscriptionStats.map((plan) => {

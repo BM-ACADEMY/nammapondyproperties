@@ -113,15 +113,21 @@ const LeadsOverview = () => {
   };
 
   const getStatusTag = (lead) => {
-    if (lead.isAcceptedByMe) return <Tag color="success" icon={<CheckCircle2 size={12} className="mr-1" />}>Accepted By You</Tag>;
+    if (lead.isAcceptedByMe) return <Tag color="success" icon={<CheckCircle2 size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">Accepted By You</Tag>;
+    
     if (lead.status === "closed" || lead.status === "accepted") {
       return (
         <Tooltip title={`Accepted by ${lead.acceptedBy || "another seller"}`}>
-          <Tag color="error" icon={<XCircle size={12} className="mr-1" />}>Deal Closed</Tag>
+          <Tag color="error" icon={<XCircle size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">Deal Closed</Tag>
         </Tooltip>
       );
     }
-    return <Tag color="processing" icon={<Clock size={12} className="mr-1" />}>Pending</Tag>;
+    
+    if (lead.matchType === "exact") {
+      return <Tag color="gold" icon={<ShieldCheck size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">Exclusive Match</Tag>;
+    }
+    
+    return <Tag color="processing" icon={<Clock size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">Open Lead</Tag>;
   };
 
   if (!hasActivePlan && !loading) {
@@ -172,13 +178,16 @@ const LeadsOverview = () => {
                 bodyStyle={{ padding: 0 }}
               >
                 {/* Card Header */}
-                <div className={`p-4 border-b flex justify-between items-start ${lead.isAcceptedByMe ? 'bg-emerald-50' : 'bg-slate-50'}`}>
+                <div className={`p-4 border-b flex justify-between items-start ${lead.isAcceptedByMe ? 'bg-emerald-50' : lead.matchType === 'exact' ? 'bg-amber-50/50' : 'bg-slate-50'}`}>
                   <div className="flex flex-col gap-1">
-                    <Text type="secondary" className="text-[10px] uppercase font-bold tracking-wider">
-                      {new Date(lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    <Text type="secondary" className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+                      Shared {new Date(lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </Text>
-                    <div className="flex gap-2">
-                       <Tag color="blue" className="m-0 text-[10px] px-2 rounded-full border-none font-bold uppercase">{lead.requirement.category}</Tag>
+                    <div className="flex gap-2 items-center">
+                       <Tag color="blue" className="m-0 text-[10px] px-2 rounded-md border-none font-black uppercase tracking-wider">{lead.requirement.category}</Tag>
+                       {lead.matchType === 'exact' && (
+                         <span className="text-[9px] font-black text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">Exclusive</span>
+                       )}
                     </div>
                   </div>
                   {getStatusTag(lead)}
@@ -234,37 +243,57 @@ const LeadsOverview = () => {
                     </div>
                   </div>
 
-                  {lead.showFullDetails ? (
-                    <div className="mt-4 bg-emerald-50 border border-emerald-100 p-4 rounded-xl relative overflow-hidden">
-                      {lead.matchType === 'exact' && !lead.isAcceptedByMe && (
-                        <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">
-                          Priority Match
+                   {lead.showFullDetails ? (
+                    <div className="mt-4 bg-emerald-50/50 border border-emerald-100 p-4 rounded-2xl relative overflow-hidden ring-1 ring-emerald-500/10">
+                      {lead.matchType === 'exact' && (
+                        <div className="absolute top-0 right-0 bg-amber-500 text-white text-[8px] font-black px-2 py-1 rounded-bl-xl uppercase tracking-widest">
+                          Matched for You
                         </div>
                       )}
-                      <div className="flex items-center gap-2 mb-3">
-                        <ShieldCheck size={18} className="text-emerald-600" />
-                        <Title level={5} className="m-0! text-emerald-800">Contact Details</Title>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                            <User size={14} className="text-emerald-600" />
-                          </div>
-                          <Text className="font-bold text-slate-700">{lead.requirement.fullName}</Text>
+                      
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                           <ShieldCheck size={20} className="text-emerald-600" />
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-                            <Phone size={14} className="text-emerald-600" />
+                        <div>
+                          <Title level={5} className="m-0! text-emerald-800 leading-none">Customer Contact</Title>
+                          <Text className="text-[11px] text-emerald-600 font-bold uppercase tracking-wider">Verified Lead</Text>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-4 bg-white/60 p-2.5 rounded-xl border border-emerald-100/50">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                            <User size={16} className="text-emerald-700" />
                           </div>
-                          <Text className="font-semibold text-slate-700">{lead.requirement.phoneNumber}</Text>
+                          <div className="flex flex-col">
+                            <Text type="secondary" className="text-[9px] font-bold uppercase tracking-widest">Full Name</Text>
+                            <Text className="font-bold text-slate-800 text-[14px] leading-tight">{lead.requirement.fullName}</Text>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 bg-white/60 p-2.5 rounded-xl border border-emerald-100/50">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                            <Phone size={16} className="text-emerald-700" />
+                          </div>
+                          <div className="flex flex-col">
+                            <Text type="secondary" className="text-[9px] font-bold uppercase tracking-widest">Phone Number</Text>
+                            <Text className="font-bold text-slate-800 text-[15px] leading-tight">{lead.requirement.phoneNumber}</Text>
+                          </div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="mt-4 blur-[1px] select-none pointer-events-none opacity-40">
-                       <div className="h-20 bg-slate-100 rounded-xl flex flex-col items-center justify-center">
-                          <Text type="secondary" className="text-xs">{lead.status === 'pending' ? 'Accept lead to unlock details' : 'Deal Closed'}</Text>
+                    <div className="mt-4 p-5 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center text-center">
+                       <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                          <Lock size={20} className="text-slate-400" />
                        </div>
+                       <Text className="text-slate-600 font-bold block mb-1">Contact Details Masked</Text>
+                       <Text type="secondary" className="text-[11px] max-w-[200px]">
+                         {lead.status === 'pending' 
+                           ? "This is an open lead. Accept it to unlock the customer contact details." 
+                           : "This lead has been accepted by someone else."}
+                       </Text>
                     </div>
                   )}
 
