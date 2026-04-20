@@ -422,21 +422,21 @@ const BusinessUserList = () => {
                       <motion.div
                         key={user._id}
                         onClick={() => setSelectedSeller(user)}
-                        className="flex flex-col sm:flex-row bg-white rounded-[24px] shadow-[0_2px_12px_rgb(0,0,0,0.04)] border border-slate-100 cursor-pointer hover:shadow-lg hover:border-slate-200 transition-all group overflow-hidden h-auto sm:h-[220px] relative"
+                        className="flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-all group overflow-hidden h-auto sm:h-[240px] relative"
                       >
-                        {/* Company Logo Badge Top Right */}
+                        {/* Company Logo Top Right (Corner Flushed) */}
                         {user.builderProfile?.companyLogo && (
-                          <div className="absolute top-0 right-0 w-[90px] h-20 lg:w-[110px] lg:h-24 bg-[#F8FAFC] flex flex-col items-center justify-center z-10 rounded-bl-[20px] border-l border-b border-slate-100 p-2">
+                          <div className="absolute top-0 right-0 w-20 h-20 lg:w-24 lg:h-24 flex justify-center items-center z-10 rounded-tr-xl overflow-hidden">
                             <img 
                               src={getImageUrl(user.builderProfile.companyLogo)} 
-                              className="max-h-full max-w-full object-contain" 
+                              className="w-full h-full object-contain" 
                               alt="company logo" 
                             />
                           </div>
                         )}
 
                         {/* Left Section: Profile Photo */}
-                        <div className="w-full sm:w-[220px] h-64 sm:h-full shrink-0 overflow-hidden relative border-r border-slate-50">
+                        <div className="w-full sm:w-[240px] h-64 sm:h-full shrink-0 overflow-hidden relative">
                           {user.profile_image ? (
                             <img
                               src={getImageUrl(user.profile_image)}
@@ -448,42 +448,52 @@ const BusinessUserList = () => {
                               {user.name?.charAt(0)}
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent sm:hidden" />
                         </div>
 
                         {/* Right Section: Info */}
-                        <div className="flex-1 p-6 sm:p-7 pr-12 lg:pr-[140px] flex flex-col justify-center min-w-0">
-                          {/* Name and Verified */}
-                          <div className="flex flex-col gap-2 mb-5">
-                            <h3 className="text-[22px] lg:text-2xl font-bold text-slate-800 truncate leading-none">
+                        <div className="flex-1 p-6 sm:p-8 flex flex-col justify-center min-w-0">
+                          <div className="mb-4">
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-0.5 mt-2">
                               {user.name}
                             </h3>
+                            <p className="text-[15px] text-slate-500 font-medium">
+                              {businessType?.name || "Professional"}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-4">
+                            {/* Verified Badge */}
                             {(user.badgeVerified ||
                               user.role_id?.role_name === "admin") && (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-[8px] w-fit">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E8F5E9] text-[#2E7D32] rounded text-[10px] font-bold uppercase tracking-wider w-fit">
                                 <img
                                   src="/Logo/badge.png"
                                   alt="Verified"
-                                  className="w-[15px] h-[15px] object-contain"
+                                  className="w-3 h-3 object-contain"
                                 />
-                                <span className="text-[12px] font-black uppercase tracking-widest leading-none text-[#2E7D32] mt-0.5">
-                                  Verified
-                                </span>
+                                <span>Verified</span>
                               </div>
                             )}
+
+                            {/* Details Table-style layout */}
+                            <div className="space-y-1 mt-1">
+                              {user.builderProfile?.experienceYears && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <span className="text-slate-500">Experience:</span>
+                                  <span className="text-slate-800 font-semibold">{user.builderProfile.experienceYears} Years</span>
+                                </div>
+                              )}
+                              {user.builderProfile?.companyName && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <span className="text-slate-500">Company:</span>
+                                  <span className="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-full">
+                                    {user.builderProfile.companyName}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
-                          {/* Bottom: Type and Exp Pill */}
-                          <div className="flex flex-wrap gap-2">
-                            <div className="inline-block bg-[#F3E8FF] text-[#6B21A8] px-3 py-1.5 rounded-xl text-[13px] font-semibold w-fit truncate">
-                              {businessType?.name || "Professional"}
-                            </div>
-                            {user.builderProfile?.experienceYears && (
-                              <div className="inline-block bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl text-[13px] font-semibold w-fit border border-amber-100">
-                                {user.builderProfile.experienceYears} Yrs Experience
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </motion.div>
                     ))}
