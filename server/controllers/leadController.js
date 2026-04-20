@@ -209,6 +209,9 @@ exports.acceptLead = async (req, res) => {
           });
         }
       });
+
+      // Notify Admin to refresh the list
+      io.emit("admin-lead-updated", { requirementId: updatedLead.requirement._id });
     }
 
     res.status(200).json({

@@ -41,6 +41,7 @@ import {
   getSubscriptionStats,
   shareRequirement
 } from "@/services/api";
+import { useSocket } from "@/context/SocketContext";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -78,9 +79,21 @@ const RequirementList = () => {
     }
   };
 
+  const socket = useSocket();
+
   useEffect(() => {
     fetchRequirements();
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("admin-lead-updated", (data) => {
+        message.info("Lead status updated internationally");
+        fetchRequirements();
+      });
+      return () => socket.off("admin-lead-updated");
+    }
+  }, [socket]);
 
   const handleStatusChange = async (id, newStatus) => {
     try {
@@ -248,19 +261,40 @@ const RequirementList = () => {
         if (record.acceptedBy) {
           return (
             <div className="flex flex-col">
-              <Tag color="green" className="m-0 text-[13px] font-semibold flex items-center justify-center w-fit px-2.5 py-1">
-                 {record.acceptedBy.name}
-              </Tag>
-              <div className="flex items-center gap-1.5 text-[12px] text-slate-500 mt-1.5 ml-1">
+              <div className="flex flex-wrap gap-1 mb-1">
+                <Tag color="green" className="m-0 text-[13px] font-semibold">
+                   {record.acceptedBy.name}
+                </Tag>
+                {record.acceptedBy.businessType && (
+                  <Tag color="blue" className="m-0 text-[10px] font-bold uppercase py-0 px-2 leading-5">
+                    {record.acceptedBy.businessType.name || record.acceptedBy.businessType}
+                  </Tag>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-[12px] text-slate-500 ml-1">
                 <Phone size={12} /> {record.acceptedBy.phone}
               </div>
             </div>
           );
         }
         if (record.isShared) {
+          let label = "Shared (Pending)";
+          let color = "orange";
+          
+          if (record.matchPriority === 1) {
+            label = "Builder Match";
+            color = "indigo";
+          } else if (record.matchPriority === 2) {
+            label = "Agent Match";
+            color = "blue";
+          }
+
           return (
-            <Tag color="orange" className="flex items-center justify-center gap-1 w-fit px-2 py-0.5">
-              <Clock size={12} /> Shared (Pending)
+            <Tag 
+              color={color} 
+              className="m-0 font-medium whitespace-nowrap"
+            >
+              {label}
             </Tag>
           );
         }
@@ -309,12 +343,20 @@ const RequirementList = () => {
               onClick={() => showDetails(record)}
             />
           </Tooltip>
-          <Tooltip title={record.acceptedBy ? "Deal Closed" : record.isShared ? "Reshare Lead" : "Share Lead"}>
+          <Tooltip title={record.acceptedBy ? "Deal Closed" : record.isShared ? "Lead Already Shared" : "Share Lead"}>
             <Button 
               type="text" 
-              icon={<Share2 size={18} className={record.acceptedBy ? "text-slate-300" : "text-indigo-500"} />} 
-              onClick={() => showShareModal(record)}
               disabled={!!record.acceptedBy}
+              icon={
+                record.acceptedBy ? (
+                  <CheckCircle size={18} className="text-slate-300" />
+                ) : record.isShared ? (
+                  <CheckCircle2 size={18} className="text-emerald-500" />
+                ) : (
+                  <Share2 size={18} className="text-indigo-500" />
+                )
+              } 
+              onClick={() => showShareModal(record)}
             />
           </Tooltip>
           <Tooltip title="Delete">

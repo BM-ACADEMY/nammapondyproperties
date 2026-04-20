@@ -77,15 +77,25 @@ exports.getRequirements = async (req, res) => {
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(
       requirements.map(async (reqDoc) => {
-        const sharedInfo = await SharedLead.findOne({ 
+        // Find if any record was accepted
+        const acceptedLead = await SharedLead.findOne({ 
           requirement: reqDoc._id, 
           status: "accepted" 
-        }).populate("acceptedBy", "name email phone");
+        }).populate({
+          path: "acceptedBy",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
+
+        // Get the highest priority match it was shared with (to show in table)
+        const anySharedLead = await SharedLead.findOne({ requirement: reqDoc._id })
+          .sort({ matchPriority: 1 }); // 1 is highest priority
 
         return {
           ...reqDoc.toObject(),
-          acceptedBy: sharedInfo ? sharedInfo.acceptedBy : null,
-          isShared: !!(await SharedLead.exists({ requirement: reqDoc._id })),
+          acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
+          isShared: !!anySharedLead,
+          matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
         };
       })
     );
