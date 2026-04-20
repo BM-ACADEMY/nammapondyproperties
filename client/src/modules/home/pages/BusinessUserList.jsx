@@ -434,12 +434,12 @@ const BusinessUserList = () => {
                 <div>
                   {/* ─── SuperAgent CTA Banner ─── */}
                   <div className="mb-12 bg-[#E9EAF5] rounded-xl overflow-hidden relative shadow-sm border border-[#D1D5DB]/30 mx-0 sm:mx-0">
-                    <div className="flex flex-col lg:flex-row items-center py-2 lg:py-6">
-                      <div className="flex-1 px-6 lg:px-12 py-8 lg:py-6 text-left z-10">
-                        <h2 className="text-2xl lg:text-4xl font-bold text-[#2C334E] mb-3 lg:mb-4 tracking-tight">
+                    <div className="flex flex-col md:flex-row items-center py-2 md:py-6">
+                      <div className="flex-1 px-6 md:px-12 py-8 md:py-6 text-left z-10">
+                        <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#2C334E] mb-2 sm:mb-3 lg:mb-4 tracking-tight">
                           Trusted Builders & Promoters
                         </h2>
-                        <p className="text-[#5E6D8E] text-base lg:text-lg mb-6 lg:mb-8 max-w-lg leading-relaxed font-medium">
+                        <p className="text-[#5E6D8E] text-sm sm:text-base lg:text-lg mb-6 lg:mb-8 max-w-lg leading-relaxed font-medium">
                           Partner with verified professionals who deliver quality and transparency. 
                           The most responsive experts for your next big project.
                         </p>
@@ -450,11 +450,11 @@ const BusinessUserList = () => {
                           Learn more
                         </button>
                       </div>
-                      <div className="flex-1 relative w-full h-[240px] lg:h-[300px]">
+                      <div className="flex-1 relative w-full h-[200px] sm:h-[240px] md:h-[300px]">
                         <img 
                           src="/builder/agent.png" 
                           alt="Trusted Builders" 
-                          className="w-full h-full object-contain object-right-bottom scale-125 lg:translate-x-4 translate-y-2 opacity-95 transition-all duration-700 hover:scale-[1.3] pointer-events-none"
+                          className="w-full h-full object-contain object-right-bottom scale-100 sm:scale-110 md:scale-125 md:translate-x-4 translate-y-2 opacity-95 transition-all duration-700 hover:scale-[1.3] pointer-events-none"
                         />
                       </div>
                     </div>
@@ -556,29 +556,29 @@ const BusinessUserList = () => {
                 <>
                   {isBuilderType ? (
                     <div className="space-y-6 mb-10">
-                      <div className="mb-6">
+                      <div className="mb-4 sm:mb-6">
                         <button
                           onClick={() => setSelectedSeller(null)}
-                          className="inline-flex items-center gap-2.5 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
+                          className="inline-flex items-center gap-2 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
                         >
-                          <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">
-                            <ChevronRight className="w-5 h-5 rotate-180" />
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">
+                            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
                           </div>
-                          <span className="text-sm font-bold tracking-tight">
+                          <span className="text-[13px] sm:text-sm font-bold tracking-tight">
                             Back to Professionals List
                           </span>
                         </button>
                       </div>
                       {/* ─── Premium Profile Hero ─── */}
-                      <div className="bg-[#174685] rounded-[24px] overflow-hidden text-white shadow-2xl relative mb-10">
+                      <div className="bg-[#174685] rounded-2xl md:rounded-[24px] overflow-hidden text-white shadow-2xl relative mb-10">
                         {/* Header & Sidebar Container */}
-                        <div className="flex flex-col lg:flex-row p-6 lg:p-10 gap-8 lg:gap-16">
+                        <div className="flex flex-col md:flex-row p-5 sm:p-6 md:p-10 gap-8 lg:gap-16">
                           {/* Main Profile Info */}
-                          <div className="flex-1 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-10">
+                          <div className="flex-1 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 lg:gap-10">
                             {/* Share Profile Button (Refined Top Right) */}
-                            <button
+                            <button 
                               onClick={handleShareProfile}
-                              className="absolute top-6 right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer"
+                              className="absolute top-4 sm:top-6 right-6 sm:right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer" 
                               title="Share profile"
                             >
                               <Share2 size={16} className="group-hover:scale-110 transition-transform" />
@@ -586,8 +586,8 @@ const BusinessUserList = () => {
                             </button>
 
                             {/* Profile Image with Modern Outline */}
-                            <div className="flex flex-col items-center shrink-0 gap-5">
-                              <div className="w-32 h-32 lg:w-44 lg:h-44 rounded-full border-[6px] border-white/10 p-1.5 bg-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
+                            <div className="flex flex-col items-center shrink-0 gap-4 sm:gap-5">
+                              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-full border-[5px] sm:border-[6px] border-white/10 p-1 bg-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
                                 {selectedSeller?.profile_image ? (
                                   <img
                                     src={getImageUrl(selectedSeller.profile_image)}
@@ -617,13 +617,13 @@ const BusinessUserList = () => {
 
                             {/* Bio Content */}
                             <div className="flex-1 text-center md:text-left pt-2">
-                              <h2 className="text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 leading-tight">
                                 {selectedSeller?.name}
                               </h2>
 
                               {/* Experience & Type Row */}
-                              <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 text-white/70 text-sm font-medium leading-relaxed">
-                                <span>{businessType?.name || "Professional"}</span>
+                              <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 sm:gap-4 text-white/70 text-[13px] sm:text-sm font-medium leading-relaxed">
+                                <span className="px-2 py-0.5 bg-black/20 rounded text-[11px] sm:text-[12px] uppercase tracking-wider">{businessType?.name || "Professional"}</span>
                                 {selectedSeller?.builderProfile?.experienceYears && (
                                   <span>{selectedSeller.builderProfile.experienceYears} Years of experience</span>
                                 )}
@@ -637,30 +637,30 @@ const BusinessUserList = () => {
                                     {selectedSeller.builderProfile.aboutCompany}
                                   </p>
                                   {selectedSeller.builderProfile.aboutCompany.length > 100 && (
-                                    <button
-                                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                                      className="mt-3 text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
-                                    >
-                                      {isDescriptionExpanded ? "Read Less" : "Read More"}
-                                      <ChevronRight size={12} className={`transition-transform duration-300 ${isDescriptionExpanded ? "-rotate-90" : "rotate-90"}`} />
-                                    </button>
+                                  <button
+                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                    className="mt-3 text-[11px] sm:text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    {isDescriptionExpanded ? "Read Less" : "Read More"}
+                                    <ChevronRight size={12} className={`transition-transform duration-300 ${isDescriptionExpanded ? "-rotate-90" : "rotate-90"}`} />
+                                  </button>
                                   )}
                                 </div>
                               )}
 
                               {/* Lower Action Row (Integrated) */}
-                              <div className="mt-12 flex flex-col sm:flex-row items-center gap-4">
-                                <div className="flex items-center gap-3">
+                              <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center gap-4">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                                   <button
                                     onClick={(e) => handleWhatsAppClick(e, selectedSeller)}
-                                    className="flex items-center gap-2 px-8 py-3 bg-white text-[#174685] rounded-xl font-bold text-sm hover:bg-white/90 transition-all shadow-xl active:scale-95 cursor-pointer"
+                                    className="flex items-center gap-2 px-5 sm:px-8 py-3 bg-white text-[#174685] rounded-xl font-bold text-[13px] sm:text-sm hover:bg-white/90 transition-all shadow-xl active:scale-95 cursor-pointer"
                                   >
                                     <MessageSquare size={16} className="fill-current" />
                                     WhatsApp
                                   </button>
                                   <button
                                     onClick={() => document.getElementById("seller-properties-grid")?.scrollIntoView({ behavior: "smooth" })}
-                                    className="flex items-center gap-2 px-8 py-3 bg-transparent border border-white/30 text-white rounded-lg font-bold text-sm hover:bg-white/10 transition-all cursor-pointer"
+                                    className="flex items-center gap-2 px-5 sm:px-8 py-3 bg-transparent border border-white/30 text-white rounded-lg font-bold text-[13px] sm:text-sm hover:bg-white/10 transition-all cursor-pointer"
                                   >
                                     View properties
                                   </button>
@@ -671,9 +671,9 @@ const BusinessUserList = () => {
 
                           {/* Brokerage Sidebar - Only show if any data exists */}
                           {(selectedSeller?.builderProfile?.companyLogo || selectedSeller?.builderProfile?.companyName || (selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link))) && (
-                            <div className="w-full lg:w-[240px] shrink-0 flex flex-col items-start lg:items-end justify-center border-t lg:border-t-0 lg:border-l border-white/10 pt-8 lg:pt-0 lg:pl-10">
+                            <div className="w-full md:w-[200px] lg:w-[240px] shrink-0 flex flex-col items-start md:items-end justify-center border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-8 lg:pl-10">
                               {selectedSeller?.builderProfile?.companyLogo && (
-                                <div className="w-32 h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-6 shadow-2xl flex items-center justify-center mb-5 hover:scale-105 transition-transform duration-500">
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl flex items-center justify-center mb-5 hover:scale-105 transition-transform duration-500">
                                   <img
                                     src={getImageUrl(selectedSeller.builderProfile.companyLogo)}
                                     className="max-h-full max-w-full object-contain"
@@ -683,14 +683,14 @@ const BusinessUserList = () => {
                               )}
                               
                               {selectedSeller?.builderProfile?.companyName && (
-                                <h4 className="text-white font-bold text-base lg:text-lg text-left lg:text-right leading-tight mb-2">
+                                <h4 className="text-white font-bold text-sm sm:text-base lg:text-lg text-left md:text-right leading-tight mb-2 uppercase tracking-wide">
                                   {selectedSeller.builderProfile.companyName}
                                 </h4>
                               )}
                               
                               {/* Social Media Links in Sidebar */}
                               {selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link) && (
-                                <div className="flex flex-wrap justify-start lg:justify-end gap-3 mt-6">
+                                <div className="flex flex-wrap justify-start md:justify-end gap-2.5 sm:gap-3 mt-4 sm:mt-6">
                                   {selectedSeller.builderProfile.socialLinks.website && (
                                     <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Website">
                                       <Globe size={16} />
