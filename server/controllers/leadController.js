@@ -1,6 +1,7 @@
 const SharedLead = require("../models/SharedLead");
 const Subscription = require("../models/Subscription");
 const Requirement = require("../models/Requirement");
+const User = require("../models/User");
 
 // Get leads shared with the seller's current plan
 exports.getSharedLeads = async (req, res) => {

@@ -14,6 +14,7 @@ import {
   Select,
   Row,
   Col,
+  Popover,
 } from "antd";
 import { 
   Trash2, 
@@ -503,14 +504,38 @@ const RequirementList = () => {
 
                           <div className="flex items-center gap-3">
                              {hasMatchesInPlan && (
-                               <Button 
-                                 type="text" 
-                                 size="small"
-                                 className="text-indigo-600 font-bold text-[11px] hover:bg-indigo-50"
-                                 onClick={() => togglePlan(`${plan.planId}-match`)}
+                               <Popover
+                                 placement="right"
+                                 title={<span className="text-[12px] font-bold text-slate-800 uppercase tracking-wider">Eligible Sellers ({matchedSellers.length})</span>}
+                                 content={
+                                   <div className="w-[280px] py-1">
+                                      <div className="flex flex-col gap-2">
+                                        {matchedSellers.map(s => (
+                                          <div key={s.id} className="bg-slate-50/50 p-2.5 rounded-[12px] border border-slate-100 flex items-center gap-3 hover:bg-indigo-50 transition-colors">
+                                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-[10px] shrink-0">
+                                              {s.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                              <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
+                                              <span className="text-slate-400 text-[9px] font-medium">{s.businessType}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                   </div>
+                                 }
+                                 trigger="click"
+                                 overlayClassName="seller-popover"
+                                 getPopupContainer={() => document.body}
                                >
-                                 {isExpanded ? "Hide" : "Review"}
-                               </Button>
+                                 <Button 
+                                   type="text" 
+                                   size="small"
+                                   className="text-indigo-600 font-bold text-[11px] hover:bg-indigo-50"
+                                 >
+                                   Review
+                                 </Button>
+                               </Popover>
                              )}
                              <Button 
                                 type={hasMatchesInPlan ? "primary" : "default"}
@@ -523,30 +548,6 @@ const RequirementList = () => {
                               </Button>
                           </div>
                         </div>
-                        
-                        <AnimatePresence>
-                          {isExpanded && hasMatchesInPlan && (
-                            <motion.div 
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="bg-indigo-50/30 border-t border-indigo-50 p-5 rounded-b-[20px]"
-                            >
-                              <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Eligible Sellers</p>
-                              <div className="grid grid-cols-2 gap-3">
-                                {matchedSellers.map(s => (
-                                  <div key={s.id} className="bg-white p-3 rounded-[14px] border border-indigo-100/50 flex flex-col items-center text-center shadow-sm">
-                                    <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-700 font-bold flex items-center justify-center text-[12px] mb-2 border border-indigo-100/50">
-                                      {s.name.substring(0, 2).toUpperCase()}
-                                    </div>
-                                    <span className="font-bold text-slate-800 text-[12.5px] line-clamp-1 w-full px-2">{s.name}</span>
-                                    <span className="text-slate-400 text-[10px] mt-0.5 font-medium">{s.businessType}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                       </div>
                     );
                   })}
@@ -587,14 +588,38 @@ const RequirementList = () => {
                             
                             <div className="flex items-center gap-3">
                                {hasAgents && (
-                                 <Button 
-                                   type="text" 
-                                   size="small"
-                                   className="text-slate-500 font-bold text-[11px]"
-                                   onClick={() => togglePlan(`${plan.planId}-notmatch`)}
+                                 <Popover
+                                   placement="right"
+                                   title={<span className="text-[12px] font-bold text-slate-800 uppercase tracking-wider">Plan Sellers ({agents.length})</span>}
+                                   content={
+                                     <div className="w-[280px] py-1">
+                                        <div className="flex flex-col gap-2">
+                                          {agents.map(s => (
+                                            <div key={s.id} className="bg-slate-50/50 p-2.5 rounded-[12px] border border-slate-100 flex items-center gap-3 hover:bg-slate-100 transition-colors">
+                                              <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
+                                                {s.name.substring(0, 2).toUpperCase()}
+                                              </div>
+                                              <div className="flex flex-col min-w-0">
+                                                <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
+                                                <span className="text-slate-400 text-[9px] font-medium">{s.businessType}</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                     </div>
+                                   }
+                                   trigger="click"
+                                   overlayClassName="seller-popover"
+                                   getPopupContainer={() => document.body}
                                  >
-                                   {isExpanded ? "Hide" : "View"}
-                                 </Button>
+                                   <Button 
+                                     type="text" 
+                                     size="small"
+                                     className="text-slate-500 font-bold text-[11px]"
+                                   >
+                                     View
+                                   </Button>
+                                 </Popover>
                                )}
                                <Button 
                                 className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs ${hasAgents ? 'bg-slate-800 text-white hover:bg-slate-900 border-none' : 'bg-slate-200 text-slate-400 border-none'}`}
@@ -606,31 +631,6 @@ const RequirementList = () => {
                               </Button>
                             </div>
                           </div>
-
-                          <AnimatePresence>
-                            {isExpanded && hasAgents && (
-                              <motion.div 
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                className="bg-slate-50/50 border-t border-slate-100 p-5 rounded-b-[20px]"
-                              >
-                                <div className="grid grid-cols-2 gap-3">
-                                  {agents.map(s => (
-                                    <div key={s.id} className="bg-white p-2.5 rounded-[12px] border border-slate-100 flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-[10px]">
-                                        {s.name.substring(0, 2).toUpperCase()}
-                                      </div>
-                                      <div className="flex flex-col min-w-0">
-                                        <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
-                                        <span className="text-slate-400 text-[9px] font-medium">{s.businessType}</span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
                       </div>
                     );
                   })}

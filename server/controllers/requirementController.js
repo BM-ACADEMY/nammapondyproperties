@@ -429,7 +429,7 @@ exports.shareRequirement = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Lead shared successfully with ${plan.name} plan users.`,
+      message: `Lead shared successfully with ${selectedPlan.name} plan users.`,
     });
   } catch (error) {
     console.error("Error sharing requirement:", error);
