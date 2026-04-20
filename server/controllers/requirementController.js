@@ -180,13 +180,25 @@ exports.getSubscriptionStats = async (req, res) => {
       requirement = await Requirement.findById(requirementId);
     }
 
-    const plans = await SubscriptionPlan.find({ status: "active" });
+    const allPlans = await SubscriptionPlan.find({ status: "active" });
     
+    // Group sub-plans by name to avoid duplicate entries in the UI
+    const planGroups = {};
+    allPlans.forEach(p => {
+      if (!planGroups[p.name]) planGroups[p.name] = [];
+      planGroups[p.name].push(p);
+    });
+
+    // Find if at least one Builder matches globally for Priority 1 logic
+    let hasGlobalBuilderMatch = false;
+
     const stats = await Promise.all(
-      plans.map(async (plan) => {
-        // Find active subscriptions for this plan
+      Object.entries(planGroups).map(async ([planName, plansInGroup]) => {
+        const planIds = plansInGroup.map(p => p._id);
+        
+        // Find active subscriptions for any plan in this group
         const activeSubscriptions = await Subscription.find({
-          plan: plan._id,
+          plan: { $in: planIds },
           status: "active",
           endDate: { $gt: new Date() },
         }).populate({
@@ -215,28 +227,44 @@ exports.getSubscriptionStats = async (req, res) => {
               const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
               const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
 
-              // Exact match logic with budget range overlap
+              // Base query
               const matchQuery = {
                 seller: user._id,
                 status: "Active",
                 "basicInfo.category": requirement.category,
                 "basicInfo.usageType": requirement.usageType,
                 "basicInfo.propertyType": requirement.propertyType,
-                $or: [
-                  // Case 1: Static price matches requirement range
-                  { [priceField]: { $gte: minBudget, $lte: maxBudget } },
-                  // Case 2: Property range overlaps with requirement range
+                $and: [
                   {
-                    [minPriceField]: { $lte: maxBudget },
-                    [maxPriceField]: { $gte: minBudget }
+                    $or: [
+                      { [priceField]: { $gte: minBudget, $lte: maxBudget } },
+                      {
+                        [minPriceField]: { $lte: maxBudget },
+                        [maxPriceField]: { $gte: minBudget }
+                      }
+                    ]
                   }
                 ]
               };
+
+              // Add Location matching if preferredLocation is provided
+              if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
+                const locTerm = requirement.preferredLocation.trim();
+                const locRegex = new RegExp(locTerm, "i");
+                matchQuery.$and.push({
+                  $or: [
+                    { "location.city": locRegex },
+                    { "location.locality": locRegex },
+                    { "location.subArea": locRegex }
+                  ]
+                });
+              }
 
               const matchingProperty = await Property.findOne(matchQuery);
               if (matchingProperty) {
                 isMatch = true;
                 matchPriority = isBuilder ? 1 : isAgent ? 2 : 3;
+                if (isBuilder) hasGlobalBuilderMatch = true;
               }
             }
 
@@ -254,11 +282,11 @@ exports.getSubscriptionStats = async (req, res) => {
           }));
 
         return {
-          planId: plan._id,
-          planName: plan.name,
+          planId: plansInGroup[0]._id, // Representative ID for frontend reference
+          planName: planName,
           sellerCount: sellers.length,
           sellers: sellers,
-          // Plan level metadata
+          // Plan level matches
           hasBuilderMatch: sellers.some(s => s.isBuilder && s.isMatch),
           hasAgentMatch: sellers.some(s => s.isAgent && s.isMatch),
         };
@@ -267,7 +295,10 @@ exports.getSubscriptionStats = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: stats,
+      data: {
+        stats,
+        hasGlobalBuilderMatch
+      },
     });
   } catch (error) {
     console.error("Error fetching subscription stats:", error);
@@ -292,13 +323,20 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
-    const plan = await SubscriptionPlan.findById(planId);
-    if (!plan) {
+    const selectedPlan = await SubscriptionPlan.findById(planId);
+    if (!selectedPlan) {
       return res.status(404).json({
         success: false,
         message: "Subscription plan not found.",
       });
     }
+
+    // Find all plan variants with the same name
+    const allMatchingPlans = await SubscriptionPlan.find({ 
+      name: selectedPlan.name,
+      status: "active" 
+    });
+    const planIds = allMatchingPlans.map(p => p._id);
 
     // Check if the lead is already accepted by anyone in any plan
     const alreadyAccepted = await SharedLead.findOne({ 
@@ -313,14 +351,42 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
-    // Find active sellers for this plan to record who it was shared with
+    // Find active sellers for all plan variants of this name
     const activeSubscriptions = await Subscription.find({
-      plan: planId,
+      plan: { $in: planIds },
       status: "active",
       endDate: { $gt: new Date() },
+    }).populate({
+      path: "user",
+      select: "name businessType",
+      populate: { path: "businessType", select: "name" }
     });
     
-    const sellerIds = activeSubscriptions.map(sub => sub.user);
+    let sellerIds = [];
+
+    // Apply filtering based on priority logic
+    // P1: Builders only
+    // P2: Agents (only if no builder match)
+    // P3: Agents (fallback)
+    if (matchPriority === 1) {
+      sellerIds = activeSubscriptions
+        .filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name))
+        .map(sub => sub.user._id);
+    } else if (matchPriority === 2 || matchPriority === 3) {
+      sellerIds = activeSubscriptions
+        .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
+        .map(sub => sub.user._id);
+    } else {
+      // Default fallback (though priority should be set)
+      sellerIds = activeSubscriptions.filter(sub => sub.user).map(sub => sub.user._id);
+    }
+
+    if (sellerIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No eligible sellers found in this plan to share the lead with.",
+      });
+    }
 
     // Create or update SharedLead
     let sharedLead = await SharedLead.findOne({ requirement: id, plan: planId });
@@ -343,12 +409,9 @@ exports.shareRequirement = async (req, res) => {
 
     await sharedLead.save();
 
-    // Emit Socket.io event to all sellers in this plan
+    // Emit Socket.io event to filtered sellers
     const io = req.app.get("socketio");
     if (io) {
-      // We can emit to a room specific to the plan, or individual sellers
-      // The user index.js mentions join-seller-room (seller-ID)
-      // Since we want all sellers in the plan to see it, we can either emit to all or specific rooms
       sellerIds.forEach(sellerId => {
         io.to(`seller-${sellerId}`).emit("new-lead-shared", {
           leadId: sharedLead._id,
