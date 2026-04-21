@@ -1084,38 +1084,77 @@ const StandardPropertyDetailsUI = ({
             </div>
 
             {/* 6. Floor Plan Section */}
-            {(property.floorPlan || property.media?.floorPlan) && (
-              <div className="space-y-6 mt-8">
-                <hr className="border-gray-100" />
-                <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
-                  Floor Plan
-                </h3>
-                <div
-                  className="bg-gray-50 rounded-3xl p-4 border border-gray-100 cursor-pointer group relative"
-                  onClick={() =>
-                    window.open(
-                      getImageUrl(
-                        property.floorPlan || property.media?.floorPlan,
-                      ),
-                      "_blank",
-                    )
-                  }
-                >
-                  <img
-                    src={getImageUrl(
-                      property.floorPlan || property.media?.floorPlan,
+            {(() => {
+              const floorPlans = property.media?.floorPlans?.length > 0 
+                ? property.media.floorPlans 
+                : (property.floorPlan || property.media?.floorPlan ? [property.floorPlan || property.media.floorPlan] : []);
+              
+              if (floorPlans.length === 0) return null;
+
+              return (
+                <div className="space-y-6 mt-8">
+                  <hr className="border-gray-100" />
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 font-sans">
+                    Floor Plan
+                  </h3>
+                  <div className="bg-gray-50 rounded-3xl p-4 border border-gray-100 relative group/floorplan">
+                    {floorPlans.length > 1 ? (
+                      <>
+                        <Swiper
+                          modules={[Navigation, Pagination, Autoplay]}
+                          navigation={{ nextEl: ".fp-next", prevEl: ".fp-prev" }}
+                          pagination={{ clickable: true, dynamicBullets: true }}
+                          autoplay={{ delay: 4000, disableOnInteraction: false }}
+                          className="rounded-2xl"
+                        >
+                          {floorPlans.map((fp, i) => (
+                            <SwiperSlide key={i} className="flex justify-center items-center">
+                              <div 
+                                className="cursor-pointer relative group/img"
+                                onClick={() => window.open(getImageUrl(fp), "_blank")}
+                              >
+                                <img
+                                  src={getImageUrl(fp)}
+                                  alt={`Floor Plan ${i + 1}`}
+                                  className="w-full h-auto rounded-2xl shadow-sm object-contain max-h-[600px]"
+                                />
+                                <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center rounded-2xl">
+                                  <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
+                                    <Eye size={16} /> Click to view full size
+                                  </span>
+                                </div>
+                              </div>
+                            </SwiperSlide>
+                          ))}
+                        </Swiper>
+                        <button className="fp-prev absolute left-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-xl opacity-0 group-hover/floorplan:opacity-100 transition-all active:scale-95">
+                          <ChevronLeft size={24} />
+                        </button>
+                        <button className="fp-next absolute right-8 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-xl opacity-0 group-hover/floorplan:opacity-100 transition-all active:scale-95">
+                          <ChevronRight size={24} />
+                        </button>
+                      </>
+                    ) : (
+                      <div
+                        className="cursor-pointer group/img relative"
+                        onClick={() => window.open(getImageUrl(floorPlans[0]), "_blank")}
+                      >
+                        <img
+                          src={getImageUrl(floorPlans[0])}
+                          alt="Floor Plan"
+                          className="w-full h-auto rounded-2xl shadow-sm"
+                        />
+                        <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center rounded-2xl">
+                          <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
+                            <Eye size={16} /> Click to view full size
+                          </span>
+                        </div>
+                      </div>
                     )}
-                    alt="Floor Plan"
-                    className="w-full h-auto rounded-2xl shadow-sm"
-                  />
-                  <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center rounded-3xl">
-                    <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">
-                      <Eye size={16} /> Click to view full size
-                    </span>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* RIGHT COLUMN: Sidebar (Preserved Card Style) */}

@@ -106,7 +106,10 @@ const BuilderPromoterDetailsUI = ({
     gallery: useRef(null),
   };
 
-  const hasFloorPlan = property.floorPlan || property.media?.floorPlan;
+  const floorPlans = property.media?.floorPlans?.length > 0 
+    ? property.media.floorPlans 
+    : (property.floorPlan || property.media?.floorPlan ? [property.floorPlan || property.media.floorPlan] : []);
+  const hasFloorPlan = floorPlans.length > 0;
 
   const tabs = [
     { id: "overview", label: "Overview" },
@@ -498,14 +501,50 @@ const BuilderPromoterDetailsUI = ({
                 <h3 className="text-2xl font-bold text-gray-900">
                   Floor Plans
                 </h3>
-                <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm text-center">
-                  <img
-                    src={getImageUrl(
-                      property.floorPlan || property.media?.floorPlan,
-                    )}
-                    className="max-h-[500px] mx-auto rounded-2xl"
-                    alt="Floor Plan"
-                  />
+                <div className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm relative group/floorplan">
+                  {floorPlans.length > 1 ? (
+                    <>
+                      <Swiper
+                        modules={[Navigation, Pagination, Autoplay]}
+                        navigation={{ nextEl: ".fp-next", prevEl: ".fp-prev" }}
+                        pagination={{ clickable: true, dynamicBullets: true }}
+                        autoplay={{ delay: 4000, disableOnInteraction: false }}
+                        className="rounded-2xl"
+                      >
+                        {floorPlans.map((fp, i) => (
+                          <SwiperSlide key={i} className="flex justify-center items-center">
+                            <div 
+                              className="cursor-pointer"
+                              onClick={() => window.open(getImageUrl(fp), "_blank")}
+                            >
+                              <img
+                                src={getImageUrl(fp)}
+                                className="max-h-[500px] mx-auto rounded-2xl object-contain"
+                                alt={`Floor Plan ${i + 1}`}
+                              />
+                            </div>
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                      <button className="fp-prev absolute left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-lg opacity-0 group-hover/floorplan:opacity-100 transition-all active:scale-95">
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button className="fp-next absolute right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-gray-900 shadow-lg opacity-0 group-hover/floorplan:opacity-100 transition-all active:scale-95">
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
+                  ) : (
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => window.open(getImageUrl(floorPlans[0]), "_blank")}
+                    >
+                      <img
+                        src={getImageUrl(floorPlans[0])}
+                        className="max-h-[500px] mx-auto rounded-2xl"
+                        alt="Floor Plan"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
