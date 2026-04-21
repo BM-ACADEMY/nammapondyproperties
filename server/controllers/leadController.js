@@ -51,12 +51,7 @@ exports.getSharedLeads = async (req, res) => {
 
     // Filter and Transform data
     const filteredLeads = sharedLeads.filter(lead => {
-      // 1. If it's already accepted by someone else or closed, don't show it at all
-      if (lead.status !== "pending" && (!lead.acceptedBy || lead.acceptedBy._id.toString() !== userId.toString())) {
-        return false;
-      }
-
-      // 2. Strict Role Matching Logic:
+      // 1. Strict Role Matching Logic:
       // Priority 1: Builders Only
       if (lead.matchPriority === 1 && !isBuilder) return false;
       // Priority 2 & 3: Agents Only

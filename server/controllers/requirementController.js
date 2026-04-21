@@ -520,11 +520,11 @@ exports.shareRequirement = async (req, res) => {
       let message = "Failed to share lead with any of the selected plans.";
       
       if (results.every(r => r.status === "no_credits")) {
-        message = "Lead Share Failed: All matching sellers in the selected plans have exhausted their lead credits. Please update the Lead Share Count in Subscription Plans.";
+        message = "Lead Share Failed: Matched sellers have exhausted their credits.";
       } else if (results.every(r => r.status === "already_shared")) {
-        message = "This lead has already been shared with all selected plans.";
+        message = "Lead already shared with selected plans.";
       } else if (results.every(r => r.status === "no_sellers")) {
-        message = "No active sellers found in the selected plans that match this lead's criteria.";
+        message = "No matching sellers found in those plans.";
       }
 
       return res.status(400).json({
