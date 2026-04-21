@@ -625,8 +625,16 @@ const RequirementList = () => {
                                               {s.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div className="flex flex-col min-w-0 flex-1">
-                                              <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
+                                              <div className="flex items-center justify-between">
+                                                <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
+                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.leadsLimit !== -1 && s.leadsUsed >= s.leadsLimit ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                  {s.leadsUsed}/{s.leadsLimit === -1 ? '∞' : s.leadsLimit}
+                                                </span>
+                                              </div>
                                               <span className="text-slate-400 text-[9px] font-medium mb-1">{s.businessType}</span>
+                                              {s.leadsLimit !== -1 && s.leadsUsed >= s.leadsLimit && (
+                                                <span className="text-[9px] text-red-500 font-bold mb-1 italic">Limit Reached</span>
+                                              )}
                                               {s.matchingProperties && s.matchingProperties.length > 0 && (
                                                 <div className="flex flex-col gap-1 mt-0.5 pt-1 border-t border-slate-100">
                                                   <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-tight">Matching Properties:</span>
@@ -754,9 +762,17 @@ const RequirementList = () => {
                                                 <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-[10px] shrink-0">
                                                   {s.name.substring(0, 2).toUpperCase()}
                                                 </div>
-                                                <div className="flex flex-col min-w-0">
-                                                  <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
-                                                  <span className="text-slate-400 text-[9px] font-medium">{s.businessType}</span>
+                                                <div className="flex flex-col min-w-0 flex-1">
+                                                  <div className="flex items-center justify-between">
+                                                    <span className="font-bold text-slate-700 text-[12px] truncate">{s.name}</span>
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.leadsLimit !== -1 && s.leadsUsed >= s.leadsLimit ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                                                      {s.leadsUsed}/{s.leadsLimit === -1 ? '∞' : s.leadsLimit}
+                                                    </span>
+                                                  </div>
+                                                  <span className="text-slate-400 text-[9px] font-medium mb-1">{s.businessType}</span>
+                                                  {s.leadsLimit !== -1 && s.leadsUsed >= s.leadsLimit && (
+                                                    <span className="text-[9px] text-red-500 font-bold mb-1 italic">Limit Reached</span>
+                                                  )}
                                                 </div>
                                               </div>
                                             ))}
