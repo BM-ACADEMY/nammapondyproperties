@@ -19,7 +19,7 @@ const TopAnnouncementBar = () => {
         </p>
         <Link
           to="/add-property"
-          className="hidden sm:flex items-center space-x-1 group hover:text-yellow-300 transition-colors ml-2 border-l border-white/20 pl-3"
+          className="hidden sm:flex items-center space-x-1 group hover:text-yellow-300 transition-colors ml-2 border-l border-white/20 pl-3 cursor-pointer"
         >
           <span className="text-[10px] sm:text-[11px] font-bold">Post Now</span>
           <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 transition-transform group-hover:translate-x-1" />

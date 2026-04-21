@@ -1,7 +1,45 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { ShieldCheck } from 'lucide-react';
 
 const BuilderPricing = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const handlePostProperty = () => {
+    if (isAuthenticated && user) {
+      const role =
+        user?.role_id?.role_name?.toUpperCase() ||
+        user?.role?.name?.toUpperCase();
+
+      // 🛡️ Restriction: Unverified profiles can only list ONE property
+      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+        message.warning({
+          content: "First complete your profile, once verified your profile then only you listing other properties",
+          key: "verification-restricted"
+        });
+        if (role === "SELLER") {
+          navigate("/seller/profile");
+        } else {
+          navigate("/user/profile");
+        }
+        return;
+      }
+
+      if (role === "ADMIN") {
+        navigate("/admin/properties/add");
+      } else if (role === "SELLER") {
+        navigate("/seller/add-property");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/post-property");
+    }
+  };
+
   return (
     <div className="flex justify-center items-center py-20 bg-white p-4 font-sans">
       
@@ -66,7 +104,10 @@ const BuilderPricing = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-sm font-bold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
+            <button 
+              onClick={handlePostProperty}
+              className="w-full bg-[#091E42] text-white py-3.5 rounded-sm font-bold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]"
+            >
               Get Basic
             </button>
           </div>
@@ -109,7 +150,10 @@ const BuilderPricing = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
+            <button 
+              onClick={handlePostProperty}
+              className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]"
+            >
               Choose Pro
             </button>
           </div>
@@ -152,7 +196,10 @@ const BuilderPricing = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
+            <button 
+              onClick={handlePostProperty}
+              className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]"
+            >
               Get Premium Leads
             </button>
           </div>
@@ -160,16 +207,6 @@ const BuilderPricing = () => {
 
         </div>
         
-        {/* BOTTOM SECTION (Consistency Check) */}
-        <div className="mt-20 flex flex-col items-center text-center">
-            <p className="text-[#091E42] font-semibold text-lg mb-4">Want a custom plan for your project?</p>
-            <button className="flex items-center gap-2 bg-[#1aa554] text-white px-10 py-4 rounded-xl font-bold text-xl hover:bg-[#168a44] cursor-pointer transition-all transform hover:-translate-y-1 shadow-lg active:scale-95">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.21-2.21a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                Book Consultation
-            </button>
-        </div>
 
       </div>
     </div>

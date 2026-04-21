@@ -1,8 +1,45 @@
 import React from 'react';
-
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { ShieldCheck } from 'lucide-react';
 
 const DealerPlanBanner = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const handlePostProperty = () => {
+    if (isAuthenticated && user) {
+      const role =
+        user?.role_id?.role_name?.toUpperCase() ||
+        user?.role?.name?.toUpperCase();
+
+      // 🛡️ Restriction: Unverified profiles can only list ONE property
+      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+        message.warning({
+          content: "First complete your profile, once verified your profile then only you listing other properties",
+          key: "verification-restricted"
+        });
+        if (role === "SELLER") {
+          navigate("/seller/profile");
+        } else {
+          navigate("/user/profile");
+        }
+        return;
+      }
+
+      if (role === "ADMIN") {
+        navigate("/admin/properties/add");
+      } else if (role === "SELLER") {
+        navigate("/seller/add-property");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/post-property");
+    }
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-white p-4 font-sans">
       
@@ -68,7 +105,10 @@ const DealerPlanBanner = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
+            <button 
+              onClick={handlePostProperty}
+              className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto"
+            >
               Get Started
             </button>
           </div>
@@ -112,7 +152,10 @@ const DealerPlanBanner = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
+            <button 
+              onClick={handlePostProperty}
+              className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto"
+            >
               Choose Standard
             </button>
           </div>
@@ -155,7 +198,10 @@ const DealerPlanBanner = () => {
             </ul>
 
             {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
+            <button 
+              onClick={handlePostProperty}
+              className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto"
+            >
               Get Premium Leads
             </button>
           </div>

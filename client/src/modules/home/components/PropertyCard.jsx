@@ -41,7 +41,7 @@ const PropertyCard = ({ property }) => {
         <img
           src={imgUrl}
           alt={property.basicInfo?.title || "Property"}
-          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${property.isSold ? "grayscale-[0.8]" : ""}`}
+          className={`w-full h-full object-cover ${property.isSold ? "grayscale-[0.8]" : ""}`}
         />
 
         {/* Wishlist Button - Top Right */}

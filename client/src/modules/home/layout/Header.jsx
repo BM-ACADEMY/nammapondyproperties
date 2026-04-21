@@ -217,7 +217,7 @@ const Header = () => {
               {/* Logo - Left Side */}
               <Link
                 to="/"
-                className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
+                className={`flex-shrink-0 items-center group cursor-pointer ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
                 onClick={() => {
                   const mainContent = document.getElementById("main-content");
                   if (mainContent) {
@@ -237,7 +237,7 @@ const Header = () => {
                 <button
                   onClick={detectLocation}
                   disabled={locationLoading}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
                 >
                   <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
                   <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
@@ -264,7 +264,7 @@ const Header = () => {
                       <Link
                         key={name}
                         to={`/properties?category=${encodeURIComponent(name)}`}
-                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide cursor-pointer"
                       >
                         {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
@@ -285,7 +285,7 @@ const Header = () => {
                         onMouseLeave={() => setActiveBusinessDropdown(null)}
                       >
                         <button
-                          className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none"
+                        className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none cursor-pointer"
                         >
                           <span>{name}</span>
                           <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${activeBusinessDropdown === id ? "rotate-180" : ""}`} />
@@ -373,7 +373,7 @@ const Header = () => {
                   onMouseEnter={() => setIsContactMenuOpen(true)}
                   onMouseLeave={() => setIsContactMenuOpen(false)}
                 >
-                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none">
+                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none cursor-pointer">
                     <Headphones className="h-5 w-5" />
                   </button>
 
@@ -438,7 +438,7 @@ const Header = () => {
                     onMouseEnter={() => setIsUserMenuOpen(true)}
                     onMouseLeave={() => setIsUserMenuOpen(false)}
                   >
-                    <button className="flex items-center space-x-1 focus:outline-none group py-1">
+                    <button className="flex items-center space-x-1 focus:outline-none group py-1 cursor-pointer">
                       <div className="relative">
                         <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center overflow-hidden border border-transparent group-hover:border-gray-400 transition-all duration-300 text-gray-900">
                           {user?.profile_image ? (
@@ -581,7 +581,7 @@ const Header = () => {
                     onMouseEnter={() => setIsLoginMenuOpen(true)}
                     onMouseLeave={() => setIsLoginMenuOpen(false)}
                   >
-                    <button className="flex items-center space-x-1 focus:outline-none group py-1">
+                    <button className="flex items-center space-x-1 focus:outline-none group py-1 cursor-pointer">
                       <div className="relative">
                         <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center text-gray-900 border border-transparent group-hover:border-gray-400 transition-all">
                           <User className="h-5 w-5" />

@@ -197,7 +197,7 @@ const PropertySearchBar = ({
                 initial={isHeader ? { opacity: 0, scale: 0.95 } : { width: "10%", opacity: 0 }}
                 animate={isHeader ? { opacity: 1, scale: 1 } : { width: "100%", opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className={`bg-white p-2 rounded-full lg:rounded-2xl shadow-2xl flex flex-row items-center relative z-50 w-full overflow-visible ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
+                className={`bg-white p-2 rounded-full lg:rounded-2xl shadow-2xl flex flex-row items-center relative z-50 w-full overflow-visible cursor-text ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
                     }`}
             >
 
@@ -327,7 +327,7 @@ const PropertySearchBar = ({
                         <div className="relative flex-shrink-0 hidden lg:block" ref={typeRef}>
                             <button
                                 onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                                className={`flex items-center gap-1.5 rounded-l-2xl hover:bg-gray-50 font-semibold text-gray-700 transition border-r border-gray-200 h-full px-4 py-2 text-sm`}
+                                className={`flex items-center gap-1.5 rounded-l-2xl hover:bg-gray-50 font-semibold text-gray-700 transition border-r border-gray-200 h-full px-4 py-2 text-sm cursor-pointer`}
                             >
                                 <span className="max-w-[100px] truncate whitespace-nowrap">{getTypeSelectorLabel()}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isTypeDropdownOpen ? "rotate-180" : ""}`} />
@@ -434,7 +434,7 @@ const PropertySearchBar = ({
                         <div className="relative" ref={locationRef}>
                             <button
                                 onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
                                 <span className="max-w-[80px] truncate">{location || "Location"}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isLocationDropdownOpen ? "rotate-180" : ""}`} />
@@ -470,7 +470,7 @@ const PropertySearchBar = ({
                         <div className="relative" ref={approvalRef}>
                             <button
                                 onClick={() => setIsApprovalDropdownOpen(!isApprovalDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
                                 <span className="max-w-[80px] truncate">{approval || "Approval"}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isApprovalDropdownOpen ? "rotate-180" : ""}`} />
@@ -506,7 +506,7 @@ const PropertySearchBar = ({
                         <div className="relative" ref={budgetRef}>
                             <button
                                 onClick={() => setIsBudgetDropdownOpen(!isBudgetDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
                                 <span className="max-w-[100px] truncate">{getBudgetLabel()}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isBudgetDropdownOpen ? "rotate-180" : ""}`} />
