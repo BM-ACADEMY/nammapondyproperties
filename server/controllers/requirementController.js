@@ -77,15 +77,25 @@ exports.getRequirements = async (req, res) => {
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(
       requirements.map(async (reqDoc) => {
-        const sharedInfo = await SharedLead.findOne({ 
+        // Find if any record was accepted
+        const acceptedLead = await SharedLead.findOne({ 
           requirement: reqDoc._id, 
           status: "accepted" 
-        }).populate("acceptedBy", "name email phone");
+        }).populate({
+          path: "acceptedBy",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
+
+        // Get the highest priority match it was shared with (to show in table)
+        const anySharedLead = await SharedLead.findOne({ requirement: reqDoc._id })
+          .sort({ matchPriority: 1 }); // 1 is highest priority
 
         return {
           ...reqDoc.toObject(),
-          acceptedBy: sharedInfo ? sharedInfo.acceptedBy : null,
-          isShared: !!(await SharedLead.exists({ requirement: reqDoc._id })),
+          acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
+          isShared: !!anySharedLead,
+          matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
         };
       })
     );
@@ -147,7 +157,6 @@ exports.updateRequirementStatus = async (req, res) => {
 exports.deleteRequirement = async (req, res) => {
   try {
     const { id } = req.params;
-
     const requirement = await Requirement.findByIdAndDelete(id);
 
     if (!requirement) {
@@ -168,6 +177,54 @@ exports.deleteRequirement = async (req, res) => {
       message: "Server Error: Could not delete requirement.",
     });
   }
+};
+
+// Helper function to build the property matching query
+const getPropertyMatchQuery = (sellerId, requirement) => {
+  if (!requirement) return null;
+
+  const isRent = requirement.category === "Rent";
+  const minBudget = requirement.minBudget || 0;
+  const maxBudget = requirement.maxBudget || Infinity;
+
+  const priceField = isRent ? "pricing.rent.monthlyRent" : "pricing.sell.price";
+  const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
+  const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
+
+  // Base query
+  const matchQuery = {
+    seller: sellerId,
+    status: "Active",
+    "basicInfo.category": requirement.category,
+    "basicInfo.usageType": requirement.usageType,
+    "basicInfo.propertyType": requirement.propertyType,
+    $and: [
+      {
+        $or: [
+          { [priceField]: { $gte: minBudget, $lte: maxBudget } },
+          {
+            [minPriceField]: { $lte: maxBudget },
+            [maxPriceField]: { $gte: minBudget }
+          }
+        ]
+      }
+    ]
+  };
+
+  // Add Location matching if preferredLocation is provided
+  if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
+    const locTerm = requirement.preferredLocation.trim();
+    const locRegex = new RegExp(locTerm, "i");
+    matchQuery.$and.push({
+      $or: [
+        { "location.city": locRegex },
+        { "location.locality": locRegex },
+        { "location.subArea": locRegex }
+      ]
+    });
+  }
+
+  return matchQuery;
 };
 
 // Get subscription stats for lead sharing (Admin)
@@ -217,54 +274,17 @@ exports.getSubscriptionStats = async (req, res) => {
 
             let isMatch = false;
             let matchPriority = 3; // Default: No match
+            let matchingProperties = [];
 
             if (requirement) {
-              const isRent = requirement.category === "Rent";
-              const minBudget = requirement.minBudget || 0;
-              const maxBudget = requirement.maxBudget || Infinity;
-
-              const priceField = isRent ? "pricing.rent.monthlyRent" : "pricing.sell.price";
-              const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
-              const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
-
-              // Base query
-              const matchQuery = {
-                seller: user._id,
-                status: "Active",
-                "basicInfo.category": requirement.category,
-                "basicInfo.usageType": requirement.usageType,
-                "basicInfo.propertyType": requirement.propertyType,
-                $and: [
-                  {
-                    $or: [
-                      { [priceField]: { $gte: minBudget, $lte: maxBudget } },
-                      {
-                        [minPriceField]: { $lte: maxBudget },
-                        [maxPriceField]: { $gte: minBudget }
-                      }
-                    ]
-                  }
-                ]
-              };
-
-              // Add Location matching if preferredLocation is provided
-              if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
-                const locTerm = requirement.preferredLocation.trim();
-                const locRegex = new RegExp(locTerm, "i");
-                matchQuery.$and.push({
-                  $or: [
-                    { "location.city": locRegex },
-                    { "location.locality": locRegex },
-                    { "location.subArea": locRegex }
-                  ]
-                });
-              }
-
-              const matchingProperty = await Property.findOne(matchQuery);
-              if (matchingProperty) {
+              const matchQuery = getPropertyMatchQuery(user._id, requirement);
+              const props = await Property.find(matchQuery).select("basicInfo.title");
+              
+              if (props.length > 0) {
                 isMatch = true;
                 matchPriority = isBuilder ? 1 : isAgent ? 2 : 3;
                 if (isBuilder) hasGlobalBuilderMatch = true;
+                matchingProperties = props.map(p => p.basicInfo.title);
               }
             }
 
@@ -277,7 +297,8 @@ exports.getSubscriptionStats = async (req, res) => {
               isBuilder,
               isAgent,
               isMatch,
-              matchPriority
+              matchPriority,
+              matchingProperties
             };
           }));
 
@@ -309,11 +330,14 @@ exports.getSubscriptionStats = async (req, res) => {
   }
 };
 
-// Share requirement with a subscription plan (Admin)
+// Share requirement with one or more subscription plans (Admin)
 exports.shareRequirement = async (req, res) => {
   try {
     const { id } = req.params; // Requirement ID
-    const { planId, matchType, matchPriority } = req.body;
+    let { planId, planIds, matchType, matchPriority } = req.body;
+    
+    // Coerce matchPriority to number to avoid type mismatch bugs (e.g. "3" === 3 is false)
+    matchPriority = Number(matchPriority) || 3;
 
     const requirement = await Requirement.findById(id);
     if (!requirement) {
@@ -323,20 +347,20 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
-    const selectedPlan = await SubscriptionPlan.findById(planId);
-    if (!selectedPlan) {
-      return res.status(404).json({
-        success: false,
-        message: "Subscription plan not found.",
-      });
+    // Determine target plans
+    let targetPlanIds = [];
+    if (planIds && Array.isArray(planIds)) {
+      targetPlanIds = planIds;
+    } else if (planId) {
+      targetPlanIds = [planId];
     }
 
-    // Find all plan variants with the same name
-    const allMatchingPlans = await SubscriptionPlan.find({ 
-      name: selectedPlan.name,
-      status: "active" 
-    });
-    const planIds = allMatchingPlans.map(p => p._id);
+    if (targetPlanIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No subscription plans provided.",
+      });
+    }
 
     // Check if the lead is already accepted by anyone in any plan
     const alreadyAccepted = await SharedLead.findOne({ 
@@ -351,85 +375,120 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
-    // Find active sellers for all plan variants of this name
-    const activeSubscriptions = await Subscription.find({
-      plan: { $in: planIds },
-      status: "active",
-      endDate: { $gt: new Date() },
-    }).populate({
-      path: "user",
-      select: "name businessType",
-      populate: { path: "businessType", select: "name" }
-    });
-    
-    let sellerIds = [];
-
-    // Apply filtering based on priority logic
-    // P1: Builders only
-    // P2: Agents (only if no builder match)
-    // P3: Agents (fallback)
-    if (matchPriority === 1) {
-      sellerIds = activeSubscriptions
-        .filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name))
-        .map(sub => sub.user._id);
-    } else if (matchPriority === 2 || matchPriority === 3) {
-      sellerIds = activeSubscriptions
-        .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
-        .map(sub => sub.user._id);
-    } else {
-      // Default fallback (though priority should be set)
-      sellerIds = activeSubscriptions.filter(sub => sub.user).map(sub => sub.user._id);
-    }
-
-    if (sellerIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No eligible sellers found in this plan to share the lead with.",
-      });
-    }
-
-    // Create or update SharedLead
-    let sharedLead = await SharedLead.findOne({ requirement: id, plan: planId });
-    
-    if (sharedLead) {
-      return res.status(400).json({
-        success: false,
-        message: "This lead has already been shared with this plan.",
-      });
-    }
-
-    sharedLead = new SharedLead({
-      requirement: id,
-      plan: planId,
-      sharedWith: sellerIds,
-      status: "pending",
-      matchType: matchType || "not-exact",
-      matchPriority: matchPriority || 3
-    });
-
-    await sharedLead.save();
-
-    // Emit Socket.io event to filtered sellers
+    const results = [];
     const io = req.app.get("socketio");
-    if (io) {
-      sellerIds.forEach(sellerId => {
-        io.to(`seller-${sellerId}`).emit("new-lead-shared", {
-          leadId: sharedLead._id,
-          requirement: {
-            category: requirement.category,
-            usageType: requirement.usageType,
-            propertyType: requirement.propertyType,
-            preferredLocation: requirement.preferredLocation,
-            propertyPreferences: requirement.propertyPreferences,
-            message: requirement.message,
-          },
+
+    for (const pId of targetPlanIds) {
+      const selectedPlan = await SubscriptionPlan.findById(pId);
+      if (!selectedPlan) continue;
+
+      // Find all plan variants with the same name
+      const allMatchingPlans = await SubscriptionPlan.find({ 
+        name: selectedPlan.name,
+        status: "active" 
+      });
+      const allPlanVariantIds = allMatchingPlans.map(p => p._id);
+
+      // Check if already shared with this specific plan
+      const existingShare = await SharedLead.findOne({ requirement: id, plan: pId });
+      if (existingShare) {
+        results.push({ plan: selectedPlan.name, status: "already_shared" });
+        continue;
+      }
+
+      // Find active sellers for all plan variants
+      const activeSubscriptions = await Subscription.find({
+        plan: { $in: allPlanVariantIds },
+        status: "active",
+        endDate: { $gt: new Date() },
+      }).populate({
+        path: "user",
+        select: "name businessType",
+        populate: { path: "businessType", select: "name" }
+      });
+      
+      let sellerIds = [];
+
+      // Improved Priority matching logic with property-level verification
+      if (matchPriority === 1) {
+        // Priority 1: ONLY Builders matching the criteria
+        const builderSubs = activeSubscriptions.filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name));
+        for (const sub of builderSubs) {
+          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
+          if (await Property.exists(matchQuery)) {
+            sellerIds.push(sub.user._id);
+          }
+        }
+      } else if (matchPriority === 2) {
+        // Priority 2: ONLY Agents matching the criteria
+        const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
+        for (const sub of agentSubs) {
+          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
+          if (await Property.exists(matchQuery)) {
+            sellerIds.push(sub.user._id);
+          }
+        }
+      } else if (matchPriority === 3) {
+        // Priority 3 (Fallback): ALL Agents in the plan (regardless of match, per requirements)
+        sellerIds = activeSubscriptions
+          .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
+          .map(sub => sub.user._id);
+      } else {
+        // Safe fallback - shouldn't usually be hit
+        sellerIds = activeSubscriptions
+          .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
+          .map(sub => sub.user._id);
+      }
+
+      if (sellerIds.length === 0) {
+        results.push({ plan: selectedPlan.name, status: "no_sellers" });
+        continue;
+      }
+
+      const sharedLead = new SharedLead({
+        requirement: id,
+        plan: pId,
+        sharedWith: sellerIds,
+        status: "pending",
+        matchType: matchType || "not-exact",
+        matchPriority: matchPriority || 3
+      });
+
+      await sharedLead.save();
+
+      // Notify sellers
+      if (io) {
+        sellerIds.forEach(sellerId => {
+          io.to(`seller-${sellerId}`).emit("new-lead-shared", {
+            leadId: sharedLead._id,
+            requirement: {
+              category: requirement.category,
+              usageType: requirement.usageType,
+              propertyType: requirement.propertyType,
+              preferredLocation: requirement.preferredLocation,
+              propertyPreferences: requirement.propertyPreferences,
+              message: requirement.message,
+            },
+          });
         });
+      }
+      results.push({ plan: selectedPlan.name, status: "success", count: sellerIds.length });
+    }
+
+    const successCount = results.filter(r => r.status === "success").length;
+    
+    if (successCount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Failed to share lead with any of the selected plans.",
+        details: results
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `Lead shared successfully with ${selectedPlan.name} plan users.`,
+      message: `Lead shared successfully with ${successCount} plan(s).`,
+      details: results
     });
   } catch (error) {
     console.error("Error sharing requirement:", error);
@@ -439,3 +498,4 @@ exports.shareRequirement = async (req, res) => {
     });
   }
 };
+

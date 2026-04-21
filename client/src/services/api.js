@@ -42,7 +42,7 @@ export const getRequirements = () => api.get("/requirements");
 export const updateRequirementStatus = (id, status) => api.patch(`/requirements/${id}`, { status });
 export const deleteRequirement = (id) => api.delete(`/requirements/${id}`);
 export const getSubscriptionStats = (requirementId) => api.get("/requirements/subscription-stats", { params: { requirementId } });
-export const shareRequirement = (id, planId, matchType, matchPriority) => api.post(`/requirements/${id}/share`, { planId, matchType, matchPriority });
+export const shareRequirement = (id, data) => api.post(`/requirements/${id}/share`, data);
 
 // Seller Shared Leads
 export const getMySharedLeads = () => api.get("/shared-leads/my-leads");
