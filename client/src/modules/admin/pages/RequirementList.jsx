@@ -210,14 +210,27 @@ const RequirementList = () => {
 
   const columns = [
     {
-      title: "User Details",
+      title: "User / Manager",
       key: "user",
       render: (_, record) => (
         <div className="flex flex-col">
-          <Text strong>{record.fullName}</Text>
-          <div className="flex items-center gap-1 text-xs text-slate-500 mt-1">
-            <Phone size={12} /> {record.phoneNumber}
+          <div className="flex items-center gap-2">
+            <Text strong className="text-gray-900">{record.fullName}</Text>
+            {record.createdBy && (
+              <Tooltip title={`Created by ${record.createdBy.name || "Admin"}`}>
+                <Tag color="cyan" className="text-[10px] m-0 border-none px-1.5 py-0 leading-normal font-bold">BY ADMIN</Tag>
+              </Tooltip>
+            )}
           </div>
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
+            <Phone size={12} className="text-slate-400" /> {record.phoneNumber}
+          </div>
+          {record.user?.assignedAdmin && (
+             <div className="mt-1 flex items-center gap-1">
+                <span className="text-[9px] text-slate-400 uppercase font-semibold">Managed By:</span>
+                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 rounded">{record.user.assignedAdmin.name || "Manager"}</span>
+             </div>
+          )}
         </div>
       ),
     },

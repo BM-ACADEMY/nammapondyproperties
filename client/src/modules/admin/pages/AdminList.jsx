@@ -16,6 +16,8 @@ import {
   Avatar,
   Input,
   Form,
+  Checkbox,
+  Divider,
 } from "antd";
 import { getImageUrl } from "@/utils/imageUrl";
 import { 
@@ -28,17 +30,40 @@ import {
   UserX, 
   ShieldCheck,
   UserPlus,
-  ShieldAlert
+  ShieldAlert,
+  Settings,
+  Lock
 } from "lucide-react";
 import api from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
+
+const PERMISSION_OPTIONS = [
+  { label: "Dashboard", value: "/admin/dashboard" },
+  { label: "Properties", value: "properties-sub" },
+  { label: "Seller Management", value: "seller-sub" },
+  { label: "Marketing", value: "marketing-sub" },
+  { label: "Analytics / Manager", value: "analytics-sub" },
+  { label: "User Management", value: "users-sub" },
+  { label: "Enquiry Leads", value: "/admin/enquiries" },
+  { label: "Posted Requirements", value: "/admin/requirements" },
+  { label: "Forms Data", value: "forms-sub" },
+  { label: "Banner Ads", value: "/admin/banner-ads" },
+  { label: "Subscriptions", value: "subscriptions-sub" },
+  { label: "Property Settings", value: "property-settings-sub" },
+  { label: "General Settings", value: "settings-sub" },
+];
 
 const AdminList = () => {
+  const { user: currentUser } = useAuth();
   const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [roles, setRoles] = useState([]);
 
   const fetchRoles = async () => {
@@ -69,6 +94,8 @@ const AdminList = () => {
   }, []);
 
   const handleRevoke = (id) => {
+    if (!currentUser?.isSuperAdmin) return message.error("Only Super Admins can revoke access");
+    
     const userRole = roles.find(r => r.role_name === "user");
     if (!userRole) return message.error("User role not found");
 
@@ -83,6 +110,8 @@ const AdminList = () => {
         try {
           await api.put(`/users/update-user-by-id/${id}`, {
             role_id: userRole._id,
+            isSuperAdmin: false,
+            permissions: []
           });
           message.success("Admin privileges revoked");
           fetchAdmins();
@@ -112,6 +141,26 @@ const AdminList = () => {
     }
   };
 
+  const handleEditPermissions = (record) => {
+    setSelectedAdmin(record);
+    editForm.setFieldsValue({
+      permissions: record.permissions || [],
+      isSuperAdmin: record.isSuperAdmin || false
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateAdmin = async (values) => {
+    try {
+      await api.put(`/users/update-user-by-id/${selectedAdmin._id}`, values);
+      message.success("Admin updated successfully");
+      setIsEditModalOpen(false);
+      fetchAdmins();
+    } catch (error) {
+      message.error("Failed to update admin");
+    }
+  };
+
   const columns = [
     {
       title: "Name",
@@ -127,9 +176,35 @@ const AdminList = () => {
             {text ? text.charAt(0).toUpperCase() : "A"}
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-semibold text-gray-900">{text || "Admin User"}</span>
-            <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{record.userId || "NO ID"}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-gray-900">{text || "Admin User"}</span>
+              {record.isSuperAdmin && (
+                <Tag color="gold" className="m-0 text-[10px] h-4 leading-3 px-1 border-none font-bold">SUPER</Tag>
+              )}
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{record.userId || "NO ID"}</span>
+              <span className="text-[10px] text-indigo-400 font-medium">
+                Created By: <span className="font-bold">{record.createdBy?.name || "System"}</span>
+              </span>
+            </div>
           </div>
+        </div>
+      ),
+    },
+    {
+      title: "Role & Access",
+      key: "role",
+      render: (_, record) => (
+        <div className="flex flex-col gap-1">
+          <Tag color={record.isSuperAdmin ? "purple" : "blue"} className="w-fit rounded-md px-2">
+            {record.isSuperAdmin ? "Super Admin" : "Sub Admin"}
+          </Tag>
+          {!record.isSuperAdmin && (
+            <span className="text-[11px] text-gray-500">
+              {record.permissions?.length || 0} sections accessible
+            </span>
+          )}
         </div>
       ),
     },
@@ -140,16 +215,6 @@ const AdminList = () => {
         <div className="flex flex-col">
           <span className="text-sm font-medium">{record.phone || "No Phone"}</span>
         </div>
-      ),
-    },
-    {
-      title: "Created By",
-      dataIndex: "createdBy",
-      key: "createdBy",
-      render: (createdBy) => (
-        <span className="text-gray-600 font-medium whitespace-nowrap">
-          {createdBy?.name || "System"}
-        </span>
       ),
     },
     {
@@ -169,7 +234,19 @@ const AdminList = () => {
       key: "action",
       align: "right",
       render: (_, record) => {
+        // Can't manage yourself or other super admins if you are not super
+        const canManage = currentUser?.isSuperAdmin && (record._id !== currentUser._id);
+        
         const items = [
+          {
+            key: "edit",
+            label: (
+              <div className="flex items-center gap-2" onClick={() => handleEditPermissions(record)}>
+                <Lock size={14} />
+                <span>Edit Access</span>
+              </div>
+            ),
+          },
           {
             key: "revoke",
             danger: true,
@@ -179,6 +256,10 @@ const AdminList = () => {
                 <span>Revoke Admin</span>
               </div>
             ),
+          },
+          {
+            key: "divider",
+            type: "divider"
           },
           {
             key: "delete",
@@ -209,10 +290,12 @@ const AdminList = () => {
           },
         ];
 
-        return (
+        return canManage ? (
           <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
             <Button type="text" icon={<MoreVertical size={20} />} />
           </Dropdown>
+        ) : (
+            <Tag color="default" className="text-[10px] opacity-50">MANAGEABLE BY SUPER</Tag>
         );
       },
     },
@@ -227,15 +310,17 @@ const AdminList = () => {
           </Title>
           <p className="text-gray-500 mt-1">Manage staff and administrative privileges</p>
         </div>
-        <Button 
-          type="primary" 
-          icon={<UserPlus size={18} />} 
-          size="large"
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 border-none shadow-md h-11"
-          onClick={() => setIsModalOpen(true)}
-        >
-          Add New Admin
-        </Button>
+        {currentUser?.isSuperAdmin && (
+          <Button 
+            type="primary" 
+            icon={<UserPlus size={18} />} 
+            size="large"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 border-none shadow-md h-11"
+            onClick={() => setIsModalOpen(true)}
+          >
+            Add New Admin
+          </Button>
+        )}
       </div>
 
       <Row gutter={[24, 24]} className="mb-8">
@@ -269,41 +354,142 @@ const AdminList = () => {
         />
       </Card>
 
+      {/* Add Admin Modal */}
       <Modal
         title="Add New Admin"
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         destroyOnClose
+        width={600}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleAddAdmin}
           className="mt-4"
+          initialValues={{ isSuperAdmin: false, permissions: [] }}
         >
-          <Form.Item
-            name="name"
-            label="Full Name"
-            rules={[{ required: true, message: "Please enter admin name" }]}
-          >
-            <Input placeholder="Enter name" prefix={<Users size={16} className="text-gray-400" />} />
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="name"
+                label="Full Name"
+                rules={[{ required: true, message: "Please enter admin name" }]}
+              >
+                <Input placeholder="Enter name" prefix={<Users size={16} className="text-gray-400" />} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[
+                  { required: true, message: "Please enter phone number" },
+                  { pattern: /^[0-9]{10}$/, message: "Please enter a valid 10-digit number" }
+                ]}
+              >
+                <Input placeholder="10-digit phone number" prefix={<span className="text-gray-400">+91</span>} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left" className="text-gray-400 text-xs">Role & Access Control</Divider>
+
+          <Form.Item name="isSuperAdmin" valuePropName="checked">
+            <Checkbox className="font-semibold text-indigo-600">Give Super Admin Access (Full Permissions)</Checkbox>
           </Form.Item>
-          <Form.Item
-            name="phone"
-            label="Phone Number"
-            rules={[
-              { required: true, message: "Please enter phone number" },
-              { pattern: /^[0-9]{10}$/, message: "Please enter a valid 10-digit number" }
-            ]}
+
+          <Form.Item 
+            noStyle 
+            shouldUpdate={(prev, curr) => prev.isSuperAdmin !== curr.isSuperAdmin}
           >
-            <Input placeholder="10-digit phone number" prefix={<span className="text-gray-400">+91</span>} />
+            {({ getFieldValue }) => !getFieldValue("isSuperAdmin") && (
+              <Form.Item
+                name="permissions"
+                label="Grant Access To:"
+                className="mt-4"
+              >
+                <Checkbox.Group className="w-full">
+                  <Row gutter={[16, 8]}>
+                    {PERMISSION_OPTIONS.map(opt => (
+                      <Col span={12} key={opt.value}>
+                        <Checkbox value={opt.value}>{opt.label}</Checkbox>
+                      </Col>
+                    ))}
+                  </Row>
+                </Checkbox.Group>
+              </Form.Item>
+            )}
           </Form.Item>
           
           <div className="flex justify-end gap-3 mt-6">
             <Button onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button type="primary" htmlType="submit" className="bg-indigo-600">
               Create Admin
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      {/* Edit Access Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <Lock size={18} className="text-indigo-600" />
+            <span>Manage Admin Access - {selectedAdmin?.name}</span>
+          </div>
+        }
+        open={isEditModalOpen}
+        onCancel={() => setIsEditModalOpen(false)}
+        footer={null}
+        destroyOnClose
+        width={600}
+      >
+        <Form
+          form={editForm}
+          layout="vertical"
+          onFinish={handleUpdateAdmin}
+          className="mt-4"
+        >
+          <Form.Item name="isSuperAdmin" valuePropName="checked">
+            <Checkbox className="font-semibold text-indigo-600">Super Admin Mode (All access granted)</Checkbox>
+          </Form.Item>
+
+          <Form.Item 
+            noStyle 
+            shouldUpdate={(prev, curr) => prev.isSuperAdmin !== curr.isSuperAdmin}
+          >
+            {({ getFieldValue }) => !getFieldValue("isSuperAdmin") && (
+              <Form.Item
+                name="permissions"
+                label="Select Accessible Sections:"
+                className="mt-4"
+              >
+                <Checkbox.Group className="w-full">
+                  <Row gutter={[16, 8]}>
+                    {PERMISSION_OPTIONS.map(opt => (
+                      <Col span={12} key={opt.value}>
+                        <Checkbox value={opt.value}>{opt.label}</Checkbox>
+                      </Col>
+                    ))}
+                  </Row>
+                </Checkbox.Group>
+              </Form.Item>
+            )}
+          </Form.Item>
+
+          <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 mt-4 mb-4">
+             <div className="flex gap-2 text-amber-800 text-[13px]">
+               <AlertCircle size={16} className="shrink-0 mt-0.5" />
+               <p className="mb-0">Changes will take effect the next time the sub-admin logs in or refreshes the page.</p>
+             </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button type="primary" htmlType="submit" className="bg-indigo-600">
+              Update Permissions
             </Button>
           </div>
         </Form>

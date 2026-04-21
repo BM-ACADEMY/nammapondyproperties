@@ -229,8 +229,11 @@ const propertySchema = new mongoose.Schema(
     },
 
     soldPrice: Number,
-    approvedAt: Date
-
+    approvedAt: Date,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }
   },
   {
     timestamps: true

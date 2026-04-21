@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Layout, Menu, Drawer, Badge } from "antd";
 import { useSocket } from "@/context/SocketContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
   Users,
@@ -26,6 +27,8 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const socket = useSocket();
+  const { user } = useAuth();
+  
   const [newLeadsCount, setNewLeadsCount] = useState(0);
   const [pendingBadgeCount, setPendingBadgeCount] = useState(0);
   const [newPropertyCount, setNewPropertyCount] = useState(0);
@@ -156,7 +159,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   };
 
   // Menu items configuration
-  const menuItems = [
+  const allMenuItems = [
     {
       key: "/admin/dashboard",
       icon: <LayoutDashboard size={20} />,
@@ -216,11 +219,6 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           ),
           onClick: () => handleMenuClick("/admin/seller-listings"),
         },
-        // {
-        //   key: "/admin/seller-requests",
-        //   label: "Seller Requests",
-        //   onClick: () => handleMenuClick("/admin/seller-requests"),
-        // },
       ],
     },
     {
@@ -427,8 +425,27 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
       ],
     },
-   
   ];
+
+  // Memoized filtered menu items based on user permissions
+  const filteredMenuItems = useMemo(() => {
+    if (!user) return [];
+    if (user.isSuperAdmin) return allMenuItems;
+
+    const userPermissions = user.permissions || [];
+    
+    // Always grant access to Dashboard if they have any access, or maybe just always.
+    // Let's assume Dashboard is one of the permissions.
+    
+    return allMenuItems.filter(item => {
+      // Check if top-level item key is in permissions
+      const hasPermission = userPermissions.includes(item.key);
+      
+      // If it's a submenu, we might also want to check children, 
+      // but the UI only allows "marking" the main section.
+      return hasPermission;
+    });
+  }, [user, allMenuItems]);
 
   const SidebarContent = (
     <>
@@ -461,7 +478,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         mode="inline"
         selectedKeys={[pathname]}
         defaultOpenKeys={["properties-sub", "users-sub", "seller-sub"]} // Optional: Keep submenus open by default or manage state
-        items={menuItems}
+        items={filteredMenuItems}
         className="px-2 border-none"
         style={{ background: "transparent" }}
       />

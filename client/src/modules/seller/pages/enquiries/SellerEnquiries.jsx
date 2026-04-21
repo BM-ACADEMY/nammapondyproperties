@@ -29,6 +29,8 @@ import {
   MessageSquare,
   Inbox,
   User,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import moment from "moment";
 import api from "@/services/api";
@@ -102,6 +104,8 @@ const SellerEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(true);
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleViewDetail = (property) => {
@@ -109,8 +113,22 @@ const SellerEnquiries = () => {
   };
 
   useEffect(() => {
-    fetchEnquiries();
+    const init = async () => {
+      await checkSubscription();
+      await fetchEnquiries();
+    };
+    init();
   }, []);
+
+  const checkSubscription = async () => {
+    try {
+      const res = await api.get("/subscriptions/my-subscription");
+      setHasActiveSubscription(!!res.data);
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+      setHasActiveSubscription(false);
+    }
+  };
 
   const fetchEnquiries = async () => {
     try {
@@ -125,21 +143,6 @@ const SellerEnquiries = () => {
     }
   };
 
-  const handleDelete = async (id, type) => {
-    try {
-      const endpoint =
-        type === "whatsapp_lead"
-          ? `/enquiries/whatsapp/delete/${id}`
-          : `/enquiries/delete/${id}`;
-
-      await api.delete(endpoint);
-      message.success("Enquiry deleted successfully");
-      fetchEnquiries();
-    } catch (error) {
-      console.error("Error deleting enquiry:", error);
-      message.error(error.response?.data?.error || "Failed to delete enquiry");
-    }
-  };
 
   const stats = {
     total: enquiries.length,
@@ -173,20 +176,27 @@ const SellerEnquiries = () => {
       render: (property) =>
         property ? (
           <div
-            className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all duration-300"
-            onClick={() => handleViewDetail(property)}
+            className={`flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all duration-300 ${!hasActiveSubscription ? "pointer-events-none" : ""}`}
+            onClick={() => hasActiveSubscription && handleViewDetail(property)}
           >
-            <img
-              src={getImageUrl(
-                property.media?.featuredImage || 
-                property.media?.images?.[0] || 
-                property.images?.[0]?.image_url || 
-                property.images?.[0]
+            <div className="relative">
+              <img
+                src={getImageUrl(
+                  property.media?.featuredImage || 
+                  property.media?.images?.[0] || 
+                  property.images?.[0]?.image_url || 
+                  property.images?.[0]
+                )}
+                alt="prop"
+                className={`w-10 h-10 rounded-lg object-cover shadow-sm border border-gray-100 group-hover:border-blue-300 group-hover:shadow-md transition-all ${!hasActiveSubscription ? "blur-[2px]" : ""}`}
+              />
+              {!hasActiveSubscription && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Lock size={12} className="text-amber-500 bg-white/30 rounded-full p-0.5" />
+                </div>
               )}
-              alt="prop"
-              className="w-10 h-10 rounded-lg object-cover shadow-sm border border-gray-100 group-hover:border-blue-300 group-hover:shadow-md transition-all"
-            />
-            <div className="flex flex-col max-w-50">
+            </div>
+            <div className={`flex flex-col max-w-50 ${!hasActiveSubscription ? "blur-[3px] select-none" : ""}`}>
               <span className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
                 {property.basicInfo?.title || property.title || "Untitled Property"}
               </span>
@@ -213,9 +223,22 @@ const SellerEnquiries = () => {
             <span className="font-semibold text-gray-900">
               {record.enquirer_name || "Guest"}
             </span>
-            <span className="text-xs text-blue-600 font-medium">
-              {record.enquirer_phone}
-            </span>
+            {record.enquirer_phone?.includes('X') ? (
+              <div className="relative w-fit mt-0.5 group/lock">
+                <span className="text-[11px] font-medium text-gray-300 blur-[2px] select-none tracking-tighter">
+                  +91 9988776655
+                </span>
+                <div className="absolute inset-0 flex items-center justify-start pl-1">
+                  <Tooltip title="Subscribe to view phone number">
+                    <Lock size={10} className="text-amber-500 bg-white/50 rounded-full" />
+                  </Tooltip>
+                </div>
+              </div>
+            ) : (
+              <span className="text-xs text-blue-600 font-medium">
+                {record.enquirer_phone}
+              </span>
+            )}
           </div>
         </div>
       ),
@@ -226,11 +249,27 @@ const SellerEnquiries = () => {
       key: "message",
       width: 250,
       render: (msg) => (
-        <Tooltip title={msg} placement="topLeft" overlayStyle={{ maxWidth: "300px" }}>
-          <div className="max-w-60 truncate text-gray-600 text-sm italic">
-            "{msg || "No message provided"}"
+        msg?.includes("Locked") ? (
+          <div className="relative w-full max-w-[200px] group/lock">
+             <div className="text-[13px] text-gray-300 blur-[3px] select-none italic line-clamp-1">
+               This is a private message from a potential property buyer interested in your listing.
+             </div>
+             <div className="absolute inset-0 flex items-center justify-center">
+                <Tooltip title="Subscribe to view full message">
+                  <div className="bg-white/80 backdrop-blur-sm border border-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm transform transition-transform group-hover/lock:scale-105">
+                    <Lock size={10} className="text-amber-600" />
+                    <span className="text-[9px] font-bold text-amber-700 uppercase tracking-tight">Locked</span>
+                  </div>
+                </Tooltip>
+             </div>
           </div>
-        </Tooltip>
+        ) : (
+          <Tooltip title={msg} placement="topLeft" overlayStyle={{ maxWidth: "300px" }}>
+            <div className="max-w-60 truncate text-gray-600 text-sm italic">
+              "{msg || "No message provided"}"
+            </div>
+          </Tooltip>
+        )
       ),
     },
     {
@@ -262,28 +301,6 @@ const SellerEnquiries = () => {
         >
           {status || "NEW"}
         </Tag>
-      ),
-    },
-    {
-      title: "Actions",
-      key: "actions",
-      align: "right",
-      render: (record) => (
-        <Popconfirm
-          title="Delete Enquiry"
-          description="Are you sure you want to delete this enquiry?"
-          onConfirm={() => handleDelete(record._id, record.type)}
-          okText="Yes"
-          cancelText="No"
-          okButtonProps={{ danger: true }}
-        >
-          <Button
-            type="text"
-            danger
-            icon={<Trash2 size={16} />}
-            className="hover:bg-red-50 flex items-center justify-center p-2 rounded-lg"
-          />
-        </Popconfirm>
       ),
     },
   ];
@@ -345,15 +362,48 @@ const SellerEnquiries = () => {
           <Title level={2} className="mb-0 text-gray-800">Property Enquiries (Leads)</Title>
           <Text type="secondary">Manage and track all incoming enquiries for your properties</Text>
         </div>
-        <Button
-          type="primary"
-          icon={<Download size={18} />}
-          onClick={downloadCSV}
-          className="bg-blue-600 hover:bg-blue-700 h-10 px-6 rounded-lg flex items-center gap-2 border-none transition-all shadow-sm"
-        >
-          Export Leads
-        </Button>
+        <div className="flex items-center gap-3">
+          {!hasActiveSubscription && !loading && (
+            <Button
+              type="primary"
+              ghost
+              className="border-amber-400 text-amber-600 hover:text-amber-700 hover:border-amber-500 hover:bg-amber-50 font-bold"
+              onClick={() => navigate("/seller/upgrade-plan")}
+            >
+              Unlock Lead Details
+            </Button>
+          )}
+          <Button
+            type="primary"
+            icon={<Download size={18} />}
+            onClick={downloadCSV}
+            className="bg-blue-600 hover:bg-blue-700 h-10 px-6 rounded-lg flex items-center gap-2 border-none transition-all shadow-sm"
+          >
+            Export Leads
+          </Button>
+        </div>
       </div>
+
+      {!hasActiveSubscription && !loading && (
+        <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+              <Lock size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-amber-900 m-0 leading-tight">Detail Access Restricted</p>
+              <p className="text-amber-700/80 text-xs m-0">You need an active subscription to view customer contact details and full messages.</p>
+            </div>
+          </div>
+          <Button 
+            type="link" 
+            className="text-amber-600 font-bold hover:text-amber-700 p-0"
+            onClick={() => navigate("/seller/upgrade-plan")}
+          >
+            Upgrade Plan <ArrowRight size={14} className="inline ml-1" />
+          </Button>
+        </div>
+      )}
 
       <Row gutter={[24, 24]} className="mb-8">
         <Col xs={24} sm={12} lg={6}>

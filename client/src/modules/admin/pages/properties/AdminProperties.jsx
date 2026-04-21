@@ -278,20 +278,29 @@ const AdminProperties = ({ mode }) => {
       render: (loc) => loc?.city || "N/A",
     },
     {
-      title: "Added By",
+      title: "Owner / Manager",
       key: "addedBy",
       render: (_, record) => {
         const isMe = user && record.seller?._id === user._id;
+        const creator = record.createdBy?.name || (record.seller?._id === record.createdBy ? "" : "");
+        
         return (
-          <div className="flex items-center gap-2">
-            <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} className="shrink-0" />
-            <span className={isMe ? "font-bold text-blue-600 truncate max-w-30" : "text-gray-600 truncate max-w-30"}>
-              {isMe ? "Me" : (record.seller?.name || "Admin")}
-            </span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} className="shrink-0" />
+              <span className={isMe ? "font-bold text-blue-600 truncate max-w-30" : "text-gray-600 truncate max-w-30"}>
+                {isMe ? "Me" : (record.seller?.name || "Owner")}
+              </span>
+            </div>
+            {record.createdBy && String(record.createdBy._id || record.createdBy) !== String(record.seller?._id) && (
+              <div className="flex items-center gap-1 ml-6">
+                <span className="text-[10px] text-gray-400">Added by:</span>
+                <span className="text-[10px] font-medium text-indigo-500 uppercase">{record.createdBy?.name || "Admin"}</span>
+              </div>
+            )}
           </div>
         );
       },
-      // hidden: mode === "seller", // Allow showing on seller properties page as well
     },
     {
       title: "Status",

@@ -153,6 +153,7 @@ exports.createProperty = async (req, res) => {
       },
       status: "Pending",
       isVerified: false,
+      createdBy: (req.user && (req.user.role_id?.role_name === "admin" || req.user.role?.name === "admin")) ? req.user._id : null,
     };
 
     const property = new Property(propertyData);
@@ -279,20 +280,31 @@ exports.getProperties = async (req, res) => {
       queryConditions.push({ isVerified: isVerified === "true" });
     }
 
-    // 3.1 Status filter for public listings
+    // 3.1 Status filter for public listings & Admin filtering
     const requesterId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
-    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin";
+    
+    // Check if requester is an admin and if they are a Super Admin
+    const userDoc = req.user?._id ? await User.findById(req.user._id).populate("role_id") : null;
+    const isAdmin = userDoc?.role_id?.role_name?.toLowerCase() === "admin";
+    const isSuperAdmin = userDoc?.isSuperAdmin;
+    
+    // Sub-admin boundary logic
+    if (isAdmin && !isSuperAdmin) {
+      // Find all users/sellers assigned to this sub-admin
+      const assignedUserIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
+      queryConditions.push({ seller: { $in: assignedUserIds } });
+    }
     
     // Check if the requester is the owner of the properties being queried
     let isMe = false;
     if (requesterId && seller_id) {
-      // Normalize both to strings for a safe comparison
       const sid = String(seller_id);
       if (sid === "me" || sid === requesterId) {
         isMe = true;
       }
     }
     
+    // Public vs Admin Visibility
     if (!isAdmin && !isMe) {
       queryConditions.push({ status: "Active" });
     }
@@ -480,6 +492,7 @@ exports.getProperties = async (req, res) => {
           populate: { path: "role_id" },
         },
         { path: "businessType" },
+        { path: "createdBy", select: "name" },
       ]);
 
       // For random, total pages/count might be less relevant or just use total count matches
@@ -492,6 +505,7 @@ exports.getProperties = async (req, res) => {
             populate: { path: "role_id" },
           },
           { path: "businessType" },
+          { path: "createdBy", select: "name" },
         ])
         .limit(limit * 1)
         .skip((page - 1) * limit)

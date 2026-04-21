@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema(
     activeSubscription: { type: mongoose.Schema.Types.ObjectId, ref: "Subscription" },
     businessType: { type: mongoose.Schema.Types.ObjectId, ref: "BusinessType" },
     builderProfile: { type: mongoose.Schema.Types.ObjectId, ref: "BuilderProfile" },
+    permissions: [{ type: String }], // Sidebar keys/section names
+    isSuperAdmin: { type: Boolean, default: false },
+    assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },
 );

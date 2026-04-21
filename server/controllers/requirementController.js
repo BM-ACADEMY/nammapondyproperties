@@ -23,8 +23,8 @@ exports.createRequirement = async (req, res) => {
       message,
     } = req.body;
 
-    // Optional: attach user ID if authenticated
     const userId = req.user ? req.user.id : null;
+    const isAdmin = req.user && (req.user.role_id?.role_name === "admin" || req.user.role?.name === "admin");
 
     const newRequirement = new Requirement({
       fullName,
@@ -39,6 +39,7 @@ exports.createRequirement = async (req, res) => {
       propertyPreferences,
       message,
       user: userId,
+      createdBy: isAdmin ? req.user._id : null
     });
 
     const savedRequirement = await newRequirement.save();
@@ -70,9 +71,21 @@ exports.createRequirement = async (req, res) => {
 // Get all requirements (Admin only)
 exports.getRequirements = async (req, res) => {
   try {
-    const requirements = await Requirement.find()
+    const userDoc = await User.findById(req.user._id).populate("role_id");
+    const isAdmin = userDoc?.role_id?.role_name?.toLowerCase() === "admin";
+    const isSuperAdmin = userDoc?.isSuperAdmin;
+    const filter = {};
+
+    if (isAdmin && !isSuperAdmin) {
+      // Sub-admin: Only see requirements for users assigned to them
+      const assignedUserIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
+      filter.user = { $in: assignedUserIds };
+    }
+
+    const requirements = await Requirement.find(filter)
       .sort({ createdAt: -1 })
-      .populate("user", "name email");
+      .populate("user", "name email")
+      .populate("createdBy", "name");
 
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(

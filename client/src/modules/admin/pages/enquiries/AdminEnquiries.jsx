@@ -111,13 +111,24 @@ const AdminEnquiries = () => {
         ),
     },
     {
-      title: "Seller",
+      title: "Seller / Managed By",
       dataIndex: "seller_id",
       key: "seller",
       render: (seller) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-800">{seller?.name || "Unknown"}</span>
-          <span className="text-xs text-gray-500">{seller?.phone || "N/A"}</span>
+          <div className="flex items-center gap-1.5">
+            <User size={12} className="text-indigo-400" />
+            <span className="font-semibold text-gray-800">{seller?.name || "Unknown"}</span>
+          </div>
+          {seller?.assignedAdmin && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] text-gray-400">Handled by:</span>
+              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">
+                {seller.assignedAdmin.name || "Manager"}
+              </span>
+            </div>
+          )}
+          <span className="text-[11px] text-gray-500 font-mono mt-1">{seller?.phone || "N/A"}</span>
         </div>
       ),
     },

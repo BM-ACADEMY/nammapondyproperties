@@ -48,6 +48,7 @@ router.get("/wishlist", protect, userController.getWishlist);
 
 // Admin Routes
 router.post("/create-user-by-admin", protect, userController.createUserByAdmin);
+router.put("/bulk-assign-admin", protect, userController.bulkAssignAdmin);
 
 // Verification Request
 router.post("/request-badge", protect, userController.requestBadgeVerification);

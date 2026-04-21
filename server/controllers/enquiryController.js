@@ -1,5 +1,6 @@
 const Enquiry = require("../models/Enquiry");
 const Property = require("../models/Property");
+const Subscription = require("../models/Subscription");
 
 exports.createEnquiry = async (req, res) => {
   try {
@@ -54,38 +55,29 @@ exports.createEnquiry = async (req, res) => {
 
 exports.getEnquiries = async (req, res) => {
   try {
-    // If admin, fetch all. If seller, fetch only theirs.
+    const User = require("../models/User");
     const filter = {};
 
-    // Check if user is admin. Ensure role_id exists and check role_name.
-    const isAdmin =
-      req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
+    // Fetch user doc to check role and superAdmin status
+    const userDoc = await User.findById(req.user._id).populate("role_id");
+    const isAdmin = userDoc?.role_id?.role_name?.toLowerCase() === "admin";
+    const isSuperAdmin = userDoc?.isSuperAdmin;
 
-    console.log("Debug getEnquiries:", {
-      userId: req.user._id,
-      role: req.user.role_id?.role_name,
-      isAdmin,
-      viewQuery: req.query.view,
-      userRoleObj: req.user.role_id,
-    });
-
-    // If NOT admin OR (is admin AND specific view requested as 'my')
-    // then filter by their own seller_id
-    if (!isAdmin || (isAdmin && req.query.view === "my")) {
+    // Filter Logic
+    if (isAdmin) {
+      if (req.query.view === "my") {
+        // Admin viewing leads for their own properties
+        filter.seller_id = req.user._id;
+      } else if (!isSuperAdmin) {
+        // Sub-admin: Only see leads for sellers assigned to them
+        const assignedSellerIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
+        filter.seller_id = { $in: assignedSellerIds };
+      }
+      // Super Admin: Sees all (filter stays empty)
+    } else {
+      // Seller: Only see their own leads
       filter.seller_id = req.user._id;
     }
-
-    // However, if the user asking is the ADMIN, they might want to see ALL enquiries.
-    // I need to check the Role model or how roles are handled.
-    // Usually req.user.role is populated.
-
-    // For now, let's allow fetching by query param if admin, or default to self.
-    // actually safer:
-    // const enquiries = await Enquiry.find({ seller: req.user._id })...
-
-    // But for the "Admin Panel" requirement, the Admin needs to see leads.
-    // I'll fetch all if admin, else filtered.
-    // I need to verify role handling.
 
     const WhatsappLead = require("../models/WhatsappLead");
 
@@ -96,29 +88,45 @@ exports.getEnquiries = async (req, res) => {
       .populate("seller_id", "name phone")
       .lean();
 
-    // 2. Fetch WhatsappLeads (Legacy)
-    const whatsappLeads = await WhatsappLead.find(
-        filter.seller_id ? { seller_id: filter.seller_id } : {}
-      )
+    // 2. Fetch WhatsappLeads
+    const whatsappLeads = await WhatsappLead.find(filter)
       .populate("property_id", "title location images")
       .populate("user_id", "name phone")
       .populate("seller_id", "name")
       .lean();
 
-    // 3. Normalize WhatsappLeads to match Enquiry structure
+    // 3. Normalize & Sort
     const normalizedLeads = whatsappLeads.map((lead) => ({
       ...lead,
       enquirer_name: lead.user_id?.name || "WhatsApp User",
       enquirer_phone: lead.user_id?.phone || "",
       message: lead.message || "WhatsApp Inquiry",
-      status: lead.status || "new", // Assuming status exists or default
-      type: "whatsapp_lead", // Marker for debugging
+      status: lead.status || "new",
+      type: "whatsapp_lead",
     }));
 
-    // 4. Merge and Sort
     const allEnquiries = [...enquiries, ...normalizedLeads].sort(
       (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
     );
+
+    // 4. Restricted Visibility Logic for Sellers
+    if (!isAdmin) {
+      const activeSubscription = await Subscription.findOne({
+        user: req.user._id,
+        status: "active",
+        endDate: { $gt: new Date() },
+      });
+
+      if (!activeSubscription) {
+        // Mask sensitive data for unsubscribed sellers
+        const maskedEnquiries = allEnquiries.map((lead) => ({
+          ...lead,
+          enquirer_phone: "XXXXXXXXXX",
+          message: "Content Locked (Upgrade to View)",
+        }));
+        return res.json(maskedEnquiries);
+      }
+    }
 
     res.json(allEnquiries);
   } catch (error) {
@@ -128,10 +136,21 @@ exports.getEnquiries = async (req, res) => {
 
 exports.getAllEnquiriesAdmin = async (req, res) => {
   try {
-    const enquiries = await Enquiry.find()
+    const User = require("../models/User");
+    const userDoc = await User.findById(req.user._id).populate("role_id");
+    const isSuperAdmin = userDoc?.isSuperAdmin;
+    const filter = {};
+
+    if (!isSuperAdmin) {
+      const assignedSellerIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
+      filter.seller_id = { $in: assignedSellerIds };
+    }
+
+    const enquiries = await Enquiry.find(filter)
       .populate("property_id", "basicInfo location media")
       .populate("user_id", "name phone")
       .populate("seller_id", "name phone")
+      .populate("createdBy", "name")
       .sort({ createdAt: -1 });
     res.json(enquiries);
   } catch (error) {
@@ -146,17 +165,14 @@ exports.deleteEnquiry = async (req, res) => {
       return res.status(404).json({ error: "Enquiry not found" });
     }
 
-    // Authorization check: Only admin or the assigned seller can delete
+    // Authorization check: Only admin can delete
     const isAdmin =
       req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
 
-    // enquiry.seller_id is an ObjectId, so .toString() works correctly
-    const isOwner = enquiry.seller_id?.toString() === req.user._id.toString();
-
-    if (!isAdmin && !isOwner) {
+    if (!isAdmin) {
       return res
         .status(403)
-        .json({ error: "Not authorized to delete this enquiry" });
+        .json({ error: "Not authorized to delete this enquiry. Contact Admin." });
     }
 
     await Enquiry.findByIdAndDelete(req.params.id);
@@ -178,13 +194,10 @@ exports.deleteWhatsappLead = async (req, res) => {
     const isAdmin =
       req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin";
 
-    // lead.seller_id is an ObjectId, so .toString() works correctly
-    const isOwner = lead.seller_id?.toString() === req.user._id.toString();
-
-    if (!isAdmin && !isOwner) {
+    if (!isAdmin) {
       return res
         .status(403)
-        .json({ error: "Not authorized to delete this lead" });
+        .json({ error: "Not authorized to delete this lead. Contact Admin." });
     }
 
     await WhatsappLead.findByIdAndDelete(req.params.id);
