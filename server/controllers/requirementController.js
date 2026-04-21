@@ -288,6 +288,8 @@ exports.getSubscriptionStats = async (req, res) => {
               }
             }
 
+            const planForSub = plansInGroup.find(p => p._id.toString() === sub.plan.toString());
+
             return {
               id: user._id,
               name: user.name || "Unnamed Seller",
@@ -298,7 +300,9 @@ exports.getSubscriptionStats = async (req, res) => {
               isAgent,
               isMatch,
               matchPriority,
-              matchingProperties
+              matchingProperties,
+              leadsLimit: planForSub?.leadsLimit || 0,
+              leadsUsed: sub.leadsUsed || 0,
             };
           }));
 
@@ -408,40 +412,70 @@ exports.shareRequirement = async (req, res) => {
       });
       
       let sellerIds = [];
+      let skippedDueToLimit = 0;
 
       // Improved Priority matching logic with property-level verification
       if (matchPriority === 1) {
         // Priority 1: ONLY Builders matching the criteria
         const builderSubs = activeSubscriptions.filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name));
         for (const sub of builderSubs) {
+          const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+          const leadsLimit = planForSub?.leadsLimit ?? 2;
+          
+          if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
+            skippedDueToLimit++;
+            continue;
+          }
+
           const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
           if (await Property.exists(matchQuery)) {
             sellerIds.push(sub.user._id);
+            // Deduct lead immediately for Exact Match
+            await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
           }
         }
       } else if (matchPriority === 2) {
         // Priority 2: ONLY Agents matching the criteria
         const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
         for (const sub of agentSubs) {
+          const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+          const leadsLimit = planForSub?.leadsLimit ?? 2;
+
+          if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
+            skippedDueToLimit++;
+            continue;
+          }
+
           const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
           if (await Property.exists(matchQuery)) {
             sellerIds.push(sub.user._id);
+            // Deduct lead immediately for Exact Match
+            await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
           }
         }
       } else if (matchPriority === 3) {
-        // Priority 3 (Fallback): ALL Agents in the plan (regardless of match, per requirements)
-        sellerIds = activeSubscriptions
-          .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
-          .map(sub => sub.user._id);
+        // Priority 3 (Fallback): ALL Agents in the plan
+        const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
+        for (const sub of agentSubs) {
+           const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+           const leadsLimit = planForSub?.leadsLimit ?? 2;
+
+           if (leadsLimit === -1 || sub.leadsUsed < leadsLimit) {
+             sellerIds.push(sub.user._id);
+           } else {
+             skippedDueToLimit++;
+           }
+        }
       } else {
-        // Safe fallback - shouldn't usually be hit
+        // Safe fallback
         sellerIds = activeSubscriptions
           .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
           .map(sub => sub.user._id);
       }
 
       if (sellerIds.length === 0) {
-        results.push({ plan: selectedPlan.name, status: "no_sellers" });
+        const status = skippedDueToLimit > 0 ? "no_credits" : "no_sellers";
+        results.push({ plan: selectedPlan.name, status });
         continue;
       }
 
@@ -472,15 +506,30 @@ exports.shareRequirement = async (req, res) => {
           });
         });
       }
-      results.push({ plan: selectedPlan.name, status: "success", count: sellerIds.length });
+      results.push({ 
+        plan: selectedPlan.name, 
+        status: "success", 
+        count: sellerIds.length,
+        skipped: skippedDueToLimit
+      });
     }
 
     const successCount = results.filter(r => r.status === "success").length;
     
     if (successCount === 0) {
+      let message = "Failed to share lead with any of the selected plans.";
+      
+      if (results.every(r => r.status === "no_credits")) {
+        message = "Lead Share Failed: All matching sellers in the selected plans have exhausted their lead credits. Please update the Lead Share Count in Subscription Plans.";
+      } else if (results.every(r => r.status === "already_shared")) {
+        message = "This lead has already been shared with all selected plans.";
+      } else if (results.every(r => r.status === "no_sellers")) {
+        message = "No active sellers found in the selected plans that match this lead's criteria.";
+      }
+
       return res.status(400).json({
         success: false,
-        message: "Failed to share lead with any of the selected plans.",
+        message,
         details: results
       });
     }

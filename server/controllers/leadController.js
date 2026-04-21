@@ -148,6 +148,15 @@ exports.acceptLead = async (req, res) => {
       return res.status(403).json({ success: false, message: "This lead is reserved for Agents." });
     }
 
+    // 1.7 Lead Count Limit Check (Only for not-exact matches, as exact match was deducted at sharing)
+    const leadsLimit = lead.plan.leadsLimit ?? 2;
+    if (lead.matchType !== "exact" && leadsLimit !== -1 && activeSubscription.leadsUsed >= leadsLimit) {
+      return res.status(403).json({
+        success: false,
+        message: `Lead Limit Reached: Your current plan allows only ${leadsLimit} leads. Please upgrade your plan for more leads.`,
+      });
+    }
+
     // 2. Atomically accept the lead
     const updatedLead = await SharedLead.findOneAndUpdate(
       { _id: id, status: "pending" },
@@ -166,6 +175,11 @@ exports.acceptLead = async (req, res) => {
         message: "Deal Closed: This lead has already been accepted by another seller.",
         acceptedBy: alreadyAcceptedLead.acceptedBy ? alreadyAcceptedLead.acceptedBy.name : "another seller"
       });
+    }
+
+    // 3. Increment usage if it's not an exact match
+    if (updatedLead.matchType !== "exact") {
+      await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
     }
 
     // 3. Update the parent Requirement status to "Closed"

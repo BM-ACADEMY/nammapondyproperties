@@ -39,7 +39,8 @@ const LeadsOverview = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [acceptingId, setAcceptingId] = useState(null);
-  const [hasActivePlan, setHasActivePlan] = useState(true); // Default to true to prevent flickering
+  const [subscription, setSubscription] = useState(null);
+  const [hasActivePlan, setHasActivePlan] = useState(true);
 
   const fetchLeads = async () => {
     setLoading(true);
@@ -51,6 +52,7 @@ const LeadsOverview = () => {
         setLeads([]);
         return;
       }
+      setSubscription(subRes.data);
       setHasActivePlan(true);
 
       const response = await getMySharedLeads();
@@ -144,13 +146,29 @@ const LeadsOverview = () => {
           </Title>
           <p className="text-slate-500 mt-1">View and manage shared property requirements from the admin.</p>
         </div>
-        <Button 
-          icon={<LayoutDashboard size={16} />} 
-          onClick={fetchLeads}
-          loading={loading}
-        >
-          Refresh Leads
-        </Button>
+        <div className="flex items-center gap-4">
+          {subscription && (
+            <div className="hidden md:flex items-center bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
+              <div className="flex flex-col items-end mr-3 border-r pr-3 border-slate-100">
+                <Text type="secondary" className="text-[10px] font-bold uppercase tracking-widest leading-none mb-1">Lead Balance</Text>
+                <Title level={5} className="m-0! text-indigo-600 font-black">
+                  {subscription.plan?.leadsLimit === -1 ? '∞' : (subscription.plan?.leadsLimit || 0) - (subscription.leadsUsed || 0)} / {subscription.plan?.leadsLimit === -1 ? '∞' : subscription.plan?.leadsLimit || 0}
+                </Title>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                {subscription.plan?.leadsLimit === -1 ? '∞' : Math.round((((subscription.plan?.leadsLimit || 0) - (subscription.leadsUsed || 0)) / (subscription.plan?.leadsLimit || 1)) * 100)}%
+              </div>
+            </div>
+          )}
+          <Button 
+            icon={<LayoutDashboard size={16} />} 
+            onClick={fetchLeads}
+            loading={loading}
+            className="rounded-xl h-10 font-semibold"
+          >
+            Refresh Leads
+          </Button>
+        </div>
       </div>
 
       {loading && leads.length === 0 ? (

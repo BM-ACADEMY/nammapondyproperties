@@ -69,7 +69,8 @@ const SubscriptionPlanManager = () => {
     setEditingPlan(record);
     form.setFieldsValue({
       ...record,
-      businessType: record.businessType?._id,
+      propertyLimit: record.propertyLimit,
+      leadsLimit: record.leadsLimit,
       features: record.features?.join("\n"),
       notIncluded: record.notIncluded?.join("\n"),
     });
@@ -211,6 +212,11 @@ const SubscriptionPlanManager = () => {
             <span>Limit: {plan.propertyLimit === -1 ? "Unlimited" : `${plan.propertyLimit} Properties`}</span>
           </div>
 
+          <div className="mb-4 text-xs font-bold text-gray-500 flex items-center gap-2">
+            <CheckCircle size={14} className="text-emerald-500" />
+            <span>Leads: {plan.leadsLimit === -1 ? "Unlimited" : `${plan.leadsLimit} Credits`}</span>
+          </div>
+
           <div className="space-y-3">
             {/* Checkmarks */}
             {plan.features?.map((feature, idx) => (
@@ -329,6 +335,14 @@ const SubscriptionPlanManager = () => {
               rules={[{ required: true }]}
             >
               <InputNumber className="w-full" placeholder="3" />
+            </Form.Item>
+
+            <Form.Item
+              name="leadsLimit"
+              label="Lead Share Count"
+              rules={[{ required: true, message: "Please enter lead share count" }]}
+            >
+              <InputNumber className="w-full" placeholder="2" />
             </Form.Item>
 
             <Form.Item
