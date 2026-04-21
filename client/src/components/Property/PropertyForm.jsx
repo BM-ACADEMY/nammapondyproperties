@@ -194,12 +194,10 @@ const PropertyForm = ({
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [images, setImages] = useState([]);
-  const [existingImages, setExistingImages] = useState(initialData?.media?.images || initialData?.images || []);
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [floorPlan, setFloorPlan] = useState(null);
-  const [floorPlanPreview, setFloorPlanPreview] = useState("");
-  const [imagesToDelete, setImagesToDelete] = useState([]);
+  const [floorPlans, setFloorPlans] = useState([]);
+  const [existingFloorPlans, setExistingFloorPlans] = useState(initialData?.media?.floorPlans || (initialData?.media?.floorPlan ? [initialData.media.floorPlan] : []));
+  const [floorPlanPreviews, setFloorPlanPreviews] = useState([]);
+  const [floorPlansToDelete, setFloorPlansToDelete] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
   const [amenitiesList, setAmenitiesList] = useState(FALLBACK_AMENITIES);
   const [businessTypes, setBusinessTypes] = useState([]);
@@ -273,10 +271,11 @@ const PropertyForm = ({
 
   useEffect(() => {
     if (isEdit && initialData && Object.keys(initialData).length > 0) {
-      // Use existing values passed above
       setExistingImages(initialData?.media?.images || initialData?.images || []);
-      if (initialData?.media?.floorPlan) {
-        setFloorPlanPreview(initialData.media.floorPlan);
+      if (initialData?.media?.floorPlans) {
+        setExistingFloorPlans(initialData.media.floorPlans);
+      } else if (initialData?.media?.floorPlan) {
+        setExistingFloorPlans([initialData.media.floorPlan]);
       }
       reset(getFormValues(initialData));
     }
@@ -379,15 +378,40 @@ const PropertyForm = ({
     setImagePreviews(newPreviews);
   };
 
-  const handleFloorPlanChange = ({ fileList }) => {
-    const file = fileList[0]?.originFileObj;
-    if (file) {
-      setFloorPlan(file);
-      setFloorPlanPreview(URL.createObjectURL(file));
-    } else {
-      setFloorPlan(null);
-      setFloorPlanPreview("");
+  const handleFloorPlanChange = ({ fileList: newFileList }) => {
+    const validFiles = [];
+    const newPreviews = [];
+    let oversizedCount = 0;
+
+    if (newFileList.length + existingFloorPlans.length > 10) {
+      toast.error("Maximum 10 floor plans allowed only");
+      return;
     }
+
+    newFileList.forEach((file) => {
+      if (file.status === "removed") return;
+      const actualFile = file.originFileObj || file;
+      const sizeInMB = actualFile.size / (1024 * 1024);
+      if (sizeInMB > 5) {
+        oversizedCount++;
+        return;
+      }
+      validFiles.push(actualFile);
+      if (file.url) {
+        newPreviews.push(file.url);
+      } else if (file.originFileObj) {
+        newPreviews.push(URL.createObjectURL(file.originFileObj));
+      } else {
+        newPreviews.push("");
+      }
+    });
+
+    if (oversizedCount > 0) {
+      toast.error(`${oversizedCount} floor plan(s) oversize or too big (max 5MB each).`);
+    }
+
+    setFloorPlans(validFiles);
+    setFloorPlanPreviews(newPreviews);
   };
 
   const onPreview = async (file) => {
@@ -412,6 +436,14 @@ const PropertyForm = ({
     const newExisting = [...existingImages];
     newExisting.splice(index, 1);
     setExistingImages(newExisting);
+  };
+
+  const removeExistingFloorPlan = (index) => {
+    const floorPlanToRemove = existingFloorPlans[index];
+    setFloorPlansToDelete([...floorPlansToDelete, floorPlanToRemove]);
+    const newExisting = [...existingFloorPlans];
+    newExisting.splice(index, 1);
+    setExistingFloorPlans(newExisting);
   };
 
   const handleFormSubmit = (data) => {
@@ -466,8 +498,12 @@ const PropertyForm = ({
       formData.append("images_to_delete", JSON.stringify(imagesToDelete));
     }
 
-    if (floorPlan) {
-      formData.append("floorPlan", floorPlan);
+    floorPlans.forEach((plan) => {
+      formData.append("floorPlans", plan);
+    });
+
+    if (isEdit && floorPlansToDelete.length > 0) {
+      formData.append("floor_plans_to_delete", JSON.stringify(floorPlansToDelete));
     }
 
     onSubmit(formData);
@@ -1040,40 +1076,43 @@ const PropertyForm = ({
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-100">
-                <div className="md:col-span-2">
-                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Floor Plan</p>
+              <div className="pt-6 border-t border-gray-100">
+                <div className="mb-4">
+                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Floor Plans (Max 10)</p>
                 </div>
 
                 <div className="space-y-4">
-                  <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Floor Plan</p>
-                  <div className="flex items-start gap-4">
-                    <ImgCrop rotationSlider aspect={4 / 3}>
-                      <Upload
-                        listType="picture-card"
-                        maxCount={1}
-                        fileList={floorPlan ? [{ uid: "-1", name: "floor-plan", status: "done", url: floorPlanPreview, originFileObj: floorPlan }] : []}
-                        onChange={handleFloorPlanChange}
-                        beforeUpload={() => false}
-                        className="floor-plan-upload"
-                      >
-                        {!floorPlan && (
-                          <div className="flex flex-col items-center gap-1">
-                            <Plus size={24} />
-                            <div className="text-xs font-bold">Upload Plan</div>
-                          </div>
-                        )}
-                      </Upload>
-                    </ImgCrop>
-                    {initialData?.media?.floorPlan && !floorPlan && (
-                      <div className="relative group rounded-xl overflow-hidden h-[102px] w-[102px] border border-gray-100">
-                        <img src={getImageUrl(initialData.media.floorPlan)} alt="Existing Floor Plan" className="w-full h-full object-cover shadow-sm" />
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                          <span className="text-[10px] text-white font-bold bg-black/40 px-2 py-1 rounded">Current Plan</span>
+                  <ImgCrop rotationSlider aspect={4 / 3}>
+                    <Upload
+                      listType="picture-card"
+                      fileList={floorPlans.map((f, i) => ({ uid: i, name: f.name, status: "done", url: floorPlanPreviews[i], originFileObj: f }))}
+                      onChange={handleFloorPlanChange}
+                      onPreview={onPreview}
+                      multiple accept="image/*"
+                      beforeUpload={() => false}
+                      className="floor-plan-upload"
+                    >
+                      {floorPlans.length + existingFloorPlans.length < 10 && (
+                        <div className="flex flex-col items-center gap-1">
+                          <Plus size={24} />
+                          <div className="text-xs font-bold">Add Plan</div>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </Upload>
+                  </ImgCrop>
+                  
+                  {existingFloorPlans.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                      {existingFloorPlans.map((fp, i) => (
+                        <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
+                          <img src={getImageUrl(fp)} alt={`Floor Plan ${i}`} className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => removeExistingFloorPlan(i)} className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

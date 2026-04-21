@@ -95,7 +95,7 @@ exports.createProperty = async (req, res) => {
 
     // Handle Files (images and floorPlan)
     let images = [];
-    let floorPlanUrl = "";
+    let floorPlans = [];
 
     if (req.files) {
       if (req.files.images) {
@@ -103,8 +103,8 @@ exports.createProperty = async (req, res) => {
           image_url: `/uploads/properties/${file.filename}`,
         }));
       }
-      if (req.files.floorPlan && req.files.floorPlan.length > 0) {
-        floorPlanUrl = `/uploads/properties/${req.files.floorPlan[0].filename}`;
+      if (req.files.floorPlans && req.files.floorPlans.length > 0) {
+        floorPlans = req.files.floorPlans.map((file) => `/uploads/properties/${file.filename}`);
       }
     }
 
@@ -143,12 +143,13 @@ exports.createProperty = async (req, res) => {
         ? (req.body.businessType || null) 
         : (req.user && req.user.businessType ? (req.user.businessType._id || req.user.businessType) : (req.body.businessType || null)),
       video: mediaMetadata.video || req.body.video || "",
-      floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || "",
+      floorPlan: floorPlans.length > 0 ? floorPlans[0] : (mediaMetadata.floorPlan || req.body.floorPlan || ""),
       media: {
         images: images.map(img => img.image_url),
         featuredImage: images.length > 0 ? images[0].image_url : "",
         video: mediaMetadata.video || req.body.video || "",
-        floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || ""
+        floorPlan: floorPlans.length > 0 ? floorPlans[0] : (mediaMetadata.floorPlan || req.body.floorPlan || ""),
+        floorPlans: floorPlans
       },
       status: "Pending",
       isVerified: false,
@@ -875,31 +876,30 @@ exports.updateProperty = async (req, res) => {
       return data;
     };
 
-    // Handle Image Deletion
-    const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
-    if (imagesToDelete.length > 0) {
-      // Find images to delete
-      const invalidImages = (property.media?.images || []).filter((img) =>
-        imagesToDelete.includes(img)
+    // Handle Floor Plan Deletion
+    const floorPlansToDelete = parseJSON(req.body.floor_plans_to_delete) || [];
+    if (floorPlansToDelete.length > 0) {
+      const invalidFloorPlans = (property.media?.floorPlans || []).filter((fp) =>
+        floorPlansToDelete.includes(fp)
       );
 
-      // Delete files from filesystem
-      invalidImages.forEach((img) => {
+      invalidFloorPlans.forEach((fp) => {
         try {
-          const filePath = path.join(__dirname, "..", img);
+          const filePath = path.join(__dirname, "..", fp);
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
           }
         } catch (err) {
-          console.error(`Failed to delete image file: ${img}`, err);
+          console.error(`Failed to delete floor plan file: ${fp}`, err);
         }
       });
     }
 
     const currentImages = property.media?.images || [];
     const remainingImages = currentImages.filter(img => !imagesToDelete.includes(img));
-
-    let floorPlanUrl = property.media?.floorPlan || "";
+    
+    const currentFloorPlans = property.media?.floorPlans || [];
+    const remainingFloorPlans = currentFloorPlans.filter(fp => !floorPlansToDelete.includes(fp));
 
     // Handle New Files
     if (req.files) {
@@ -907,8 +907,9 @@ exports.updateProperty = async (req, res) => {
         const newImages = req.files.images.map((file) => `/uploads/properties/${file.filename}`);
         remainingImages.push(...newImages);
       }
-      if (req.files.floorPlan && req.files.floorPlan.length > 0) {
-        floorPlanUrl = `/uploads/properties/${req.files.floorPlan[0].filename}`;
+      if (req.files.floorPlans && req.files.floorPlans.length > 0) {
+        const newFloorPlans = req.files.floorPlans.map((file) => `/uploads/properties/${file.filename}`);
+        remainingFloorPlans.push(...newFloorPlans);
       }
     }
 
@@ -951,7 +952,8 @@ exports.updateProperty = async (req, res) => {
       images: remainingImages,
       featuredImage: remainingImages.length > 0 ? remainingImages[0] : (property.media?.featuredImage || ""),
       video: mediaMetadata.video || property.media?.video || "",
-      floorPlan: floorPlanUrl
+      floorPlans: remainingFloorPlans,
+      floorPlan: remainingFloorPlans.length > 0 ? remainingFloorPlans[0] : (property.media?.floorPlan || "")
     };
 
     // Set top-level fields

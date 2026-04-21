@@ -182,7 +182,8 @@ const propertySchema = new mongoose.Schema(
     media: {
       featuredImage: String,
       images: [String],
-      floorPlan: String
+      floorPlan: String,
+      floorPlans: [String]
     },
 
     // =====================================================
