@@ -31,7 +31,7 @@ const PostRequirementCard = () => {
             e.stopPropagation();
             handlePostClick();
           }}
-          className="bg-[#fb2c36] hover:bg-[#e7000b] text-white font-bold py-2 px-4 md:py-3 md:px-8 rounded-xl shadow-sm transition-all text-xs md:text-[14px] w-fit active:scale-95"
+          className="bg-[#fb2c36] hover:bg-[#e7000b] text-white font-bold py-2 px-4 md:py-3 md:px-8 rounded-xl shadow-sm transition-all text-xs md:text-[14px] w-fit active:scale-95 cursor-pointer"
         >
           Post Requirement
         </button>

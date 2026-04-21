@@ -15,7 +15,10 @@ import {
   Users,
   X,
   ChevronRight,
+  Share2,
+  MessageSquare,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { AnimatePresence, motion } from "framer-motion";
 import { getImageUrl } from "@/utils/imageUrl";
 import HorizontalPropertyCard from "@/modules/home/components/HorizontalPropertyCard";
@@ -28,6 +31,7 @@ const BusinessUserList = () => {
   const [sellers, setSellers] = useState([]);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [sellerProperties, setSellerProperties] = useState([]);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [businessType, setBusinessType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
@@ -89,8 +93,6 @@ const BusinessUserList = () => {
 
   useEffect(() => {
     const fetchSellerProperties = async () => {
-      // For non-builder types, selectedSeller is always set if sellers exist
-      // For builder types, it's null until one is clicked
       if (!selectedSeller || !businessTypeId) {
         setSellerProperties([]);
         return;
@@ -175,6 +177,28 @@ const BusinessUserList = () => {
     } finally {
       window.open(whatsappUrl, "_blank");
       setEnquiryLoading(false);
+    }
+  };
+
+  const handleShareProfile = async (e) => {
+    e.stopPropagation();
+    const shareData = {
+      title: `${selectedSeller?.name} | Namma Pondy`,
+      text: `View ${selectedSeller?.name}'s professional profile and listings on Namma Pondy.`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Profile link copied to clipboard!");
+      }
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        console.error("Error sharing:", err);
+      }
     }
   };
 
@@ -408,6 +432,34 @@ const BusinessUserList = () => {
               {isBuilderType && !selectedSeller ? (
                 /* ─── Builder Profile Grid ─── */
                 <div>
+                  {/* ─── SuperAgent CTA Banner ─── */}
+                  <div className="mb-12 bg-[#E9EAF5] rounded-xl overflow-hidden relative shadow-sm border border-[#D1D5DB]/30 mx-0 sm:mx-0">
+                    <div className="flex flex-col md:flex-row items-center py-2 md:py-6">
+                      <div className="flex-1 px-6 md:px-12 py-8 md:py-6 text-left z-10">
+                        <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold text-[#2C334E] mb-2 sm:mb-3 lg:mb-4 tracking-tight">
+                          Trusted Builders & Promoters
+                        </h2>
+                        <p className="text-[#5E6D8E] text-sm sm:text-base lg:text-lg mb-6 lg:mb-8 max-w-lg leading-relaxed font-medium">
+                          Partner with verified professionals who deliver quality and transparency. 
+                          The most responsive experts for your next big project.
+                        </p>
+                        <button 
+                          onClick={() => navigate("/builder-info")}
+                          className="w-full sm:w-auto px-10 py-3 bg-[#174685] text-white rounded-xl text-base font-bold hover:bg-[#123a6d] transition-all shadow-lg hover:shadow-[#174685]/20 active:scale-95 cursor-pointer"
+                        >
+                          Learn more
+                        </button>
+                      </div>
+                      <div className="flex-1 relative w-full h-[200px] sm:h-[240px] md:h-[300px]">
+                        <img 
+                          src="/builder/agent.png" 
+                          alt="Trusted Builders" 
+                          className="w-full h-full object-contain object-right-bottom scale-100 sm:scale-110 md:scale-125 md:translate-x-4 translate-y-2 opacity-95 transition-all duration-700 hover:scale-[1.3] pointer-events-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="mb-10">
                     <h1 className="text-2xl font-bold text-[#1e293b]">
                       Verified {businessType?.name}s
@@ -422,21 +474,21 @@ const BusinessUserList = () => {
                       <motion.div
                         key={user._id}
                         onClick={() => setSelectedSeller(user)}
-                        className="flex flex-col sm:flex-row bg-white rounded-[24px] shadow-[0_2px_12px_rgb(0,0,0,0.04)] border border-slate-100 cursor-pointer hover:shadow-lg hover:border-slate-200 transition-all group overflow-hidden h-auto sm:h-[220px] relative"
+                        className="flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-all group overflow-hidden h-auto sm:h-[240px] relative"
                       >
-                        {/* Company Logo Badge Top Right */}
+                        {/* Company Logo Top Right (Corner Flushed) */}
                         {user.builderProfile?.companyLogo && (
-                          <div className="absolute top-0 right-0 w-[90px] h-20 lg:w-[110px] lg:h-24 bg-[#F8FAFC] flex flex-col items-center justify-center z-10 rounded-bl-[20px] border-l border-b border-slate-100 p-2">
+                          <div className="absolute top-0 right-0 w-20 h-20 lg:w-24 lg:h-24 flex justify-center items-center z-10 rounded-tr-xl overflow-hidden">
                             <img 
                               src={getImageUrl(user.builderProfile.companyLogo)} 
-                              className="max-h-full max-w-full object-contain" 
+                              className="w-full h-full object-contain" 
                               alt="company logo" 
                             />
                           </div>
                         )}
 
                         {/* Left Section: Profile Photo */}
-                        <div className="w-full sm:w-[220px] h-64 sm:h-full shrink-0 overflow-hidden relative border-r border-slate-50">
+                        <div className="w-full sm:w-[240px] h-64 sm:h-full shrink-0 overflow-hidden relative">
                           {user.profile_image ? (
                             <img
                               src={getImageUrl(user.profile_image)}
@@ -444,46 +496,56 @@ const BusinessUserList = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-[#174685] text-6xl font-extrabold uppercase">
+                            <div className="w-full h-full flex items-center justify-center bg-slate-50 text-[#174685] text-6xl font-medium uppercase">
                               {user.name?.charAt(0)}
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent sm:hidden" />
                         </div>
 
                         {/* Right Section: Info */}
-                        <div className="flex-1 p-6 sm:p-7 pr-12 lg:pr-[140px] flex flex-col justify-center min-w-0">
-                          {/* Name and Verified */}
-                          <div className="flex flex-col gap-2 mb-5">
-                            <h3 className="text-[22px] lg:text-2xl font-bold text-slate-800 truncate leading-none">
+                        <div className="flex-1 p-6 sm:p-8 flex flex-col justify-center min-w-0">
+                          <div className="mb-4">
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-0.5 mt-2">
                               {user.name}
                             </h3>
+                            <p className="text-[15px] text-slate-500 font-medium">
+                              {businessType?.name || "Professional"}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-4">
+                            {/* Verified Badge */}
                             {(user.badgeVerified ||
                               user.role_id?.role_name === "admin") && (
-                              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-[8px] w-fit">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E8F5E9] text-[#2E7D32] rounded text-[10px] font-bold uppercase tracking-wider w-fit">
                                 <img
                                   src="/Logo/badge.png"
                                   alt="Verified"
-                                  className="w-[15px] h-[15px] object-contain"
+                                  className="w-3 h-3 object-contain"
                                 />
-                                <span className="text-[12px] font-black uppercase tracking-widest leading-none text-[#2E7D32] mt-0.5">
-                                  Verified
-                                </span>
+                                <span>Verified</span>
                               </div>
                             )}
+
+                            {/* Details Table-style layout */}
+                            <div className="space-y-1 mt-1">
+                              {user.builderProfile?.experienceYears && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <span className="text-slate-500">Experience:</span>
+                                  <span className="text-slate-800 font-semibold">{user.builderProfile.experienceYears} Years</span>
+                                </div>
+                              )}
+                              {user.builderProfile?.companyName && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <span className="text-slate-500">Company:</span>
+                                  <span className="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-full">
+                                    {user.builderProfile.companyName}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
-                          {/* Bottom: Type and Exp Pill */}
-                          <div className="flex flex-wrap gap-2">
-                            <div className="inline-block bg-[#F3E8FF] text-[#6B21A8] px-3 py-1.5 rounded-xl text-[13px] font-semibold w-fit truncate">
-                              {businessType?.name || "Professional"}
-                            </div>
-                            {user.builderProfile?.experienceYears && (
-                              <div className="inline-block bg-amber-50 text-amber-700 px-3 py-1.5 rounded-xl text-[13px] font-semibold w-fit border border-amber-100">
-                                {user.builderProfile.experienceYears} Yrs Experience
-                              </div>
-                            )}
-                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -494,228 +556,167 @@ const BusinessUserList = () => {
                 <>
                   {isBuilderType ? (
                     <div className="space-y-6 mb-10">
-                      <div className="mb-6">
+                      <div className="mb-4 sm:mb-6">
                         <button
                           onClick={() => setSelectedSeller(null)}
-                          className="inline-flex items-center gap-2.5 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
+                          className="inline-flex items-center gap-2 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
                         >
-                          <div className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">
-                            <ChevronRight className="w-5 h-5 rotate-180" />
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">
+                            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 rotate-180" />
                           </div>
-                          <span className="text-sm font-bold tracking-tight">
+                          <span className="text-[13px] sm:text-sm font-bold tracking-tight">
                             Back to Professionals List
                           </span>
                         </button>
                       </div>
-                      {/* ─── Main Header Card ─── */}
-                      <div className="bg-white rounded-[32px] p-6 lg:p-10 shadow-sm border border-slate-100 relative overflow-hidden group">
-                        {/* Decorative background element */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#174685]/[0.02] rounded-bl-full -mr-32 -mt-32 transition-all duration-700 group-hover:bg-[#174685]/[0.05]" />
+                      {/* ─── Premium Profile Hero ─── */}
+                      <div className="bg-[#174685] rounded-2xl md:rounded-[24px] overflow-hidden text-white shadow-2xl relative mb-10">
+                        {/* Header & Sidebar Container */}
+                        <div className="flex flex-col md:flex-row p-5 sm:p-6 md:p-10 gap-8 lg:gap-16">
+                          {/* Main Profile Info */}
+                          <div className="flex-1 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 lg:gap-10">
+                            {/* Share Profile Button (Refined Top Right) */}
+                            <button 
+                              onClick={handleShareProfile}
+                              className="absolute top-4 sm:top-6 right-6 sm:right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer" 
+                              title="Share profile"
+                            >
+                              <Share2 size={16} className="group-hover:scale-110 transition-transform" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest hidden lg:inline">Share</span>
+                            </button>
 
-                        <div className="relative">
-                          {/* Left Section: Professional Bio */}
-                          <div className="flex-1 flex flex-col sm:flex-row items-center sm:items-start gap-8 lg:gap-10">
-                            {/* Profile Image Container */}
-                            <div className="relative shrink-0">
-                              <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-full border-[8px] border-[#174685]/5 p-1.5 bg-white shadow-xl relative z-10 overflow-hidden">
+                            {/* Profile Image with Modern Outline */}
+                            <div className="flex flex-col items-center shrink-0 gap-4 sm:gap-5">
+                              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-full border-[5px] sm:border-[6px] border-white/10 p-1 bg-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
                                 {selectedSeller?.profile_image ? (
                                   <img
-                                    src={getImageUrl(
-                                      selectedSeller.profile_image,
-                                    )}
+                                    src={getImageUrl(selectedSeller.profile_image)}
                                     alt={selectedSeller?.name}
                                     className="w-full h-full object-cover rounded-full"
                                   />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-slate-100 text-[#174685] text-5xl font-bold rounded-full">
-                                    {selectedSeller?.name
-                                      ?.charAt(0)
-                                      .toUpperCase()}
+                                  <div className="w-full h-full flex items-center justify-center bg-[#0f3468] text-white/90 text-5xl font-bold rounded-full">
+                                    {selectedSeller?.name?.charAt(0).toUpperCase()}
                                   </div>
                                 )}
                               </div>
-                              {/* Verified Badge Overlay */}
-                              {(selectedSeller?.badgeVerified ||
-                                selectedSeller?.role_id?.role_name ===
-                                  "admin") && (
-                                <div className="absolute bottom-2 right-2 bg-green-50 rounded-full p-1 shadow-md border border-green-100 z-20">
+                              {/* Verified Badge (Fully Separated) */}
+                              {(selectedSeller?.badgeVerified || selectedSeller?.role_id?.role_name === "admin") && (
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-md shadow-lg border border-white/10">
                                   <img
                                     src="/Logo/badge.png"
                                     alt="Verified"
-                                    className="w-6 h-6 object-contain"
+                                    className="w-3.5 h-3.5 object-contain"
                                   />
+                                  <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+                                    Verified
+                                  </span>
                                 </div>
                               )}
                             </div>
 
                             {/* Bio Content */}
-                            <div className="flex-1 text-center sm:text-left pt-2">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4 justify-center sm:justify-start">
-                                {/* Verified Badge */}
-                                {(selectedSeller?.badgeVerified ||
-                                  selectedSeller?.role_id?.role_name ===
-                                    "admin") && (
-                                  <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-lg border border-green-200 shadow-sm w-fit mx-auto sm:mx-0">
-                                    <img
-                                      src="/Logo/badge.png"
-                                      alt="Verified"
-                                      className="w-3.5 h-3.5 object-contain"
-                                    />
-                                    <span className="text-[10px] font-bold uppercase tracking-wider">
-                                      Verified Professional
-                                    </span>
-                                  </div>
-                                )}
-                                <button className="sm:ml-auto text-slate-400 hover:text-[#174685] flex items-center gap-2 text-sm font-bold transition-colors group">
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    className="w-5 h-5 fill-none stroke-current stroke-[2.5]"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      d="M13 19l6-6-6-6M5 19v-3a5 5 0 015-5h9"
-                                    />
-                                  </svg>
-                                  Share profile
-                                </button>
-                              </div>
-
-                              <h2 className="text-3xl lg:text-4xl font-bold text-[#174685] mb-3">
+                            <div className="flex-1 text-center md:text-left pt-2">
+                              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 leading-tight">
                                 {selectedSeller?.name}
                               </h2>
 
-                              {/* Professional Meta Info */}
-                              <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-6">
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
-                                  <Building2
-                                    size={14}
-                                    className="text-[#174685]"
-                                  />
-                                  <span className="text-sm font-bold text-[#174685]">
-                                    {sellerProperties.length}
-                                  </span>
-                                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-tight">
-                                    Properties
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
-                                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                    Type:
-                                  </span>
-                                  <span className="text-sm font-bold text-slate-700">
-                                    {businessType?.name || "Professional"}
-                                  </span>
-                                </div>
+                              {/* Experience & Type Row */}
+                              <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 sm:gap-4 text-white/70 text-[13px] sm:text-sm font-medium leading-relaxed">
+                                <span className="px-2 py-0.5 bg-black/20 rounded text-[11px] sm:text-[12px] uppercase tracking-wider">{businessType?.name || "Professional"}</span>
                                 {selectedSeller?.builderProfile?.experienceYears && (
-                                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
-                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                      Exp:
-                                    </span>
-                                    <span className="text-sm font-bold text-slate-700">
-                                      {selectedSeller.builderProfile.experienceYears} Years
-                                    </span>
-                                  </div>
+                                  <span>{selectedSeller.builderProfile.experienceYears} Years of experience</span>
                                 )}
                               </div>
-                              {selectedSeller?.builderProfile?.companyName && (
-                                <div className="mt-4 flex flex-col sm:flex-row gap-4 justify-center sm:justify-start text-sm text-slate-600">
-                                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
-                                    {selectedSeller.builderProfile.companyLogo && (
-                                      <img src={getImageUrl(selectedSeller.builderProfile.companyLogo)} className="w-6 h-6 object-contain rounded-md border border-slate-100" alt="company logo" />
-                                    )}
-                                    <span className="font-semibold text-slate-400 uppercase text-xs tracking-wider">Company</span>
-                                    <span className="font-bold text-slate-800">{selectedSeller.builderProfile.companyName}</span>
-                                  </div>
-                                  {selectedSeller?.builderProfile?.officeAddress && (
-                                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 shadow-sm max-w-sm shrink-0 truncate">
-                                      <span className="font-semibold text-slate-400 uppercase text-xs tracking-wider">Location</span>
-                                      <span className="font-bold text-slate-800 truncate" title={selectedSeller.builderProfile.officeAddress}>{selectedSeller.builderProfile.officeAddress}</span>
-                                    </div>
+
+                              {/* About Company / Bio Section */}
+                              {selectedSeller?.builderProfile?.aboutCompany && (
+                                <div className="mt-8">
+                                  <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[2px] mb-3">About Company</h3>
+                                  <p className={`text-sm lg:text-base text-white/70 leading-relaxed max-w-2xl transition-all duration-300 ${isDescriptionExpanded ? "" : "line-clamp-2"}`}>
+                                    {selectedSeller.builderProfile.aboutCompany}
+                                  </p>
+                                  {selectedSeller.builderProfile.aboutCompany.length > 100 && (
+                                  <button
+                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                    className="mt-3 text-[11px] sm:text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    {isDescriptionExpanded ? "Read Less" : "Read More"}
+                                    <ChevronRight size={12} className={`transition-transform duration-300 ${isDescriptionExpanded ? "-rotate-90" : "rotate-90"}`} />
+                                  </button>
                                   )}
                                 </div>
                               )}
-                              {selectedSeller?.builderProfile?.aboutCompany && (
-                                <p className="mt-4 text-sm text-slate-500 text-center sm:text-left max-w-2xl leading-relaxed">
-                                  {selectedSeller.builderProfile.aboutCompany}
-                                </p>
+
+                              {/* Lower Action Row (Integrated) */}
+                              <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center gap-4">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                                  <button
+                                    onClick={(e) => handleWhatsAppClick(e, selectedSeller)}
+                                    className="flex items-center gap-2 px-5 sm:px-8 py-3 bg-white text-[#174685] rounded-xl font-bold text-[13px] sm:text-sm hover:bg-white/90 transition-all shadow-xl active:scale-95 cursor-pointer"
+                                  >
+                                    <MessageSquare size={16} className="fill-current" />
+                                    WhatsApp
+                                  </button>
+                                  <button
+                                    onClick={() => document.getElementById("seller-properties-grid")?.scrollIntoView({ behavior: "smooth" })}
+                                    className="flex items-center gap-2 px-5 sm:px-8 py-3 bg-transparent border border-white/30 text-white rounded-lg font-bold text-[13px] sm:text-sm hover:bg-white/10 transition-all cursor-pointer"
+                                  >
+                                    View properties
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Brokerage Sidebar - Only show if any data exists */}
+                          {(selectedSeller?.builderProfile?.companyLogo || selectedSeller?.builderProfile?.companyName || (selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link))) && (
+                            <div className="w-full md:w-[200px] lg:w-[240px] shrink-0 flex flex-col items-start md:items-end justify-center border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-8 lg:pl-10">
+                              {selectedSeller?.builderProfile?.companyLogo && (
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl flex items-center justify-center mb-5 hover:scale-105 transition-transform duration-500">
+                                  <img
+                                    src={getImageUrl(selectedSeller.builderProfile.companyLogo)}
+                                    className="max-h-full max-w-full object-contain"
+                                    alt="company logo"
+                                  />
+                                </div>
                               )}
+                              
+                              {selectedSeller?.builderProfile?.companyName && (
+                                <h4 className="text-white font-bold text-sm sm:text-base lg:text-lg text-left md:text-right leading-tight mb-2 uppercase tracking-wide">
+                                  {selectedSeller.builderProfile.companyName}
+                                </h4>
+                              )}
+                              
+                              {/* Social Media Links in Sidebar */}
                               {selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link) && (
-                                <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-5">
+                                <div className="flex flex-wrap justify-start md:justify-end gap-2.5 sm:gap-3 mt-4 sm:mt-6">
                                   {selectedSeller.builderProfile.socialLinks.website && (
-                                    <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#174685]/10 hover:border-[#174685]/20 hover:text-[#174685] transition-colors text-slate-500">
-                                      <Globe className="w-5 h-5" />
+                                    <a href={selectedSeller.builderProfile.socialLinks.website} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Website">
+                                      <Globe size={16} />
                                     </a>
                                   )}
                                   {selectedSeller.builderProfile.socialLinks.linkedin && (
-                                    <a href={selectedSeller.builderProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#0A66C2]/10 hover:border-[#0A66C2]/20 hover:text-[#0A66C2] transition-colors text-slate-500">
-                                      <Linkedin className="w-5 h-5" />
+                                    <a href={selectedSeller.builderProfile.socialLinks.linkedin} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="LinkedIn">
+                                      <Linkedin size={16} />
                                     </a>
                                   )}
                                   {selectedSeller.builderProfile.socialLinks.instagram && (
-                                    <a href={selectedSeller.builderProfile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#E1306C]/10 hover:border-[#E1306C]/20 hover:text-[#E1306C] transition-colors text-slate-500">
-                                      <Instagram className="w-5 h-5" />
+                                    <a href={selectedSeller.builderProfile.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Instagram">
+                                      <Instagram size={16} />
                                     </a>
                                   )}
                                   {selectedSeller.builderProfile.socialLinks.facebook && (
-                                    <a href={selectedSeller.builderProfile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 border border-slate-100 rounded-lg hover:bg-[#1877F2]/10 hover:border-[#1877F2]/20 hover:text-[#1877F2] transition-colors text-slate-500">
-                                      <Facebook className="w-5 h-5" />
+                                    <a href={selectedSeller.builderProfile.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/20 transition-colors text-white/70 hover:text-white" title="Facebook">
+                                      <Facebook size={16} />
                                     </a>
                                   )}
                                 </div>
                               )}
                             </div>
-                          </div>
+                          )}
                         </div>
 
-                        {/* Integrated Status & Action Bar */}
-                        <div className="mt-10 pt-8 border-t border-slate-100 flex flex-wrap items-center justify-between gap-6">
-                          {/* Response Status */}
-                          <div className="flex items-center gap-3 px-4 py-2 bg-[#22c55e]/5 border border-[#22c55e]/10 rounded-full">
-                            <div className="relative">
-                              <div className="w-2.5 h-2.5 bg-[#22c55e] rounded-full animate-ping absolute inset-0" />
-                              <div className="relative w-2.5 h-2.5 bg-[#22c55e] rounded-full border-2 border-white shadow-sm" />
-                            </div>
-                            <span className="text-xs font-bold text-[#1aa554]">
-                              Usually responds within 5 minutes
-                            </span>
-                          </div>
-
-                          {/* Primary CTA Group */}
-                          <div className="flex items-center gap-3">
-                            <button
-                              onClick={(e) =>
-                                handleWhatsAppClick(e, selectedSeller)
-                              }
-                              className="flex items-center gap-2.5 px-6 py-3 bg-[#22c55e] text-white rounded-xl font-bold text-sm hover:translate-y-[-2px] transition-all shadow-lg shadow-[#22c55e]/20 active:translate-y-0"
-                            >
-                              <svg
-                                viewBox="0 0 24 24"
-                                className="w-4 h-4 fill-current"
-                              >
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                              </svg>
-                              WhatsApp
-                            </button>
-                            <button
-                              onClick={() => {
-                                const element = document.getElementById(
-                                  "seller-properties-grid",
-                                );
-                                if (element)
-                                  element.scrollIntoView({
-                                    behavior: "smooth",
-                                  });
-                              }}
-                              className="flex items-center gap-2.5 px-6 py-3 bg-[#174685] text-white rounded-xl font-bold text-sm hover:translate-y-[-2px] transition-all shadow-lg shadow-[#174685]/20 active:translate-y-0"
-                            >
-                              <div className="p-1 bg-white/20 rounded-md">
-                                <Building2 size={14} className="text-white" />
-                              </div>
-                              View Properties
-                            </button>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   ) : (
@@ -730,7 +731,7 @@ const BusinessUserList = () => {
                           onClick={(e) =>
                             handleWhatsAppClick(e, selectedSeller)
                           }
-                          className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#1aa554] text-white rounded-[10px] text-sm font-bold hover:bg-[#158a45] transition-all shadow-sm"
+                          className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#174685] text-white rounded-[10px] text-sm font-bold hover:bg-[#123a6d] transition-all shadow-sm"
                         >
                           <Phone className="w-4 h-4 fill-current" /> WhatsApp
                         </button>

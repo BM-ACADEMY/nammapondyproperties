@@ -68,7 +68,7 @@ const PropertySidebarFilter = ({
                 <div className="space-y-4">
                     <button
                         onClick={() => toggleSection("budget")}
-                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
                     >
                         <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Budget Range</span>
                         {openSections.budget ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -115,7 +115,7 @@ const PropertySidebarFilter = ({
                 <div className="space-y-4">
                     <button
                         onClick={() => toggleSection("location")}
-                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
                     >
                         <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Location</span>
                         {openSections.location ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -128,7 +128,7 @@ const PropertySidebarFilter = ({
                                     <button
                                         key={name}
                                         onClick={() => handleChipClick("location", name)}
-                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.location || []).includes(name)
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all cursor-pointer ${(filters.location || []).includes(name)
                                             ? "bg-blue-50 border-blue-600 text-blue-700"
                                             : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                                             }`}
@@ -147,7 +147,7 @@ const PropertySidebarFilter = ({
                 <div className="space-y-4">
                     <button
                         onClick={() => toggleSection("approval")}
-                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
                     >
                         <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Approval</span>
                         {openSections.approval ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -160,7 +160,7 @@ const PropertySidebarFilter = ({
                                     <button
                                         key={name}
                                         onClick={() => handleChipClick("approval", name)}
-                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.approval || []).includes(name)
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all cursor-pointer ${(filters.approval || []).includes(name)
                                             ? "bg-blue-50 border-blue-600 text-blue-700"
                                             : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                                             }`}
@@ -179,7 +179,7 @@ const PropertySidebarFilter = ({
                 <div className="space-y-4">
                     <button
                         onClick={() => toggleSection("usageType")}
-                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
                     >
                         <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Usage & Property Type</span>
                         {openSections.usageType ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -191,7 +191,7 @@ const PropertySidebarFilter = ({
                                     <button
                                         key={type}
                                         onClick={() => handleChipClick("usageType", type)}
-                                        className={`px-4 py-1.5 rounded-full border text-xs font-bold transition-all ${
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer ${
                                             (filters.usageType || []).includes(type)
                                                 ? "bg-[#166aa8] border-[#166aa8] text-white shadow-sm"
                                                 : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
@@ -208,7 +208,7 @@ const PropertySidebarFilter = ({
                                         <button
                                             key={type._id || type.name}
                                             onClick={() => handleChipClick("type", type.name)}
-                                            className={`px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                                            className={`px-3 py-1.5 rounded-lg border text-[11px] font-medium transition-all cursor-pointer ${
                                                 (filters.type || []).includes(type.name)
                                                     ? "bg-blue-50 border-blue-600 text-blue-700"
                                                     : "bg-gray-50/50 border-gray-100 text-gray-500 hover:border-gray-300"
@@ -229,7 +229,7 @@ const PropertySidebarFilter = ({
                 <div className="space-y-4">
                     <button
                         onClick={() => toggleSection("category")}
-                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
                     >
                         <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Property Category</span>
                         {openSections.category ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -242,7 +242,7 @@ const PropertySidebarFilter = ({
                                     <button
                                         key={name}
                                         onClick={() => handleChipClick("category", name)}
-                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.category || []).includes(name)
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all cursor-pointer ${(filters.category || []).includes(name)
                                             ? "bg-blue-50 border-blue-600 text-blue-700"
                                             : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                                             }`}
@@ -261,7 +261,7 @@ const PropertySidebarFilter = ({
                 <div className="space-y-4">
                     <button
                         onClick={() => toggleSection("businessType")}
-                        className="flex items-center justify-between w-full text-left focus:outline-none"
+                        className="flex items-center justify-between w-full text-left focus:outline-none cursor-pointer"
                     >
                         <span className="text-sm font-bold text-gray-900 uppercase tracking-wider">Business Type</span>
                         {openSections.businessType ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
@@ -274,7 +274,7 @@ const PropertySidebarFilter = ({
                                     <button
                                         key={type._id || name}
                                         onClick={() => handleChipClick("businessType", type._id || name)}
-                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all ${(filters.businessType || []).includes(type._id || name)
+                                        className={`px-4 py-1.5 rounded-full border text-xs font-medium transition-all cursor-pointer ${(filters.businessType || []).includes(type._id || name)
                                             ? "bg-blue-50 border-blue-600 text-blue-700"
                                             : "bg-white border-gray-200 text-gray-600 hover:border-gray-400"
                                             }`}
@@ -290,7 +290,7 @@ const PropertySidebarFilter = ({
                 <div className="pt-4 border-t border-gray-100">
                     <button
                         onClick={onClearFilters}
-                        className="w-full text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
+                        className="w-full text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
                     >
                         Clear All Filters
                     </button>

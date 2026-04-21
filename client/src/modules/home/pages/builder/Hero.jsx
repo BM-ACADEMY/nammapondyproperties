@@ -1,8 +1,46 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { ShieldCheck, ArrowRight, Zap, Target, MousePointerClick } from 'lucide-react';
 import illustration from '../../../../assets/builder-hero-illustration.png';
 
 export const Hero = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const handlePostProperty = () => {
+    if (isAuthenticated && user) {
+      const role =
+        user?.role_id?.role_name?.toUpperCase() ||
+        user?.role?.name?.toUpperCase();
+
+      // 🛡️ Restriction: Unverified profiles can only list ONE property
+      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+        message.warning({
+          content: "First complete your profile, once verified your profile then only you listing other properties",
+          key: "verification-restricted"
+        });
+        if (role === "SELLER") {
+          navigate("/seller/profile");
+        } else {
+          navigate("/user/profile");
+        }
+        return;
+      }
+
+      if (role === "ADMIN") {
+        navigate("/admin/properties/add");
+      } else if (role === "SELLER") {
+        navigate("/seller/add-property");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/post-property");
+    }
+  };
+
   return (
     <section className="bg-[#fffbf7] pt-24 pb-16 lg:pt-32 lg:pb-24 px-4 sm:px-6 lg:px-8 font-sans overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
@@ -36,7 +74,10 @@ export const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-2">
-              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 group leading-none">
+              <button 
+                onClick={handlePostProperty}
+                className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 group leading-none"
+              >
                 Get Demo
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>

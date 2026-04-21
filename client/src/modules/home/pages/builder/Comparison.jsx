@@ -1,8 +1,46 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { XCircle, CheckCircle2, ShieldCheck, MousePointerClick } from 'lucide-react';
 
 const Comparison = () => {
-  const issues = [
+    const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
+
+    const handlePostProperty = () => {
+        if (isAuthenticated && user) {
+            const role =
+                user?.role_id?.role_name?.toUpperCase() ||
+                user?.role?.name?.toUpperCase();
+
+            // 🛡️ Restriction: Unverified profiles can only list ONE property
+            if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+                message.warning({
+                    content: "First complete your profile, once verified your profile then only you listing other properties",
+                    key: "verification-restricted"
+                });
+                if (role === "SELLER") {
+                    navigate("/seller/profile");
+                } else {
+                    navigate("/user/profile");
+                }
+                return;
+            }
+
+            if (role === "ADMIN") {
+                navigate("/admin/properties/add");
+            } else if (role === "SELLER") {
+                navigate("/seller/add-property");
+            } else {
+                navigate("/add-property");
+            }
+        } else {
+            navigate("/post-property");
+        }
+    };
+
+    const issues = [
     "No consistent leads",
     "Depend on brokers",
     "Slow-moving inventory"
@@ -69,7 +107,10 @@ const Comparison = () => {
 
         {/* Footer CTA - Exact Hero Button Style */}
         <div className="mt-16 flex flex-col items-center gap-4">
-            <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2">
+            <button 
+                onClick={handlePostProperty}
+                className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2"
+            >
                 <MousePointerClick className="w-6 h-6" />
                 Get Verified Leads Now
             </button>

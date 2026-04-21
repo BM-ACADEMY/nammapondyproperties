@@ -1,8 +1,45 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { Building2, Users, BarChart3, Plus, ShieldCheck } from 'lucide-react';
 import illustration from '../../../../assets/agent-hero-illustration.png';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const handlePostProperty = () => {
+    if (isAuthenticated && user) {
+      const role =
+        user?.role_id?.role_name?.toUpperCase() ||
+        user?.role?.name?.toUpperCase();
+
+      // 🛡️ Restriction: Unverified profiles can only list ONE property
+      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+        message.warning({
+          content: "First complete your profile, once verified your profile then only you listing other properties",
+          key: "verification-restricted"
+        });
+        if (role === "SELLER") {
+          navigate("/seller/profile");
+        } else {
+          navigate("/user/profile");
+        }
+        return;
+      }
+
+      if (role === "ADMIN") {
+        navigate("/admin/properties/add");
+      } else if (role === "SELLER") {
+        navigate("/seller/add-property");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/post-property");
+    }
+  };
+
   return (
     <section className="bg-[#fffbf7] py-6 lg:py-12 px-4 sm:px-6 lg:px-8 font-sans overflow-x-hidden">
       <div className="mt-10 max-w-350 mx-auto relative overflow-hidden">
@@ -80,7 +117,10 @@ const HeroSection = () => {
 
             {/* CTA Button Block */}
             <div className="pt-2 space-y-3">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none">
+              <button 
+                onClick={handlePostProperty}
+                className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none"
+              >
                 Get Buyers Now - Post FREE
               </button>
               <div className="text-[#38526e] font-bold text-base flex items-center gap-2">
