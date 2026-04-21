@@ -194,6 +194,10 @@ const PropertyForm = ({
   });
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState(initialData?.media?.images || initialData?.images || []);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
   const [floorPlans, setFloorPlans] = useState([]);
   const [existingFloorPlans, setExistingFloorPlans] = useState(initialData?.media?.floorPlans || (initialData?.media?.floorPlan ? [initialData.media.floorPlan] : []));
   const [floorPlanPreviews, setFloorPlanPreviews] = useState([]);
@@ -1063,7 +1067,7 @@ const PropertyForm = ({
                   </Upload>
                 </ImgCrop>
                 {existingImages.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
                     {existingImages.map((img, i) => (
                       <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
                         <img src={getImageUrl(img)} alt={`Property ${i}`} className="w-full h-full object-cover" />
@@ -1102,7 +1106,7 @@ const PropertyForm = ({
                   </ImgCrop>
                   
                   {existingFloorPlans.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
                       {existingFloorPlans.map((fp, i) => (
                         <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
                           <img src={getImageUrl(fp)} alt={`Floor Plan ${i}`} className="w-full h-full object-cover" />
