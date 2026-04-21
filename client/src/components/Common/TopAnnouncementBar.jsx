@@ -55,8 +55,6 @@ const TopAnnouncementBar = () => {
             Get Buyers in 7 Days
           </span>
         </p>
-        <Link
-          to="/add-property"
         <button
           onClick={handlePostProperty}
           className="hidden sm:flex items-center space-x-1 group hover:text-yellow-300 transition-colors ml-2 border-l border-white/20 pl-3 cursor-pointer"

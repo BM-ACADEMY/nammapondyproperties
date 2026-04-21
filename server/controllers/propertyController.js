@@ -876,6 +876,25 @@ exports.updateProperty = async (req, res) => {
       return data;
     };
 
+    // Handle Image Deletion
+    const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
+    if (imagesToDelete.length > 0) {
+      const invalidImages = (property.media?.images || []).filter((img) =>
+        imagesToDelete.includes(img)
+      );
+
+      invalidImages.forEach((img) => {
+        try {
+          const filePath = path.join(__dirname, "..", img);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (err) {
+          console.error(`Failed to delete image file: ${img}`, err);
+        }
+      });
+    }
+
     // Handle Floor Plan Deletion
     const floorPlansToDelete = parseJSON(req.body.floor_plans_to_delete) || [];
     if (floorPlansToDelete.length > 0) {
