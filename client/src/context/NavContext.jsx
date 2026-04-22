@@ -12,6 +12,7 @@ export const NavProvider = ({ children }) => {
     const [priceRanges, setPriceRanges] = useState([]);
     const [maxPrice, setMaxPrice] = useState(10000000);
     const [isLoading, setIsLoading] = useState(true);
+    const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchNavData = async () => {
@@ -40,7 +41,18 @@ export const NavProvider = ({ children }) => {
     }, []);
 
     return (
-        <NavContext.Provider value={{ businessTypes, propertyCategories, propertyTypes, locations, approvalTypes, priceRanges, maxPrice, isLoading }}>
+        <NavContext.Provider value={{ 
+            businessTypes, 
+            propertyCategories, 
+            propertyTypes, 
+            locations, 
+            approvalTypes, 
+            priceRanges, 
+            maxPrice, 
+            isLoading,
+            isCallbackModalOpen,
+            setIsCallbackModalOpen
+        }}>
             {children}
         </NavContext.Provider>
     );

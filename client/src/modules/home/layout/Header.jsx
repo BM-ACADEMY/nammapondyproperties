@@ -32,13 +32,12 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
-  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [activeBusinessDropdown, setActiveBusinessDropdown] = useState(null);
   const [expandedMobileBusiness, setExpandedMobileBusiness] = useState(null);
-  const { businessTypes, propertyCategories = [] } = useNav();
+  const { businessTypes, propertyCategories = [], isCallbackModalOpen, setIsCallbackModalOpen } = useNav();
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
