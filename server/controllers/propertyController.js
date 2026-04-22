@@ -306,7 +306,7 @@ exports.getProperties = async (req, res) => {
     
     // Public vs Admin Visibility
     if (!isAdmin && !isMe) {
-      queryConditions.push({ status: "Active" });
+      queryConditions.push({ status: { $in: ["Active", "Edit Pending Approval"] } });
     }
 
 
@@ -538,10 +538,17 @@ exports.verifyProperty = async (req, res) => {
       if (property.status === "Pending") {
         property.status = "Active";
         property.approvedAt = property.approvedAt || new Date();
+      } else if (property.status === "Edit Pending Approval") {
+        if (property.pendingEdits) {
+          Object.assign(property, property.pendingEdits);
+          property.pendingEdits = null;
+        }
+        property.status = "Active";
+        property.approvedAt = property.approvedAt || new Date();
       }
     } else {
       // If unverified, take it down back to Pending
-      if (property.status === "Active") {
+      if (property.status === "Active" || property.status === "Edit Pending Approval") {
         property.status = "Pending";
       }
     }
@@ -551,6 +558,48 @@ exports.verifyProperty = async (req, res) => {
       message: `Property ${property.isVerified ? "verified" : "unverified"}`,
       property,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.rejectPropertyEdit = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    if (property.status === "Edit Pending Approval") {
+      property.pendingEdits = null;
+      property.status = "Active";
+      await property.save();
+      return res.json({ message: "Property edit rejected and reverted to live data", property });
+    }
+
+    res.status(400).json({ error: "Property is not pending an edit approval" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.approvePropertyEdit = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    if (property.status === "Edit Pending Approval") {
+      if (property.pendingEdits) {
+        Object.assign(property, property.pendingEdits);
+        property.pendingEdits = null;
+      }
+      property.status = "Active";
+      property.approvedAt = property.approvedAt || new Date();
+      await property.save();
+      return res.json({ message: "Property edit approved successfully", property });
+    }
+
+    res.status(400).json({ error: "Property is not pending an edit approval" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -993,7 +1042,25 @@ exports.updateProperty = async (req, res) => {
     updates.video = updates.media.video;
     updates.floorPlan = updates.media.floorPlan;
 
-    Object.assign(property, updates);
+    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || req.user?.role?.name?.toLowerCase() === "admin";
+    const isApproved = property.status === "Active" || property.status === "Edit Pending Approval";
+    
+    if (!isAdmin && isApproved) {
+      property.pendingEdits = updates;
+      property.status = "Edit Pending Approval";
+      
+      const io = req.app.get("socketio");
+      if (io) {
+        io.to("admin-room").emit("new-property-listed", {
+          propertyId: property._id,
+          title: property.basicInfo?.title || updates.basicInfo?.title,
+          isSellerProperty: true,
+          message: `Property edit pending approval: ${property.basicInfo?.title || updates.basicInfo?.title}`
+        });
+      }
+    } else {
+      Object.assign(property, updates);
+    }
 
     await property.save();
     res.json(property);

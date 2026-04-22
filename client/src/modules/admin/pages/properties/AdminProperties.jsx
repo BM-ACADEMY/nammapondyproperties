@@ -172,6 +172,28 @@ const AdminProperties = ({ mode }) => {
     }
   };
 
+  const handleRejectEdit = async (id) => {
+    try {
+      await api.put(`/properties/reject-edit/${id}`);
+      message.success("Property edit discarded successfully");
+      fetchProperties();
+    } catch (error) {
+      console.error("Reject error:", error);
+      message.error("Failed to reject property edit");
+    }
+  };
+
+  const handleApproveEdit = async (id) => {
+    try {
+      await api.put(`/properties/approve-edit/${id}`);
+      message.success("Property edit approved successfully");
+      fetchProperties();
+    } catch (error) {
+      console.error("Approve error:", error);
+      message.error("Failed to approve property edit");
+    }
+  };
+
   const handleMarkAsSoldClick = (property) => {
     setPropertyToSell(property);
     setSoldPrice(property.soldPrice || "");
@@ -313,6 +335,7 @@ const AdminProperties = ({ mode }) => {
             case "available":
               return "green";
             case "pending":
+            case "edit pending approval":
               return "gold";
             case "sold":
             case "rented":
@@ -434,6 +457,25 @@ const AdminProperties = ({ mode }) => {
             danger: true,
           },
         ];
+
+        if (record.status === "Edit Pending Approval") {
+          // Insert Approve and Reject Edit before delete
+          items.splice(items.length - 2, 0, 
+            {
+              key: "approve_edit",
+              label: "Approve Edit",
+              icon: <CheckCircle size={14} className="text-green-600" />,
+              onClick: () => handleApproveEdit(record._id),
+            },
+            {
+              key: "reject_edit",
+              label: "Reject Edit",
+              icon: <AlertCircle size={14} />,
+              onClick: () => handleRejectEdit(record._id),
+              danger: true,
+            }
+          );
+        }
 
         return (
           <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
