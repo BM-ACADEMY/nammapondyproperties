@@ -25,7 +25,8 @@ const { Sider } = Layout;
 
 const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+
   const socket = useSocket();
   const { user } = useAuth();
   
@@ -37,6 +38,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const [newRequirementCount, setNewRequirementCount] = useState(0);
   const [newCallRequestCount, setNewCallRequestCount] = useState(0);
   const [newContactCount, setNewContactCount] = useState(0);
+  const [newExpiringPlansCount, setNewExpiringPlansCount] = useState(0);
+  const [businessTypes, setBusinessTypes] = useState([]);
+
 
   // Fetch initial pending counts
   useEffect(() => {
@@ -57,7 +61,27 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       }
     };
 
+    const fetchExpiringSoon = async () => {
+      try {
+        const response = await api.get("/subscriptions/admin/expiring-soon");
+        setNewExpiringPlansCount(response.data.length || 0);
+      } catch (error) {
+        console.error("Error fetching expiring plans count:", error);
+      }
+    };
+
+    const fetchBusinessTypes = async () => {
+      try {
+        const response = await api.get("/business-types");
+        setBusinessTypes(response.data.filter((t) => t.status === "active"));
+      } catch (error) {
+        console.error("Error fetching business types:", error);
+      }
+    };
+
     fetchCounts();
+    fetchExpiringSoon();
+    fetchBusinessTypes();
   }, []);
 
   useEffect(() => {
@@ -287,7 +311,18 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
               )}
             </div>
           ),
-          onClick: () => handleMenuClick("/admin/sellers"),
+          children: [
+            {
+              key: "/admin/sellers",
+              label: "All Sellers",
+              onClick: () => handleMenuClick("/admin/sellers"),
+            },
+            ...businessTypes.map((type) => ({
+              key: `/admin/sellers?type=${type._id}`,
+              label: type.name,
+              onClick: () => handleMenuClick(`/admin/sellers?type=${type._id}`),
+            })),
+          ],
         },
         {
           key: "/admin/failed-registrations",
@@ -367,7 +402,18 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "subscriptions-sub",
       icon: <CreditCard size={20} />,
-      label: "Subscriptions",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Subscriptions</span>
+          {newExpiringPlansCount > 0 && (
+            <Badge 
+              count={newExpiringPlansCount} 
+              size="small" 
+              style={{ backgroundColor: '#ff4d4f', boxShadow: '0 0 0 1px #fff' }} 
+            />
+          )}
+        </div>
+      ),
       children: [
         {
           key: "/admin/subscription-plans",
@@ -376,7 +422,14 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
         {
           key: "/admin/payment-history",
-          label: "Payment History",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Payment History</span>
+              {newExpiringPlansCount > 0 && (
+                <Badge count={newExpiringPlansCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/payment-history"),
         },
       ],
@@ -476,7 +529,8 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       <Menu
         theme="dark"
         mode="inline"
-        selectedKeys={[pathname]}
+        selectedKeys={[pathname + search]}
+
         defaultOpenKeys={["properties-sub", "users-sub", "seller-sub"]} // Optional: Keep submenus open by default or manage state
         items={filteredMenuItems}
         className="px-2 border-none"

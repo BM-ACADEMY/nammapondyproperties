@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu as MenuIcon, User, LogOut } from "lucide-react";
-import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme } from "antd";
+import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme, Alert, Modal, Tag } from "antd";
+import { AlertTriangle, Clock } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import SellerSidebar from "./SellerSidebar";
 import { getImageUrl } from "../../../utils/imageUrl";
@@ -14,6 +15,35 @@ const SellerLayout = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+
+  useEffect(() => {
+    if (user?.activeSubscription) {
+      const sub = user.activeSubscription;
+      setSubscriptionInfo(sub);
+
+      if (sub.status === "expired") {
+        const lastShown = localStorage.getItem(`expired_modal_shown_${user._id}`);
+        const today = new Date().toDateString();
+        if (lastShown !== today) {
+          setShowExpiredModal(true);
+        }
+      }
+    }
+  }, [user]);
+
+  const handleCloseModal = () => {
+    setShowExpiredModal(false);
+    localStorage.setItem(`expired_modal_shown_${user._id}`, new Date().toDateString());
+  };
+
+  const getDaysRemaining = (endDate) => {
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffTime = end - now;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -136,7 +166,7 @@ const SellerLayout = () => {
             />
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <Dropdown
               menu={{ items: userMenuParts }}
               trigger={["click"]}
@@ -170,6 +200,41 @@ const SellerLayout = () => {
             minHeight: "calc(100vh - 112px)", // Adjust for header and margin
           }}
         >
+          {/* Subscription Status - Closable Right Aligned Alert */}
+          <div className="flex justify-end mb-4 sticky top-20 z-20">
+            {subscriptionInfo && subscriptionInfo.status === "active" && getDaysRemaining(subscriptionInfo.endDate) <= 7 && (
+              <Alert
+                message={
+                  <div className="flex items-center gap-2 pr-2">
+                    <Clock size={14} className="text-amber-600" />
+                    <span className="text-xs font-bold text-amber-800">
+                      Plan expires in {getDaysRemaining(subscriptionInfo.endDate)} days
+                    </span>
+                    <Link to="/seller/upgrade-plan" className="text-[10px] underline ml-1 hover:text-amber-900">Renew</Link>
+                  </div>
+                }
+                type="warning"
+                closable
+                className="rounded-full py-1 px-4 border-amber-200 shadow-md bg-amber-50/90 backdrop-blur-sm animate-in slide-in-from-right duration-500"
+              />
+            )}
+
+            {subscriptionInfo && subscriptionInfo.status === "expired" && (
+              <Alert
+                message={
+                  <div className="flex items-center gap-2 pr-2">
+                    <AlertTriangle size={14} className="text-red-600" />
+                    <span className="text-xs font-bold text-red-800 uppercase">Plan Expired</span>
+                    <Link to="/seller/upgrade-plan" className="text-[10px] underline ml-1 hover:text-red-900">Renew now</Link>
+                  </div>
+                }
+                type="error"
+                closable
+                className="rounded-full py-1 px-4 border-red-200 shadow-md bg-red-50/90 backdrop-blur-sm animate-in slide-in-from-right duration-500"
+              />
+            )}
+          </div>
+
           <div
             className="seller-content-wrapper"
             style={{
@@ -182,6 +247,46 @@ const SellerLayout = () => {
           </div>
         </Content>
       </Layout>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-red-600">
+            <AlertTriangle size={24} />
+            <span className="text-xl font-bold">Plan Expired</span>
+          </div>
+        }
+        open={showExpiredModal}
+        onCancel={handleCloseModal}
+        footer={[
+          <Button key="close" onClick={handleCloseModal}>
+            Later
+          </Button>,
+          <Button 
+            key="renew" 
+            type="primary" 
+            danger 
+            onClick={() => {
+              handleCloseModal();
+              navigate("/seller/upgrade-plan");
+            }}
+          >
+            Renew Now
+          </Button>
+        ]}
+        centered
+        className="rounded-2xl overflow-hidden"
+      >
+        <div className="py-4">
+          <p className="text-gray-600 text-lg">
+            Your premium plan has expired. To continue receiving leads and managing your properties effectively, please renew your subscription.
+          </p>
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100 mt-4">
+            <p className="text-sm text-red-700 m-0">
+              Expired on: <strong>{subscriptionInfo && new Date(subscriptionInfo.endDate).toLocaleDateString()}</strong>
+            </p>
+          </div>
+        </div>
+      </Modal>
     </Layout>
   );
 };

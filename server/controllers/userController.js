@@ -192,7 +192,7 @@ exports.getPublicUsers = async (req, res) => {
     if (sellerRole) query.role_id = sellerRole._id;
 
     const users = await User.find(query)
-      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType slug")
       .populate(["role_id", "builderProfile", "businessType"])
       .limit(parseInt(limit) || 20);
 
@@ -205,7 +205,7 @@ exports.getPublicUsers = async (req, res) => {
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType slug")
       .populate(["role_id", "builderProfile", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
@@ -216,7 +216,9 @@ exports.getPublicUserById = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate(["role_id", "businessType", "builderProfile"]);
+    const user = await User.findById(req.params.id)
+      .select("+slug")
+      .populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -446,7 +448,7 @@ exports.getSellersByPropertyBusinessType = async (req, res) => {
     const Property = require("../models/Property");
     const sellersIds = await Property.find({ businessType: businessTypeId }).distinct("seller");
     const sellers = await User.find({ _id: { $in: sellersIds } })
-      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType slug")
       .populate(["role_id", "builderProfile", "businessType"]);
     res.json(sellers);
   } catch (error) {

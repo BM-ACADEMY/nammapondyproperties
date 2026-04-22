@@ -21,10 +21,11 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
+      referralSource,
     } = req.body;
 
     const userId = req.user ? req.user.id : null;
-    const isAdmin = req.user && (req.user.role_id?.role_name === "admin" || req.user.role?.name === "admin");
+    const isAdmin = req.user && (req.user.role_id?.role_name?.toLowerCase() === "admin" || req.user.role?.name?.toLowerCase() === "admin");
 
     const newRequirement = new Requirement({
       fullName,
@@ -38,6 +39,7 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
+      referralSource,
       user: userId,
       createdBy: isAdmin ? req.user._id : null
     });

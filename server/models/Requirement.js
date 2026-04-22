@@ -58,6 +58,10 @@ const requirementSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    referralSource: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

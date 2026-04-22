@@ -12,37 +12,14 @@ export const Hero = () => {
 
   const handlePostProperty = () => {
     if (isAuthenticated && user) {
-      const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
-
-      if (!canPost) {
-        message.warning({
-          content: limitMessage,
-          key: "verification-restricted"
-        });
-
-        if (reason === "unverified") {
-          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
-          if (role === "SELLER") {
-            navigate("/seller/profile");
-          } else {
-            navigate("/user/profile");
-          }
-        } else if (reason === "limit_reached") {
-          navigate(redirectPath || "/seller/upgrade-plan");
-        }
-        return;
-      }
-
       const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
-      if (role === "ADMIN") {
-        navigate("/admin/properties/add");
-      } else if (role === "SELLER") {
-        navigate("/seller/add-property");
+      if (role === "SELLER") {
+        navigate("/seller/upgrade-plan");
       } else {
         navigate("/add-property");
       }
     } else {
-      navigate("/post-property");
+      navigate("/add-property");
     }
   };
 

@@ -1,12 +1,12 @@
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 
-// Get all plans (Filtered by user's business type if available)
+// Get all plans (Filtered by user's business type if available and not requested all)
 exports.getAllPlans = async (req, res) => {
   try {
     const query = { status: "active" };
     
-    // If user is a seller, only show plans for their business type
-    if (req.user && req.user.businessType) {
+    // If user is a seller, and not requesting all plans, only show plans for their business type
+    if (req.user && req.user.businessType && req.query.allPlans !== "true") {
       query.businessType = req.user.businessType;
     }
 

@@ -258,6 +258,25 @@ const PostRequirementPage = () => {
                 >
                   <TextArea rows={3} placeholder="Any additional details or specific requirements..." />
                 </Form.Item>
+
+                <Form.Item
+                  name="referralSource"
+                  label={<span className="font-semibold">How do you hear Namma Pondy Properties?</span>}
+                  className="lg:col-span-2"
+                  rules={[{ required: true, message: "Please select an option" }]}
+                >
+                  <Select placeholder="Select an option">
+                    <Option value="Facebook">Facebook</Option>
+                    <Option value="Instagram">Instagram</Option>
+                    <Option value="YouTube">YouTube</Option>
+                    <Option value="LinkedIn">LinkedIn</Option>
+                    <Option value="WhatsApp">WhatsApp</Option>
+                    <Option value="Google Search">Google Search</Option>
+                    <Option value="Friend/Reference">Friend/Reference</Option>
+                    <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+                    <Option value="Others">Others</Option>
+                  </Select>
+                </Form.Item>
               </div>
 
               <div className="mt-8 pt-6 flex flex-col items-center justify-center border-t border-gray-100">
@@ -311,6 +330,16 @@ const PostRequirementPage = () => {
                   <div>
                     <h3 className="font-bold text-slate-800">Curated Choices</h3>
                     <p className="text-sm text-slate-500 mt-1">Get the power to choose from the best handpicked properties.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
+                    <UserCheck size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800">Leads Sharing</h3>
+                    <p className="text-sm text-slate-500 mt-1">Your requirements are shared with our verified members like agents and builders to get you the best deals.</p>
                   </div>
                 </div>
               </div>

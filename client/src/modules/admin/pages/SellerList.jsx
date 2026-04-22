@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+
 import {
   Table,
   Button,
@@ -50,7 +52,15 @@ const SellerList = () => {
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningLoading, setAssigningLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const typeFilter = searchParams.get("type");
+  const [businessTypes, setBusinessTypes] = useState([]);
   const socket = useSocket();
+
+  const filteredSellers = typeFilter
+    ? sellers.filter((s) => s.businessType?._id === typeFilter)
+    : sellers;
+
 
   const fetchSellers = async () => {
     setLoading(true);
@@ -75,8 +85,18 @@ const SellerList = () => {
     }
   };
 
+  const fetchBusinessTypes = async () => {
+    try {
+      const response = await api.get("/business-types");
+      setBusinessTypes(response.data.filter((t) => t.status === "active"));
+    } catch (error) {
+      console.error("Failed to fetch business types", error);
+    }
+  };
+
   useEffect(() => {
     fetchSellers();
+    fetchBusinessTypes();
     if (currentUser?.isSuperAdmin) {
       fetchAdmins();
     }
@@ -367,6 +387,28 @@ const SellerList = () => {
           <Title level={3} className="mb-0! text-left">
             Seller Management {currentUser?.isSuperAdmin ? "(All)" : "(Assigned)"}
           </Title>
+          <div className="flex items-center gap-3 mt-2">
+            <Select
+              className="w-64 h-10 rounded-lg shadow-sm"
+              placeholder="Filter by Business Type"
+              allowClear
+              value={typeFilter}
+              onChange={(val) => {
+                if (val) {
+                  setSearchParams({ type: val });
+                } else {
+                  setSearchParams({});
+                }
+              }}
+            >
+              {businessTypes.map((type) => (
+                <Select.Option key={type._id} value={type._id}>
+                  {type.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+
           {selectedRowKeys.length > 0 && (
             <div className="flex items-center gap-4 mt-2 p-2 bg-indigo-50 rounded-lg border border-indigo-100 animate-in fade-in slide-in-from-top-1 duration-300">
               <span className="text-sm font-bold text-indigo-600">
@@ -427,7 +469,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-indigo-600 font-semibold text-xs uppercase tracking-wider">Total Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.length}</div>
               </div>
             </div>
           </Card>
@@ -440,7 +482,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-emerald-600 font-semibold text-xs uppercase tracking-wider">Active Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.filter(s => s.status === 'active').length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.filter(s => s.status === 'active').length}</div>
               </div>
             </div>
           </Card>
@@ -453,7 +495,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-rose-600 font-semibold text-xs uppercase tracking-wider">Inactive Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.filter(s => s.status !== 'active').length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.filter(s => s.status !== 'active').length}</div>
               </div>
             </div>
           </Card>
@@ -466,7 +508,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Verified Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.filter(s => s.badgeVerified).length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.filter(s => s.badgeVerified).length}</div>
               </div>
             </div>
           </Card>
@@ -478,7 +520,7 @@ const SellerList = () => {
           <Table
             rowSelection={rowSelection}
             columns={columns}
-            dataSource={sellers}
+            dataSource={filteredSellers}
             rowKey="_id"
             loading={loading}
             pagination={{

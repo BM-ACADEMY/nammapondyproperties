@@ -35,6 +35,7 @@ import {
   User,
   Lock,
   ArrowRight,
+  Zap,
 } from "lucide-react";
 import moment from "moment";
 import api from "@/services/api";
@@ -336,8 +337,11 @@ const SellerEnquiries = () => {
     let matchesDate = true;
     if (dateRange && dateRange[0] && dateRange[1]) {
       const leadDate = moment(item.createdAt);
-      matchesDate = leadDate.isSameOrAfter(dateRange[0], 'day') && 
-                    leadDate.isSameOrBefore(dateRange[1], 'day');
+      const startDate = moment(dateRange[0].$d || dateRange[0].toDate?.() || dateRange[0]);
+      const endDate = moment(dateRange[1].$d || dateRange[1].toDate?.() || dateRange[1]);
+      
+      matchesDate = leadDate.isSameOrAfter(startDate, 'day') && 
+                    leadDate.isSameOrBefore(endDate, 'day');
     }
 
     return matchesSearch && matchesStatus && matchesDate;
@@ -469,40 +473,60 @@ const SellerEnquiries = () => {
 
       <Row gutter={[24, 24]} className="mb-8">
         <Col xs={24} sm={12} lg={6}>
-          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-50 rounded-xl text-blue-600 flex items-center justify-center">
-                <Inbox size={24} />
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden rounded-2xl">
+            <div className="flex items-center gap-5 p-1">
+              <div className="w-14 h-14 bg-blue-50 rounded-2xl text-blue-600 flex items-center justify-center shrink-0">
+                <Inbox size={28} />
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">Total</span>
-                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.total}</span>
+                <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">Total</span>
+                <span className="text-3xl font-black text-slate-900 leading-none">{loading ? "..." : stats.total}</span>
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-cyan-50 rounded-xl text-cyan-600 flex items-center justify-center">
-                <User size={24} />
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden rounded-2xl">
+            <div className="flex items-center gap-5 p-1">
+              <div className="w-14 h-14 bg-cyan-50 rounded-2xl text-cyan-600 flex items-center justify-center shrink-0">
+                <User size={28} />
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">New</span>
-                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.new}</span>
+                <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">New</span>
+                <span className="text-3xl font-black text-slate-900 leading-none">{loading ? "..." : stats.new}</span>
               </div>
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600 flex items-center justify-center">
-                <MessageSquare size={24} />
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden rounded-2xl">
+            <div className="flex items-center gap-5 p-1">
+              <div className="w-14 h-14 bg-indigo-50 rounded-2xl text-indigo-600 flex items-center justify-center shrink-0">
+                <MessageSquare size={28} />
               </div>
               <div className="flex flex-col">
-                <span className="text-gray-400 font-semibold text-xs uppercase tracking-wider leading-none mb-1.5">Portal</span>
-                <span className="text-2xl font-bold text-gray-900 leading-none">{loading ? "..." : stats.portal}</span>
+                <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">Portal</span>
+                <span className="text-3xl font-black text-slate-900 leading-none">{loading ? "..." : stats.portal}</span>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card className="hover:shadow-md transition-shadow duration-300 border-none shadow-sm bg-white overflow-hidden rounded-2xl border-l-4 border-l-amber-500!">
+            <div className="flex items-center gap-5 p-1">
+              <div className="w-14 h-14 bg-amber-50 rounded-2xl text-amber-600 flex items-center justify-center shrink-0 shadow-xs">
+                <Zap size={28} fill="currentColor" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">Lead Allotment</span>
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-2xl font-black leading-none ${subscriptionState.isLimitReached ? 'text-red-600' : 'text-slate-900'}`}>
+                    {loading ? "..." : subscriptionState.used}
+                  </span>
+                  <span className="text-slate-400 text-sm font-bold">
+                    / {subscriptionState.limit === -1 ? "∞" : subscriptionState.limit}
+                  </span>
+                </div>
               </div>
             </div>
           </Card>
@@ -527,42 +551,46 @@ const SellerEnquiries = () => {
             )}
           </div>
 
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={8} lg={6}>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Search</span>
+          <Row gutter={[16, 16]} align="bottom">
+            <Col xs={24} md={12} lg={6}>
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Search</span>
                 <Input
-                  prefix={<Search size={16} className="text-gray-400" />}
+                  prefix={<Search size={18} className="text-slate-300 mr-1" />}
                   placeholder="Name, Phone, Property..."
                   allowClear
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="rounded-xl bg-gray-50 border-gray-100 hover:border-blue-300 focus:border-blue-500 transition-all h-11"
+                  className="rounded-xl border-slate-200 bg-white hover:border-blue-400 focus:border-blue-500 transition-all h-12 shadow-sm"
                 />
               </div>
             </Col>
-            <Col xs={24} md={8} lg={6}>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Status</span>
+            <Col xs={24} md={12} lg={6}>
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Status</span>
                 <Select
                   value={filterStatus}
                   onChange={setFilterStatus}
-                  className="w-full enquiries-select"
+                  className="w-full enquiries-select-main"
+                  suffixIcon={<ArrowRight size={16} className="rotate-90 text-slate-300" />}
                 >
                   <Option value="all">All Status</Option>
                   <Option value="new">New</Option>
                   <Option value="contacted">Contact</Option>
+                  <Option value="closed">Closed</Option>
                 </Select>
               </div>
             </Col>
-            <Col xs={24} md={24} lg={10}>
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold text-gray-400 uppercase ml-1">Date Range</span>
+            <Col xs={24} md={24} lg={12}>
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Date Range</span>
                 <RangePicker
                   value={dateRange}
                   onChange={setDateRange}
-                  className="w-full rounded-xl border-gray-100 bg-gray-50 h-11 hover:border-blue-300 transition-all enquiries-range"
+                  className="w-full rounded-xl border-slate-200 bg-white h-12 hover:border-blue-400 transition-all enquiries-range-main shadow-sm"
                   format="DD MMM YYYY"
+                  placeholder={["Start date", "End date"]}
+                  separator={<span className="text-slate-300">→</span>}
                 />
               </div>
             </Col>
@@ -609,28 +637,41 @@ const SellerEnquiries = () => {
           border-radius: 10px;
         }
 
-        .enquiries-select .ant-select-selector {
-          height: 44px !important;
+        .enquiries-select-main .ant-select-selector {
+          height: 48px !important;
           border-radius: 12px !important;
-          border-color: #f3f4f6 !important;
-          background-color: #f9fafb !important;
+          border-color: #e2e8f0 !important;
+          background-color: #ffffff !important;
           display: flex;
           align-items: center;
           transition: all 0.3s ease !important;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
         }
-        .enquiries-select .ant-select-selector:hover {
-          border-color: #bfdbfe !important;
+        .enquiries-select-main .ant-select-selector:hover {
+          border-color: #60a5fa !important;
         }
-        .enquiries-select .ant-select-selection-item {
+        .enquiries-select-main .ant-select-selection-item {
           font-weight: 600;
-          color: #374151;
+          color: #334155;
+          font-size: 14px;
         }
-        .enquiries-range input {
-          font-weight: 600;
-          color: #374151;
+        .enquiries-range-main {
+          border-radius: 12px !important;
+          border-color: #e2e8f0 !important;
+          background-color: #ffffff !important;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+          padding: 4px 15px !important;
         }
-        .enquiries-range .ant-picker-range-separator {
-          padding: 0 4px;
+        .enquiries-range-main input {
+          font-weight: 500;
+          color: #334155;
+          font-size: 14px;
+        }
+        .enquiries-range-main .ant-picker-range-separator {
+          padding: 0 8px;
+        }
+        .enquiries-range-main .ant-picker-suffix {
+          color: #cbd5e1 !important;
         }
 
         .status-select {

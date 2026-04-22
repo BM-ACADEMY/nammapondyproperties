@@ -17,7 +17,10 @@ const HomePageRoute = () => {
         <Route index element={<HomePage />} />
         <Route path="home" element={<HomePage />} />
         <Route path="properties" element={<PropertiesPage />} />
-        <Route path="business-user-list/:businessTypeId" element={<BusinessUserList />} />
+        <Route path="business/:businessTypeSlug" element={<BusinessUserList />} />
+        <Route path="business/:businessTypeSlug/:sellerSlug" element={<BusinessUserList />} />
+        <Route path="business-user-list/:businessTypeSlug" element={<BusinessUserList />} />
+        <Route path="business-user-list/:businessTypeSlug/:sellerSlug" element={<BusinessUserList />} />
         <Route path="properties/:slug" element={<PropertyDetails />} />
         <Route path="post-property" element={<PostPropertyLanding />} />
         <Route path="agent-info" element={<AgentInfo />} />
