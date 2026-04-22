@@ -4,6 +4,7 @@ import axios from "axios";
 import { message, Button, Spin } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
 import PhoneUpdateModal from "../../../../components/Common/PhoneUpdateModal";
 
 const AddProperty = () => {
@@ -22,57 +23,37 @@ const AddProperty = () => {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
 
   useEffect(() => {
-    // 🛡️ Restriction: Unverified profiles can only list ONE property
-    if (user && !editId) {
-      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
-      if (role !== "ADMIN" && user.propertyCount >= 1 && !user.badgeVerified) {
+    if (!user) return;
+
+    // 🛡️ Centralized Plan & Verification Check
+    const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
+
+    if (!canPost && !editId) {
+      if (!warnedRef.current) {
         message.warning({
-          content: "First complete your profile, once verified your profile then only you listing other properties",
+          content: limitMessage,
           key: "verification-restricted"
         });
-        navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
-        return;
+        warnedRef.current = true;
       }
+
+      if (reason === "unverified") {
+        const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+        navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
+      } else if (reason === "limit_reached") {
+        navigate(redirectPath || "/seller/upgrade-plan");
+      }
+      return;
     }
 
+    setVerifyingLimit(false);
+
     // Show modal if user is logged in but has no phone number (only for new properties)
-    if (user && !user.phone && !editId) {
+    if (!user.phone && !editId) {
       setShowPhoneModal(true);
     }
   }, [user, editId, navigate]);
 
-  const checkLimit = React.useCallback(async () => {
-    try {
-      setVerifyingLimit(true);
-      // Fetch both subscription and properties
-      const [subRes, propRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/subscriptions/my-subscription`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        }),
-        axios.get(`${import.meta.env.VITE_API_URL}/properties/fetch-all-property?seller_id=${user._id}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        })
-      ]);
-
-      const subscription = subRes.data;
-      const properties = propRes.data.properties || [];
-      
-      const propertyLimit = subscription?.plan?.propertyLimit || 3;
-      
-      if (propertyLimit !== -1 && properties.length >= propertyLimit) {
-        if (!warnedRef.current) {
-          message.warning(`You have reached your limit of ${propertyLimit} properties. Please upgrade!`);
-          warnedRef.current = true;
-        }
-        navigate("/seller/upgrade-plan");
-        return;
-      }
-    } catch (error) {
-      console.error("Error checking limit:", error);
-    } finally {
-      setVerifyingLimit(false);
-    }
-  }, [user, navigate]);
 
   const fetchProperty = React.useCallback(async () => {
     try {
@@ -89,12 +70,9 @@ const AddProperty = () => {
   useEffect(() => {
     if (editId) {
       fetchProperty();
-    } else {
-      if (user) {
-        checkLimit();
-      }
     }
-  }, [editId, checkLimit, fetchProperty, user]);
+    // Limit check is now handled in the main useEffect above
+  }, [editId, fetchProperty, user]);
   const onSubmit = async (formData) => {
     setLoading(true);
     let response = null;

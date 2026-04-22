@@ -62,6 +62,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 const { Title, Text } = Typography;
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
 
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
@@ -341,10 +342,9 @@ const MyProperties = () => {
     );
   });
 
-  const planName = subscription?.plan?.name || settings?.defaultPlanName || "BASIC";
-  const propertyLimit = subscription?.plan?.propertyLimit || settings?.sellerPropertyLimit || 3;
-  const isLimitReached =
-    propertyLimit !== -1 && properties.length >= propertyLimit;
+  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user);
+  const isLimitReached = !canPost && reason === "limit_reached";
+  const planName = user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE";
 
   return (
     <div className="space-y-6">
@@ -435,11 +435,15 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            if (isLimitReached) {
-              message.warning(
-                `You have reached your limit of ${propertyLimit} properties. Please upgrade!`,
-              );
-              navigate("/seller/upgrade-plan");
+            const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
+            if (!canPost) {
+              message.warning(limitMessage);
+              if (reason === "unverified") {
+                const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+                navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
+              } else if (reason === "limit_reached") {
+                navigate(redirectPath || "/seller/upgrade-plan");
+              }
               return;
             }
             navigate("/seller/add-property");

@@ -26,50 +26,45 @@ const parseJSON = (data) => {
 
 exports.createProperty = async (req, res) => {
   try {
-    // 🛡️ Restriction: Unverified profiles can only list ONE property
-    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || 
-                    req.user?.role?.name?.toLowerCase() === "admin";
-
+    // Check property limit for non-admin users
     if (!isAdmin) {
-      const propertyCount = await Property.countDocuments({ seller: req.user._id });
+      const propertyCount = await Property.countDocuments({ 
+        seller: req.user._id,
+        status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+      });
+
+      // 🛡️ Restriction 1: Unverified profiles can only list ONE property
       if (propertyCount >= 1 && !req.user.badgeVerified) {
         return res.status(403).json({ 
-          error: "First complete your profile, once verified your profile then only you listing other properties" 
+          error: "First complete your profile, once verified your profile then only you listing other properties",
+          reason: "unverified"
         });
       }
-    }
 
-    console.log("Create Property Request Body:", req.body);
-    console.log("Create Property Files:", req.files);
-
-    // Check property limit for sellers
-    if (
-      req.user &&
-      req.user.role_id &&
-      req.user.role_id.role_name === "seller"
-    ) {
-      // Get site settings for fallbacks
+      // 🛡️ Restriction 2: Role-based limits for verified sellers
       const settings = await WebsiteSetting.findOne();
-      const defaultLimit = settings?.sellerPropertyLimit || 3;
-      const defaultName = settings?.defaultPlanName || "FREE";
+      let propertyLimit = settings?.sellerPropertyLimit || 3; // Default fallback
+      let planName = settings?.defaultPlanName || "FREE";
 
-      // Get current upload limit from subscription
-      let propertyLimit = defaultLimit; 
-      let planName = defaultName;
-
+      // A. If user has an active subscription, use its limit
       if (req.user.activeSubscription) {
         const subscription = await Subscription.findById(req.user.activeSubscription).populate("plan");
         if (subscription && subscription.status === "active" && subscription.plan) {
           propertyLimit = subscription.plan.propertyLimit;
           planName = subscription.plan.name;
         }
+      } else {
+        // B. Free Tier Limits (Based on Business Type)
+        const businessTypeName = req.user.businessType?.name || "";
+        
+        if (businessTypeName.match(/Builder|Promoter/i)) {
+          propertyLimit = 1; // Builders: Max 1 property for free
+        } else if (businessTypeName.match(/Agent|Owner/i)) {
+          propertyLimit = 3; // Agents/Owners: Max 3 properties for free
+        }
       }
 
-      const propertyCount = await Property.countDocuments({
-        seller: req.user._id,
-      });
-
-      // propertyLimit of -1 or very high means unlimited
+      // Check if limit is reached (propertyLimit of -1 means unlimited)
       if (propertyLimit !== -1 && propertyCount >= propertyLimit) {
         // Delete uploaded files to avoid garbage
         if (req.files) {
@@ -82,14 +77,14 @@ exports.createProperty = async (req, res) => {
             }
           });
         }
-        return res
-          .status(403)
-          .json({ 
-            error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
-            limitReached: true,
-            currentCount: propertyCount,
-            limit: propertyLimit
-          });
+        
+        return res.status(403).json({ 
+          error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
+          limitReached: true,
+          currentCount: propertyCount,
+          limit: propertyLimit,
+          reason: "limit_reached"
+        });
       }
     }
 
@@ -306,7 +301,7 @@ exports.getProperties = async (req, res) => {
     
     // Public vs Admin Visibility
     if (!isAdmin && !isMe) {
-      queryConditions.push({ status: "Active" });
+      queryConditions.push({ status: { $in: ["Active", "Edit Pending Approval"] } });
     }
 
 
@@ -538,10 +533,17 @@ exports.verifyProperty = async (req, res) => {
       if (property.status === "Pending") {
         property.status = "Active";
         property.approvedAt = property.approvedAt || new Date();
+      } else if (property.status === "Edit Pending Approval") {
+        if (property.pendingEdits) {
+          Object.assign(property, property.pendingEdits);
+          property.pendingEdits = null;
+        }
+        property.status = "Active";
+        property.approvedAt = property.approvedAt || new Date();
       }
     } else {
       // If unverified, take it down back to Pending
-      if (property.status === "Active") {
+      if (property.status === "Active" || property.status === "Edit Pending Approval") {
         property.status = "Pending";
       }
     }
@@ -551,6 +553,48 @@ exports.verifyProperty = async (req, res) => {
       message: `Property ${property.isVerified ? "verified" : "unverified"}`,
       property,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.rejectPropertyEdit = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    if (property.status === "Edit Pending Approval") {
+      property.pendingEdits = null;
+      property.status = "Active";
+      await property.save();
+      return res.json({ message: "Property edit rejected and reverted to live data", property });
+    }
+
+    res.status(400).json({ error: "Property is not pending an edit approval" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.approvePropertyEdit = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    if (property.status === "Edit Pending Approval") {
+      if (property.pendingEdits) {
+        Object.assign(property, property.pendingEdits);
+        property.pendingEdits = null;
+      }
+      property.status = "Active";
+      property.approvedAt = property.approvedAt || new Date();
+      await property.save();
+      return res.json({ message: "Property edit approved successfully", property });
+    }
+
+    res.status(400).json({ error: "Property is not pending an edit approval" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -993,7 +1037,25 @@ exports.updateProperty = async (req, res) => {
     updates.video = updates.media.video;
     updates.floorPlan = updates.media.floorPlan;
 
-    Object.assign(property, updates);
+    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || req.user?.role?.name?.toLowerCase() === "admin";
+    const isApproved = property.status === "Active" || property.status === "Edit Pending Approval";
+    
+    if (!isAdmin && isApproved) {
+      property.pendingEdits = updates;
+      property.status = "Edit Pending Approval";
+      
+      const io = req.app.get("socketio");
+      if (io) {
+        io.to("admin-room").emit("new-property-listed", {
+          propertyId: property._id,
+          title: property.basicInfo?.title || updates.basicInfo?.title,
+          isSellerProperty: true,
+          message: `Property edit pending approval: ${property.basicInfo?.title || updates.basicInfo?.title}`
+        });
+      }
+    } else {
+      Object.assign(property, updates);
+    }
 
     await property.save();
     res.json(property);

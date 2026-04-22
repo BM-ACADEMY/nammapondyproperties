@@ -35,6 +35,10 @@ router.delete("/delete-property-by-id/:id", propertyController.deleteProperty);
 router.put("/increment-view-count/:id", propertyController.incrementViewCount);
 // Verify property
 router.put("/verify-property/:id", protect, propertyController.verifyProperty);
+// Reject pending property edit
+router.put("/reject-edit/:id", protect, propertyController.rejectPropertyEdit);
+// Approve pending property edit
+router.put("/approve-edit/:id", protect, propertyController.approvePropertyEdit);
 // Get property types
 // router.get("/property-types", propertyController.getPropertyTypes); // Removed
 // Get approval types

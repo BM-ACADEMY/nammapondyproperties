@@ -203,8 +203,13 @@ const propertySchema = new mongoose.Schema(
     // =====================================================
     status: {
       type: String,
-      enum: ["Active", "Sold", "Rented", "Pending"],
+      enum: ["Active", "Sold", "Rented", "Pending", "Edit Pending Approval"],
       default: "Pending"
+    },
+
+    pendingEdits: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
     },
 
     isVerified: {

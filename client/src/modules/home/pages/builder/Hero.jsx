@@ -4,6 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { message } from 'antd';
 import { ShieldCheck, ArrowRight, Zap, Target, MousePointerClick } from 'lucide-react';
 import illustration from '../../../../assets/builder-hero-illustration.png';
+import { checkPropertyListingLimit } from '@/utils/propertyLimits';
 
 export const Hero = () => {
   const navigate = useNavigate();
@@ -11,24 +12,28 @@ export const Hero = () => {
 
   const handlePostProperty = () => {
     if (isAuthenticated && user) {
-      const role =
-        user?.role_id?.role_name?.toUpperCase() ||
-        user?.role?.name?.toUpperCase();
+      const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
 
-      // 🛡️ Restriction: Unverified profiles can only list ONE property
-      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+      if (!canPost) {
         message.warning({
-          content: "First complete your profile, once verified your profile then only you listing other properties",
+          content: limitMessage,
           key: "verification-restricted"
         });
-        if (role === "SELLER") {
-          navigate("/seller/profile");
-        } else {
-          navigate("/user/profile");
+
+        if (reason === "unverified") {
+          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+          if (role === "SELLER") {
+            navigate("/seller/profile");
+          } else {
+            navigate("/user/profile");
+          }
+        } else if (reason === "limit_reached") {
+          navigate(redirectPath || "/seller/upgrade-plan");
         }
         return;
       }
 
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
       if (role === "ADMIN") {
         navigate("/admin/properties/add");
       } else if (role === "SELLER") {
