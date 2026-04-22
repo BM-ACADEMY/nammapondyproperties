@@ -252,6 +252,16 @@ const RequirementList = () => {
       ),
     },
     {
+      title: "Source",
+      dataIndex: "heardFrom",
+      key: "heardFrom",
+      render: (source) => (
+        <Tag color="purple" className="m-0 font-semibold px-2 py-0.5 rounded">
+          {source || "Direct"}
+        </Tag>
+      ),
+    },
+    {
       title: "Budget",
       key: "budget",
       render: (_, record) => (
@@ -467,6 +477,13 @@ const RequirementList = () => {
                   <p className="m-0 text-slate-700 font-medium">
                     {selectedRequirement.preferredLocation || "Not specified"}
                   </p>
+                </div>
+
+                <div className="mb-4">
+                  <Text type="secondary" className="text-xs uppercase font-semibold">Lead Source</Text>
+                  <div className="mt-1">
+                    <Tag color="purple" className="font-bold">{selectedRequirement.heardFrom || "Direct"}</Tag>
+                  </div>
                 </div>
               </Col>
               

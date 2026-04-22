@@ -142,6 +142,18 @@ const PostRequirementPage = () => {
                   />
                 </Form.Item>
 
+                <Form.Item
+                  name="heardFrom"
+                  label={<span className="font-semibold">How did you hear about us?</span>}
+                  rules={[{ required: true, message: "Please select an option" }]}
+                >
+                  <Select placeholder="Select source">
+                    <Option value="Social Media">Social Media</Option>
+                    <Option value="Reference">Reference from Known Person</Option>
+                    <Option value="Google">Google</Option>
+                  </Select>
+                </Form.Item>
+
 
                 <Form.Item
                   name="category"

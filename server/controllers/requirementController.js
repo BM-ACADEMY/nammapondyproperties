@@ -21,6 +21,7 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
+      heardFrom,
     } = req.body;
 
     const userId = req.user ? req.user.id : null;
@@ -38,6 +39,7 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
+      heardFrom,
       user: userId,
       createdBy: isAdmin ? req.user._id : null
     });
