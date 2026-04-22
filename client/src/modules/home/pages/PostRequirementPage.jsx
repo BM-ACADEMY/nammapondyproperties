@@ -15,6 +15,7 @@ import {
   MessageCircle,
   FileText,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 
 const { Option } = Select;
@@ -323,6 +324,16 @@ const PostRequirementPage = () => {
                   <div>
                     <h3 className="font-bold text-slate-800">Curated Choices</h3>
                     <p className="text-sm text-slate-500 mt-1">Get the power to choose from the best handpicked properties.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
+                    <ShieldCheck size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800">Trusted Assistance</h3>
+                    <p className="text-sm text-slate-500 mt-1">Our verified agents or builders will contact you.</p>
                   </div>
                 </div>
               </div>
