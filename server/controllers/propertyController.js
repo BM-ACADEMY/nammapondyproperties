@@ -26,50 +26,45 @@ const parseJSON = (data) => {
 
 exports.createProperty = async (req, res) => {
   try {
-    // 🛡️ Restriction: Unverified profiles can only list ONE property
-    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || 
-                    req.user?.role?.name?.toLowerCase() === "admin";
-
+    // Check property limit for non-admin users
     if (!isAdmin) {
-      const propertyCount = await Property.countDocuments({ seller: req.user._id });
+      const propertyCount = await Property.countDocuments({ 
+        seller: req.user._id,
+        status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+      });
+
+      // 🛡️ Restriction 1: Unverified profiles can only list ONE property
       if (propertyCount >= 1 && !req.user.badgeVerified) {
         return res.status(403).json({ 
-          error: "First complete your profile, once verified your profile then only you listing other properties" 
+          error: "First complete your profile, once verified your profile then only you listing other properties",
+          reason: "unverified"
         });
       }
-    }
 
-    console.log("Create Property Request Body:", req.body);
-    console.log("Create Property Files:", req.files);
-
-    // Check property limit for sellers
-    if (
-      req.user &&
-      req.user.role_id &&
-      req.user.role_id.role_name === "seller"
-    ) {
-      // Get site settings for fallbacks
+      // 🛡️ Restriction 2: Role-based limits for verified sellers
       const settings = await WebsiteSetting.findOne();
-      const defaultLimit = settings?.sellerPropertyLimit || 3;
-      const defaultName = settings?.defaultPlanName || "FREE";
+      let propertyLimit = settings?.sellerPropertyLimit || 3; // Default fallback
+      let planName = settings?.defaultPlanName || "FREE";
 
-      // Get current upload limit from subscription
-      let propertyLimit = defaultLimit; 
-      let planName = defaultName;
-
+      // A. If user has an active subscription, use its limit
       if (req.user.activeSubscription) {
         const subscription = await Subscription.findById(req.user.activeSubscription).populate("plan");
         if (subscription && subscription.status === "active" && subscription.plan) {
           propertyLimit = subscription.plan.propertyLimit;
           planName = subscription.plan.name;
         }
+      } else {
+        // B. Free Tier Limits (Based on Business Type)
+        const businessTypeName = req.user.businessType?.name || "";
+        
+        if (businessTypeName.match(/Builder|Promoter/i)) {
+          propertyLimit = 1; // Builders: Max 1 property for free
+        } else if (businessTypeName.match(/Agent|Owner/i)) {
+          propertyLimit = 3; // Agents/Owners: Max 3 properties for free
+        }
       }
 
-      const propertyCount = await Property.countDocuments({
-        seller: req.user._id,
-      });
-
-      // propertyLimit of -1 or very high means unlimited
+      // Check if limit is reached (propertyLimit of -1 means unlimited)
       if (propertyLimit !== -1 && propertyCount >= propertyLimit) {
         // Delete uploaded files to avoid garbage
         if (req.files) {
@@ -82,14 +77,14 @@ exports.createProperty = async (req, res) => {
             }
           });
         }
-        return res
-          .status(403)
-          .json({ 
-            error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
-            limitReached: true,
-            currentCount: propertyCount,
-            limit: propertyLimit
-          });
+        
+        return res.status(403).json({ 
+          error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
+          limitReached: true,
+          currentCount: propertyCount,
+          limit: propertyLimit,
+          reason: "limit_reached"
+        });
       }
     }
 

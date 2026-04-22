@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNav } from "@/context/NavContext";
 import { useAuth } from "@/context/AuthContext";
+import { message } from "antd";
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
 import {
   Mail,
   Phone,
@@ -22,6 +24,27 @@ const Footer = () => {
 
   const handlePostProperty = () => {
     if (isAuthenticated && user) {
+      const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
+
+      if (!canPost) {
+        message.warning({
+          content: limitMessage,
+          key: "verification-restricted"
+        });
+
+        if (reason === "unverified") {
+          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+          if (role === "SELLER") {
+            navigate("/seller/profile");
+          } else {
+            navigate("/user/profile");
+          }
+        } else if (reason === "limit_reached") {
+          navigate(redirectPath || "/seller/upgrade-plan");
+        }
+        return;
+      }
+
       const role =
         user?.role_id?.role_name?.toUpperCase() ||
         user?.role?.name?.toUpperCase();

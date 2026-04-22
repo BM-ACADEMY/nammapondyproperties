@@ -106,7 +106,15 @@ exports.verifyOtp = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate(["role_id", "businessType", "builderProfile"]);
+    const user = await User.findById(req.user.id).populate([
+      "role_id", 
+      "businessType", 
+      "builderProfile",
+      {
+        path: "activeSubscription",
+        populate: { path: "plan" }
+      }
+    ]);
     if (!user) return res.status(404).json({ error: "User not found" });
 
     // [BOOTSTRAP LOGIC] 
@@ -120,8 +128,11 @@ exports.getMe = async (req, res) => {
       }
     }
 
-    // Include property count for frontend verification checks
-    const propertyCount = await Property.countDocuments({ seller: user._id });
+    // Include property count for frontend verification checks (Active + Pending)
+    const propertyCount = await Property.countDocuments({ 
+      seller: user._id,
+      status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+    });
     
     // Add propertyCount to the user object (as a plain object property)
     const userData = user.toObject();
@@ -406,10 +417,20 @@ exports.upgradeToSeller = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate(["role_id", "businessType"]);
+    const user = await User.findById(req.user.id).populate([
+      "role_id", 
+      "businessType",
+      {
+        path: "activeSubscription",
+        populate: { path: "plan" }
+      }
+    ]);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const propertyCount = await Property.countDocuments({ seller: user._id });
+    const propertyCount = await Property.countDocuments({ 
+      seller: user._id,
+      status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+    });
     const userData = user.toObject();
     userData.propertyCount = propertyCount;
 
