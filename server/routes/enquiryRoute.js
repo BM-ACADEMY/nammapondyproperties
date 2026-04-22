@@ -39,4 +39,7 @@ router.delete(
   enquiryController.deleteWhatsappLead,
 );
 
+// Update Enquiry Status (Seller or Admin)
+router.patch("/update-status/:id", protect, enquiryController.updateStatus);
+
 module.exports = router;

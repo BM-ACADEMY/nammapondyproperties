@@ -78,7 +78,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "/seller/enquiries",
       icon: <MessageSquare size={20} />,
-      label: "Enquiry Property",
+      label: (
+        <div className="flex items-center justify-between gap-2">
+          <span>Enquiry Property</span>
+          {!hasActivePlan && <Lock size={12} className="text-white" />}
+        </div>
+      ),
       onClick: () => handleMenuClick("/seller/enquiries"),
     },
     {
