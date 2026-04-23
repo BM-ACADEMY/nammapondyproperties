@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu as MenuIcon, User, LogOut } from "lucide-react";
-import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme, Alert, Modal, Tag } from "antd";
+import { Menu as MenuIcon, User, LogOut, Bell, MessageSquare } from "lucide-react";
+
+import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme, Alert, Modal, Tag, Badge } from "antd";
+
 import { AlertTriangle, Clock } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import { useSocket } from "../../../context/SocketContext";
+
 import SellerSidebar from "./SellerSidebar";
 import { getImageUrl } from "../../../utils/imageUrl";
 
@@ -17,6 +21,9 @@ const SellerLayout = () => {
   const { logout, user } = useAuth();
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [supportCount, setSupportCount] = useState(0);
+  const socket = useSocket();
+
 
   useEffect(() => {
     if (user?.activeSubscription) {
@@ -64,6 +71,25 @@ const SellerLayout = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewMessage = (data) => {
+        if (!pathname.includes("/seller/support")) {
+          setSupportCount(prev => prev + 1);
+        }
+      };
+      socket.on("new-support-message", handleNewMessage);
+      return () => socket.off("new-support-message", handleNewMessage);
+    }
+  }, [socket, pathname]);
+
+  useEffect(() => {
+    if (pathname === "/seller/support") {
+      setSupportCount(0);
+    }
+  }, [pathname]);
+
 
   const userMenuParts = [
     {
@@ -167,7 +193,37 @@ const SellerLayout = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <Badge count={supportCount} size="small" offset={[-2, 2]}>
+              <Dropdown
+                menu={{ 
+                  items: [
+                    {
+                      key: 'support',
+                      label: (
+                        <div onClick={() => navigate("/seller/support")}>
+                          <p className="font-bold m-0">New Message</p>
+                          <p className="text-xs text-gray-500 m-0">Support team replied to your ticket</p>
+                        </div>
+                      ),
+                      icon: <MessageSquare size={16} className="text-blue-500" />
+                    }
+                  ] 
+                }}
+                disabled={supportCount === 0}
+                trigger={["click"]}
+                placement="bottomRight"
+              >
+                <Button
+                  type="text"
+                  shape="circle"
+                  icon={<Bell size={24} className={supportCount > 0 ? "text-amber-500 animate-bounce" : ""} />}
+                  onClick={() => supportCount > 0 && navigate("/seller/support")}
+                />
+              </Dropdown>
+            </Badge>
+
             <Dropdown
+
               menu={{ items: userMenuParts }}
               trigger={["click"]}
               placement="bottomRight"

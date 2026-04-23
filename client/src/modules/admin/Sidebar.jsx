@@ -17,8 +17,11 @@ import {
   Image,
   Sliders,
   ClipboardList,
-  CreditCard
+  CreditCard,
+  Headphones
 } from "lucide-react";
+
+
 import api from "@/services/api";
 
 const { Sider } = Layout;
@@ -39,7 +42,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const [newCallRequestCount, setNewCallRequestCount] = useState(0);
   const [newContactCount, setNewContactCount] = useState(0);
   const [newExpiringPlansCount, setNewExpiringPlansCount] = useState(0);
+  const [newSupportTicketCount, setNewSupportTicketCount] = useState(0);
   const [businessTypes, setBusinessTypes] = useState([]);
+
 
 
   // Fetch initial pending counts
@@ -146,6 +151,25 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     }
   }, [socket, pathname]);
 
+  useEffect(() => {
+    if (socket) {
+      const handleNewSupportMessage = (data) => {
+        if (pathname !== "/admin/support") {
+          setNewSupportTicketCount((prev) => prev + 1);
+        }
+      };
+      
+      socket.on("new-support-message", handleNewSupportMessage);
+      socket.on("new-support-ticket", handleNewSupportMessage);
+
+      return () => {
+        socket.off("new-support-message", handleNewSupportMessage);
+        socket.off("new-support-ticket", handleNewSupportMessage);
+      };
+    }
+  }, [socket, pathname]);
+
+
   // Reset count when navigating to the marketing requests page
   useEffect(() => {
     if (pathname === "/admin/marketing-requests") {
@@ -172,7 +196,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     if (pathname === "/admin/forms/contact-messages") {
       setNewContactCount(0);
     }
+    if (pathname === "/admin/support") {
+      setNewSupportTicketCount(0);
+    }
   }, [pathname]);
+
 
   // Handle menu click for mobile responsive closing
   const handleMenuClick = (path) => {
@@ -435,7 +463,21 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       ],
     },
     {
+      key: "/admin/support",
+      icon: <Headphones size={20} />,
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Support Tickets</span>
+          {newSupportTicketCount > 0 && (
+            <Badge count={newSupportTicketCount} size="small" />
+          )}
+        </div>
+      ),
+      onClick: () => handleMenuClick("/admin/support"),
+    },
+    {
       key: "property-settings-sub",
+
       icon: <Sliders size={20} />,
       label: "Property Settings",
       children: [

@@ -11,7 +11,8 @@ import {
   theme,
   Tag,
 } from "antd";
-import { AlertCircle, Clock } from "lucide-react";
+import { AlertCircle, Clock, MessageSquare } from "lucide-react";
+
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "./Sidebar";
 import api from "@/services/api";
@@ -25,6 +26,8 @@ const AdminLayout = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [expiringCount, setExpiringCount] = useState(0);
+  const [supportCount, setSupportCount] = useState(0);
+
   const [isNotificationsCleared, setIsNotificationsCleared] = useState(() => {
     return localStorage.getItem("admin_notifications_cleared") === "true";
   });
@@ -73,10 +76,23 @@ const AdminLayout = () => {
 
     if (socket) {
       socket.on("new-property-listed", fetchPendingCount);
+      
+      const handleNewSupport = () => {
+        if (!pathname.includes("/admin/support")) {
+          setSupportCount(prev => prev + 1);
+        }
+      };
+
+      socket.on("new-support-message", handleNewSupport);
+      socket.on("new-support-ticket", handleNewSupport);
+
       return () => {
         socket.off("new-property-listed", fetchPendingCount);
+        socket.off("new-support-message", handleNewSupport);
+        socket.off("new-support-ticket", handleNewSupport);
       };
     }
+
 
     // Refresh counts every minute as fallback
     const interval = setInterval(() => {
@@ -84,7 +100,15 @@ const AdminLayout = () => {
       fetchExpiringCount();
     }, 60000);
     return () => clearInterval(interval);
-  }, [socket]);
+  }, [socket, pathname]);
+
+
+  // Reset counts on navigation
+  useEffect(() => {
+    if (pathname === "/admin/support") {
+      setSupportCount(0);
+    }
+  }, [pathname]);
 
   // Handle mobile responsiveness
   useEffect(() => {
@@ -217,7 +241,29 @@ const AdminLayout = () => {
         ),
         icon: <Clock size={16} className="text-amber-500" />,
       }
-    ] : [
+    ] : []),
+    ...(supportCount > 0 ? [
+      {
+        key: 'support',
+        label: (
+          <div 
+            className="flex flex-col gap-1 py-1"
+            onClick={() => {
+              setSupportCount(0);
+              navigate("/admin/support");
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <Tag color="blue" className="m-0 text-[10px] px-1.5 font-bold border-none uppercase">Support</Tag>
+              <span className="text-[12px] font-semibold text-gray-700">{supportCount} New Messages</span>
+            </div>
+            <span className="text-[11px] text-gray-400">View support tickets and respond to sellers</span>
+          </div>
+        ),
+        icon: <MessageSquare size={16} className="text-blue-500" />,
+      }
+    ] : []),
+    ...(expiringCount === 0 && supportCount === 0 ? [
       {
         key: 'empty',
         label: (
@@ -226,9 +272,11 @@ const AdminLayout = () => {
           </div>
         ),
       }
-    ]),
+    ] : []),
+
     {
       key: 'footer',
+
       label: (
         <div className="text-center py-1 mt-1 border-t border-gray-50 pt-2">
           <span className="text-[11px] font-bold text-blue-600 hover:text-blue-700 cursor-pointer">View All Activity</span>
@@ -238,7 +286,7 @@ const AdminLayout = () => {
   ];
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout className="min-h-screen">
       <Sidebar
         collapsed={collapsed}
         setCollapsed={setCollapsed}
@@ -248,23 +296,27 @@ const AdminLayout = () => {
       <Layout
         style={{
           marginLeft: isMobile ? 0 : collapsed ? 80 : 250,
-          transition: "all 0.2s",
-          height: "100vh", // Fix layout height to viewport
-          overflow: "hidden", // Prevent outer scroll
+          transition: "margin-left 0.2s cubic-bezier(0.645, 0.045, 0.355, 1)",
+          height: "100vh",
+          overflow: "hidden",
         }}
       >
+
         <Header
           style={{
             padding: "0 24px",
             background: colorBgContainer,
-            // Remove sticky, straightforward block header
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-            zIndex: 10,
+            boxShadow: "0 1px 4px rgba(0,21,41,0.08)",
+            height: 64,
           }}
         >
+
           <div className="flex items-center gap-4">
             <Button
               type="text"
@@ -286,7 +338,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-6">
 
 
-            <Badge count={isNotificationsCleared ? 0 : expiringCount} size="small" offset={[-2, 2]}>
+            <Badge count={supportCount + (isNotificationsCleared ? 0 : expiringCount)} size="small" offset={[-2, 2]}>
               <Dropdown
                 menu={{ items: notificationItems }}
                 trigger={["click"]}
@@ -297,11 +349,12 @@ const AdminLayout = () => {
                 <Button
                   type="text"
                   shape="circle"
-                  icon={<Bell size={24} className={expiringCount > 0 && !isNotificationsCleared ? "text-amber-500 bell-ringing" : ""} />}
-                  title={expiringCount > 0 ? `${expiringCount} Plans Expiring Soon` : "No Expiring Plans"}
+                  icon={<Bell size={24} className={(supportCount > 0 || (expiringCount > 0 && !isNotificationsCleared)) ? "text-amber-500 bell-ringing" : ""} />}
+                  title={(supportCount + expiringCount) > 0 ? `${supportCount + expiringCount} Notifications` : "No Notifications"}
                 />
               </Dropdown>
             </Badge>
+
 
             {/* <Badge count={pendingCount} size="small" offset={[-2, 2]}>
               <Button
@@ -340,18 +393,29 @@ const AdminLayout = () => {
         </Header>
 
         <Content
-          id="admin-content"
           style={{
-            // margin: "24px 16px",
-            padding: 24,
-            minHeight: 280,
-            borderRadius: borderRadiusLG,
+            padding: isMobile ? "16px" : "24px",
+            height: "calc(100vh - 64px)",
             overflowY: "auto",
-            height: "calc(100vh - 112px)",
+            background: "#f8fafc", // Subtle grey background for content area
           }}
         >
-          <Outlet />
+
+
+          <div
+            className="admin-content-wrapper"
+            style={{
+              borderRadius: borderRadiusLG,
+              minHeight: "100%",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              background: colorBgContainer,
+              padding: 24,
+            }}
+          >
+            <Outlet />
+          </div>
         </Content>
+
       </Layout>
       <style>{`
         @keyframes bell-ring {

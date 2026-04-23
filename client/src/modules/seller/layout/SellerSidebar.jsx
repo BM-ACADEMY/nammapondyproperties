@@ -9,8 +9,10 @@ import {
   LogOut,
   Lock,
   CreditCard,
-  ClipboardList
+  ClipboardList,
+  Headphones
 } from "lucide-react";
+
 import { useAuth } from "../../../context/AuthContext";
 import { useState, useEffect } from "react";
 import api from "../../../services/api";
@@ -127,6 +129,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <User size={20} />,
       label: "Profile",
       onClick: () => handleMenuClick("/seller/profile"),
+    },
+    {
+      key: "/seller/support",
+      icon: <Headphones size={20} />,
+      label: "Support Team",
+      onClick: () => handleMenuClick("/seller/support"),
     },
   ];
 

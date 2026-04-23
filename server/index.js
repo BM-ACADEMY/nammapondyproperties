@@ -32,6 +32,8 @@ const formRoutes = require("./routes/formRoutes");
 const requirementRoutes = require("./routes/requirementRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const leadRoutes = require("./routes/leadRoutes");
+const supportTicketRoutes = require("./routes/supportTicketRoute");
+
 const app = express();
 app.set("trust proxy", true);
 
@@ -110,6 +112,8 @@ app.use("/api/forms", formRoutes);
 app.use("/api/requirements", requirementRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/shared-leads", leadRoutes);
+app.use("/api/support-tickets", supportTicketRoutes);
+
 /* ===============================
    404 Handler (must be last route)
 ================================ */
