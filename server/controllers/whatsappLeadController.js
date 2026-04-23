@@ -1,8 +1,10 @@
-// controllers/whatsappLeadController.js
 const WhatsappLead = require("../models/WhatsappLead");
+const Subscription = require("../models/Subscription");
 
 exports.createWhatsappLead = async (req, res) => {
   try {
+    const { seller_id } = req.body;
+    
     // If user_id is not provided,ensure we have enquirer details
     if (
       !req.body.user_id &&
@@ -12,6 +14,20 @@ exports.createWhatsappLead = async (req, res) => {
     }
     const whatsappLead = new WhatsappLead(req.body);
     await whatsappLead.save();
+
+    // Increment lead usage for the seller if they have an active plan
+    if (seller_id) {
+        const activeSubscription = await Subscription.findOne({
+            user: seller_id,
+            status: "active",
+            endDate: { $gt: new Date() },
+        });
+
+        if (activeSubscription) {
+            await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
+        }
+    }
+
     res.status(201).json(whatsappLead);
   } catch (error) {
     res.status(400).json({ error: error.message });

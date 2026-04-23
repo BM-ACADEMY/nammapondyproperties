@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import { useLocation as useAppLocation } from "@/context/LocationContext";
 import { getImageUrl } from "@/utils/imageUrl";
+import { slugify } from "@/utils/slugify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -38,6 +39,11 @@ const Header = () => {
   const [activeBusinessDropdown, setActiveBusinessDropdown] = useState(null);
   const [expandedMobileBusiness, setExpandedMobileBusiness] = useState(null);
   const { businessTypes, propertyCategories = [], isCallbackModalOpen, setIsCallbackModalOpen } = useNav();
+
+  const builderType = businessTypes.find(t => {
+    const n = typeof t.name === "string" ? t.name : t.name?.name || "";
+    return n.toLowerCase().includes("builder") || n.toLowerCase().includes("promoter");
+  });
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
@@ -306,7 +312,7 @@ const Header = () => {
                             >
                               <div className="px-2 space-y-0.5">
                                 <Link
-                                  to={`/business-user-list/${id}`}
+                                  to={`/business/${slugify(name)}`}
                                   className="flex items-center px-4 py-2 text-sm font-bold text-[#166aa8] hover:bg-blue-50 rounded-lg transition-colors capitalize"
                                 >
                                   {name}
@@ -321,13 +327,22 @@ const Header = () => {
                                   </Link>
                                 )}
                                 {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
-                                  <Link
-                                    to="/builder-info"
-                                    onClick={() => setActiveBusinessDropdown(null)}
-                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
-                                  >
-                                    Builder Info
-                                  </Link>
+                                  <>
+                                    <Link
+                                      to="/builder-info"
+                                      onClick={() => setActiveBusinessDropdown(null)}
+                                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                    >
+                                      Builder Info
+                                    </Link>
+                                    <Link
+                                      to={`/business/${slugify(name)}`}
+                                      onClick={() => setActiveBusinessDropdown(null)}
+                                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                    >
+                                      Builder List
+                                    </Link>
+                                  </>
                                 )}
                                 <button
                                   onClick={handlePostProperty}
@@ -827,6 +842,8 @@ const Header = () => {
                     );
                   })}
 
+
+
                   {businessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
                     const name =
@@ -856,7 +873,7 @@ const Header = () => {
                               className="overflow-hidden pl-6 space-y-1"
                             >
                               <Link
-                                to={`/business-user-list/${id}`}
+                                to={`/business/${slugify(name)}`}
                                 onClick={() => setIsMenuOpen(false)}
                                 className="flex items-center px-4 py-2.5 text-sm font-bold text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all capitalize"
                               >
@@ -872,13 +889,22 @@ const Header = () => {
                                 </Link>
                               )}
                               {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
-                                <Link
-                                  to="/builder-info"
-                                  onClick={() => setIsMenuOpen(false)}
-                                  className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
-                                >
-                                  Builder Info
-                                </Link>
+                                <>
+                                  <Link
+                                    to="/builder-info"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                  >
+                                    Builder Info
+                                  </Link>
+                                  <Link
+                                    to={`/business/${slugify(name)}`}
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                  >
+                                    Builder List
+                                  </Link>
+                                </>
                               )}
                               <button
                                 onClick={handlePostProperty}

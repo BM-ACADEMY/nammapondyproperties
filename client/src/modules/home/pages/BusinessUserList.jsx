@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useNav } from "@/context/NavContext";
 import axios from "axios";
 import {
   Globe,
@@ -25,9 +26,12 @@ import HorizontalPropertyCard from "@/modules/home/components/HorizontalProperty
 import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import PhoneUpdateModal from "@/components/Common/PhoneUpdateModal";
+import { slugify } from "@/utils/slugify";
 
 const BusinessUserList = () => {
-  const { businessTypeId } = useParams();
+  const { businessTypeSlug, sellerSlug } = useParams();
+  const { businessTypes = [] } = useNav();
+  const [businessTypeId, setBusinessTypeId] = useState(null);
   const [sellers, setSellers] = useState([]);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [sellerProperties, setSellerProperties] = useState([]);
@@ -43,8 +47,29 @@ const BusinessUserList = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [enquiryLoading, setEnquiryLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  
+  const isBuilderType = useMemo(() => {
+    return businessType?.name?.toLowerCase().includes("builder") ||
+           businessType?.name?.toLowerCase().includes("promoter");
+  }, [businessType]);
 
   const API = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    if (businessTypes.length > 0 && businessTypeSlug) {
+      const type = businessTypes.find((t) => {
+        const name = typeof t.name === "string" ? t.name : t.name?.name || "";
+        return slugify(name) === businessTypeSlug || t._id === businessTypeSlug;
+      });
+      if (type) {
+        setBusinessTypeId(type._id);
+        const typeSlug = slugify(typeof type.name === "string" ? type.name : type.name?.name || "");
+        if (type._id === businessTypeSlug && typeSlug) {
+          navigate(`/business/${typeSlug}${sellerSlug ? `/${sellerSlug}` : ""}`, { replace: true });
+        }
+      }
+    }
+  }, [businessTypeSlug, businessTypes, navigate, sellerSlug]);
 
   useEffect(() => {
     const fontLinkId = "google-font-poppins";
@@ -90,6 +115,22 @@ const BusinessUserList = () => {
     };
     fetchSellers();
   }, [businessTypeId, API]);
+
+  useEffect(() => {
+    if (sellerSlug && sellers.length > 0) {
+      const seller = sellers.find((s) => s.slug === sellerSlug || s._id === sellerSlug);
+      if (seller) {
+        setSelectedSeller(seller);
+        // Auto-redirect to slug if accessing by ID
+        if (seller._id === sellerSlug && seller.slug) {
+          navigate(`/business/${businessTypeSlug}/${seller.slug}`, { replace: true });
+        }
+      }
+    } else if (!sellerSlug && isBuilderType) {
+      // Clear selected seller when going back to the list (for builders)
+      setSelectedSeller(null);
+    }
+  }, [sellerSlug, sellers, navigate, businessTypeSlug, isBuilderType]);
 
   useEffect(() => {
     const fetchSellerProperties = async () => {
@@ -202,9 +243,7 @@ const BusinessUserList = () => {
     }
   };
 
-  const isBuilderType =
-    businessType?.name?.toLowerCase().includes("builder") ||
-    businessType?.name?.toLowerCase().includes("promoter");
+
 
   if (loading) {
     return (
@@ -230,7 +269,8 @@ const BusinessUserList = () => {
           <div
             key={user._id}
             onClick={() => {
-              setSelectedSeller(user);
+              const sellerPath = user.slug || slugify(user.name) || user._id;
+              navigate(`/business/${businessTypeSlug}/${sellerPath}`);
               onSelect?.();
             }}
             className={`group flex items-center cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-0
@@ -473,7 +513,10 @@ const BusinessUserList = () => {
                     {sellers.map((user) => (
                       <motion.div
                         key={user._id}
-                        onClick={() => setSelectedSeller(user)}
+                        onClick={() => {
+                          const sellerPath = user.slug || slugify(user.name) || user._id;
+                          navigate(`/business/${businessTypeSlug}/${sellerPath}`);
+                        }}
                         className="flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-slate-200 cursor-pointer hover:shadow-md transition-all group overflow-hidden h-auto sm:h-[240px] relative"
                       >
                         {/* Company Logo Top Right (Corner Flushed) */}
@@ -558,7 +601,10 @@ const BusinessUserList = () => {
                     <div className="space-y-6 mb-10">
                       <div className="mb-4 sm:mb-6">
                         <button
-                          onClick={() => setSelectedSeller(null)}
+                          onClick={() => {
+                            const typeSlug = businessType ? slugify(typeof businessType.name === "string" ? businessType.name : businessType.name?.name || "") : businessTypeSlug;
+                            navigate(`/business/${typeSlug}`);
+                          }}
                           className="inline-flex items-center gap-2 text-slate-500 hover:text-[#174685] transition-all group lg:pl-0"
                         >
                           <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-[#174685] group-hover:border-[#174685] group-hover:text-white transition-all duration-300">

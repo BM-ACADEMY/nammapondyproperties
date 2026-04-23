@@ -57,7 +57,11 @@ const SellerPaymentHistory = () => {
   const planName = subscription?.plan?.name || "Free Plan";
   const planPrice = subscription?.plan?.price || 0;
   const propertyLimit = subscription?.plan?.propertyLimit || 3;
-  const usagePercent = propertyLimit === -1 ? 0 : Math.min(100, (propertyCount / propertyLimit) * 100);
+  const usagePercent = propertyLimit === -1 ? 0 : Math.round(Math.min(100, (propertyCount / propertyLimit) * 100));
+
+  const leadsLimit = subscription?.plan?.leadsLimit || 0;
+  const leadsUsed = subscription?.leadsUsed || 0;
+  const leadsPercent = leadsLimit === -1 ? 0 : Math.round(Math.min(100, (leadsUsed / leadsLimit) * 100));
 
   const columns = [
     {
@@ -159,7 +163,7 @@ const SellerPaymentHistory = () => {
 
         <Row gutter={[24, 24]} className="mb-12" justify="start">
           {/* Current Plan Card */}
-          <Col xs={24} lg={12} xl={10}>
+          <Col xs={24} lg={8} xl={7}>
             <Card className="rounded-3xl border-gray-200/60 shadow-sm h-full hover:shadow-md transition-all group overflow-hidden">
                <div className="flex flex-col h-full">
                   <div className="flex justify-between items-start mb-6">
@@ -212,57 +216,100 @@ const SellerPaymentHistory = () => {
           </Col>
 
           {/* Usage Summary Card */}
-          <Col xs={24} lg={12} xl={10}>
+          <Col xs={24} md={12} lg={8} xl={7}>
             <Card className="rounded-3xl border-gray-200/60 shadow-sm h-full hover:shadow-md transition-all group">
                 <div className="flex flex-col h-full">
-                    <Text className="text-gray-400 font-semibold uppercase tracking-widest text-[10px] mb-6 block">Usage Summary</Text>
+                  <Text className="text-gray-400 font-semibold uppercase tracking-widest text-[10px] mb-6 block">Usage Summary</Text>
 
-                    <div className="flex items-center justify-between gap-4 py-2">
-                        <div className="flex-1">
-                            <div className="mb-1 flex items-baseline gap-1">
-                                <span className={propertyLimit !== -1 && usagePercent > 90 ? "text-3xl font-bold text-red-500" : "text-3xl font-bold text-gray-900"}>
-                                    {propertyCount}
-                                </span>
-                                <span className="text-gray-400 text-lg font-medium">/ {propertyLimit === -1 ? "∞" : propertyLimit}</span>
-                            </div>
-                            <Text className="text-gray-500 text-sm font-semibold block mb-4">Properties Uploaded</Text>
-                            
-                            <div className="flex flex-col gap-2">
-                                <Tag color={propertyLimit === -1 ? "blue" : usagePercent > 90 ? "red" : "blue"} className="w-fit rounded-full px-3 font-bold border-none uppercase text-[10px]">
-                                    {propertyLimit === -1 ? "Unlimited Plan" : `${Math.round(usagePercent)}% Utilization`}
-                                </Tag>
-                                {propertyLimit !== -1 && propertyLimit - propertyCount > 0 && (
-                                    <Text className="text-[10px] text-gray-400 font-medium italic">
-                                        You can still upload {propertyLimit - propertyCount} more properties
-                                    </Text>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="relative flex items-center justify-center shrink-0">
-                            <Progress
-                                type="dashboard"
-                                percent={propertyLimit === -1 ? 100 : Math.min(100, usagePercent)}
-                                strokeColor={{
-                                    '0%': propertyLimit === -1 ? '#3B82F6' : usagePercent > 90 ? '#EF4444' : '#60A5FA',
-                                    '100%': propertyLimit === -1 ? '#2563EB' : usagePercent > 90 ? '#DC2626' : '#2563EB',
-                                }}
-                                strokeWidth={12}
-                                size={120}
-                                trailColor="#F1F5F9"
-                                format={(percent) => (
-                                    <div className="flex flex-col items-center">
-                                        <span className={`text-xl font-black ${propertyLimit === -1 ? "text-blue-600" : usagePercent > 90 ? "text-red-500" : "text-gray-900"}`}>
-                                            {propertyLimit === -1 ? "∞" : `${percent}%`}
-                                        </span>
-                                    </div>
-                                )}
-                            />
-                        </div>
+                  <div className="flex items-center justify-between mt-auto">
+                    {/* Left side: Stats */}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline gap-1">
+                        <span className={propertyLimit !== -1 && usagePercent > 90 ? "text-4xl font-black text-red-500" : "text-4xl font-black text-gray-900"}>
+                          {propertyCount}
+                        </span>
+                        <span className="text-gray-400 text-xl font-bold">/ {propertyLimit === -1 ? "∞" : propertyLimit}</span>
+                      </div>
+                      <Text className="text-gray-800 text-sm font-bold block mb-3">Properties Uploaded</Text>
+                      
+                      <Tag color={propertyLimit === -1 ? "blue" : usagePercent > 90 ? "red" : "blue"} className="rounded-md px-2 py-0.5 font-black border-none uppercase text-[9px] w-fit">
+                        {propertyLimit === -1 ? "UNLIMITED" : `${usagePercent}% UTILIZATION`}
+                      </Tag>
                     </div>
+
+                    {/* Right side: Circular Progress */}
+                    <div className="shrink-0 scale-110">
+                      <Progress
+                        type="dashboard"
+                        percent={propertyLimit === -1 ? 100 : Math.min(100, usagePercent)}
+                        gapDegree={60}
+                        strokeWidth={12}
+                        size={120}
+                        strokeColor={{
+                          '0%': propertyLimit === -1 ? '#93C5FD' : usagePercent > 90 ? '#FCA5A5' : '#93C5FD',
+                          '100%': propertyLimit === -1 ? '#1D4ED8' : usagePercent > 90 ? '#B91C1C' : '#1D4ED8',
+                        }}
+                        trailColor="#F1F5F9"
+                        format={(percent) => (
+                          <span className={`${propertyLimit !== -1 && usagePercent > 90 ? "text-red-500" : "text-blue-600"} text-lg font-black`}>
+                            {percent}%
+                          </span>
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
             </Card>
           </Col>
+
+          {/* Leads Allotment Card - Only show if active subscription exists */}
+          {subscription && (
+            <Col xs={24} md={12} lg={8} xl={7}>
+              <Card className="rounded-3xl border-gray-200/60 shadow-sm h-full hover:shadow-md transition-all group">
+                <div className="flex flex-col h-full">
+                  <Text className="text-gray-400 font-semibold uppercase tracking-widest text-[10px] mb-6 block">Leads Allotment</Text>
+
+                  <div className="flex items-center justify-between mt-auto">
+                    {/* Left side: Stats */}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-baseline gap-1">
+                        <span className={leadsLimit !== -1 && leadsUsed > leadsLimit ? "text-4xl font-black text-red-500" : "text-4xl font-black text-gray-900"}>
+                          {leadsUsed}
+                        </span>
+                        <span className="text-gray-400 text-xl font-bold">/ {leadsLimit === -1 ? "∞" : leadsLimit}</span>
+                      </div>
+                      <Text className="text-gray-800 text-sm font-bold block mb-3">Leads Processed</Text>
+                      
+                      <Tag color={leadsLimit === -1 ? "blue" : (leadsUsed > leadsLimit ? "red" : "blue")} className="rounded-md px-2 py-0.5 font-black border-none uppercase text-[9px] w-fit">
+                        {leadsLimit === -1 ? "UNLIMITED" : (leadsUsed > leadsLimit ? "OVER LIMIT" : `${leadsPercent}% UTILIZATION`)}
+                      </Tag>
+                    </div>
+
+                    {/* Right side: Circular Progress */}
+                    <div className="shrink-0 scale-110">
+                      <Progress
+                        type="dashboard"
+                        percent={leadsLimit === -1 ? 100 : Math.min(100, (leadsUsed / (leadsLimit || 1)) * 100)}
+                        gapDegree={60}
+                        strokeWidth={12}
+                        size={120}
+                        strokeColor={{
+                          '0%': '#A5B4FC',
+                          '100%': '#6366F1',
+                        }}
+                        trailColor="#F1F5F9"
+                        format={(percent) => (
+                          <span className={`${leadsLimit !== -1 && leadsUsed > leadsLimit ? "text-red-500" : "text-indigo-600"} text-lg font-black`}>
+                            {percent}%
+                          </span>
+                        )}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </Col>
+          )}
         </Row>
 
         <div className="flex justify-between items-center mb-6">

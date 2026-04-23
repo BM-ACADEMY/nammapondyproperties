@@ -17,15 +17,19 @@ import {
   Image,
   Sliders,
   ClipboardList,
-  CreditCard
+  CreditCard,
+  Headphones
 } from "lucide-react";
+
+
 import api from "@/services/api";
 
 const { Sider } = Layout;
 
 const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+
   const socket = useSocket();
   const { user } = useAuth();
   
@@ -37,6 +41,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const [newRequirementCount, setNewRequirementCount] = useState(0);
   const [newCallRequestCount, setNewCallRequestCount] = useState(0);
   const [newContactCount, setNewContactCount] = useState(0);
+  const [newExpiringPlansCount, setNewExpiringPlansCount] = useState(0);
+  const [newSupportTicketCount, setNewSupportTicketCount] = useState(0);
+  const [businessTypes, setBusinessTypes] = useState([]);
+
+
 
   // Fetch initial pending counts
   useEffect(() => {
@@ -57,7 +66,27 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       }
     };
 
+    const fetchExpiringSoon = async () => {
+      try {
+        const response = await api.get("/subscriptions/admin/expiring-soon");
+        setNewExpiringPlansCount(response.data.length || 0);
+      } catch (error) {
+        console.error("Error fetching expiring plans count:", error);
+      }
+    };
+
+    const fetchBusinessTypes = async () => {
+      try {
+        const response = await api.get("/business-types");
+        setBusinessTypes(response.data.filter((t) => t.status === "active"));
+      } catch (error) {
+        console.error("Error fetching business types:", error);
+      }
+    };
+
     fetchCounts();
+    fetchExpiringSoon();
+    fetchBusinessTypes();
   }, []);
 
   useEffect(() => {
@@ -122,6 +151,25 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     }
   }, [socket, pathname]);
 
+  useEffect(() => {
+    if (socket) {
+      const handleNewSupportMessage = (data) => {
+        if (pathname !== "/admin/support") {
+          setNewSupportTicketCount((prev) => prev + 1);
+        }
+      };
+      
+      socket.on("new-support-message", handleNewSupportMessage);
+      socket.on("new-support-ticket", handleNewSupportMessage);
+
+      return () => {
+        socket.off("new-support-message", handleNewSupportMessage);
+        socket.off("new-support-ticket", handleNewSupportMessage);
+      };
+    }
+  }, [socket, pathname]);
+
+
   // Reset count when navigating to the marketing requests page
   useEffect(() => {
     if (pathname === "/admin/marketing-requests") {
@@ -148,7 +196,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     if (pathname === "/admin/forms/contact-messages") {
       setNewContactCount(0);
     }
+    if (pathname === "/admin/support") {
+      setNewSupportTicketCount(0);
+    }
   }, [pathname]);
+
 
   // Handle menu click for mobile responsive closing
   const handleMenuClick = (path) => {
@@ -287,7 +339,18 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
               )}
             </div>
           ),
-          onClick: () => handleMenuClick("/admin/sellers"),
+          children: [
+            {
+              key: "/admin/sellers",
+              label: "All Sellers",
+              onClick: () => handleMenuClick("/admin/sellers"),
+            },
+            ...businessTypes.map((type) => ({
+              key: `/admin/sellers?type=${type._id}`,
+              label: type.name,
+              onClick: () => handleMenuClick(`/admin/sellers?type=${type._id}`),
+            })),
+          ],
         },
         {
           key: "/admin/failed-registrations",
@@ -367,7 +430,18 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "subscriptions-sub",
       icon: <CreditCard size={20} />,
-      label: "Subscriptions",
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Subscriptions</span>
+          {newExpiringPlansCount > 0 && (
+            <Badge 
+              count={newExpiringPlansCount} 
+              size="small" 
+              style={{ backgroundColor: '#ff4d4f', boxShadow: '0 0 0 1px #fff' }} 
+            />
+          )}
+        </div>
+      ),
       children: [
         {
           key: "/admin/subscription-plans",
@@ -376,13 +450,34 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
         {
           key: "/admin/payment-history",
-          label: "Payment History",
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Payment History</span>
+              {newExpiringPlansCount > 0 && (
+                <Badge count={newExpiringPlansCount} size="small" />
+              )}
+            </div>
+          ),
           onClick: () => handleMenuClick("/admin/payment-history"),
         },
       ],
     },
     {
+      key: "/admin/support",
+      icon: <Headphones size={20} />,
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Support Tickets</span>
+          {newSupportTicketCount > 0 && (
+            <Badge count={newSupportTicketCount} size="small" />
+          )}
+        </div>
+      ),
+      onClick: () => handleMenuClick("/admin/support"),
+    },
+    {
       key: "property-settings-sub",
+
       icon: <Sliders size={20} />,
       label: "Property Settings",
       children: [
@@ -476,7 +571,8 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       <Menu
         theme="dark"
         mode="inline"
-        selectedKeys={[pathname]}
+        selectedKeys={[pathname + search]}
+
         defaultOpenKeys={["properties-sub", "users-sub", "seller-sub"]} // Optional: Keep submenus open by default or manage state
         items={filteredMenuItems}
         className="px-2 border-none"

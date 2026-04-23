@@ -28,6 +28,8 @@ import AdminList from "./pages/AdminList";
 import RequirementList from "./pages/RequirementList";
 import SubscriptionPlanManager from "./pages/SubscriptionPlanManager";
 import PaymentHistory from "./pages/PaymentHistory";
+import SupportManagement from "./pages/SupportManagement";
+
 
 const AdminRoute = () => {
   return (
@@ -66,6 +68,8 @@ const AdminRoute = () => {
         <Route path="requirements" element={<RequirementList />} />
         <Route path="subscription-plans" element={<SubscriptionPlanManager />} />
         <Route path="payment-history" element={<PaymentHistory />} />
+        <Route path="support" element={<SupportManagement />} />
+
 
         {/* Settings route can be placeholder too if needed */}
       </Route>

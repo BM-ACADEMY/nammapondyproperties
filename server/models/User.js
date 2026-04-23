@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema(
     permissions: [{ type: String }], // Sidebar keys/section names
     isSuperAdmin: { type: Boolean, default: false },
     assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    slug: { type: String, unique: true, sparse: true },
   },
   { timestamps: true },
 );
@@ -53,6 +54,27 @@ userSchema.pre("save", async function () {
       .toString(36)
       .substring(2, 8)
       .toUpperCase();
+  }
+
+  // Generate slug if not exists or name changed
+  if (this.name && (this.isModified("name") || !this.slug)) {
+    let baseSlug = this.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    let slug = baseSlug;
+    let count = 1;
+
+    // Check for uniqueness
+    while (true) {
+      const existing = await this.constructor.findOne({
+        slug,
+        _id: { $ne: this._id },
+      });
+      if (!existing) break;
+      slug = `${baseSlug}-${count++}`;
+    }
+    this.slug = slug;
   }
 });
 
