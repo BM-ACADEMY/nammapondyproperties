@@ -15,6 +15,7 @@ import {
   MessageCircle,
   FileText,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 
 const { Option } = Select;
@@ -140,6 +141,18 @@ const PostRequirementPage = () => {
                       }
                     }}
                   />
+                </Form.Item>
+
+                <Form.Item
+                  name="heardFrom"
+                  label={<span className="font-semibold">How did you hear about us?</span>}
+                  rules={[{ required: true, message: "Please select an option" }]}
+                >
+                  <Select placeholder="Select source">
+                    <Option value="Social Media">Social Media</Option>
+                    <Option value="Reference">Reference from Known Person</Option>
+                    <Option value="Google">Google</Option>
+                  </Select>
                 </Form.Item>
 
 
@@ -335,11 +348,11 @@ const PostRequirementPage = () => {
 
                 <div className="flex gap-4">
                   <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
-                    <UserCheck size={24} />
+                    <ShieldCheck size={24} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-slate-800">Leads Sharing</h3>
-                    <p className="text-sm text-slate-500 mt-1">Your requirements are shared with our verified members like agents and builders to get you the best deals.</p>
+                    <h3 className="font-bold text-slate-800">Trusted Assistance</h3>
+                    <p className="text-sm text-slate-500 mt-1">Our verified agents or builders will contact you.</p>
                   </div>
                 </div>
               </div>

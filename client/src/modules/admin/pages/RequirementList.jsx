@@ -532,6 +532,13 @@ const RequirementList = () => {
                     {selectedRequirement.preferredLocation || "Not specified"}
                   </p>
                 </div>
+
+                <div className="mb-4">
+                  <Text type="secondary" className="text-xs uppercase font-semibold">Lead Source</Text>
+                  <div className="mt-1">
+                    <Tag color="purple" className="font-bold">{selectedRequirement.heardFrom || "Direct"}</Tag>
+                  </div>
+                </div>
               </Col>
               
               <Col xs={24} md={12}>

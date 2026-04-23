@@ -41,6 +41,11 @@ const requirementSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    heardFrom: {
+      type: String,
+      enum: ["Social Media", "Reference", "Google"],
+      required: true,
+    },
     message: {
       type: String,
       trim: true,
