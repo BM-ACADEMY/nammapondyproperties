@@ -440,7 +440,7 @@ const SupportManagement = () => {
             ) : (
 
               <div className="h-full flex flex-col items-center justify-center text-center p-10 lg:p-20">
-                <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-[40px] shadow-xl flex items-center justify-center mb-6 lg:mb-8 animate-bounce">
+                <div className="w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center mb-6 lg:mb-8">
                   <MessageOutlined style={{ fontSize: isMobile ? 40 : 60 }} className="text-blue-500" />
                 </div>
                 <Title level={isMobile ? 4 : 3} className="text-gray-900 font-black mb-3">SUPPORT CONSOLE</Title>

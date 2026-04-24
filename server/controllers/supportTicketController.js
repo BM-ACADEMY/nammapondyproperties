@@ -75,6 +75,11 @@ exports.getTicketById = async (req, res) => {
       return res.status(404).json({ success: false, message: "Ticket not found" });
     }
 
+    const isUserAdmin = req.user.isSuperAdmin || (req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin");
+    if (!isUserAdmin && ticket.seller._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Not authorized to access this ticket" });
+    }
+
     res.status(200).json({ success: true, ticket });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -93,10 +98,20 @@ exports.addMessage = async (req, res) => {
       return res.status(404).json({ success: false, message: "Ticket not found" });
     }
 
+    const isUserAdmin = req.user.isSuperAdmin || (req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin");
+
+    // Security check: if not admin, must be the ticket owner
+    if (!isUserAdmin && ticket.seller.toString() !== senderId.toString()) {
+      return res.status(403).json({ success: false, message: "Not authorized to access this ticket" });
+    }
+
+    // Only actual admins can set the isAdmin flag
+    const finalIsAdmin = isUserAdmin ? !!isAdmin : false;
+
     const newMessage = {
       sender: senderId,
       content,
-      isAdmin: !!isAdmin,
+      isAdmin: finalIsAdmin,
       createdAt: new Date(),
     };
 

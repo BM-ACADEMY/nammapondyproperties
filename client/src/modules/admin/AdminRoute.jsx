@@ -70,6 +70,7 @@ const AdminRoute = () => {
         <Route path="subscription-plans" element={<SubscriptionPlanManager />} />
         <Route path="payment-history" element={<PaymentHistory />} />
         <Route path="other-services" element={<OtherServicesManager />} />
+        <Route path="support" element={<SupportManagement />} />
 
       </Route>
     </Routes>
