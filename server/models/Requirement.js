@@ -55,7 +55,7 @@ const requirementSchema = new mongoose.Schema(
         "Newspaper/Ad",
         "Others",
       ],
-      required: true,
+      required: false,
     },
     message: {
       type: String,
@@ -65,6 +65,10 @@ const requirementSchema = new mongoose.Schema(
       type: String,
       enum: ["Pending", "Contacted", "Closed"],
       default: "Pending",
+    },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,

@@ -1,6 +1,8 @@
 const Enquiry = require("../models/Enquiry");
 const Property = require("../models/Property");
 const Subscription = require("../models/Subscription");
+const Role = require("../models/Role");
+const User = require("../models/User");
 
 exports.createEnquiry = async (req, res) => {
   try {
@@ -56,7 +58,7 @@ exports.createEnquiry = async (req, res) => {
 
 exports.getEnquiries = async (req, res) => {
   try {
-    const User = require("../models/User");
+
     const filter = {};
 
     // Fetch user doc to check role and superAdmin status
@@ -66,15 +68,17 @@ exports.getEnquiries = async (req, res) => {
 
     // Filter Logic
     if (isAdmin) {
+      // Find Admin Role and all Admin Users to filter "Admin Leads"
+      const adminRole = await Role.findOne({ role_name: { $regex: /admin/i } });
+      const adminUserIds = await User.find({ role_id: adminRole?._id }).distinct("_id");
+      
       if (req.query.view === "my") {
         // Admin viewing leads for their own properties
         filter.seller_id = req.user._id;
-      } else if (!isSuperAdmin) {
-        // Sub-admin: Only see leads for sellers assigned to them
-        const assignedSellerIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
-        filter.seller_id = { $in: assignedSellerIds };
+      } else {
+        // Only show leads for admin-owned properties
+        filter.seller_id = { $in: adminUserIds };
       }
-      // Super Admin: Sees all (filter stays empty)
     } else {
       // Seller: Only see their own leads
       filter.seller_id = req.user._id;
@@ -87,6 +91,7 @@ exports.getEnquiries = async (req, res) => {
       .populate("property_id", "basicInfo location media")
       .populate("user_id", "name phone")
       .populate("seller_id", "name phone")
+      .populate("updatedBy", "name")
       .lean();
 
     // 2. Fetch WhatsappLeads
@@ -94,6 +99,7 @@ exports.getEnquiries = async (req, res) => {
       .populate("property_id", "title location images")
       .populate("user_id", "name phone")
       .populate("seller_id", "name")
+      .populate("updatedBy", "name")
       .lean();
 
     // 3. Normalize & Sort
@@ -194,21 +200,22 @@ exports.getEnquiries = async (req, res) => {
 
 exports.getAllEnquiriesAdmin = async (req, res) => {
   try {
-    const User = require("../models/User");
+
     const userDoc = await User.findById(req.user._id).populate("role_id");
     const isSuperAdmin = userDoc?.isSuperAdmin;
     const filter = {};
 
-    if (!isSuperAdmin) {
-      const assignedSellerIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
-      filter.seller_id = { $in: assignedSellerIds };
-    }
+    // Filter by admin sellers only
+    const adminRole = await Role.findOne({ role_name: { $regex: /admin/i } });
+    const adminUserIds = await User.find({ role_id: adminRole?._id }).distinct("_id");
+    filter.seller_id = { $in: adminUserIds };
 
     const enquiries = await Enquiry.find(filter)
       .populate("property_id", "basicInfo location media")
       .populate("user_id", "name phone")
       .populate("seller_id", "name phone")
       .populate("createdBy", "name")
+      .populate("updatedBy", "name")
       .sort({ createdAt: -1 });
     res.json(enquiries);
   } catch (error) {
@@ -270,7 +277,7 @@ exports.updateStatus = async (req, res) => {
     const { id } = req.params;
     const { status, type } = req.body;
     const WhatsappLead = require("../models/WhatsappLead");
-    const User = require("../models/User");
+
 
     if (!status) {
       return res.status(400).json({ error: "Status is required" });
@@ -312,6 +319,7 @@ exports.updateStatus = async (req, res) => {
     }
 
     lead.status = status;
+    lead.updatedBy = req.user._id;
     await lead.save();
 
     res.json({ message: "Status updated successfully", lead });

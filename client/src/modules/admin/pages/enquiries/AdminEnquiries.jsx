@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space } from "antd";
+import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space, Select } from "antd";
 import { Search, Download, Trash2, MessageSquare, Phone, User, Inbox, MoreVertical, ExternalLink } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const AdminEnquiries = () => {
   const navigate = useNavigate();
@@ -46,6 +47,17 @@ const AdminEnquiries = () => {
     } catch (error) {
       console.error("Error deleting enquiry", error);
       message.error("Failed to delete enquiry");
+    }
+  };
+
+  const handleStatusChange = async (id, status, type) => {
+    try {
+      await api.patch(`/enquiries/update-status/${id}`, { status, type });
+      message.success(`Status updated to ${status}`);
+      fetchEnquiries();
+    } catch (error) {
+      console.error("Error updating status", error);
+      message.error("Failed to update status");
     }
   };
 
@@ -186,13 +198,35 @@ const AdminEnquiries = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag
-          color={status === "new" ? "cyan" : "success"}
-          className="rounded-full px-3 uppercase text-[10px] font-bold"
+      render: (status, record) => (
+        <Select
+          value={status || "new"}
+          onChange={(value) => handleStatusChange(record._id, value, record.type)}
+          size="small"
+          style={{ width: 110 }}
+          className={`status-select-${status?.toLowerCase()}`}
         >
-          {status || "NEW"}
-        </Tag>
+          <Option value="new">NEW</Option>
+          <Option value="contacted">CONTACTED</Option>
+          <Option value="closed">CLOSED</Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Updated By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
+      width: 130,
+      render: (updatedBy) => (
+        <div className="flex flex-col">
+          {updatedBy ? (
+            <Tag color="cyan" className="font-bold text-[10px] uppercase border-none bg-cyan-50 text-cyan-700 m-0">
+              {updatedBy.name}
+            </Tag>
+          ) : (
+            <span className="text-gray-300 text-[10px] italic">No update yet</span>
+          )}
+        </div>
       ),
     },
     {

@@ -105,7 +105,9 @@ exports.createRequestCall = async (req, res) => {
 // Get all callback requests (Admin)
 exports.getRequestCalls = async (req, res) => {
   try {
-    const requests = await RequestCall.find().sort({ createdAt: -1 });
+    const requests = await RequestCall.find()
+      .populate("updatedBy", "name")
+      .sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       data: requests,
@@ -132,6 +134,39 @@ exports.deleteRequestCall = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to delete callback request",
+      error: error.message,
+    });
+  }
+};
+
+// Update callback request status
+exports.updateRequestCallStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedRequest = await RequestCall.findByIdAndUpdate(
+      id,
+      { 
+        status,
+        updatedBy: req.user._id 
+      },
+      { new: true }
+    ).populate("updatedBy", "name");
+
+    if (!updatedRequest) {
+      return res.status(404).json({ success: false, message: "Request not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedRequest,
+      message: "Status updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update status",
       error: error.message,
     });
   }

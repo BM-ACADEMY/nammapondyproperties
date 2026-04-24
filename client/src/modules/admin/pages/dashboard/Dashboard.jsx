@@ -55,8 +55,10 @@ const { Option } = Select;
 
 import Loader from "../../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
+import { useAuth } from "@/context/AuthContext";
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState("30d"); // 7d, 30d, 90d, all
@@ -192,7 +194,7 @@ const Dashboard = () => {
             style={{ margin: 0 }}
             className="bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600"
           >
-            Admin Insights
+            {user?.isSuperAdmin ? "Admin Insights" : "Sub Admin Insights"}
           </Title>
           <Text type="secondary">Real-time system performance & activity</Text>
         </div>

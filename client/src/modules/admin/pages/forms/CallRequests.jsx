@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Table, Card, Button, Input, Tag, message, Popconfirm, Row, Col, Typography, Tooltip, Avatar } from "antd";
+import { Table, Card, Button, Input, Tag, message, Popconfirm, Row, Col, Typography, Tooltip, Avatar, Select } from "antd";
 import { Download, Search, RefreshCw, Trash2, Phone, Mail, Clock, Calendar, Layout, CheckCircle, AlertCircle, Hash } from "lucide-react";
 import api from "@/services/api";
 import * as XLSX from "xlsx";
 import moment from "moment";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const timeMapping = {
   morning: "9 AM to 12 PM",
@@ -78,6 +79,19 @@ const CallRequests = () => {
     } catch (error) {
       console.error("Error deleting request:", error);
       message.error(error.response?.data?.message || "Failed to delete request");
+    }
+  };
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      const res = await api.patch(`/forms/request-call/${id}/status`, { status });
+      if (res.data.success) {
+        message.success(`Status updated to ${status}`);
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      message.error("Failed to update status");
     }
   };
 
@@ -194,23 +208,37 @@ const CallRequests = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      width: 120,
-      render: (status) => {
-        const config = {
-          new: { color: "volcano", text: "NEW REQUEST", icon: <AlertCircle size={10} /> },
-          closed: { color: "success", text: "COMPLETED", icon: <CheckCircle size={10} /> },
-          default: { color: "blue", text: "IN PROGRESS", icon: <Clock size={10} /> }
-        };
-        const item = config[status] || config.default;
-        return (
-          <Tag color={item.color} className="rounded-full px-3 border-none shadow-sm whitespace-nowrap">
-            <span className="inline-flex items-center gap-1 uppercase text-[10px] font-bold tracking-wider">
-              {item.icon}
-              {item.text}
-            </span>
-          </Tag>
-        );
-      },
+      width: 140,
+      render: (status, record) => (
+        <Select
+          value={status || "new"}
+          onChange={(value) => handleStatusChange(record._id, value)}
+          size="small"
+          style={{ width: 120 }}
+          className={`status-select-${status?.toLowerCase()}`}
+        >
+          <Option value="new">NEW REQUEST</Option>
+          <Option value="contacted">CONTACTED</Option>
+          <Option value="closed">COMPLETED</Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Updated By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
+      width: 130,
+      render: (updatedBy) => (
+        <div className="flex flex-col">
+          {updatedBy ? (
+            <Tag color="cyan" className="font-bold text-[10px] uppercase border-none bg-cyan-50 text-cyan-700 m-0">
+              {updatedBy.name}
+            </Tag>
+          ) : (
+            <span className="text-gray-300 text-[10px] italic">No update yet</span>
+          )}
+        </div>
+      ),
     },
     {
       title: "Action",

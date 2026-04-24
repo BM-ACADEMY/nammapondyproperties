@@ -145,8 +145,7 @@ const PostRequirementPage = () => {
 
                 <Form.Item
                   name="heardFrom"
-                  label={<span className="font-semibold">How did you hear about us?</span>}
-                  rules={[{ required: true, message: "Please select an option" }]}
+                  label={<span className="font-semibold">Lead Source (Marketing)</span>}
                 >
                   <Select placeholder="Select source">
                     <Option value="Social Media">Social Media</Option>

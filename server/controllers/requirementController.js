@@ -78,16 +78,13 @@ exports.getRequirements = async (req, res) => {
     const isSuperAdmin = userDoc?.isSuperAdmin;
     const filter = {};
 
-    if (isAdmin && !isSuperAdmin) {
-      // Sub-admin: Only see requirements for users assigned to them
-      const assignedUserIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
-      filter.user = { $in: assignedUserIds };
-    }
+
 
     const requirements = await Requirement.find(filter)
       .sort({ createdAt: -1 })
       .populate("user", "name email")
-      .populate("createdBy", "name");
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name");
 
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(
@@ -143,9 +140,12 @@ exports.updateRequirementStatus = async (req, res) => {
 
     const requirement = await Requirement.findByIdAndUpdate(
       id,
-      { status },
+      { 
+        status,
+        updatedBy: req.user._id
+      },
       { new: true }
-    );
+    ).populate("updatedBy", "name");
 
     if (!requirement) {
       return res.status(404).json({

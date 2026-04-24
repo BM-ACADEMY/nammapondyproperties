@@ -576,11 +576,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg group hover:bg-white/20 transition-all duration-300">
           {collapsed && !isMobile ? (
             <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
-              AP
+              {user?.isSuperAdmin ? "AP" : "SAP"}
             </div>
           ) : (
             <span className="text-white text-lg font-bold tracking-wide group-hover:scale-105 transition-transform">
-              ADMIN PANEL
+              {user?.isSuperAdmin ? "ADMIN PANEL" : "SUB ADMIN PANEL"}
             </span>
           )}
         </div>

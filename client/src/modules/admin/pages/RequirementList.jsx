@@ -254,7 +254,8 @@ const RequirementList = () => {
       item.fullName?.toLowerCase().includes(searchLower) ||
       item.phoneNumber?.includes(searchText) ||
       item.propertyType?.toLowerCase().includes(searchLower) ||
-      item.preferredLocation?.toLowerCase().includes(searchLower)
+      item.preferredLocation?.toLowerCase().includes(searchLower) ||
+      item.createdBy?.name?.toLowerCase().includes(searchLower)
     );
   });
 
@@ -266,11 +267,6 @@ const RequirementList = () => {
         <div className="flex flex-col">
           <div className="flex items-center gap-2">
             <Text strong className="text-gray-900">{record.fullName}</Text>
-            {record.createdBy && (
-              <Tooltip title={`Created by ${record.createdBy.name || "Admin"}`}>
-                <Tag color="cyan" className="text-[10px] m-0 border-none px-1.5 py-0 leading-normal font-bold">BY {record.createdBy.name?.toUpperCase() || "ADMIN"}</Tag>
-              </Tooltip>
-            )}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
             <Phone size={12} className="text-slate-400" /> {record.phoneNumber}
@@ -314,6 +310,23 @@ const RequirementList = () => {
             </>
           ) : (
             <Text type="secondary">Not specified</Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "Created By",
+      key: "createdBy",
+      render: (_, record) => (
+        <div className="flex flex-col">
+          {record.createdBy ? (
+            <Tag color="cyan" className="font-bold text-[11px] uppercase border-none bg-cyan-50 text-cyan-700">
+              {record.createdBy.name}
+            </Tag>
+          ) : (
+            <Tag className="font-bold text-[11px] uppercase border-none bg-slate-50 text-slate-400">
+              Direct/Public
+            </Tag>
           )}
         </div>
       ),
@@ -388,6 +401,23 @@ const RequirementList = () => {
           </Select>
         );
       },
+    },
+    {
+      title: "Updated By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
+      width: 130,
+      render: (updatedBy) => (
+        <div className="flex flex-col">
+          {updatedBy ? (
+            <Tag color="cyan" className="font-bold text-[10px] uppercase border-none bg-cyan-50 text-cyan-700 m-0 w-fit">
+              {updatedBy.name}
+            </Tag>
+          ) : (
+            <span className="text-gray-300 text-[10px] italic">No update yet</span>
+          )}
+        </div>
+      ),
     },
     {
       title: "Date",
@@ -529,7 +559,7 @@ const RequirementList = () => {
                 </div>
 
                 <div className="mb-4">
-                  <Text type="secondary" className="text-xs uppercase font-semibold">Lead Source</Text>
+                  <Text type="secondary" className="text-xs uppercase font-semibold">Lead Source (Marketing)</Text>
                   <div className="mt-1">
                     <Tag color="purple" className="font-bold">{selectedRequirement.heardFrom || "Direct"}</Tag>
                   </div>
@@ -1059,13 +1089,19 @@ const RequirementList = () => {
               <Form.Item
                 name="heardFrom"
                 label={<span className="font-semibold text-slate-700">Lead Source (Marketing)</span>}
-                rules={[{ required: true, message: "Source is required" }]}
                 className="md:col-span-2"
               >
                 <Select placeholder="General source of the lead" className="rounded-lg h-10">
                   <Option value="Social Media">Social Media</Option>
+                  <Option value="Facebook">Facebook</Option>
+                  <Option value="Instagram">Instagram</Option>
+                  <Option value="YouTube">YouTube</Option>
+                  <Option value="LinkedIn">LinkedIn</Option>
+                  <Option value="WhatsApp">WhatsApp</Option>
+                  <Option value="Google Search">Google Search</Option>
                   <Option value="Reference">Reference</Option>
-                  <Option value="Google">Google</Option>
+                  <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+                  <Option value="Others">Others</Option>
                 </Select>
               </Form.Item>
 
@@ -1081,23 +1117,7 @@ const RequirementList = () => {
                 />
               </Form.Item>
 
-              <Form.Item
-                name="referralSource"
-                label={<span className="font-semibold text-slate-700">Referral Source</span>}
-                className="md:col-span-2"
-              >
-                <Select placeholder="How did they hear about us?" className="rounded-lg h-10">
-                  <Option value="Facebook">Facebook</Option>
-                  <Option value="Instagram">Instagram</Option>
-                  <Option value="YouTube">YouTube</Option>
-                  <Option value="LinkedIn">LinkedIn</Option>
-                  <Option value="WhatsApp">WhatsApp</Option>
-                  <Option value="Google Search">Google Search</Option>
-                  <Option value="Friend/Reference">Friend/Reference</Option>
-                  <Option value="Newspaper/Ad">Newspaper/Ad</Option>
-                  <Option value="Others">Others</Option>
-                </Select>
-              </Form.Item>
+
             </div>
 
             <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
