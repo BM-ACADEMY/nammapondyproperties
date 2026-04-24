@@ -17,8 +17,10 @@ import {
   Image,
   Sliders,
   ClipboardList,
-  CreditCard
+  CreditCard,
+  Layers
 } from "lucide-react";
+
 import api from "@/services/api";
 
 const { Sider } = Layout;
@@ -403,8 +405,15 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
       ],
     },
-     {
+    {
+      key: "/admin/other-services",
+      icon: <Layers size={20} />,
+      label: "Other Services",
+      onClick: () => handleMenuClick("/admin/other-services"),
+    },
+    {
       key: "settings-sub",
+
       icon: <Settings size={20} />,
       label: "Settings",
       children: [
