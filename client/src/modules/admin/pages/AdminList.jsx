@@ -18,6 +18,7 @@ import {
   Form,
   Checkbox,
   Divider,
+  Tabs,
 } from "antd";
 import { getImageUrl } from "@/utils/imageUrl";
 import { 
@@ -75,6 +76,9 @@ const AdminList = () => {
       console.error("Failed to fetch roles", error);
     }
   };
+
+  const superAdmins = (admins || []).filter(admin => admin.isSuperAdmin);
+  const subAdmins = (admins || []).filter(admin => !admin.isSuperAdmin);
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -325,7 +329,7 @@ const AdminList = () => {
       </div>
 
       <Row gutter={[24, 24]} className="mb-8">
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={8}>
           <Card className="shadow-sm border-none bg-indigo-50/50 hover:bg-indigo-50 transition-colors py-2">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-indigo-100 rounded-xl text-indigo-600">
@@ -338,20 +342,88 @@ const AdminList = () => {
             </div>
           </Card>
         </Col>
+        <Col xs={24} sm={8}>
+          <Card className="shadow-sm border-none bg-purple-50/50 hover:bg-purple-50 transition-colors py-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-100 rounded-xl text-purple-600">
+                <ShieldCheck size={24} />
+              </div>
+              <div>
+                <div className="text-purple-600 font-semibold text-xs uppercase tracking-wider">Super Admins</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : superAdmins.length}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={24} sm={8}>
+          <Card className="shadow-sm border-none bg-blue-50/50 hover:bg-blue-50 transition-colors py-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+                <UserCheck size={24} />
+              </div>
+              <div>
+                <div className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Sub Admins</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : subAdmins.length}</div>
+              </div>
+            </div>
+          </Card>
+        </Col>
       </Row>
 
       <Card className="shadow-sm border-none overflow-hidden">
-        <Table
-          columns={columns}
-          dataSource={admins}
-          rowKey="_id"
-          loading={loading}
-          pagination={{ 
-            pageSize: 10,
-            showSizeChanger: false,
-            className: "px-4"
-          }}
-          scroll={{ x: true }}
+        <Tabs
+          defaultActiveKey="1"
+          className="admin-tabs"
+          items={[
+            {
+              key: "1",
+              label: (
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <ShieldCheck size={18} />
+                  <span>Super Admins</span>
+                  <Tag className="ml-1 border-none bg-indigo-100 text-indigo-600 rounded-full">{superAdmins.length}</Tag>
+                </div>
+              ),
+              children: (
+                <Table
+                  columns={columns}
+                  dataSource={superAdmins}
+                  rowKey="_id"
+                  loading={loading}
+                  pagination={{ 
+                    pageSize: 10,
+                    showSizeChanger: false,
+                    className: "px-4"
+                  }}
+                  scroll={{ x: true }}
+                />
+              ),
+            },
+            {
+              key: "2",
+              label: (
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <UserCheck size={18} />
+                  <span>Sub Admins</span>
+                  <Tag className="ml-1 border-none bg-blue-100 text-blue-600 rounded-full">{subAdmins.length}</Tag>
+                </div>
+              ),
+              children: (
+                <Table
+                  columns={columns}
+                  dataSource={subAdmins}
+                  rowKey="_id"
+                  loading={loading}
+                  pagination={{ 
+                    pageSize: 10,
+                    showSizeChanger: false,
+                    className: "px-4"
+                  }}
+                  scroll={{ x: true }}
+                />
+              ),
+            },
+          ]}
         />
       </Card>
 
