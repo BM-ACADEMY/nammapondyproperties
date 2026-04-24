@@ -57,6 +57,11 @@ const BusinessUserList = () => {
 
   useEffect(() => {
     if (businessTypes.length > 0 && businessTypeSlug) {
+      if (businessTypeSlug === "administration") {
+        setBusinessTypeId("administration");
+        setBusinessType({ name: "Administration" });
+        return;
+      }
       const type = businessTypes.find((t) => {
         const name = typeof t.name === "string" ? t.name : t.name?.name || "";
         return slugify(name) === businessTypeSlug || t._id === businessTypeSlug;
@@ -88,24 +93,30 @@ const BusinessUserList = () => {
       if (!businessTypeId) return;
       setLoading(true);
       try {
-        const [typeRes, sellersRes] = await Promise.all([
-          axios.get(`${API}/business-types/${businessTypeId}`),
-          axios.get(`${API}/users/sellers-by-business-type/${businessTypeId}`),
-        ]);
-        const bType = typeRes.data;
-        setBusinessType(bType);
-        setSellers(sellersRes.data);
-
-        // Check if this is a builder/promoter type
-        const isBuilder =
-          bType?.name?.toLowerCase().includes("builder") ||
-          bType?.name?.toLowerCase().includes("promoter");
-
-        // Only auto-select if NOT a builder type
-        if (sellersRes.data.length > 0 && !isBuilder) {
-          setSelectedSeller(sellersRes.data[0]);
+        if (businessTypeId === "administration") {
+          const res = await axios.get(`${API}/users/public-admins`);
+          setSellers(res.data);
+          if (res.data.length > 0) setSelectedSeller(res.data[0]);
         } else {
-          setSelectedSeller(null);
+          const [typeRes, sellersRes] = await Promise.all([
+            axios.get(`${API}/business-types/${businessTypeId}`),
+            axios.get(`${API}/users/sellers-by-business-type/${businessTypeId}`),
+          ]);
+          const bType = typeRes.data;
+          setBusinessType(bType);
+          setSellers(sellersRes.data);
+
+          // Check if this is a builder/promoter type
+          const isBuilder =
+            bType?.name?.toLowerCase().includes("builder") ||
+            bType?.name?.toLowerCase().includes("promoter");
+
+          // Only auto-select if NOT a builder type
+          if (sellersRes.data.length > 0 && !isBuilder) {
+            setSelectedSeller(sellersRes.data[0]);
+          } else {
+            setSelectedSeller(null);
+          }
         }
       } catch (error) {
         console.error("Error fetching sellers:", error);
@@ -134,15 +145,17 @@ const BusinessUserList = () => {
 
   useEffect(() => {
     const fetchSellerProperties = async () => {
-      if (!selectedSeller || !businessTypeId) {
+      if (!selectedSeller) {
         setSellerProperties([]);
         return;
       }
       setPropertiesLoading(true);
       try {
-        const res = await axios.get(
-          `${API}/properties/fetch-all-property?seller_id=${selectedSeller._id}&businessType=${businessTypeId}`,
-        );
+        let url = `${API}/properties/fetch-all-property?seller_id=${selectedSeller._id}`;
+        if (businessTypeId !== "administration") {
+           url += `&businessType=${businessTypeId}`;
+        }
+        const res = await axios.get(url);
         setSellerProperties(res.data.properties || []);
       } catch (error) {
         console.error("Error fetching seller properties:", error);
@@ -664,7 +677,7 @@ const BusinessUserList = () => {
                             {/* Bio Content */}
                             <div className="flex-1 text-center md:text-left pt-2">
                               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-3 sm:mb-4 leading-tight">
-                                {selectedSeller?.name}
+                                {selectedSeller?.role_id?.role_name === 'admin' && selectedSeller?.name === 'Admin' ? 'Namma Pondy Admin' : selectedSeller?.name}
                               </h2>
 
                               {/* Experience & Type Row */}

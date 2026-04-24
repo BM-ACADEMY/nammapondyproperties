@@ -23,7 +23,16 @@ const AdvertiserTypeSection = () => {
         <User className="w-8 h-8 text-[#c19b48] mt-2" />
     );
 
-    const displayTypes = businessTypes.slice(0, 4);
+    const displayTypes = [...businessTypes.slice(0, 4)];
+    
+    // Add Administration manually if not present
+    if (!displayTypes.some(t => t.slug === "administration" || t.name === "Administration")) {
+        displayTypes.push({
+            _id: "administration",
+            name: "Administration",
+            slug: "administration"
+        });
+    }
 
     if (displayTypes.length === 0) return null;
 

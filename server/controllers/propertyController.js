@@ -26,6 +26,8 @@ const parseJSON = (data) => {
 
 exports.createProperty = async (req, res) => {
   try {
+    const isAdmin = req.user && (req.user.isSuperAdmin || req.user.role_id?.role_name?.toLowerCase() === "admin");
+
     // Check property limit for non-admin users
     if (!isAdmin) {
       const propertyCount = await Property.countDocuments({ 
@@ -125,6 +127,19 @@ exports.createProperty = async (req, res) => {
     const legal = removeEmptyStrings(parseJSON(req.body.legal) || {});
     const mediaMetadata = parseJSON(req.body.media) || {};
 
+    let sellerId = req.user && req.user._id ? req.user._id : req.body.seller;
+
+    // If an admin creates a property, attribute it to the Super Admin (to hide sub-admin identity)
+    if (isAdmin) {
+      // If no seller specified OR if the admin is assigning it to themselves
+      if (!req.body.seller || req.body.seller === String(req.user._id)) {
+        const superAdmin = await User.findOne({ isSuperAdmin: true }).sort({ createdAt: 1 });
+        if (superAdmin) {
+          sellerId = superAdmin._id;
+        }
+      }
+    }
+
     const propertyData = {
       ...req.body,
       basicInfo,
@@ -133,8 +148,8 @@ exports.createProperty = async (req, res) => {
       legal,
       amenities,
       location,
-      seller: req.user && req.user._id ? req.user._id : req.body.seller,
-      businessType: (req.user && req.user.role_id && req.user.role_id.role_name === "admin") 
+      seller: sellerId,
+      businessType: isAdmin 
         ? (req.body.businessType || null) 
         : (req.user && req.user.businessType ? (req.user.businessType._id || req.user.businessType) : (req.body.businessType || null)),
       video: mediaMetadata.video || req.body.video || "",
@@ -148,7 +163,7 @@ exports.createProperty = async (req, res) => {
       },
       status: "Pending",
       isVerified: false,
-      createdBy: (req.user && (req.user.role_id?.role_name === "admin" || req.user.role?.name === "admin")) ? req.user._id : null,
+      createdBy: isAdmin ? req.user._id : (req.body.createdBy || null),
     };
 
     const property = new Property(propertyData);
@@ -287,7 +302,15 @@ exports.getProperties = async (req, res) => {
     if (isAdmin && !isSuperAdmin) {
       // Find all users/sellers assigned to this sub-admin
       const assignedUserIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
-      queryConditions.push({ seller: { $in: assignedUserIds } });
+      
+      // Sub-admin should see properties from their assigned sellers OR properties they created themselves
+      queryConditions.push({ 
+        $or: [
+          { seller: { $in: assignedUserIds } },
+          { seller: req.user._id },
+          { createdBy: req.user._id }
+        ]
+      });
     }
     
     // Check if the requester is the owner of the properties being queried
@@ -487,7 +510,7 @@ exports.getProperties = async (req, res) => {
           populate: { path: "role_id" },
         },
         { path: "businessType" },
-        { path: "createdBy", select: "name" },
+        { path: "createdBy", select: "name role_id", populate: { path: "role_id" } },
       ]);
 
       // For random, total pages/count might be less relevant or just use total count matches
@@ -500,7 +523,11 @@ exports.getProperties = async (req, res) => {
             populate: { path: "role_id" },
           },
           { path: "businessType" },
-          { path: "createdBy", select: "name" },
+          { 
+            path: "createdBy", 
+            select: "name role_id",
+            populate: { path: "role_id" } 
+          },
         ])
         .limit(limit * 1)
         .skip((page - 1) * limit)

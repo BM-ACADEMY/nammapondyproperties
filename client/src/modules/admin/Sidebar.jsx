@@ -531,17 +531,33 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
     const userPermissions = user.permissions || [];
     
-    // Always grant access to Dashboard if they have any access, or maybe just always.
-    // Let's assume Dashboard is one of the permissions.
-    
-    return allMenuItems.filter(item => {
-      // Check if top-level item key is in permissions
-      const hasPermission = userPermissions.includes(item.key);
-      
-      // If it's a submenu, we might also want to check children, 
-      // but the UI only allows "marking" the main section.
-      return hasPermission;
-    });
+    const filterItems = (items) => {
+      return items
+        .map(item => {
+          // If item has children, filter them first
+          if (item.children) {
+            const filteredChildren = filterItems(item.children);
+            // If some children remain, show this parent item with filtered children
+            if (filteredChildren.length > 0) {
+              return { ...item, children: filteredChildren };
+            }
+          }
+          
+          // Check if this item itself is permitted
+          const hasPermission = userPermissions.includes(item.key);
+          if (hasPermission) {
+            // If it has children but they were all filtered out, 
+            // we still show it as a leaf node if the parent key itself is permitted
+            // (though in this sidebar structure, leaf nodes usually have keys that are routes)
+            return item;
+          }
+          
+          return null;
+        })
+        .filter(Boolean);
+    };
+
+    return filterItems(allMenuItems);
   }, [user, allMenuItems]);
 
   const SidebarContent = (

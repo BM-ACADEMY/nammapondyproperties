@@ -14,6 +14,7 @@ router.get("/refresh-token", protect, userController.refreshToken);
 router.get("/public-users", userController.getPublicUsers);
 router.get("/sellers-by-business-type/:businessTypeId", userController.getSellersByPropertyBusinessType);
 router.get("/public-user/:id", userController.getPublicUserById);
+router.get("/public-admins", userController.getPublicAdmins);
 
 // User Management Routes (Protected)
 router.get("/fetch-all-user", protect, userController.getUsers); // Legacy support

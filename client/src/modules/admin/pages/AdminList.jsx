@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Table,
   Button,
@@ -37,24 +37,67 @@ import {
 } from "lucide-react";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
+import moment from "moment";
 
 const { Title, Text } = Typography;
 
-const PERMISSION_OPTIONS = [
-  { label: "Dashboard", value: "/admin/dashboard" },
-  { label: "Properties", value: "properties-sub" },
-  { label: "Seller Management", value: "seller-sub" },
-  { label: "Marketing", value: "marketing-sub" },
-  { label: "Analytics / Manager", value: "analytics-sub" },
-  { label: "User Management", value: "users-sub" },
-  { label: "Enquiry Leads", value: "/admin/enquiries" },
-  { label: "Posted Requirements", value: "/admin/requirements" },
-  { label: "Forms Data", value: "forms-sub" },
-  { label: "Banner Ads", value: "/admin/banner-ads" },
-  { label: "Subscriptions", value: "subscriptions-sub" },
-  { label: "Property Settings", value: "property-settings-sub" },
-  { label: "General Settings", value: "settings-sub" },
-
+const PERMISSION_GROUPS = [
+  {
+    title: "Overview",
+    options: [
+      { label: "Dashboard", value: "/admin/dashboard" },
+      { label: "Analytics", value: "/admin/view-count-manager" },
+    ],
+  },
+  {
+    title: "Properties",
+    options: [
+      { label: "Properties List", value: "/admin/properties" },
+      { label: "Add Property", value: "/admin/properties/add" },
+      { label: "Seller Listings", value: "/admin/seller-listings" },
+      { label: "Business Types", value: "/admin/business-types" },
+      { label: "Property Types", value: "/admin/property-types" },
+      { label: "Approval Types", value: "/admin/approval-types" },
+    ],
+  },
+  {
+    title: "Marketing & Sales",
+    options: [
+      { label: "Marketing Plans", value: "/admin/marketing-plans" },
+      { label: "Marketing Leads", value: "/admin/marketing-requests" },
+      { label: "Subscription Plans", value: "/admin/subscription-plans" },
+      { label: "Payment History", value: "/admin/payment-history" },
+    ],
+  },
+  {
+    title: "User Management",
+    options: [
+      { label: "User List", value: "/admin/users" },
+      { label: "Admin Management", value: "/admin/admins" },
+      { label: "Seller Management", value: "/admin/sellers" },
+      { label: "Delete Seller Action", value: "delete_seller" },
+      { label: "Failed Registrations", value: "/admin/failed-registrations" },
+    ],
+  },
+  {
+    title: "Enquiries & Communication",
+    options: [
+      { label: "Enquiry Leads", value: "/admin/enquiries" },
+      { label: "Posted Requirements", value: "/admin/requirements" },
+      { label: "Call Requests", value: "/admin/forms/call-requests" },
+      { label: "Contact Messages", value: "/admin/forms/contact-messages" },
+      { label: "Support Tickets", value: "/admin/support" },
+      { label: "Testimonials", value: "/admin/testimonials" },
+    ],
+  },
+  {
+    title: "Content & Settings",
+    options: [
+      { label: "Banner Ads", value: "/admin/banner-ads" },
+      { label: "Social Media", value: "/admin/social-media" },
+      { label: "Profile Settings", value: "/admin/profile" },
+    ],
+  },
 ];
 
 const AdminList = () => {
@@ -67,6 +110,16 @@ const AdminList = () => {
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [roles, setRoles] = useState([]);
+  const [businessTypes, setBusinessTypes] = useState([]);
+
+  const fetchBusinessTypes = async () => {
+    try {
+      const response = await api.get("/business-types");
+      setBusinessTypes(response.data.filter((t) => t.status === "active"));
+    } catch (error) {
+      console.error("Error fetching business types:", error);
+    }
+  };
 
   const fetchRoles = async () => {
     try {
@@ -96,7 +149,24 @@ const AdminList = () => {
   useEffect(() => {
     fetchAdmins();
     fetchRoles();
+    fetchBusinessTypes();
   }, []);
+
+  const permissionGroups = useMemo(() => {
+    const groups = [...PERMISSION_GROUPS];
+    
+    if (businessTypes.length > 0) {
+      groups.push({
+        title: "Business Segment Access",
+        options: businessTypes.map(type => ({
+          label: `${type.name} Access`,
+          value: `/admin/sellers?type=${type._id}`
+        }))
+      });
+    }
+
+    return groups;
+  }, [businessTypes]);
 
   const handleRevoke = (id) => {
     if (!currentUser?.isSuperAdmin) return message.error("Only Super Admins can revoke access");
@@ -149,6 +219,8 @@ const AdminList = () => {
   const handleEditPermissions = (record) => {
     setSelectedAdmin(record);
     editForm.setFieldsValue({
+      name: record.name,
+      phone: record.phone,
       permissions: record.permissions || [],
       isSuperAdmin: record.isSuperAdmin || false
     });
@@ -189,11 +261,22 @@ const AdminList = () => {
             </div>
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{record.userId || "NO ID"}</span>
-              <span className="text-[10px] text-indigo-400 font-medium">
-                Created By: <span className="font-bold">{record.createdBy?.name || "System"}</span>
-              </span>
             </div>
           </div>
+        </div>
+      ),
+    },
+    {
+      title: "Created By",
+      key: "creator",
+      render: (_, record) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold text-indigo-600">
+            {record.createdBy?.name || "System"}
+          </span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-widest">
+            {record.createdAt ? moment(record.createdAt).format("DD MMM YYYY") : "Initial Setup"}
+          </span>
         </div>
       ),
     },
@@ -484,13 +567,46 @@ const AdminList = () => {
                 className="mt-4"
               >
                 <Checkbox.Group className="w-full">
-                  <Row gutter={[16, 8]}>
-                    {PERMISSION_OPTIONS.map(opt => (
-                      <Col span={12} key={opt.value}>
-                        <Checkbox value={opt.value}>{opt.label}</Checkbox>
-                      </Col>
-                    ))}
-                  </Row>
+                  <div className="max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                    {permissionGroups.map((group) => {
+                      const groupValues = group.options.map(o => o.value);
+                      const currentPermissions = form.getFieldValue("permissions") || [];
+                      const isAllSelected = groupValues.length > 0 && groupValues.every(val => currentPermissions.includes(val));
+
+                      const toggleGroup = () => {
+                        const otherPermissions = currentPermissions.filter(val => !groupValues.includes(val));
+                        const newPermissions = isAllSelected 
+                          ? otherPermissions 
+                          : Array.from(new Set([...otherPermissions, ...groupValues]));
+                        form.setFieldsValue({ permissions: newPermissions });
+                      };
+
+                      return (
+                        <div key={group.title} className="mb-4">
+                          <div className="flex justify-between items-center bg-gray-50 px-2 py-1 rounded mb-2">
+                            <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">
+                              {group.title}
+                            </div>
+                            <Button 
+                              type="link" 
+                              size="small" 
+                              className="text-[10px] p-0 h-auto"
+                              onClick={toggleGroup}
+                            >
+                              {isAllSelected ? "Deselect All" : "Select All"}
+                            </Button>
+                          </div>
+                          <Row gutter={[16, 8]}>
+                            {group.options.map((opt) => (
+                              <Col span={12} key={opt.value}>
+                                <Checkbox value={opt.value}>{opt.label}</Checkbox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </Checkbox.Group>
               </Form.Item>
             )}
@@ -525,6 +641,32 @@ const AdminList = () => {
           onFinish={handleUpdateAdmin}
           className="mt-4"
         >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="name"
+                label="Full Name"
+                rules={[{ required: true, message: "Please enter admin name" }]}
+              >
+                <Input placeholder="Enter name" prefix={<Users size={16} className="text-gray-400" />} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[
+                  { required: true, message: "Please enter phone number" },
+                  { pattern: /^[0-9]{10}$/, message: "Please enter a valid 10-digit number" }
+                ]}
+              >
+                <Input placeholder="10-digit phone number" prefix={<span className="text-gray-400">+91</span>} />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Divider orientation="left" className="text-gray-400 text-xs">Access Control</Divider>
+
           <Form.Item name="isSuperAdmin" valuePropName="checked">
             <Checkbox className="font-semibold text-indigo-600">Super Admin Mode (All access granted)</Checkbox>
           </Form.Item>
@@ -540,13 +682,22 @@ const AdminList = () => {
                 className="mt-4"
               >
                 <Checkbox.Group className="w-full">
-                  <Row gutter={[16, 8]}>
-                    {PERMISSION_OPTIONS.map(opt => (
-                      <Col span={12} key={opt.value}>
-                        <Checkbox value={opt.value}>{opt.label}</Checkbox>
-                      </Col>
+                  <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {permissionGroups.map((group) => (
+                      <div key={group.title} className="mb-4">
+                        <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold mb-2 bg-gray-50 px-2 py-1 rounded">
+                          {group.title}
+                        </div>
+                        <Row gutter={[16, 8]}>
+                          {group.options.map((opt) => (
+                            <Col span={12} key={opt.value}>
+                              <Checkbox value={opt.value}>{opt.label}</Checkbox>
+                            </Col>
+                          ))}
+                        </Row>
+                      </div>
                     ))}
-                  </Row>
+                  </div>
                 </Checkbox.Group>
               </Form.Item>
             )}

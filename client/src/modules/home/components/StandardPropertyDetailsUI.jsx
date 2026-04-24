@@ -1178,10 +1178,10 @@ const StandardPropertyDetailsUI = ({
                   </div>
                   <div>
                     <div className="text-[10px] text-[#174685] uppercase font-bold tracking-widest mb-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
-                      {property.businessType?.name || "LISTED BY"}
+                      {property.seller?.role_id?.role_name === "admin" ? (property.seller?.name || "Admin") : (property.businessType?.name || "LISTED BY")}
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {property.seller?.name || "Seller"}
+                      {property.seller?.role_id?.role_name === "admin" ? (property.seller?.name || "Admin") : (property.seller?.name || "Seller")}
                     </h3>
                     <div className="text-sm font-semibold text-gray-500">
                       {maskPhoneNumber(property.seller?.phone)}

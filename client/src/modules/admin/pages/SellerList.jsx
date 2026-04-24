@@ -359,7 +359,7 @@ const SellerList = () => {
           {
             type: "divider",
           },
-          {
+          (currentUser?.isSuperAdmin || currentUser?.permissions?.includes("delete_seller")) && {
             key: "delete",
             danger: true,
             label: (

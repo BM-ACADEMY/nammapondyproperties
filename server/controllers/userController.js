@@ -202,6 +202,21 @@ exports.getPublicUsers = async (req, res) => {
   }
 };
 
+exports.getPublicAdmins = async (req, res) => {
+  try {
+    const adminRole = await Role.findOne({ role_name: "admin" });
+    if (!adminRole) return res.status(404).json({ error: "Admin role not found" });
+
+    const admins = await User.find({ role_id: adminRole._id })
+      .select("name profile_image role_id slug")
+      .populate("role_id");
+
+    res.json(admins);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)

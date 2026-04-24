@@ -13,6 +13,7 @@ import PostPropertyCTA from "../components/PostPropertyCTA";
 import RecommendedProperties from "../components/RecommendedProperties";
 import MeetKamar from "./MeetKamar";
 import AdvertiserTypeSection from "../components/AdvertiserTypeSection";
+import AdminTeamSection from "../components/AdminTeamSection";
 
 const HomePage = () => {
   const [mapProperties, setMapProperties] = useState([]);
@@ -54,6 +55,7 @@ const HomePage = () => {
       <RecommendedProperties />
         <AdvertiserTypeSection />
       <BuilderPromoterProperties />
+      <AdminTeamSection />
       <MeetKamar />
       {/* <WhyChooseUs /> */}
       <Testimonials />
