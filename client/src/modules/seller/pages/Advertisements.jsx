@@ -100,9 +100,9 @@ const SellerAdvertisements = () => {
             >
               {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
             </span>
-            {request.plan_id?.name && (
+            {request.plan_id?.serviceName && (
               <span className="text-[11px] font-medium text-gray-400 flex items-center gap-1 mt-1">
-                <Sparkles size={10} /> {request.plan_id.name}
+                <Sparkles size={10} /> {request.plan_id.serviceName}
               </span>
             )}
           </Space>

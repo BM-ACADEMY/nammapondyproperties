@@ -776,8 +776,8 @@ const MyProperties = () => {
 
             {/* Reduced gap between cards from gap-6 to gap-4 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              {marketingPlans.map((plan, index) => {
-                const isPopular = index === 1;
+              {marketingPlans.map((plan) => {
+                const isPopular = plan.isPopular;
 
                 return (
                   <div
@@ -794,7 +794,7 @@ const MyProperties = () => {
                         isPopular ? "text-white" : "text-slate-900"
                       }`}
                     >
-                      {plan.name}
+                      {plan.serviceName}
                     </h3>
                     <p
                       className={`text-[13px] leading-snug mb-4 max-w-[200px] ${
@@ -814,7 +814,7 @@ const MyProperties = () => {
                               isPopular ? "text-white" : "text-slate-900"
                             }`}
                           >
-                            {plan.price}
+                            ₹{plan.priceRange}
                           </span>
                         </div>
                       </div>
@@ -851,42 +851,7 @@ const MyProperties = () => {
 
                     {/* Reduced spacing between features */}
                     <div className="space-y-2">
-                      {plan.features?.map((feature, idx) => (
-                        <div key={idx} className="flex items-start gap-2">
-                          {/* Reduced icon size */}
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="mt-[3px] shrink-0"
-                          >
-                            <path
-                              d="M7.75 14.75a7 7 0 1 0 0-14 7 7 0 0 0 0 14"
-                              stroke={isPopular ? "#F8FAFC" : "#62748e"}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="m5.65 7.752 1.4 1.4 2.8-2.8"
-                              stroke={isPopular ? "#F8FAFC" : "#62748e"}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          {/* Reduced feature text size */}
-                          <span
-                            className={`text-[13px] ${
-                              isPopular ? "text-slate-100" : "text-slate-600"
-                            }`}
-                          >
-                            {feature}
-                          </span>
-                        </div>
-                      ))}
+                       {/* Features list removed as per simplified fields */}
                     </div>
                   </div>
                 );
