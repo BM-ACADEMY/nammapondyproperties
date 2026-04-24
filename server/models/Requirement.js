@@ -43,7 +43,18 @@ const requirementSchema = new mongoose.Schema(
     },
     heardFrom: {
       type: String,
-      enum: ["Social Media", "Reference", "Google"],
+      enum: [
+        "Social Media",
+        "Facebook",
+        "Instagram",
+        "YouTube",
+        "LinkedIn",
+        "WhatsApp",
+        "Google Search",
+        "Reference",
+        "Newspaper/Ad",
+        "Others",
+      ],
       required: true,
     },
     message: {
@@ -62,10 +73,6 @@ const requirementSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    },
-    referralSource: {
-      type: String,
-      trim: true,
     },
   },
   {

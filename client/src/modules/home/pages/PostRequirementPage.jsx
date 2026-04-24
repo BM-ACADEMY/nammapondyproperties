@@ -150,8 +150,15 @@ const PostRequirementPage = () => {
                 >
                   <Select placeholder="Select source">
                     <Option value="Social Media">Social Media</Option>
+                    <Option value="Facebook">Facebook</Option>
+                    <Option value="Instagram">Instagram</Option>
+                    <Option value="YouTube">YouTube</Option>
+                    <Option value="LinkedIn">LinkedIn</Option>
+                    <Option value="WhatsApp">WhatsApp</Option>
+                    <Option value="Google Search">Google Search</Option>
                     <Option value="Reference">Reference from Known Person</Option>
-                    <Option value="Google">Google</Option>
+                    <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+                    <Option value="Others">Others</Option>
                   </Select>
                 </Form.Item>
 
@@ -272,24 +279,7 @@ const PostRequirementPage = () => {
                   <TextArea rows={3} placeholder="Any additional details or specific requirements..." />
                 </Form.Item>
 
-                <Form.Item
-                  name="referralSource"
-                  label={<span className="font-semibold">How do you hear Namma Pondy Properties?</span>}
-                  className="lg:col-span-2"
-                  rules={[{ required: true, message: "Please select an option" }]}
-                >
-                  <Select placeholder="Select an option">
-                    <Option value="Facebook">Facebook</Option>
-                    <Option value="Instagram">Instagram</Option>
-                    <Option value="YouTube">YouTube</Option>
-                    <Option value="LinkedIn">LinkedIn</Option>
-                    <Option value="WhatsApp">WhatsApp</Option>
-                    <Option value="Google Search">Google Search</Option>
-                    <Option value="Friend/Reference">Friend/Reference</Option>
-                    <Option value="Newspaper/Ad">Newspaper/Ad</Option>
-                    <Option value="Others">Others</Option>
-                  </Select>
-                </Form.Item>
+
               </div>
 
               <div className="mt-8 pt-6 flex flex-col items-center justify-center border-t border-gray-100">

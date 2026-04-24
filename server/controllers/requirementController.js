@@ -21,7 +21,7 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
-      referralSource,
+      heardFrom,
     } = req.body;
 
     const userId = req.user ? req.user.id : null;
@@ -39,7 +39,7 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
-      referralSource,
+      heardFrom,
       user: userId,
       createdBy: isAdmin ? req.user._id : null
     });
@@ -199,8 +199,11 @@ const getPropertyMatchQuery = (sellerId, requirement) => {
   if (!requirement) return null;
 
   const isRent = requirement.category === "Rent";
-  const minBudget = requirement.minBudget || 0;
-  const maxBudget = requirement.maxBudget || Infinity;
+  
+  // Fuzzy Matching Logic (80% - 120%)
+  // This automatically expands the requirement budget to find more relevant leads.
+  const minBudget = (requirement.minBudget || 0) * 0.8;
+  const maxBudget = requirement.maxBudget ? requirement.maxBudget * 1.2 : Infinity;
 
   const priceField = isRent ? "pricing.rent.monthlyRent" : "pricing.sell.price";
   const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
