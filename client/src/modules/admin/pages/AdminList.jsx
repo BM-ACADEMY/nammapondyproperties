@@ -53,6 +53,7 @@ const PERMISSION_OPTIONS = [
   { label: "Subscriptions", value: "subscriptions-sub" },
   { label: "Property Settings", value: "property-settings-sub" },
   { label: "General Settings", value: "settings-sub" },
+  { label: "Other Services", value: "/admin/other-services" },
 ];
 
 const AdminList = () => {

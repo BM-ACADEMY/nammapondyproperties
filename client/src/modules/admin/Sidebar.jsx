@@ -18,9 +18,9 @@ import {
   Sliders,
   ClipboardList,
   CreditCard,
-  Headphones
+  Layers,
+  Headphones,
 } from "lucide-react";
-
 
 import api from "@/services/api";
 
@@ -498,8 +498,15 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
       ],
     },
-     {
+    {
+      key: "/admin/other-services",
+      icon: <Layers size={20} />,
+      label: "Other Services",
+      onClick: () => handleMenuClick("/admin/other-services"),
+    },
+    {
       key: "settings-sub",
+
       icon: <Settings size={20} />,
       label: "Settings",
       children: [
