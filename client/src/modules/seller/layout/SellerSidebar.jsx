@@ -9,8 +9,10 @@ import {
   LogOut,
   Lock,
   CreditCard,
-  ClipboardList
+  ClipboardList,
+  Headphones
 } from "lucide-react";
+
 import { useAuth } from "../../../context/AuthContext";
 import { useState, useEffect } from "react";
 import api from "../../../services/api";
@@ -78,7 +80,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "/seller/enquiries",
       icon: <MessageSquare size={20} />,
-      label: "Enquiry Property",
+      label: (
+        <div className="flex items-center justify-between gap-2">
+          <span>Enquiry Property</span>
+          {!hasActivePlan && <Lock size={12} className="text-white" />}
+        </div>
+      ),
       onClick: () => handleMenuClick("/seller/enquiries"),
     },
     {
@@ -122,6 +129,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <User size={20} />,
       label: "Profile",
       onClick: () => handleMenuClick("/seller/profile"),
+    },
+    {
+      key: "/seller/support",
+      icon: <Headphones size={20} />,
+      label: "Support Team",
+      onClick: () => handleMenuClick("/seller/support"),
     },
   ];
 

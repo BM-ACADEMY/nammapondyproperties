@@ -36,15 +36,13 @@ export const Hero = () => {
       }
 
       const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
-      if (role === "ADMIN") {
-        navigate("/admin/properties/add");
-      } else if (role === "SELLER") {
-        navigate("/seller/add-property");
+      if (role === "SELLER") {
+        navigate("/seller/upgrade-plan");
       } else {
         navigate("/add-property");
       }
     } else {
-      navigate("/post-property");
+      navigate("/add-property");
     }
   };
 

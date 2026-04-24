@@ -132,17 +132,36 @@ exports.getUserSubscription = async (req, res) => {
     
     // On-the-fly expiry check
     if (subscription && subscription.endDate && new Date(subscription.endDate) < new Date()) {
-      subscription.status = "expired";
-      await subscription.save();
-      
-      await User.findByIdAndUpdate(req.user._id, {
-        activeSubscription: null
-      });
-      
-      return res.json(null);
+      if (subscription.status !== "expired") {
+        subscription.status = "expired";
+        await subscription.save();
+      }
+      // We still return it so the frontend can show an "Expired" message/modal
+      return res.json(subscription);
     }
     
     res.json(subscription);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// 4. Admin: Get Subscriptions Expiring Soon (within 7 days)
+exports.getExpiringSoonSubscriptions = async (req, res) => {
+  try {
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const now = new Date();
+
+    const subscriptions = await Subscription.find({
+      status: "active",
+      endDate: { $lte: sevenDaysFromNow, $gt: now }
+    })
+    .populate("user", "name phone email customId")
+    .populate("plan", "name price")
+    .sort({ endDate: 1 });
+
+    res.json(subscriptions);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

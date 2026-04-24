@@ -9,23 +9,24 @@ exports.getSharedLeads = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 1. Get seller's active subscription to identify their plan
-    const activeSubscription = await Subscription.findOne({
+    // 1. Get seller's most recent subscription (active or expired)
+    const lastSubscription = await Subscription.findOne({
       user: userId,
-      status: "active",
-      endDate: { $gt: new Date() },
-    });
+    }).populate("plan").sort({ startDate: -1 });
 
-    if (!activeSubscription) {
+    if (!lastSubscription) {
       return res.status(200).json({
         success: true,
         data: [],
-        message: "No active subscription found. Subscribe to see leads.",
+        message: "No subscription found. Subscribe to see leads.",
       });
     }
 
+    const isActive = lastSubscription && lastSubscription.status === "active" && 
+                     (!lastSubscription.endDate || new Date(lastSubscription.endDate) > new Date());
+
     // Identify all plan variants with the same name as the seller's plan
-    const sellerPlan = await SubscriptionPlan.findById(activeSubscription.plan);
+    const sellerPlan = lastSubscription.plan;
     const allMatchingPlans = await SubscriptionPlan.find({ 
       name: sellerPlan.name,
       status: "active" 
@@ -60,13 +61,37 @@ exports.getSharedLeads = async (req, res) => {
       return true;
     });
 
+    const leadsLimit = sellerPlan.leadsLimit ?? 2;
+    const cycleStartDate = lastSubscription ? new Date(lastSubscription.startDate) : null;
+    const cycleEndDate = lastSubscription?.endDate ? new Date(lastSubscription.endDate) : null;
+
+    // Identify leads that belong to the most recent cycle
+    const currentCycleLeads = filteredLeads.filter(lead => {
+      const leadDate = new Date(lead.createdAt);
+      return leadDate >= cycleStartDate && (!cycleEndDate || leadDate <= cycleEndDate);
+    });
+    const totalInCycle = currentCycleLeads.length;
+
     const fullLeads = await Promise.all(filteredLeads.map(async (lead) => {
       const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
+      const leadDate = new Date(lead.createdAt);
       
       // Visibility Logic:
       // 1. If accepted by me -> Always show details
-      // 2. If it is an EXACT MATCH -> Show details
-      let showFullDetails = isAcceptedByMe || lead.matchType === "exact";
+      // 2. If it is an EXACT MATCH and was within quota when received -> Show details
+      
+      let isWithinLimit = true;
+      if (leadDate >= cycleStartDate && (!cycleEndDate || leadDate <= cycleEndDate)) {
+          // Lead is within the most recent cycle (active or expired)
+          const indexInCycle = currentCycleLeads.findIndex(e => e._id.toString() === lead._id.toString());
+          isWithinLimit = leadsLimit === -1 || (totalInCycle - indexInCycle) <= leadsLimit;
+      } else if (leadDate > cycleEndDate && !isActive) {
+          // Lead arrived AFTER plan expired
+          isWithinLimit = false; 
+      }
+      // If leadDate < cycleStartDate, isWithinLimit remains true (Historical/Legacy)
+
+      let showFullDetails = isAcceptedByMe || (lead.matchType === "exact" && isWithinLimit);
       
       let reqDetails = { ...lead.requirement._doc };
       
@@ -75,7 +100,6 @@ exports.getSharedLeads = async (req, res) => {
         reqDetails.fullName = "Contact Masked";
         reqDetails.email = "masked@example.com";
         reqDetails.phoneNumber = "XXXXXXXXXX";
-        // Also remove from the object to be safe if client logic depends on presence
       }
 
       return {
@@ -143,9 +167,9 @@ exports.acceptLead = async (req, res) => {
       return res.status(403).json({ success: false, message: "This lead is reserved for Agents." });
     }
 
-    // 1.7 Lead Count Limit Check (Only for not-exact matches, as exact match was deducted at sharing)
+    // 1.7 Lead Count Limit Check
     const leadsLimit = lead.plan.leadsLimit ?? 2;
-    if (lead.matchType !== "exact" && leadsLimit !== -1 && activeSubscription.leadsUsed >= leadsLimit) {
+    if (leadsLimit !== -1 && activeSubscription.leadsUsed >= leadsLimit) {
       return res.status(403).json({
         success: false,
         message: `Lead Limit Reached: Your current plan allows only ${leadsLimit} leads. Please upgrade your plan for more leads.`,
@@ -172,10 +196,8 @@ exports.acceptLead = async (req, res) => {
       });
     }
 
-    // 3. Increment usage if it's not an exact match
-    if (updatedLead.matchType !== "exact") {
-      await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
-    }
+    // 3. Increment usage for all types of accepted leads
+    await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
 
     // 3. Update the parent Requirement status to "Closed"
     await Requirement.findByIdAndUpdate(updatedLead.requirement._id, { status: "Closed" });

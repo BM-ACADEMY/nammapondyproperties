@@ -16,6 +16,8 @@ import {
   Col,
   Popover,
   Checkbox,
+  Form,
+  InputNumber,
 } from "antd";
 import { 
   Trash2, 
@@ -32,15 +34,18 @@ import {
   ChevronUp,
   CheckSquare,
   Square,
-  CheckCircle2
+  CheckCircle2,
+  Plus
 } from "lucide-react";
 import { 
   getRequirements, 
   updateRequirementStatus, 
   deleteRequirement,
   getSubscriptionStats,
-  shareRequirement
+  shareRequirement,
+  postRequirement
 } from "@/services/api";
+import { useNav } from "@/context/NavContext";
 import { useSocket } from "@/context/SocketContext";
 
 const { Title, Text } = Typography;
@@ -53,12 +58,31 @@ const RequirementList = () => {
   const [selectedRequirement, setSelectedRequirement] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addForm] = Form.useForm();
+  const [showOtherType, setShowOtherType] = useState(false);
+  const { propertyTypes } = useNav();
   const [subscriptionStats, setSubscriptionStats] = useState([]);
   const [hasGlobalBuilderMatch, setHasGlobalBuilderMatch] = useState(false);
   const [sharingLoading, setSharingLoading] = useState(false);
   const [fetchingStats, setFetchingStats] = useState(false);
   const [expandedPlans, setExpandedPlans] = useState([]);
   const [selectedPlanIds, setSelectedPlanIds] = useState([]);
+
+  const selectedUsageType = Form.useWatch("usageType", addForm);
+
+  // Filter property types based on usage type
+  const filteredPropertyTypes = propertyTypes.filter(
+    (type) => type.usageType === selectedUsageType
+  );
+
+  // Reset property type when usage type changes
+  useEffect(() => {
+    if (selectedUsageType) {
+      addForm.setFieldsValue({ propertyType: undefined });
+      setShowOtherType(false);
+    }
+  }, [selectedUsageType, addForm]);
 
   const togglePlan = (planId) => {
     setExpandedPlans((prev) => 
@@ -173,6 +197,32 @@ const RequirementList = () => {
     );
   };
 
+  const handleAddLead = async (values) => {
+    setLoading(true);
+    try {
+      const finalPropertyType =
+        values.propertyType === "Others"
+          ? values.otherPropertyType
+          : values.propertyType;
+
+      const submissionData = {
+        ...values,
+        propertyType: finalPropertyType,
+      };
+
+      await postRequirement(submissionData);
+      message.success("Lead created successfully!");
+      setIsAddModalOpen(false);
+      addForm.resetFields();
+      fetchRequirements();
+    } catch (error) {
+      console.error("Error creating lead:", error);
+      message.error(error.response?.data?.message || "Failed to create lead");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const selectAllMatches = (plans) => {
     const matchedIds = plans
       .filter(plan => hasGlobalBuilderMatch 
@@ -218,7 +268,7 @@ const RequirementList = () => {
             <Text strong className="text-gray-900">{record.fullName}</Text>
             {record.createdBy && (
               <Tooltip title={`Created by ${record.createdBy.name || "Admin"}`}>
-                <Tag color="cyan" className="text-[10px] m-0 border-none px-1.5 py-0 leading-normal font-bold">BY ADMIN</Tag>
+                <Tag color="cyan" className="text-[10px] m-0 border-none px-1.5 py-0 leading-normal font-bold">BY {record.createdBy.name?.toUpperCase() || "ADMIN"}</Tag>
               </Tooltip>
             )}
           </div>
@@ -252,14 +302,10 @@ const RequirementList = () => {
       ),
     },
     {
-      title: "Source",
-      dataIndex: "heardFrom",
-      key: "heardFrom",
-      render: (source) => (
-        <Tag color="purple" className="m-0 font-semibold px-2 py-0.5 rounded">
-          {source || "Direct"}
-        </Tag>
-      ),
+      title: "Referral Source",
+      dataIndex: "referralSource",
+      key: "referralSource",
+      render: (source) => source || <Text type="secondary" className="text-[10px]">Direct/Unknown</Text>
     },
     {
       title: "Budget",
@@ -404,14 +450,22 @@ const RequirementList = () => {
           </Title>
           <p className="text-slate-500 mt-1 text-sm">Manage and track user property requirements and leads.</p>
         </div>
-        <div className="w-full md:w-72">
+        <div className="w-full md:w-auto flex flex-col md:flex-row gap-3">
           <Input
             placeholder="Search requirements..."
             prefix={<Search size={16} className="text-slate-400" />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            className="rounded-lg w-full"
+            className="rounded-lg w-full md:w-64"
           />
+          <Button 
+            type="primary" 
+            icon={<Plus size={18} />} 
+            className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 rounded-lg font-bold flex items-center gap-2"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            Add Lead
+          </Button>
         </div>
       </div>
 
@@ -519,6 +573,13 @@ const RequirementList = () => {
                   <Text type="secondary" className="text-xs uppercase font-semibold">Message / Additional Info</Text>
                   <p className="m-0 mt-1 text-slate-700">
                     {selectedRequirement.message || "No additional message."}
+                  </p>
+                </div>
+
+                <div className="mb-4">
+                  <Text type="secondary" className="text-xs uppercase font-semibold">Referral Source</Text>
+                  <p className="m-0 mt-1 text-slate-700 font-bold text-indigo-600">
+                    {selectedRequirement.referralSource || "Direct / Not Specified"}
                   </p>
                 </div>
               </Col>
@@ -843,6 +904,219 @@ const RequirementList = () => {
                )}
             </div>
           )}
+        </div>
+      </Modal>
+
+      {/* Add Lead Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <Plus size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold m-0">Create New Lead</h3>
+              <Text type="secondary" className="text-xs">Add a property requirement manually</Text>
+            </div>
+          </div>
+        }
+        open={isAddModalOpen}
+        onCancel={() => {
+          setIsAddModalOpen(false);
+          addForm.resetFields();
+        }}
+        footer={null}
+        width={700}
+        destroyOnClose
+      >
+        <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+          <Form
+            form={addForm}
+            layout="vertical"
+            onFinish={handleAddLead}
+            requiredMark="optional"
+            className="admin-add-lead-form"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+              <Form.Item
+                name="fullName"
+                label={<span className="font-semibold text-slate-700">Full Name</span>}
+                rules={[{ required: true, message: "Name is required" }]}
+              >
+                <Input placeholder="Lead's full name" className="rounded-lg h-10" />
+              </Form.Item>
+
+              <Form.Item
+                name="phoneNumber"
+                label={<span className="font-semibold text-slate-700">Mobile Number</span>}
+                rules={[{ required: true, message: "Phone number is required" }]}
+              >
+                <InputNumber 
+                  style={{ width: "100%" }}
+                  placeholder="10-digit mobile number" 
+                  controls={false}
+                  className="rounded-lg h-10 flex items-center"
+                  onKeyPress={(event) => {
+                    if (!/[0-9]/.test(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="category"
+                label={<span className="font-semibold text-slate-700">Category</span>}
+                rules={[{ required: true, message: "Selection required" }]}
+              >
+                <Select placeholder="Rent or Buy?" className="rounded-lg h-10" size="large">
+                  <Option value="Rent">Rent</Option>
+                  <Option value="Sell/Buy">Sell/Buy</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="usageType"
+                label={<span className="font-semibold text-slate-700">Usage Type</span>}
+                rules={[{ required: true, message: "Selection required" }]}
+              >
+                <Select placeholder="Purpose of use" className="rounded-lg h-10" size="large">
+                  <Option value="Residential">Residential</Option>
+                  <Option value="Commercial">Commercial</Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="propertyType"
+                label={<span className="font-semibold text-slate-700">Property Type</span>}
+                rules={[{ required: true, message: "Selection required" }]}
+              >
+                <Select
+                  placeholder="Select type"
+                  className="rounded-lg h-10"
+                  size="large"
+                  disabled={!selectedUsageType}
+                  onChange={(val) => setShowOtherType(val === "Others")}
+                >
+                  {filteredPropertyTypes.map((type) => (
+                    <Option key={type._id} value={type.name}>
+                      {type.name}
+                    </Option>
+                  ))}
+                  <Option value="Others">Others</Option>
+                </Select>
+              </Form.Item>
+
+              {showOtherType && (
+                <Form.Item
+                  name="otherPropertyType"
+                  label={<span className="font-semibold text-slate-700">Specify Type</span>}
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="Enter property type" className="rounded-lg h-10" />
+                </Form.Item>
+              )}
+
+              <Form.Item
+                name="preferredLocation"
+                label={<span className="font-semibold text-slate-700">Preferred Location</span>}
+                rules={[{ required: true, message: "Location is required" }]}
+              >
+                <Input placeholder="e.g. White Town, Pondy" className="rounded-lg h-10" />
+              </Form.Item>
+
+              <Col span={24} className="p-0">
+                 <div className="flex gap-4 w-full">
+                    <Form.Item
+                      name="minBudget"
+                      label={<span className="font-semibold text-slate-700">Min Budget</span>}
+                      className="flex-1"
+                    >
+                      <InputNumber 
+                        style={{ width: "100%" }}
+                        placeholder="Min" 
+                        controls={false}
+                        className="rounded-lg h-10 flex items-center"
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      name="maxBudget"
+                      label={<span className="font-semibold text-slate-700">Max Budget</span>}
+                      className="flex-1"
+                    >
+                      <InputNumber 
+                        style={{ width: "100%" }}
+                        placeholder="Max" 
+                        controls={false}
+                        className="rounded-lg h-10 flex items-center"
+                      />
+                    </Form.Item>
+                 </div>
+              </Col>
+
+              <Form.Item
+                name="propertyPreferences"
+                label={<span className="font-semibold text-slate-700">Property Preferences</span>}
+                className="md:col-span-2"
+              >
+                <Input.TextArea 
+                  rows={2} 
+                  placeholder="e.g. 2BHK, Gated community, South facing..." 
+                  className="rounded-lg"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="message"
+                label={<span className="font-semibold text-slate-700">Additional Message</span>}
+                className="md:col-span-2"
+              >
+                <Input.TextArea 
+                  rows={3} 
+                  placeholder="Any other specific notes for the sellers..." 
+                  className="rounded-lg"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="referralSource"
+                label={<span className="font-semibold text-slate-700">Referral Source</span>}
+                className="md:col-span-2"
+              >
+                <Select placeholder="How did they hear about us?" className="rounded-lg h-10">
+                  <Option value="Facebook">Facebook</Option>
+                  <Option value="Instagram">Instagram</Option>
+                  <Option value="YouTube">YouTube</Option>
+                  <Option value="LinkedIn">LinkedIn</Option>
+                  <Option value="WhatsApp">WhatsApp</Option>
+                  <Option value="Google Search">Google Search</Option>
+                  <Option value="Friend/Reference">Friend/Reference</Option>
+                  <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+                  <Option value="Others">Others</Option>
+                </Select>
+              </Form.Item>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+              <Button 
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  addForm.resetFields();
+                }}
+                className="rounded-lg h-10 px-6"
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                loading={loading}
+                className="bg-indigo-600 hover:bg-indigo-700 rounded-lg h-10 px-8 font-bold"
+              >
+                Create Lead
+              </Button>
+            </div>
+          </Form>
         </div>
       </Modal>
     </div>

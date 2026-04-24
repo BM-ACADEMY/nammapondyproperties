@@ -36,14 +36,15 @@ exports.createEnquiry = async (req, res) => {
     const enquiry = new Enquiry(enquiryData);
     await enquiry.save();
 
-    // Emit socket event for real-time notification
-    const io = req.app.get("socketio");
-    if (io) {
-      io.to("admin-room").emit("new-enquiry", {
-        enquiryId: enquiry._id,
-        name: enquiryData.enquirer_name,
-        message: `New enquiry received from ${enquiryData.enquirer_name || "a user"}`,
-      });
+    // Increment lead usage for the seller if they have an active plan
+    const activeSubscription = await Subscription.findOne({
+      user: seller_id,
+      status: "active",
+      endDate: { $gt: new Date() },
+    });
+
+    if (activeSubscription) {
+      await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
     }
 
     res.status(201).json({ message: "Enquiry recorded successfully", enquiry });
@@ -111,21 +112,78 @@ exports.getEnquiries = async (req, res) => {
 
     // 4. Restricted Visibility Logic for Sellers
     if (!isAdmin) {
-      const activeSubscription = await Subscription.findOne({
+      // Fetch the most recent subscription (active or expired)
+      const lastSubscription = await Subscription.findOne({
         user: req.user._id,
-        status: "active",
-        endDate: { $gt: new Date() },
+      }).populate("plan").sort({ startDate: -1 });
+
+      const isActive = lastSubscription && lastSubscription.status === "active" && 
+                       (!lastSubscription.endDate || new Date(lastSubscription.endDate) > new Date());
+      
+      const leadsLimit = lastSubscription?.plan?.leadsLimit ?? 0;
+      const cycleStartDate = lastSubscription ? new Date(lastSubscription.startDate) : null;
+      const cycleEndDate = lastSubscription?.endDate ? new Date(lastSubscription.endDate) : null;
+
+      // Identify leads that belong to the most recent cycle
+      const currentCycleLeads = allEnquiries.filter(lead => {
+        const leadDate = new Date(lead.createdAt);
+        return leadDate >= cycleStartDate && (!cycleEndDate || leadDate <= cycleEndDate);
+      });
+      const totalInCycle = currentCycleLeads.length;
+
+      const maskedEnquiries = allEnquiries.map((lead) => {
+          // If no subscription ever existed, mask everything
+          if (!lastSubscription) {
+              return {
+                  ...lead,
+                  enquirer_phone: "XXXXXXXXXX",
+                  message: "Content Locked (Upgrade to View)",
+              };
+          }
+
+          const leadDate = new Date(lead.createdAt);
+
+          // Rule 1: Legacy leads (before first sub) are unlocked
+          if (leadDate < cycleStartDate) {
+              return lead;
+          }
+
+          // Rule 2: If plan is active, check ranking within cycle
+          if (isActive) {
+              const indexInCycle = currentCycleLeads.findIndex(e => e._id.toString() === lead._id.toString());
+              if (leadsLimit !== -1 && (totalInCycle - indexInCycle) > leadsLimit) {
+                  return {
+                      ...lead,
+                      enquirer_phone: "XXXXXXXXXX",
+                      message: "Content Locked (Upgrade to View)",
+                  };
+              }
+              return lead;
+          }
+
+          // Rule 3: Plan is Expired
+          // If lead arrived within the cycle, it preserves its unlock state from that time
+          if (cycleEndDate && leadDate <= cycleEndDate) {
+              const indexInCycle = currentCycleLeads.findIndex(e => e._id.toString() === lead._id.toString());
+              if (leadsLimit !== -1 && (totalInCycle - indexInCycle) > leadsLimit) {
+                  return {
+                      ...lead,
+                      enquirer_phone: "XXXXXXXXXX",
+                      message: "Content Locked (Upgrade to View)",
+                  };
+              }
+              return lead;
+          }
+
+          // Rule 4: Lead arrived AFTER the plan expired (in the gap)
+          return {
+              ...lead,
+              enquirer_phone: "XXXXXXXXXX",
+              message: "Content Locked (Upgrade to View)",
+          };
       });
 
-      if (!activeSubscription) {
-        // Mask sensitive data for unsubscribed sellers
-        const maskedEnquiries = allEnquiries.map((lead) => ({
-          ...lead,
-          enquirer_phone: "XXXXXXXXXX",
-          message: "Content Locked (Upgrade to View)",
-        }));
-        return res.json(maskedEnquiries);
-      }
+      return res.json(maskedEnquiries);
     }
 
     res.json(allEnquiries);
@@ -203,6 +261,62 @@ exports.deleteWhatsappLead = async (req, res) => {
     await WhatsappLead.findByIdAndDelete(req.params.id);
     res.json({ message: "WhatsApp lead deleted successfully" });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, type } = req.body;
+    const WhatsappLead = require("../models/WhatsappLead");
+    const User = require("../models/User");
+
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    let lead;
+    let model;
+
+    // Determine which model to use
+    if (type === "whatsapp_lead") {
+      model = WhatsappLead;
+    } else {
+      model = Enquiry;
+    }
+
+    lead = await model.findById(id);
+
+    if (!lead) {
+      // Fallback: search across both if type is missing or incorrect
+      lead = await Enquiry.findById(id);
+      model = Enquiry;
+      if (!lead) {
+        lead = await WhatsappLead.findById(id);
+        model = WhatsappLead;
+      }
+    }
+
+    if (!lead) {
+      return res.status(404).json({ error: "Lead/Enquiry not found" });
+    }
+
+    // Authorization check
+    const userDoc = await User.findById(req.user._id).populate("role_id");
+    const isAdmin = userDoc?.role_id?.role_name?.toLowerCase() === "admin";
+    const isOwner = lead.seller_id?.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: "Not authorized to update this status" });
+    }
+
+    lead.status = status;
+    await lead.save();
+
+    res.json({ message: "Status updated successfully", lead });
+  } catch (error) {
+    console.error("Update Status Error:", error);
     res.status(500).json({ error: error.message });
   }
 };

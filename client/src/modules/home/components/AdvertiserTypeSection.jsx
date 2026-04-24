@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, User } from "lucide-react";
 import { useNav } from "../../../context/NavContext";
+import { slugify } from "../../../utils/slugify";
 
 const AdvertiserTypeSection = () => {
     const navigate = useNavigate();
@@ -76,7 +77,7 @@ const AdvertiserTypeSection = () => {
                                     return (
                                         <div
                                             key={id}
-                                            onClick={() => navigate(`/business-user-list/${id}`)}
+                                            onClick={() => navigate(`/business/${slugify(name)}`)}
                                             className="group flex items-center justify-between py-3 cursor-pointer"
                                         >
                                             <div className="flex items-center gap-5">
