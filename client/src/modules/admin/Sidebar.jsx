@@ -498,12 +498,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         },
       ],
     },
-    {
-      key: "/admin/other-services",
-      icon: <Layers size={20} />,
-      label: "Other Services",
-      onClick: () => handleMenuClick("/admin/other-services"),
-    },
+
     {
       key: "settings-sub",
 

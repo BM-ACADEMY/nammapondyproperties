@@ -32,7 +32,7 @@ const formRoutes = require("./routes/formRoutes");
 const requirementRoutes = require("./routes/requirementRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const leadRoutes = require("./routes/leadRoutes");
-const otherServiceRoutes = require("./routes/otherServiceRoutes");
+
 const supportTicketRoutes = require("./routes/supportTicketRoute");
 
 const app = express();
@@ -113,7 +113,7 @@ app.use("/api/forms", formRoutes);
 app.use("/api/requirements", requirementRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/shared-leads", leadRoutes);
-app.use("/api/other-services", otherServiceRoutes);
+
 app.use("/api/support-tickets", supportTicketRoutes);
 
 /* ===============================
