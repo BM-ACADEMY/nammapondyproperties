@@ -78,8 +78,10 @@ const GeneralSettings = () => {
                         initialValue="Standard"
                     >
                         <Select className="w-full md:w-1/2" placeholder="Select Plan">
+                            <Select.Option value="Free">Free</Select.Option>
                             <Select.Option value="Standard">Standard</Select.Option>
                             <Select.Option value="Premium">Premium</Select.Option>
+                            <Select.Option value="Pro">Pro</Select.Option>
                         </Select>
                     </Form.Item>
 

@@ -193,13 +193,13 @@ const UpgradePlan = () => {
             return (
               <Col xs={24} sm={12} lg={8} key={plan._id} style={{ display: 'flex' }}>
                 <Card
-                  className="relative w-full rounded-2xl border-none shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col overflow-hidden bg-white"
+                  className="relative w-full rounded-2xl border-none shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col bg-white"
                   bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%', flex: 1 }}
                 >
                   {/* Ribbon for Popular */}
                   {isPopular && (
-                    <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20">
-                      <div className="absolute top-5 -left-10 w-40 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-lg">
+                    <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none">
+                      <div className="absolute top-6 -left-12 w-44 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-xl border-b border-white/20">
                         Popular
                       </div>
                     </div>

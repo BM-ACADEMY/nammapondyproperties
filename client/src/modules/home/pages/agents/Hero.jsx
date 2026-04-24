@@ -40,10 +40,6 @@ const HeroSection = () => {
                     className="w-full h-auto object-contain mix-blend-multiply" 
                   />
                   
-                  {/* Floating Elements (Subtle decoration) */}
-                  <div className="absolute top-1/4 -right-6 w-12 h-12 bg-white rounded-xl shadow-lg border border-slate-100 flex items-center justify-center animate-bounce duration-1000">
-                    <BarChart3 className="w-6 h-6 text-[#c19b48]" />
-                  </div>
               </div>
           </div>
 

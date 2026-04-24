@@ -389,7 +389,9 @@ const MyProperties = () => {
             ? `${planName} plan allows up to ${propertyLimit} property listings.`
             : planName === "Standard"
             ? "Standard plan supports up to 10 listings with better visibility."
-            : "Premium plan gives unlimited listings with top priority exposure."}
+            : planName === "Pro"
+            ? "Pro plan gives unlimited listings with the highest priority exposure."
+            : "Premium plan gives enhanced listings with top priority exposure."}
         </p>
       </div>
     </div>

@@ -118,7 +118,7 @@ export const Hero = () => {
               <img 
                 src={illustration} 
                 alt="Modern Project Illustration" 
-                className="w-full h-auto object-contain mix-blend-multiply transition-all duration-700 group-hover:scale-105" 
+                className="w-full h-auto object-contain mix-blend-multiply transition-all duration-700" 
               />                         
             </div>
 

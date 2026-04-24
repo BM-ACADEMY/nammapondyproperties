@@ -123,7 +123,7 @@ const BuilderPricing = () => {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-white border ${plan.isPopular ? 'border-[#c5a059] shadow-[0_12px_32px_rgba(197,160,89,0.15)]' : 'border-[#0078DB] shadow-[0_8px_24px_rgba(0,0,0,0.08)]'} rounded w-full p-6 transition-all duration-300 hover:scale-[1.02] flex flex-col relative group cursor-pointer`}
+              className={`bg-white border ${plan.isPopular ? 'border-[#c5a059] shadow-[0_12px_32px_rgba(197,160,89,0.15)]' : 'border-[#0078DB] shadow-[0_8px_24px_rgba(0,0,0,0.08)]'} rounded w-full p-6 transition-all duration-300 flex flex-col relative group cursor-pointer`}
             >
               {plan.isPopular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#c5a059] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -187,7 +187,7 @@ const BuilderPricing = () => {
               {/* Action Button */}
               <button
                 onClick={handlePlanClick}
-                className={`w-full ${plan.isPopular ? 'bg-[#c5a059]' : 'bg-[#091E42]'} text-white py-3.5 rounded-sm font-bold text-[14px] hover:opacity-90 cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]`}
+                className={`w-full ${plan.isPopular ? 'bg-[#c5a059]' : 'bg-[#091E42]'} text-white py-3.5 rounded-sm font-bold text-[14px] hover:opacity-90 cursor-pointer transition duration-200 mt-auto shadow-md`}
               >
                 Get {plan.name}
               </button>

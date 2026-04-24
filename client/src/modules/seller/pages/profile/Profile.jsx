@@ -713,7 +713,7 @@ const Profile = () => {
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <Title level={3} className="!text-2xl !font-semibold !text-[#1a2b56] !mb-0">
-                  {activeSub?.plan?.name || "Premium"}
+                  {activeSub?.plan?.name || settings?.defaultPlanName || "BASIC"}
                 </Title>
                 <Text className="text-blue-600 text-base font-semibold block">
                   {activeSub?.plan?.propertyLimit === -1 ? "Unlimited" : activeSub?.plan?.propertyLimit || "Unlimited"} Properties Upload Limit
