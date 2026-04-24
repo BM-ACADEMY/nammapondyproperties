@@ -301,12 +301,7 @@ const RequirementList = () => {
         </div>
       ),
     },
-    {
-      title: "Referral Source",
-      dataIndex: "referralSource",
-      key: "referralSource",
-      render: (source) => source || <Text type="secondary" className="text-[10px]">Direct/Unknown</Text>
-    },
+
     {
       title: "Budget",
       key: "budget",
@@ -576,12 +571,7 @@ const RequirementList = () => {
                   </p>
                 </div>
 
-                <div className="mb-4">
-                  <Text type="secondary" className="text-xs uppercase font-semibold">Referral Source</Text>
-                  <p className="m-0 mt-1 text-slate-700 font-bold text-indigo-600">
-                    {selectedRequirement.referralSource || "Direct / Not Specified"}
-                  </p>
-                </div>
+
               </Col>
             </Row>
           </div>
@@ -1064,6 +1054,19 @@ const RequirementList = () => {
                   placeholder="e.g. 2BHK, Gated community, South facing..." 
                   className="rounded-lg"
                 />
+              </Form.Item>
+
+              <Form.Item
+                name="heardFrom"
+                label={<span className="font-semibold text-slate-700">Lead Source (Marketing)</span>}
+                rules={[{ required: true, message: "Source is required" }]}
+                className="md:col-span-2"
+              >
+                <Select placeholder="General source of the lead" className="rounded-lg h-10">
+                  <Option value="Social Media">Social Media</Option>
+                  <Option value="Reference">Reference</Option>
+                  <Option value="Google">Google</Option>
+                </Select>
               </Form.Item>
 
               <Form.Item

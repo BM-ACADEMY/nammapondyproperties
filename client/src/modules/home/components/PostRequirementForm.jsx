@@ -102,8 +102,15 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
         >
           <Select placeholder="Select source">
             <Option value="Social Media">Social Media</Option>
+            <Option value="Facebook">Facebook</Option>
+            <Option value="Instagram">Instagram</Option>
+            <Option value="YouTube">YouTube</Option>
+            <Option value="LinkedIn">LinkedIn</Option>
+            <Option value="WhatsApp">WhatsApp</Option>
+            <Option value="Google Search">Google Search</Option>
             <Option value="Reference">Reference from Known Person</Option>
-            <Option value="Google">Google</Option>
+            <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+            <Option value="Others">Others</Option>
           </Select>
         </Form.Item>
 
