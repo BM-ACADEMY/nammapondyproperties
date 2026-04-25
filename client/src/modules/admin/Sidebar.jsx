@@ -464,13 +464,14 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     },
     {
       key: "/admin/support",
-      icon: <Headphones size={20} />,
+      icon: (
+        <Badge count={newSupportTicketCount} size="small" offset={[10, 0]}>
+          <Headphones size={20} />
+        </Badge>
+      ),
       label: (
         <div className="flex justify-between items-center pr-4">
           <span>Support Tickets</span>
-          {newSupportTicketCount > 0 && (
-            <Badge count={newSupportTicketCount} size="small" />
-          )}
         </div>
       ),
       onClick: () => handleMenuClick("/admin/support"),
@@ -576,7 +577,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         <div className="flex items-center justify-center h-16 m-2 bg-white/10 rounded-lg group hover:bg-white/20 transition-all duration-300">
           {collapsed && !isMobile ? (
             <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center text-white font-bold group-hover:scale-110 transition-transform">
-              {user?.isSuperAdmin ? "AP" : "SAP"}
+              {user?.isSuperAdmin ? "AP" : "SP"}
             </div>
           ) : (
             <span className="text-white text-lg font-bold tracking-wide group-hover:scale-105 transition-transform">

@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Table, Card, Button, Input, Tag, message, Drawer, Descriptions, Popconfirm, Row, Col, Typography, Tooltip, Avatar } from "antd";
+import { Table, Card, Button, Input, Tag, message, Drawer, Descriptions, Popconfirm, Row, Col, Typography, Tooltip, Avatar, Select } from "antd";
 import { Download, Search, RefreshCw, Eye, Trash2, Phone, Mail, Clock, Calendar, MessageSquare, CheckCircle, AlertCircle, User, Info } from "lucide-react";
 import api from "@/services/api";
 import * as XLSX from "xlsx";
 import moment from "moment";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const ContactMessages = () => {
   const [data, setData] = useState([]);
@@ -83,6 +84,22 @@ const ContactMessages = () => {
     } catch (error) {
       console.error("Error deleting message:", error);
       message.error(error.response?.data?.message || "Failed to delete message");
+    }
+  };
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      const res = await api.patch(`/forms/contact/${id}/status`, { status });
+      if (res.data.success) {
+        message.success(`Status updated to ${status}`);
+        fetchData();
+        if (selectedMessage && selectedMessage._id === id) {
+          setSelectedMessage(res.data.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      message.error("Failed to update status");
     }
   };
 
@@ -173,6 +190,42 @@ const ContactMessages = () => {
         <div className="flex items-center gap-1.5 text-gray-500 font-medium whitespace-nowrap">
           <Clock size={14} className="text-gray-400" />
           <span>{moment(date).format("hh:mm A")}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 140,
+      render: (status, record) => (
+        <Select
+          value={status || "new"}
+          onChange={(value) => handleStatusChange(record._id, value)}
+          size="small"
+          style={{ width: 120 }}
+          className={`status-select-${status?.toLowerCase()}`}
+        >
+          <Option value="new">NEW MESSAGE</Option>
+          <Option value="contacted">CONTACTED</Option>
+          <Option value="closed">CLOSED</Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Handled By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
+      width: 130,
+      render: (updatedBy) => (
+        <div className="flex flex-col">
+          {updatedBy ? (
+            <Tag color="cyan" className="font-bold text-[10px] uppercase border-none bg-cyan-50 text-cyan-700 m-0">
+              {updatedBy.name}
+            </Tag>
+          ) : (
+            <span className="text-gray-300 text-[10px] italic">Unassigned</span>
+          )}
         </div>
       ),
     },
@@ -323,6 +376,23 @@ const ContactMessages = () => {
                     <Tag color={selectedMessage.sellProperty ? "purple" : "cyan"} className="rounded-full mt-1 border-none font-semibold">
                       {selectedMessage.sellProperty ? "Seller Enquiry" : "General Inquiry"}
                     </Tag>
+                    <div className="mt-2">
+                      <Select
+                        value={selectedMessage.status || "new"}
+                        onChange={(value) => handleStatusChange(selectedMessage._id, value)}
+                        size="small"
+                        style={{ width: 140 }}
+                      >
+                        <Option value="new">NEW MESSAGE</Option>
+                        <Option value="contacted">CONTACTED</Option>
+                        <Option value="closed">CLOSED</Option>
+                      </Select>
+                      {selectedMessage.updatedBy && (
+                        <div className="text-[10px] text-gray-400 mt-1 uppercase font-bold">
+                          Updated by: {selectedMessage.updatedBy.name}
+                        </div>
+                      )}
+                    </div>
                   </div>
                </div>
                <div className="grid grid-cols-1 gap-3">

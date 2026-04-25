@@ -131,7 +131,7 @@ const AdminList = () => {
   };
 
   const superAdmins = (admins || []).filter(admin => admin.isSuperAdmin);
-  const subAdmins = (admins || []).filter(admin => !admin.isSuperAdmin);
+  const subAdmins = (admins || []).filter(admin => !admin.isSuperAdmin); // Support Teams
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -286,7 +286,7 @@ const AdminList = () => {
       render: (_, record) => (
         <div className="flex flex-col gap-1">
           <Tag color={record.isSuperAdmin ? "purple" : "blue"} className="w-fit rounded-md px-2">
-            {record.isSuperAdmin ? "Super Admin" : "Sub Admin"}
+            {record.isSuperAdmin ? "Super Admin" : "Support Team"}
           </Tag>
           {!record.isSuperAdmin && (
             <span className="text-[11px] text-gray-500">
@@ -445,7 +445,7 @@ const AdminList = () => {
                 <UserCheck size={24} />
               </div>
               <div>
-                <div className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Sub Admins</div>
+                <div className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Support Teams</div>
                 <div className="text-2xl font-bold text-gray-800">{loading ? "..." : subAdmins.length}</div>
               </div>
             </div>
@@ -487,7 +487,7 @@ const AdminList = () => {
               label: (
                 <div className="flex items-center gap-2 px-4 py-2">
                   <UserCheck size={18} />
-                  <span>Sub Admins</span>
+                  <span>Support Teams</span>
                   <Tag className="ml-1 border-none bg-blue-100 text-blue-600 rounded-full">{subAdmins.length}</Tag>
                 </div>
               ),

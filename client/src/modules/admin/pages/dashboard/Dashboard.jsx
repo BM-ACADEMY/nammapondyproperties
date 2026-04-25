@@ -194,7 +194,7 @@ const Dashboard = () => {
             style={{ margin: 0 }}
             className="bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600"
           >
-            {user?.isSuperAdmin ? "Admin Insights" : "Sub Admin Insights"}
+            {user?.isSuperAdmin ? "Admin Insights" : "Support Team Insights"}
           </Title>
           <Text type="secondary">Real-time system performance & activity</Text>
         </div>

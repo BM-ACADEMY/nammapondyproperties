@@ -16,6 +16,7 @@ exports.createTicket = async (req, res) => {
           isAdmin: false,
         },
       ],
+      isAdminRead: false,
     });
 
     await newTicket.save();
@@ -58,6 +59,7 @@ exports.getAllTickets = async (req, res) => {
     const tickets = await SupportTicket.find()
       .populate("seller", "name email profile_image")
       .sort({ lastMessageAt: -1 });
+    
     res.status(200).json({ success: true, tickets });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -78,6 +80,41 @@ exports.getTicketById = async (req, res) => {
     const isUserAdmin = req.user.isSuperAdmin || (req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin");
     if (!isUserAdmin && ticket.seller._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ success: false, message: "Not authorized to access this ticket" });
+    }
+
+    // Mark messages as read if viewing party is the recipient
+    let hasChanged = false;
+    ticket.messages.forEach(msg => {
+      if (!msg.read) {
+        if (isUserAdmin && !msg.isAdmin) {
+          msg.read = true;
+          hasChanged = true;
+        } else if (!isUserAdmin && msg.isAdmin) {
+          msg.read = true;
+          hasChanged = true;
+        }
+      }
+    });
+
+    if (hasChanged) {
+      await ticket.save();
+      // Notify the other party that messages were read
+      const io = req.app.get("socketio");
+      if (io) {
+        if (isUserAdmin) {
+          // Admin read seller's messages, notify seller
+          io.to(`seller-${ticket.seller._id}`).emit("messages-read", { ticketId: ticket._id });
+        } else {
+          // Seller read admin's messages, notify admins
+          io.to("admin-room").emit("messages-read", { ticketId: ticket._id });
+        }
+      }
+    }
+
+    // Mark as read if admin is viewing (general ticket flag)
+    if (isUserAdmin && !ticket.isAdminRead) {
+      ticket.isAdminRead = true;
+      await ticket.save();
     }
 
     res.status(200).json({ success: true, ticket });
@@ -128,19 +165,25 @@ exports.addMessage = async (req, res) => {
     // Real-time notification
     const io = req.app.get("socketio");
     if (io) {
-      if (isAdmin) {
+      if (finalIsAdmin) {
+        // Admin sent message, mark as read
+        ticket.isAdminRead = true;
         // Notify seller
         io.to(`seller-${ticket.seller}`).emit("new-support-message", {
           ticketId,
           message: latestPopulatedMessage,
         });
       } else {
+        // Seller sent message, mark as unread
+        ticket.isAdminRead = false;
         // Notify admins
         io.to("admin-room").emit("new-support-message", {
           ticketId,
           message: latestPopulatedMessage,
+          isAdminRead: false
         });
       }
+      await ticket.save();
     }
 
     res.status(200).json({
@@ -157,11 +200,23 @@ exports.addMessage = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    const ticketId = req.params.id;
+
+    // Determine if we should set or unset the resolvedAt field for TTL
+    let update = { status };
+    if (status === "resolved" || status === "closed") {
+      update.resolvedAt = new Date();
+    } else {
+      // If status is "open", we unset resolvedAt to stop the deletion timer
+      update.$unset = { resolvedAt: 1 };
+    }
+
     const ticket = await SupportTicket.findByIdAndUpdate(
-      req.params.id,
-      { status },
+      ticketId,
+      update,
       { new: true }
     );
+
     res.status(200).json({ success: true, ticket });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

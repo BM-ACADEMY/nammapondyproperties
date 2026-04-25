@@ -37,7 +37,9 @@ exports.createContact = async (req, res) => {
 // Get all contact messages (Admin)
 exports.getContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find().sort({ createdAt: -1 });
+    const contacts = await Contact.find()
+      .populate("updatedBy", "name")
+      .sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       data: contacts,
@@ -161,6 +163,38 @@ exports.updateRequestCallStatus = async (req, res) => {
     res.status(200).json({
       success: true,
       data: updatedRequest,
+      message: "Status updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update status",
+      error: error.message,
+    });
+  }
+};
+// Update contact message status
+exports.updateContactStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedContact = await Contact.findByIdAndUpdate(
+      id,
+      { 
+        status,
+        updatedBy: req.user._id 
+      },
+      { new: true }
+    ).populate("updatedBy", "name");
+
+    if (!updatedContact) {
+      return res.status(404).json({ success: false, message: "Contact not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: updatedContact,
       message: "Status updated successfully",
     });
   } catch (error) {

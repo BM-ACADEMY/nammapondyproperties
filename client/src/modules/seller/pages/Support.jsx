@@ -27,6 +27,7 @@ import {
   ArrowLeftOutlined,
   CheckCircleOutlined,
   MoreOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useSocket } from "../../../context/SocketContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -102,12 +103,26 @@ const Support = () => {
       });
     };
 
+    const handleMessagesRead = (data) => {
+      if (data.ticketId === activeTicket?._id) {
+        setActiveTicket(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            messages: prev.messages.map(m => !m.isAdmin ? { ...m, read: true } : m)
+          };
+        });
+      }
+    };
+
     socket.on("new-support-message", handleNewMessage);
+    socket.on("messages-read", handleMessagesRead);
 
     return () => {
       socket.off("new-support-message", handleNewMessage);
+      socket.off("messages-read", handleMessagesRead);
     };
-  }, [socket]);
+  }, [socket, activeTicket?._id]);
 
   useEffect(() => {
     if (searchTerm) {
@@ -200,7 +215,7 @@ const Support = () => {
             className="bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-20" 
             theme="light"
           >
-            <div className="p-6 bg-gray-50 border-b border-gray-200">
+            <div className="p-6 bg-gray-200 border-b border-gray-200">
               <div className="flex justify-between items-center mb-4">
                 <Title level={4} className="m-0 font-bold tracking-tight text-gray-800">Support Desk</Title>
                 <div className="flex items-center gap-2">
@@ -246,9 +261,16 @@ const Support = () => {
                         <Tag color={getStatusColor(item.status)} className="m-0 rounded-full text-[10px] px-2 py-0 border-none font-bold uppercase tracking-wider shadow-sm">
                           {item.status}
                         </Tag>
-                        <Text className="text-[10px] text-gray-400 font-bold uppercase">
-                          {moment(item.lastMessageAt).fromNow()}
-                        </Text>
+                        <div className="flex flex-col items-end">
+                          <Text className="text-[11px] text-gray-400 font-bold uppercase">
+                            {moment(item.lastMessageAt).fromNow()}
+                          </Text>
+                          {item.resolvedAt && (
+                            <Text className="text-[9px] text-red-500 font-bold uppercase mt-0.5">
+                              Deletes in {Math.max(0, 30 - moment().diff(moment(item.resolvedAt), 'days'))} days
+                            </Text>
+                          )}
+                        </div>
                       </div>
                       <Text strong className={`text-sm block truncate ${activeTicket?._id === item._id ? "text-blue-700" : "text-gray-800"}`}>
                         {item.subject}
@@ -308,44 +330,75 @@ const Support = () => {
                   </div>
                 </div>
 
-                {/* Messages Container */}
-                <div className={`flex-1 overflow-y-auto ${isMobile ? "p-4" : "p-10"} space-y-6`}>
-                  <div className="flex justify-center mb-4 lg:mb-8">
-                    <div className="bg-gray-200/50 backdrop-blur-sm px-3 py-1 lg:px-4 lg:py-1.5 rounded-full border border-gray-300/50 flex items-center gap-2">
+                {/* Messages Container with WhatsApp Background */}
+                <div 
+                  className={`flex-1 overflow-y-auto ${isMobile ? "p-3" : "p-8"} space-y-3 bg-[#efeae2] relative`}
+                  style={{
+                    backgroundImage: `url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')`,
+                    backgroundBlendMode: 'overlay',
+                    backgroundColor: '#efeae2'
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-2 mb-6">
+                    <div className="bg-[#fff9c2] px-3 py-1.5 rounded-lg border border-gray-200/50 shadow-sm flex items-center gap-2">
                       <ClockCircleOutlined className="text-gray-500 text-[10px]" />
-                      <Text className="text-[10px] font-bold text-gray-600 uppercase tracking-tight">
-                        Ticket opened {moment(activeTicket.createdAt).format("MMM DD, YYYY")}
+                      <Text className="text-[11px] font-medium text-gray-700 uppercase tracking-wide">
+                        Ticket Created {moment(activeTicket.createdAt).format("MMM DD, YYYY")}
                       </Text>
                     </div>
+                    {activeTicket.resolvedAt && (
+                      <div className="bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 shadow-sm flex items-center gap-2">
+                        <DeleteOutlined className="text-red-500 text-[10px]" />
+                        <Text className="text-[11px] font-bold text-red-600 uppercase tracking-wide">
+                          Auto-deletion in {Math.max(0, 30 - moment().diff(moment(activeTicket.resolvedAt), 'days'))} days
+                        </Text>
+                      </div>
+                    )}
                   </div>
 
                   {activeTicket.messages.map((msg, idx) => {
-                    const isMe = !msg.isAdmin;
+                    const isMe = !msg.isAdmin; // In seller panel, seller is "me"
                     return (
                       <div
                         key={idx}
-                        className={`flex ${isMe ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                        className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1 animate-in fade-in slide-in-from-bottom-1 duration-200`}
                       >
-                        <div className={`max-w-[85%] lg:max-w-[70%] flex gap-2 lg:gap-4 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                          <Avatar
-                            size={isMobile ? 28 : 32}
-                            src={!msg.isAdmin && user?.profile_image ? (user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL.replace('/api', '')}${user.profile_image}`) : null}
-                            icon={<UserOutlined />}
-                            className={`${isMe ? "bg-blue-600" : "bg-orange-500"} shadow-md flex-shrink-0`}
+                        <div className={`relative max-w-[85%] lg:max-w-[65%] min-w-[80px] px-3 py-1.5 rounded-lg shadow-sm ${
+                          isMe 
+                            ? "bg-[#d9fdd3] rounded-tr-none ml-10" 
+                            : "bg-white rounded-tl-none mr-10"
+                        }`}>
+                          {/* WhatsApp Bubble Tail */}
+                          <div 
+                            className={`absolute top-0 w-3 h-3 ${isMe ? "-right-2" : "-left-2"}`}
+                            style={{
+                              background: isMe ? '#d9fdd3' : '#ffffff',
+                              clipPath: isMe ? 'polygon(0 0, 0 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)'
+                            }}
                           />
-                          <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                            <div
-                              className={`px-4 py-2.5 lg:px-5 lg:py-3.5 rounded-2xl lg:rounded-3xl text-xs lg:text-sm shadow-md transition-all hover:shadow-lg ${
-                                isMe
-                                  ? "bg-blue-600 text-white rounded-tr-none"
-                                  : "bg-white border border-gray-200 text-gray-800 rounded-tl-none"
-                              }`}
-                            >
-                              <div className="font-medium whitespace-pre-wrap leading-relaxed">{msg.content}</div>
-                            </div>
-                            <span className="text-[9px] mt-1.5 font-bold text-gray-500 px-1 uppercase tracking-tighter opacity-80">
-                              {msg.isAdmin ? "Admin Support" : "You"} • {moment(msg.createdAt).fromNow()}
+                          
+                          <div className="text-[14px] lg:text-[15px] text-[#111b21] leading-relaxed whitespace-pre-wrap pb-2 pr-14">
+                            {msg.content}
+                          </div>
+                          
+                          <div className="absolute bottom-1 right-2 flex items-center gap-1">
+                            <span className="text-[10px] text-[#667781] leading-none">
+                              {moment(msg.createdAt).format("HH:mm")}
                             </span>
+                            {isMe && (
+                              <div className="flex items-center -mb-0.5">
+                                {msg.read ? (
+                                  <svg viewBox="0 0 16 11" width="16" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1.5 5.5L5.5 9.5L14.5 0.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M5.5 5.5L9.5 9.5L18.5 0.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" transform="translate(-4, 0)"/>
+                                  </svg>
+                                ) : (
+                                  <svg viewBox="0 0 16 11" width="16" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1.5 5.5L5.5 9.5L14.5 0.5" stroke="#667781" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

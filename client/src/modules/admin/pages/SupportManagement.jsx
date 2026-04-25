@@ -26,6 +26,7 @@ import {
   ReloadOutlined,
   ClockCircleOutlined,
   ArrowLeftOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useSocket } from "../../../context/SocketContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -78,7 +79,7 @@ const SupportManagement = () => {
       setTickets((prev) => {
         const updated = prev.map((t) =>
           t._id === ticketId
-            ? { ...t, lastMessageAt: newMessage.createdAt }
+            ? { ...t, lastMessageAt: newMessage.createdAt, isAdminRead: data.isAdminRead !== undefined ? data.isAdminRead : newMessage.isAdmin }
             : t
         );
         return updated.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
@@ -106,14 +107,28 @@ const SupportManagement = () => {
       fetchTickets();
     };
 
+    const handleMessagesRead = (data) => {
+      if (data.ticketId === activeTicket?._id) {
+        setActiveTicket(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            messages: prev.messages.map(m => m.isAdmin ? { ...m, read: true } : m)
+          };
+        });
+      }
+    };
+
     socket.on("new-support-message", handleNewMessage);
     socket.on("new-support-ticket", handleNewTicket);
+    socket.on("messages-read", handleMessagesRead);
 
     return () => {
       socket.off("new-support-message", handleNewMessage);
       socket.off("new-support-ticket", handleNewTicket);
+      socket.off("messages-read", handleMessagesRead);
     };
-  }, [socket]);
+  }, [socket, activeTicket?._id]);
 
 
   useEffect(() => {
@@ -145,10 +160,14 @@ const SupportManagement = () => {
   };
 
   const fetchTicketDetails = async (id) => {
+    // Clear indicator immediately for better UX
+    setTickets(prev => prev.map(t => t._id === id ? { ...t, isAdminRead: true } : t));
+    
     try {
       const response = await api.get(`/support-tickets/${id}`);
       if (response.data.success) {
         setActiveTicket(response.data.ticket);
+        setTickets(prev => prev.map(t => t._id === id ? { ...t, isAdminRead: true } : t));
       }
     } catch (error) {}
   };
@@ -165,7 +184,7 @@ const SupportManagement = () => {
       if (response.data.success) {
         setActiveTicket(response.data.ticket);
         setMessageText("");
-        setTickets(prev => prev.map(t => t._id === activeTicket._id ? { ...t, lastMessageAt: new Date() } : t));
+        setTickets(prev => prev.map(t => t._id === activeTicket._id ? { ...t, lastMessageAt: new Date(), isAdminRead: true } : t));
       }
     } catch (error) {
       message.error("Failed to send message");
@@ -259,6 +278,11 @@ const SupportManagement = () => {
                     }`}
                     onClick={() => fetchTicketDetails(item._id)}
                   >
+                    {!item.isAdminRead && activeTicket?._id !== item._id && (
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center">
+                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.6)]" />
+                      </div>
+                    )}
                     <div className="p-5">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-3">
@@ -275,11 +299,18 @@ const SupportManagement = () => {
                             <Text className="text-[11px] text-gray-500 font-medium">
                               {moment(item.lastMessageAt).fromNow()}
                             </Text>
+                            {item.resolvedAt && (
+                              <Text className="text-[9px] text-red-500 font-bold uppercase mt-0.5">
+                                Deletes in {Math.max(0, 30 - moment().diff(moment(item.resolvedAt), 'days'))} days
+                              </Text>
+                            )}
                           </div>
                         </div>
-                        <Tag color={getStatusColor(item.status)} className="m-0 rounded-full text-[10px] px-2 py-0 border-none font-bold uppercase tracking-wider shadow-sm">
-                          {item.status}
-                        </Tag>
+                        <div className="flex flex-col items-end gap-2">
+                          <Tag color={getStatusColor(item.status)} className="m-0 border-none px-2.5 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider shadow-sm">
+                            {item.status}
+                          </Tag>
+                        </div>
                       </div>
                       <Text className={`text-sm block font-semibold truncate ${activeTicket?._id === item._id ? "text-blue-700" : "text-gray-700"}`}>
                         {item.subject}
@@ -343,16 +374,30 @@ const SupportManagement = () => {
                     )}
                   </div>
                 </div>
-
-                {/* Messages Container */}
-                <div className={`flex-1 overflow-y-auto ${isMobile ? "p-4" : "p-10"} space-y-6`}>
-                  <div className="flex justify-center mb-4 lg:mb-8">
-                    <div className="bg-gray-200/50 backdrop-blur-sm px-3 py-1 lg:px-4 lg:py-1.5 rounded-full border border-gray-300/50 flex items-center gap-2">
+                {/* Messages Container with WhatsApp Background */}
+                <div 
+                  className={`flex-1 overflow-y-auto ${isMobile ? "p-3" : "p-8"} space-y-3 bg-[#efeae2] relative`}
+                  style={{
+                    backgroundImage: `url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')`,
+                    backgroundBlendMode: 'overlay',
+                    backgroundColor: '#efeae2'
+                  }}
+                >
+                  <div className="flex flex-col items-center gap-2 mb-6">
+                    <div className="bg-[#fff9c2] px-3 py-1.5 rounded-lg border border-gray-200/50 shadow-sm flex items-center gap-2">
                       <ClockCircleOutlined className="text-gray-500 text-[10px]" />
-                      <Text className="text-[10px] font-bold text-gray-600 uppercase tracking-tight">
-                        Created {moment(activeTicket.createdAt).format("MMM DD, YYYY")}
+                      <Text className="text-[11px] font-medium text-gray-700 uppercase tracking-wide">
+                        Ticket Created {moment(activeTicket.createdAt).format("MMM DD, YYYY")}
                       </Text>
                     </div>
+                    {activeTicket.resolvedAt && (
+                      <div className="bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 shadow-sm flex items-center gap-2">
+                        <DeleteOutlined className="text-red-500 text-[10px]" />
+                        <Text className="text-[11px] font-bold text-red-600 uppercase tracking-wide">
+                          Auto-deletion in {Math.max(0, 30 - moment().diff(moment(activeTicket.resolvedAt), 'days'))} days
+                        </Text>
+                      </div>
+                    )}
                   </div>
 
                   {activeTicket.messages.map((msg, idx) => {
@@ -360,60 +405,79 @@ const SupportManagement = () => {
                     return (
                       <div
                         key={idx}
-                        className={`flex ${isMe ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                        className={`flex ${isMe ? "justify-end" : "justify-start"} mb-1 animate-in fade-in slide-in-from-bottom-1 duration-200`}
                       >
-                        <div className={`max-w-[85%] lg:max-w-[70%] flex gap-2 lg:gap-4 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
-                          <Avatar
-                            size={isMobile ? 28 : 32}
-                            src={!msg.isAdmin && activeTicket.seller?.profile_image ? (activeTicket.seller.profile_image.startsWith('http') ? activeTicket.seller.profile_image : `${import.meta.env.VITE_API_URL.replace('/api', '')}${activeTicket.seller.profile_image}`) : null}
-                            icon={<UserOutlined />}
-                            className={`${isMe ? "bg-orange-500" : "bg-blue-600"} shadow-md flex-shrink-0`}
+                        <div className={`relative max-w-[85%] lg:max-w-[65%] min-w-[80px] px-3 py-1.5 rounded-lg shadow-sm ${
+                          isMe 
+                            ? "bg-[#d9fdd3] rounded-tr-none ml-10" 
+                            : "bg-white rounded-tl-none mr-10"
+                        }`}>
+                          {/* WhatsApp Bubble Tail */}
+                          <div 
+                            className={`absolute top-0 w-3 h-3 ${isMe ? "-right-2" : "-left-2"}`}
+                            style={{
+                              background: isMe ? '#d9fdd3' : '#ffffff',
+                              clipPath: isMe ? 'polygon(0 0, 0 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)'
+                            }}
                           />
-                          <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                            <div
-                              className={`px-4 py-2.5 lg:px-5 lg:py-3.5 rounded-2xl lg:rounded-3xl text-xs lg:text-sm shadow-md transition-all hover:shadow-lg ${
-                                isMe
-                                  ? "bg-orange-500 text-white rounded-tr-none"
-                                  : "bg-white border border-gray-200 text-gray-800 rounded-tl-none"
-                              }`}
-                            >
-                              <div className="font-medium whitespace-pre-wrap leading-relaxed">{msg.content}</div>
-                            </div>
-                            <span className="text-[9px] mt-1.5 font-bold text-gray-500 px-1 uppercase tracking-tighter opacity-80">
-                              {moment(msg.createdAt).fromNow()}
+                          
+                          <div className="text-[14px] lg:text-[15px] text-[#111b21] leading-relaxed whitespace-pre-wrap pb-2 pr-14">
+                            {msg.content}
+                          </div>
+                          
+                          <div className="absolute bottom-1 right-2 flex items-center gap-1">
+                            <span className="text-[10px] text-[#667781] leading-none">
+                              {moment(msg.createdAt).format("HH:mm")}
                             </span>
+                            {isMe && (
+                              <div className="flex items-center -mb-0.5">
+                                {msg.read ? (
+                                  <svg viewBox="0 0 16 11" width="16" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1.5 5.5L5.5 9.5L14.5 0.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M5.5 5.5L9.5 9.5L18.5 0.5" stroke="#53bdeb" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" transform="translate(-4, 0)"/>
+                                  </svg>
+                                ) : (
+                                  <svg viewBox="0 0 16 11" width="16" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1.5 5.5L5.5 9.5L14.5 0.5" stroke="#667781" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
                     );
                   })}
                   <div ref={messagesEndRef} className="h-4" />
-                </div>                {/* Input Area */}
-                <div className={`${isMobile ? "p-3" : "p-6"} bg-white border-t border-gray-200 shadow-lg`}>
+                </div>
+                {/* Input Area */}
+                <div className={`${isMobile ? "p-3" : "p-6"} bg-white border-t border-gray-100`}>
                   {activeTicket.status === "open" ? (
-                    <div className="flex items-end gap-3 bg-gray-50 p-2 lg:p-3 rounded-[24px] lg:rounded-[32px] border border-gray-200 focus-within:border-blue-500 focus-within:bg-white focus-within:shadow-xl transition-all duration-300">
-                      <Input.TextArea
-                        autoSize={{ minRows: 1, maxRows: 6 }}
-                        placeholder="Write your response..."
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
-                        onPressEnter={(e) => {
-                          if (!e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        className="flex-1 border-none bg-transparent shadow-none focus:ring-0 text-sm lg:text-base p-2 lg:px-4 resize-none min-h-[40px] flex items-center"
-                        style={{ boxShadow: 'none' }}
-                      />
-                      <div className="pb-1 pr-1">
+                    <div className="max-w-4xl mx-auto flex items-end gap-3 bg-gray-50/80 p-2 lg:p-2.5 rounded-[24px] lg:rounded-[30px] border border-gray-200 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
+                      <div className="flex-1 flex items-center min-h-[44px] px-2">
+                        <Input.TextArea
+                          autoSize={{ minRows: 1, maxRows: 6 }}
+                          placeholder="Type your message here..."
+                          value={messageText}
+                          onChange={(e) => setMessageText(e.target.value)}
+                          onPressEnter={(e) => {
+                            if (!e.shiftKey) {
+                              e.preventDefault();
+                              handleSendMessage();
+                            }
+                          }}
+                          className="flex-1 border-none bg-transparent shadow-none focus:ring-0 text-sm lg:text-[15px] p-2 resize-none leading-relaxed text-gray-700"
+                          style={{ boxShadow: 'none' }}
+                        />
+                      </div>
+                      <div className="flex-shrink-0">
                         <Button
                           type="primary"
-                          icon={<SendOutlined />}
+                          icon={<SendOutlined className="text-lg" />}
                           onClick={handleSendMessage}
                           loading={sending}
                           disabled={!messageText.trim()}
-                          className="bg-orange-500 hover:bg-orange-600 border-none h-10 lg:h-12 w-10 lg:w-12 flex items-center justify-center rounded-2xl lg:rounded-3xl shadow-lg shadow-orange-200 transition-all active:scale-90"
+                          className="bg-blue-600 hover:bg-blue-700 border-none h-11 w-11 flex items-center justify-center rounded-full shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400"
                         />
                       </div>
                     </div>

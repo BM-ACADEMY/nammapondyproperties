@@ -255,7 +255,7 @@ const Footer = () => {
               <li className="flex items-center justify-start gap-4">
                 {/* <Mail className="w-5 h-5 text-gray-400 shrink-0" /> */}
                 <span className="underline-offset-4 hover:underline cursor-pointer">
-                  info@nammapondy.com
+                  help@nammapondyproperties.com
                 </span>
               </li>
             </ul>

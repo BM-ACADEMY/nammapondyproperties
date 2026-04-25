@@ -174,7 +174,7 @@ const AdminLayout = () => {
   const getBreadcrumbItems = () => {
     const pathSnippets = pathname.split("/").filter((i) => i);
     const breadcrumbItems = [
-      { title: <Link to="/admin/dashboard">{user?.isSuperAdmin ? "Admin" : "Sub Admin"}</Link> },
+      { title: <Link to="/admin/dashboard">{user?.isSuperAdmin ? "Admin" : "Support Team"}</Link> },
     ];
 
     pathSnippets.forEach((snippet, index) => {
@@ -378,7 +378,7 @@ const AdminLayout = () => {
                     {user?.name || "Admin"}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {user?.isSuperAdmin ? "Super Admin" : "Sub Admin"}
+                    {user?.isSuperAdmin ? "Super Admin" : "Support Team"}
                   </div>
                 </div>
                 <Avatar
