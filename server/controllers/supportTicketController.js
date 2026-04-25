@@ -215,7 +215,16 @@ exports.updateStatus = async (req, res) => {
       ticketId,
       update,
       { new: true }
-    );
+    ).populate("seller", "name email profile_image");
+
+    // Real-time notification for status change
+    const io = req.app.get("socketio");
+    if (io) {
+      // Notify seller
+      io.to(`seller-${ticket.seller._id}`).emit("ticket-status-updated", { ticket });
+      // Notify admins
+      io.to("admin-room").emit("ticket-status-updated", { ticket });
+    }
 
     res.status(200).json({ success: true, ticket });
   } catch (error) {

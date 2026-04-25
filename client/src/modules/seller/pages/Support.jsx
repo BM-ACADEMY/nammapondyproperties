@@ -115,24 +115,60 @@ const Support = () => {
       }
     };
 
+    const handleStatusUpdated = (data) => {
+      const updatedTicket = data.ticket;
+      setTickets(prev => prev.map(t => t._id === updatedTicket._id ? updatedTicket : t));
+      if (activeTicket?._id === updatedTicket._id) {
+        setActiveTicket(updatedTicket);
+      }
+    };
+
     socket.on("new-support-message", handleNewMessage);
     socket.on("messages-read", handleMessagesRead);
+    socket.on("ticket-status-updated", handleStatusUpdated);
 
     return () => {
       socket.off("new-support-message", handleNewMessage);
       socket.off("messages-read", handleMessagesRead);
+      socket.off("ticket-status-updated", handleStatusUpdated);
     };
   }, [socket, activeTicket?._id]);
 
   useEffect(() => {
+    let result = tickets;
     if (searchTerm) {
-      setFilteredTickets(tickets.filter(t => 
+      result = result.filter(t => 
         t.subject.toLowerCase().includes(searchTerm.toLowerCase())
-      ));
-    } else {
-      setFilteredTickets(tickets);
+      );
     }
+    setFilteredTickets(result);
   }, [tickets, searchTerm]);
+
+  // Auto-remove expired tickets from UI in real-time
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      setTickets(prev => {
+        const now = moment();
+        const filtered = prev.filter(t => {
+          if (!t.resolvedAt) return true;
+          // Use 30 days for production
+          const expiryTime = moment(t.resolvedAt).add(30, 'days');
+          return now.isBefore(expiryTime);
+        });
+        
+        if (filtered.length !== prev.length) {
+          // If the active ticket was removed, clear it
+          if (activeTicket && !filtered.find(t => t._id === activeTicket._id)) {
+            setActiveTicket(null);
+          }
+          return filtered;
+        }
+        return prev;
+      });
+    }, 60000); // Check every minute in production
+
+    return () => clearInterval(cleanupInterval);
+  }, [activeTicket]);
 
   const fetchTickets = async () => {
     setLoading(true);

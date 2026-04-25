@@ -56,7 +56,8 @@ const supportTicketSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// TTL Index to auto-delete tickets 1 minute after they are resolved or closed (FOR TESTING)
-supportTicketSchema.index({ resolvedAt: 1 }, { expireAfterSeconds: 60 });
+// TTL Index to auto-delete tickets 30 days after they are resolved or closed
+supportTicketSchema.index({ resolvedAt: 1 }, { expireAfterSeconds: 2592000 });
 
 module.exports = mongoose.model("SupportTicket", supportTicketSchema);
+
