@@ -617,20 +617,29 @@ const Header = () => {
                           initial="hidden"
                           animate="visible"
                           exit="exit"
-                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 z-50 border border-gray-100 overflow-hidden"
+                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50 overflow-hidden"
                         >
-                          <div className="px-2">
+                          {/* Welcome Header */}
+                          <div className="px-5 py-4 border-b border-gray-100 bg-slate-50">
+                            <p className="text-sm font-bold text-gray-900 tracking-wide">
+                              Welcome to NammaPondy
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                              Login to manage your properties, leads and saved listings.
+                            </p>
+                          </div>
+
+                          {/* Login Action */}
+                          <div className="p-4">
                             <button
                               onClick={() => {
                                 setIsLoginMenuOpen(false);
                                 setLoginModalOpen(true);
                               }}
-                              className="w-full flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
+                              className="w-full flex items-center justify-center px-4 py-3 bg-[#166aa8] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-[0.98] group"
                             >
-                              <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                              <span className="group-hover:translate-x-1 transition-transform">
-                                Login
-                              </span>
+                              <User className="h-4 w-4 mr-2 text-white/80 group-hover:text-white transition-colors" />
+                              <span>Login / Register</span>
                             </button>
                           </div>
                         </motion.div>
