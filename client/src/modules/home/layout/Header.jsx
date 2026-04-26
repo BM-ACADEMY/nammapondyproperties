@@ -335,13 +335,6 @@ const Header = () => {
                                     >
                                       Builder Info
                                     </Link>
-                                    <Link
-                                      to={`/business/${slugify(name)}`}
-                                      onClick={() => setActiveBusinessDropdown(null)}
-                                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
-                                    >
-                                      Builder List
-                                    </Link>
                                   </>
                                 )}
                                 <button
@@ -905,13 +898,6 @@ const Header = () => {
                                     className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
                                   >
                                     Builder Info
-                                  </Link>
-                                  <Link
-                                    to={`/business/${slugify(name)}`}
-                                    onClick={() => setIsMenuOpen(false)}
-                                    className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
-                                  >
-                                    Builder List
                                   </Link>
                                 </>
                               )}
