@@ -182,7 +182,8 @@ const propertySchema = new mongoose.Schema(
     media: {
       featuredImage: String,
       images: [String],
-      floorPlan: String
+      floorPlan: String,
+      floorPlans: [String]
     },
 
     // =====================================================
@@ -202,8 +203,13 @@ const propertySchema = new mongoose.Schema(
     // =====================================================
     status: {
       type: String,
-      enum: ["Active", "Sold", "Rented", "Pending"],
+      enum: ["Active", "Sold", "Rented", "Pending", "Edit Pending Approval"],
       default: "Pending"
+    },
+
+    pendingEdits: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null
     },
 
     isVerified: {
@@ -228,8 +234,11 @@ const propertySchema = new mongoose.Schema(
     },
 
     soldPrice: Number,
-    approvedAt: Date
-
+    approvedAt: Date,
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    }
   },
   {
     timestamps: true

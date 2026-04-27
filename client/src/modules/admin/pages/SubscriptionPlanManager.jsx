@@ -13,10 +13,13 @@ import {
   Dropdown,
   Switch,
   Checkbox,
-  Card
+  Card,
+  Tabs
 } from "antd";
-import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck, XCircle, Star, Check, X } from "lucide-react";
+import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck, XCircle, Star, Check, X, Filter } from "lucide-react";
 import axios from "axios";
+
+const { TabPane } = Tabs;
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -69,7 +72,9 @@ const SubscriptionPlanManager = () => {
     setEditingPlan(record);
     form.setFieldsValue({
       ...record,
-      businessType: record.businessType?._id,
+      businessType: record.businessType?._id || record.businessType,
+      propertyLimit: record.propertyLimit,
+      leadsLimit: record.leadsLimit,
       features: record.features?.join("\n"),
       notIncluded: record.notIncluded?.join("\n"),
     });
@@ -116,18 +121,26 @@ const SubscriptionPlanManager = () => {
     }
   };
 
+  // Group plans by business type
+  const groupedPlans = plans.reduce((acc, plan) => {
+    const typeName = plan.businessType?.name || "Global / Other";
+    if (!acc[typeName]) acc[typeName] = [];
+    acc[typeName].push(plan);
+    return acc;
+  }, {});
+
   const PlanCard = ({ plan }) => {
     const isPopular = plan.isPopular;
 
     return (
       <Card
-        className={`relative w-full h-full rounded-2xl border-none shadow-xl transition-all duration-300 flex flex-col overflow-hidden bg-white`}
+        className={`relative w-full h-full rounded-2xl border-none shadow-xl transition-all duration-300 flex flex-col overflow-hidden bg-white hover:shadow-2xl`}
         styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } }}
       >
         {/* Ribbon for Popular */}
         {isPopular && (
-          <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20">
-            <div className="absolute top-5 -left-10 w-40 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-lg">
+          <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20 pointer-events-none">
+            <div className="absolute top-6 -left-12 w-44 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-xl border-b border-white/20">
               Popular
             </div>
           </div>
@@ -211,6 +224,11 @@ const SubscriptionPlanManager = () => {
             <span>Limit: {plan.propertyLimit === -1 ? "Unlimited" : `${plan.propertyLimit} Properties`}</span>
           </div>
 
+          <div className="mb-4 text-xs font-bold text-gray-500 flex items-center gap-2">
+            <CheckCircle size={14} className="text-emerald-500" />
+            <span>Leads: {plan.leadsLimit === -1 ? "Unlimited" : `${plan.leadsLimit} Credits`}</span>
+          </div>
+
           <div className="space-y-3">
             {/* Checkmarks */}
             {plan.features?.map((feature, idx) => (
@@ -238,45 +256,71 @@ const SubscriptionPlanManager = () => {
   };
 
   return (
-    <div className="p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl shadow-inner">
-              <CreditCard size={24} />
-            </div>
-            Subscription Plans
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Manage properties upload limits and subscription pricing for sellers
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+      <div className="max-w-7xl">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+              <div className="p-2 bg-blue-600 text-white rounded-xl shadow-lg">
+                <CreditCard size={24} />
+              </div>
+              Subscription Plans
+            </h1>
+            <p className="text-gray-500 text-sm font-medium mt-1">
+              Manage pricing tiers and listing quotas for your real estate business.
+            </p>
+          </div>
 
-        <Button
-          type="primary"
-          icon={<Plus size={18} />}
-          onClick={handleAdd}
-          className="bg-blue-600 hover:bg-blue-700 h-auto py-2.5 px-6 rounded-xl font-semibold shadow-md flex items-center gap-2 transition-all hover:scale-[1.02]"
-        >
-          Add Plan
-        </Button>
-      </div>
+          <Button
+            type="primary"
+            icon={<Plus size={18} />}
+            onClick={handleAdd}
+            className="bg-blue-600 hover:bg-blue-700 h-auto py-3 px-8 rounded-xl font-bold shadow-lg flex items-center gap-2 transition-all hover:scale-[1.02]"
+          >
+            Create New Plan
+          </Button>
+        </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-96 bg-gray-100 rounded-2xl" />
+            <div key={i} className="h-96 bg-gray-200 rounded-2xl shadow-sm" />
           ))}
         </div>
       ) : plans.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {plans.map((plan) => (
-            <PlanCard key={plan._id} plan={plan} />
+        <Tabs 
+          defaultActiveKey="0" 
+          className="premium-tabs"
+          type="card"
+          tabBarGutter={12}
+        >
+          {Object.keys(groupedPlans).map((typeName, index) => (
+            <TabPane 
+              tab={
+                <span className="flex items-center gap-2 px-2">
+                  <Filter size={14} />
+                  {typeName}
+                  <Tag className="ml-1 border-none bg-gray-100 text-gray-600 rounded-full text-[10px]">{groupedPlans[typeName].length}</Tag>
+                </span>
+              } 
+              key={index}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-4">
+                {groupedPlans[typeName].map((plan) => (
+                  <PlanCard key={plan._id} plan={plan} />
+                ))}
+              </div>
+            </TabPane>
           ))}
-        </div>
+        </Tabs>
       ) : (
-        <div className="bg-white p-12 rounded-2xl shadow-sm border border-dashed border-gray-200 text-center">
-          <p className="text-gray-400 font-medium">No subscription plans found. Create the Free, Standard, and Premium plans!</p>
+        <div className="bg-white p-16 rounded-3xl shadow-sm border-2 border-dashed border-gray-200 text-center">
+          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CreditCard size={32} className="text-gray-300" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">No Plans Found</h3>
+          <p className="text-gray-400 font-medium max-w-sm mx-auto mb-8">You haven't created any subscription plans yet. Start by adding your first plan!</p>
+          <Button onClick={handleAdd} type="primary" size="large" className="rounded-xl px-8 font-bold">Add First Plan</Button>
         </div>
       )}
 
@@ -295,10 +339,12 @@ const SubscriptionPlanManager = () => {
               label="Plan Name"
               rules={[{ required: true }]}
             >
-              <Select placeholder="Select plan name">
-                <Select.Option value="Standard">Standard</Select.Option>
-                <Select.Option value="Premium">Premium</Select.Option>
-              </Select>
+                <Select placeholder="Select plan name">
+                  <Select.Option value="Free">Free</Select.Option>
+                  <Select.Option value="Standard">Standard</Select.Option>
+                  <Select.Option value="Premium">Premium</Select.Option>
+                  <Select.Option value="Pro">Pro</Select.Option>
+                </Select>
             </Form.Item>
 
             <Form.Item
@@ -329,6 +375,14 @@ const SubscriptionPlanManager = () => {
               rules={[{ required: true }]}
             >
               <InputNumber className="w-full" placeholder="3" />
+            </Form.Item>
+
+            <Form.Item
+              name="leadsLimit"
+              label="Lead Share Count"
+              rules={[{ required: true, message: "Please enter lead share count" }]}
+            >
+              <InputNumber className="w-full" placeholder="2" />
             </Form.Item>
 
             <Form.Item
@@ -384,6 +438,8 @@ const SubscriptionPlanManager = () => {
           </Form>
         </div>
       </Modal>
+
+      </div> {/* End max-w-7xl */}
 
       <style>{`
         .ant-card {

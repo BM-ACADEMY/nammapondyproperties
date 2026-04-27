@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space } from "antd";
+import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space, Select } from "antd";
 import { Search, Download, Trash2, MessageSquare, Phone, User, Inbox, MoreVertical, ExternalLink } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
+const { Option } = Select;
 
 const AdminEnquiries = () => {
   const navigate = useNavigate();
@@ -46,6 +47,17 @@ const AdminEnquiries = () => {
     } catch (error) {
       console.error("Error deleting enquiry", error);
       message.error("Failed to delete enquiry");
+    }
+  };
+
+  const handleStatusChange = async (id, status, type) => {
+    try {
+      await api.patch(`/enquiries/update-status/${id}`, { status, type });
+      message.success(`Status updated to ${status}`);
+      fetchEnquiries();
+    } catch (error) {
+      console.error("Error updating status", error);
+      message.error("Failed to update status");
     }
   };
 
@@ -111,13 +123,24 @@ const AdminEnquiries = () => {
         ),
     },
     {
-      title: "Seller",
+      title: "Seller / Managed By",
       dataIndex: "seller_id",
       key: "seller",
       render: (seller) => (
         <div className="flex flex-col">
-          <span className="font-medium text-gray-800">{seller?.name || "Unknown"}</span>
-          <span className="text-xs text-gray-500">{seller?.phone || "N/A"}</span>
+          <div className="flex items-center gap-1.5">
+            <User size={12} className="text-indigo-400" />
+            <span className="font-semibold text-gray-800">{seller?.name || "Unknown"}</span>
+          </div>
+          {seller?.assignedAdmin && (
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] text-gray-400">Handled by:</span>
+              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">
+                {seller.assignedAdmin.name || "Manager"}
+              </span>
+            </div>
+          )}
+          <span className="text-[11px] text-gray-500 font-mono mt-1">{seller?.phone || "N/A"}</span>
         </div>
       ),
     },
@@ -175,13 +198,35 @@ const AdminEnquiries = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag
-          color={status === "new" ? "cyan" : "success"}
-          className="rounded-full px-3 uppercase text-[10px] font-bold"
+      render: (status, record) => (
+        <Select
+          value={status || "new"}
+          onChange={(value) => handleStatusChange(record._id, value, record.type)}
+          size="small"
+          style={{ width: 110 }}
+          className={`status-select-${status?.toLowerCase()}`}
         >
-          {status || "NEW"}
-        </Tag>
+          <Option value="new">NEW</Option>
+          <Option value="contacted">CONTACTED</Option>
+          <Option value="closed">CLOSED</Option>
+        </Select>
+      ),
+    },
+    {
+      title: "Updated By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
+      width: 130,
+      render: (updatedBy) => (
+        <div className="flex flex-col">
+          {updatedBy ? (
+            <Tag color="cyan" className="font-bold text-[10px] uppercase border-none bg-cyan-50 text-cyan-700 m-0">
+              {updatedBy.name}
+            </Tag>
+          ) : (
+            <span className="text-gray-300 text-[10px] italic">No update yet</span>
+          )}
+        </div>
       ),
     },
     {

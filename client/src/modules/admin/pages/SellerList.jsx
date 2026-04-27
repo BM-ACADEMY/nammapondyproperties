@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+
 import {
   Table,
   Button,
@@ -15,8 +17,9 @@ import {
   Col,
   Statistic,
   Avatar,
+  Select,
 } from "antd";
-import { Hash, UserPlus } from "lucide-react";
+import { Hash, UserPlus, UserCircle, ShieldCheck as ShieldIcon, UserCog, ChevronDown } from "lucide-react";
 import { getImageUrl } from "@/utils/imageUrl";
 import { 
   Trash2, 
@@ -36,15 +39,28 @@ import {
 } from "lucide-react";
 import api from "@/services/api";
 import { useSocket } from "@/context/SocketContext";
+import { useAuth } from "@/context/AuthContext";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const SellerList = () => {
+  const { user: currentUser } = useAuth();
   const [sellers, setSellers] = useState([]);
+  const [admins, setAdmins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assigningLoading, setAssigningLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const typeFilter = searchParams.get("type");
+  const [businessTypes, setBusinessTypes] = useState([]);
   const socket = useSocket();
+
+  const filteredSellers = typeFilter
+    ? sellers.filter((s) => s.businessType?._id === typeFilter)
+    : sellers;
+
 
   const fetchSellers = async () => {
     setLoading(true);
@@ -60,9 +76,31 @@ const SellerList = () => {
     }
   };
 
+  const fetchAdmins = async () => {
+    try {
+      const response = await api.get("/users/get-all-users?role=admin");
+      setAdmins(response.data);
+    } catch (error) {
+      console.error("Failed to fetch admins", error);
+    }
+  };
+
+  const fetchBusinessTypes = async () => {
+    try {
+      const response = await api.get("/business-types");
+      setBusinessTypes(response.data.filter((t) => t.status === "active"));
+    } catch (error) {
+      console.error("Failed to fetch business types", error);
+    }
+  };
+
   useEffect(() => {
     fetchSellers();
-  }, []);
+    fetchBusinessTypes();
+    if (currentUser?.isSuperAdmin) {
+      fetchAdmins();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (socket) {
@@ -104,6 +142,56 @@ const SellerList = () => {
     });
   };
 
+  const handleAssignAdmin = async (adminId) => {
+    setAssigningLoading(true);
+    try {
+      await api.put(`/users/update-user-by-id/${selectedSeller._id}`, {
+        assignedAdmin: adminId || null,
+      });
+      message.success("Seller assigned successfully");
+      setIsAssignModalOpen(false);
+      fetchSellers();
+    } catch (error) {
+      message.error("Failed to assign seller");
+    } finally {
+      setAssigningLoading(false);
+    }
+  };
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+
+  const onSelectChange = (newSelectedRowKeys) => {
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: !!record.assignedAdmin,
+    }),
+  };
+
+  const handleBulkAssign = async (adminId) => {
+    setAssigningLoading(true);
+    try {
+      await api.put("/users/bulk-assign-admin", {
+        userIds: selectedRowKeys,
+        assignedAdminId: adminId || null,
+      });
+      message.success(`${selectedRowKeys.length} sellers assigned successfully`);
+      setIsAssignModalOpen(false);
+      setSelectedRowKeys([]);
+      setIsBulkMode(false);
+      fetchSellers();
+    } catch (error) {
+      message.error("Failed to perform bulk assignment");
+    } finally {
+      setAssigningLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "Name",
@@ -126,13 +214,22 @@ const SellerList = () => {
       ),
     },
     {
-      title: "Referral ID",
-      dataIndex: "referralCode",
-      key: "referralCode",
-      render: (code) => (
-        <div className="flex items-center gap-1.5 font-mono text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-100 w-fit">
-          <UserPlus size={12} className="text-gray-400" />
-          <span>{code || "---"}</span>
+      title: "Portfolio Manager",
+      key: "attribution",
+      render: (_, record) => (
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1.5">
+            <UserCircle size={12} className="text-gray-400" />
+            <span className="text-[11px] text-gray-500">
+              Created By: <span className="font-medium text-gray-700">{record.createdBy?.name || (record.role_id?.role_name === "admin" ? "System" : "Self Registered")}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <UserPlus size={12} className="text-gray-400" />
+            <span className="text-[11px] text-gray-500">
+              Assigned: <span className="font-medium text-indigo-600">{record.assignedAdmin?.name || (currentUser?.isSuperAdmin ? "Unassigned" : "Me")}</span>
+            </span>
+          </div>
         </div>
       ),
     },
@@ -172,76 +269,24 @@ const SellerList = () => {
       ),
     },
     {
-      title: "Badge Request",
-      dataIndex: "badgeRequestStatus",
-      key: "badgeRequestStatus",
-      render: (status, record) => {
-        const isBuilder = record.businessType?.name?.match(/Builder|Promoter/i);
-        let color = "default";
-        let icon = null;
-        if (status === "pending") { color = "orange"; icon = <Clock size={12} className="mr-1" />; }
-        else if (status === "approved") { color = "green"; icon = <CheckCircle size={12} className="mr-1" />; }
-        else if (status === "rejected") { color = "error"; icon = <XCircle size={12} className="mr-1" />; }
-        
-        return (
-          <div className="flex items-center gap-3">
-            {status && status !== "none" ? (
-              <Tag color={color} className="rounded-full px-3 m-0">
-                <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                  {icon}
-                  <span className="leading-none">{status.toUpperCase()}</span>
-                </span>
-              </Tag>
-            ) : (
-              <span className="text-gray-400 text-xs">NONE</span>
-            )}
-            
-            {isBuilder && (
-              <Button 
-                type="primary" 
-                shape="circle" 
-                size="small"
-                className="bg-indigo-600 hover:!bg-indigo-700 shadow-md flex items-center justify-center"
-                icon={<Briefcase size={12} className="text-white" />}
-                onClick={() => {
-                  setSelectedSeller(record);
-                  setIsDetailModalVisible(true);
-                }}
-                title="View Builder Details"
-              />
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      title: "Verified",
-      dataIndex: "badgeVerified",
-      key: "badgeVerified",
-      align: "center",
-      render: (verified) => (
-        verified ? (
-          <Tag color="blue" className="rounded-full px-3">
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
-              <CheckCircle size={14} /> 
-              <span>VERIFIED</span>
-            </span>
-          </Tag>
-        ) : (
-          <Tag className="rounded-full px-3">
-            <span className="inline-flex items-center whitespace-nowrap text-gray-400">
-              NOT VERIFIED
-            </span>
-          </Tag>
-        )
-      ),
-    },
-    {
       title: "Action",
       key: "action",
       align: "right",
       render: (_, record) => {
         const items = [
+          currentUser?.isSuperAdmin && {
+            key: "assign",
+            label: (
+              <div className="flex items-center gap-2" onClick={() => {
+                setSelectedSeller(record);
+                setIsBulkMode(false);
+                setIsAssignModalOpen(true);
+              }}>
+                <UserCog size={14} className="text-indigo-600" />
+                <span>Assign Portfolio Manager</span>
+              </div>
+            ),
+          },
           {
             key: "toggleStatus",
             label: (
@@ -314,7 +359,7 @@ const SellerList = () => {
           {
             type: "divider",
           },
-          {
+          (currentUser?.isSuperAdmin || currentUser?.permissions?.includes("delete_seller")) && {
             key: "delete",
             danger: true,
             label: (
@@ -338,7 +383,81 @@ const SellerList = () => {
   return (
     <div className="p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4 mb-6">
-        <Title level={3} className="mb-0! w-full sm:w-auto text-left">Seller Management</Title>
+        <div className="w-full sm:w-auto">
+          <Title level={3} className="mb-0! text-left">
+            Seller Management {currentUser?.isSuperAdmin ? "(All)" : "(Assigned)"}
+          </Title>
+          <div className="flex items-center gap-3 mt-2">
+            <Select
+              className="w-64 h-10 rounded-lg shadow-sm"
+              placeholder="Filter by Business Type"
+              allowClear
+              value={typeFilter}
+              onChange={(val) => {
+                if (val) {
+                  setSearchParams({ type: val });
+                } else {
+                  setSearchParams({});
+                }
+              }}
+            >
+              {businessTypes.map((type) => (
+                <Select.Option key={type._id} value={type._id}>
+                  {type.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+
+          {selectedRowKeys.length > 0 && (
+            <div className="flex items-center gap-4 mt-2 p-2 bg-indigo-50 rounded-lg border border-indigo-100 animate-in fade-in slide-in-from-top-1 duration-300">
+              <span className="text-sm font-bold text-indigo-600">
+                {selectedRowKeys.length} sellers selected
+              </span>
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: "unassign",
+                      label: "(Unassigned / Super Admin)",
+                      onClick: () => handleBulkAssign(null),
+                    },
+                    { type: "divider" },
+                    ...admins.map((admin) => ({
+                      key: admin._id,
+                      label: (
+                        <div className="flex items-center gap-2">
+                          <Avatar size="small" src={getImageUrl(admin.profile_image)}>
+                            {admin.name?.charAt(0)}
+                          </Avatar>
+                          <span>{admin.name}</span>
+                        </div>
+                      ),
+                      onClick: () => handleBulkAssign(admin._id),
+                    })),
+                  ],
+                }}
+                trigger={["click"]}
+              >
+                <Button 
+                  type="primary" 
+                  size="small" 
+                  className="bg-indigo-600 flex items-center gap-2"
+                  loading={assigningLoading}
+                >
+                  Assign to Admin <ChevronDown size={14} />
+                </Button>
+              </Dropdown>
+              <Button 
+                type="text" 
+                size="small" 
+                onClick={() => setSelectedRowKeys([])}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       <Row gutter={[24, 24]} className="mb-8">
@@ -350,7 +469,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-indigo-600 font-semibold text-xs uppercase tracking-wider">Total Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.length}</div>
               </div>
             </div>
           </Card>
@@ -363,7 +482,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-emerald-600 font-semibold text-xs uppercase tracking-wider">Active Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.filter(s => s.status === 'active').length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.filter(s => s.status === 'active').length}</div>
               </div>
             </div>
           </Card>
@@ -376,7 +495,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-rose-600 font-semibold text-xs uppercase tracking-wider">Inactive Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.filter(s => s.status !== 'active').length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.filter(s => s.status !== 'active').length}</div>
               </div>
             </div>
           </Card>
@@ -389,7 +508,7 @@ const SellerList = () => {
               </div>
               <div>
                 <div className="text-blue-600 font-semibold text-xs uppercase tracking-wider">Verified Sellers</div>
-                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : sellers.filter(s => s.badgeVerified).length}</div>
+                <div className="text-2xl font-bold text-gray-800">{loading ? "..." : filteredSellers.filter(s => s.badgeVerified).length}</div>
               </div>
             </div>
           </Card>
@@ -399,8 +518,9 @@ const SellerList = () => {
       <Card className="shadow-sm border-none overflow-hidden">
         <div className="overflow-x-auto">
           <Table
+            rowSelection={rowSelection}
             columns={columns}
-            dataSource={sellers}
+            dataSource={filteredSellers}
             rowKey="_id"
             loading={loading}
             pagination={{
@@ -413,6 +533,58 @@ const SellerList = () => {
           />
         </div>
       </Card>
+
+      {/* Assignment Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2">
+            <UserCog size={18} className="text-indigo-600" />
+            <span>{isBulkMode ? "Bulk Portfolio Allocation" : "Allocate Seller to Support Administrator"}</span>
+          </div>
+        }
+        open={isAssignModalOpen}
+        onCancel={() => setIsAssignModalOpen(false)}
+        footer={null}
+        destroyOnClose
+      >
+        <div className="py-4">
+          <Text className="text-gray-500 block mb-4">
+            {isBulkMode 
+              ? `Assigning ${selectedRowKeys.length} selected sellers to an administrator.`
+              : <>Assign <span className="font-bold text-gray-800">{selectedSeller?.name}</span> to a sub-admin for portfolio maintenance.</>
+            }
+          </Text>
+          
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Portfolio Manager</label>
+              <Select
+                placeholder="Choose an administrator"
+                className="w-full h-11"
+                onChange={(val) => isBulkMode ? handleBulkAssign(val) : handleAssignAdmin(val)}
+                loading={assigningLoading}
+                value={isBulkMode ? undefined : selectedSeller?.assignedAdmin?._id}
+              >
+                <Select.Option value="">(Unassigned / Super Admin)</Select.Option>
+                {admins.map(admin => (
+                  <Select.Option key={admin._id} value={admin._id}>
+                    <div className="flex items-center gap-2">
+                      <Avatar size="small" src={getImageUrl(admin.profile_image)}>
+                        {admin.name?.charAt(0)}
+                      </Avatar>
+                      <span>{admin.name} ({admin.phone})</span>
+                    </div>
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 mt-8">
+            <Button onClick={() => setIsAssignModalOpen(false)}>Cancel</Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Builder Details Modal */}
       <Modal

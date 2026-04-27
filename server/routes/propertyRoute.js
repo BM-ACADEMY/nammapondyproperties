@@ -9,7 +9,7 @@ const propertyUpload = require("../middleware/propertyUploadMiddleware");
 router.post(
   "/create-property",
   protect,
-  propertyUpload.fields([{ name: "images", maxCount: 10 }, { name: "floorPlan", maxCount: 1 }]),
+  propertyUpload.fields([{ name: "images", maxCount: 10 }, { name: "floorPlans", maxCount: 10 }]),
   propertyController.createProperty,
 );
 // Get all properties
@@ -26,7 +26,7 @@ router.get("/fetch-builder-other-properties/:id", propertyController.getBuilderO
 router.put(
   "/update-property-by-id/:id",
   protect,
-  propertyUpload.fields([{ name: "images", maxCount: 10 }, { name: "floorPlan", maxCount: 1 }]),
+  propertyUpload.fields([{ name: "images", maxCount: 10 }, { name: "floorPlans", maxCount: 10 }]),
   propertyController.updateProperty,
 );
 // Delete a property
@@ -35,6 +35,10 @@ router.delete("/delete-property-by-id/:id", propertyController.deleteProperty);
 router.put("/increment-view-count/:id", propertyController.incrementViewCount);
 // Verify property
 router.put("/verify-property/:id", protect, propertyController.verifyProperty);
+// Reject pending property edit
+router.put("/reject-edit/:id", protect, propertyController.rejectPropertyEdit);
+// Approve pending property edit
+router.put("/approve-edit/:id", protect, propertyController.approvePropertyEdit);
 // Get property types
 // router.get("/property-types", propertyController.getPropertyTypes); // Removed
 // Get approval types

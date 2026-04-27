@@ -1,12 +1,12 @@
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 
-// Get all plans (Filtered by user's business type if available)
+// Get all plans (Filtered by user's business type if available and not requested all)
 exports.getAllPlans = async (req, res) => {
   try {
     const query = { status: "active" };
     
-    // If user is a seller, only show plans for their business type
-    if (req.user && req.user.businessType) {
+    // If user is a seller, and not requesting all plans, only show plans for their business type
+    if (req.user && req.user.businessType && req.query.allPlans !== "true") {
       query.businessType = req.user.businessType;
     }
 
@@ -30,18 +30,18 @@ exports.adminGetAllPlans = async (req, res) => {
 // Admin: Create/Update Plan
 exports.savePlan = async (req, res) => {
   try {
-    const { id, name, price, propertyLimit, duration, features, notIncluded, isPopular, status, businessType } = req.body;
+    const { id, name, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType } = req.body;
     
     if (id) {
       const plan = await SubscriptionPlan.findByIdAndUpdate(
         id,
-        { name, price, propertyLimit, duration, features, notIncluded, isPopular, status, businessType },
+        { name, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType },
         { new: true }
       ).populate("businessType");
       return res.json({ message: "Plan updated successfully", plan });
     }
 
-    const plan = new SubscriptionPlan({ name, price, propertyLimit, duration, features, notIncluded, isPopular, status, businessType });
+    const plan = new SubscriptionPlan({ name, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType });
     await plan.save();
     res.status(201).json({ message: "Plan created successfully", plan });
   } catch (error) {

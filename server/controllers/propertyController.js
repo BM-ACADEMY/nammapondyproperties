@@ -26,50 +26,47 @@ const parseJSON = (data) => {
 
 exports.createProperty = async (req, res) => {
   try {
-    // 🛡️ Restriction: Unverified profiles can only list ONE property
-    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || 
-                    req.user?.role?.name?.toLowerCase() === "admin";
+    const isAdmin = req.user && (req.user.isSuperAdmin || req.user.role_id?.role_name?.toLowerCase() === "admin");
 
+    // Check property limit for non-admin users
     if (!isAdmin) {
-      const propertyCount = await Property.countDocuments({ seller: req.user._id });
+      const propertyCount = await Property.countDocuments({ 
+        seller: req.user._id,
+        status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+      });
+
+      // 🛡️ Restriction 1: Unverified profiles can only list ONE property
       if (propertyCount >= 1 && !req.user.badgeVerified) {
         return res.status(403).json({ 
-          error: "First complete your profile, once verified your profile then only you listing other properties" 
+          error: "First complete your profile, once verified your profile then only you listing other properties",
+          reason: "unverified"
         });
       }
-    }
 
-    console.log("Create Property Request Body:", req.body);
-    console.log("Create Property Files:", req.files);
-
-    // Check property limit for sellers
-    if (
-      req.user &&
-      req.user.role_id &&
-      req.user.role_id.role_name === "seller"
-    ) {
-      // Get site settings for fallbacks
+      // 🛡️ Restriction 2: Role-based limits for verified sellers
       const settings = await WebsiteSetting.findOne();
-      const defaultLimit = settings?.sellerPropertyLimit || 3;
-      const defaultName = settings?.defaultPlanName || "FREE";
+      let propertyLimit = settings?.sellerPropertyLimit || 3; // Default fallback
+      let planName = settings?.defaultPlanName || "FREE";
 
-      // Get current upload limit from subscription
-      let propertyLimit = defaultLimit; 
-      let planName = defaultName;
-
+      // A. If user has an active subscription, use its limit
       if (req.user.activeSubscription) {
         const subscription = await Subscription.findById(req.user.activeSubscription).populate("plan");
         if (subscription && subscription.status === "active" && subscription.plan) {
           propertyLimit = subscription.plan.propertyLimit;
           planName = subscription.plan.name;
         }
+      } else {
+        // B. Free Tier Limits (Based on Business Type)
+        const businessTypeName = req.user.businessType?.name || "";
+        
+        if (businessTypeName.match(/Builder|Promoter/i)) {
+          propertyLimit = 1; // Builders: Max 1 property for free
+        } else if (businessTypeName.match(/Agent|Owner/i)) {
+          propertyLimit = 3; // Agents/Owners: Max 3 properties for free
+        }
       }
 
-      const propertyCount = await Property.countDocuments({
-        seller: req.user._id,
-      });
-
-      // propertyLimit of -1 or very high means unlimited
+      // Check if limit is reached (propertyLimit of -1 means unlimited)
       if (propertyLimit !== -1 && propertyCount >= propertyLimit) {
         // Delete uploaded files to avoid garbage
         if (req.files) {
@@ -82,20 +79,20 @@ exports.createProperty = async (req, res) => {
             }
           });
         }
-        return res
-          .status(403)
-          .json({ 
-            error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
-            limitReached: true,
-            currentCount: propertyCount,
-            limit: propertyLimit
-          });
+        
+        return res.status(403).json({ 
+          error: `Your ${planName} plan allows only ${propertyLimit} properties. Please upgrade your plan for more uploads.`,
+          limitReached: true,
+          currentCount: propertyCount,
+          limit: propertyLimit,
+          reason: "limit_reached"
+        });
       }
     }
 
     // Handle Files (images and floorPlan)
     let images = [];
-    let floorPlanUrl = "";
+    let floorPlans = [];
 
     if (req.files) {
       if (req.files.images) {
@@ -103,8 +100,8 @@ exports.createProperty = async (req, res) => {
           image_url: `/uploads/properties/${file.filename}`,
         }));
       }
-      if (req.files.floorPlan && req.files.floorPlan.length > 0) {
-        floorPlanUrl = `/uploads/properties/${req.files.floorPlan[0].filename}`;
+      if (req.files.floorPlans && req.files.floorPlans.length > 0) {
+        floorPlans = req.files.floorPlans.map((file) => `/uploads/properties/${file.filename}`);
       }
     }
 
@@ -130,6 +127,19 @@ exports.createProperty = async (req, res) => {
     const legal = removeEmptyStrings(parseJSON(req.body.legal) || {});
     const mediaMetadata = parseJSON(req.body.media) || {};
 
+    let sellerId = req.user && req.user._id ? req.user._id : req.body.seller;
+
+    // If an admin creates a property, attribute it to the Super Admin (to hide sub-admin identity)
+    if (isAdmin) {
+      // If no seller specified OR if the admin is assigning it to themselves
+      if (!req.body.seller || req.body.seller === String(req.user._id)) {
+        const superAdmin = await User.findOne({ isSuperAdmin: true }).sort({ createdAt: 1 });
+        if (superAdmin) {
+          sellerId = superAdmin._id;
+        }
+      }
+    }
+
     const propertyData = {
       ...req.body,
       basicInfo,
@@ -138,20 +148,22 @@ exports.createProperty = async (req, res) => {
       legal,
       amenities,
       location,
-      seller: req.user && req.user._id ? req.user._id : req.body.seller,
-      businessType: (req.user && req.user.role_id && req.user.role_id.role_name === "admin") 
+      seller: sellerId,
+      businessType: isAdmin 
         ? (req.body.businessType || null) 
         : (req.user && req.user.businessType ? (req.user.businessType._id || req.user.businessType) : (req.body.businessType || null)),
       video: mediaMetadata.video || req.body.video || "",
-      floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || "",
+      floorPlan: floorPlans.length > 0 ? floorPlans[0] : (mediaMetadata.floorPlan || req.body.floorPlan || ""),
       media: {
         images: images.map(img => img.image_url),
         featuredImage: images.length > 0 ? images[0].image_url : "",
         video: mediaMetadata.video || req.body.video || "",
-        floorPlan: floorPlanUrl || mediaMetadata.floorPlan || req.body.floorPlan || ""
+        floorPlan: floorPlans.length > 0 ? floorPlans[0] : (mediaMetadata.floorPlan || req.body.floorPlan || ""),
+        floorPlans: floorPlans
       },
       status: "Pending",
       isVerified: false,
+      createdBy: isAdmin ? req.user._id : (req.body.createdBy || null),
     };
 
     const property = new Property(propertyData);
@@ -278,22 +290,41 @@ exports.getProperties = async (req, res) => {
       queryConditions.push({ isVerified: isVerified === "true" });
     }
 
-    // 3.1 Status filter for public listings
+    // 3.1 Status filter for public listings & Admin filtering
     const requesterId = req.user?._id ? String(req.user._id) : (req.user?.id ? String(req.user.id) : null);
-    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin";
+    
+    // Check if requester is an admin and if they are a Super Admin
+    const userDoc = req.user?._id ? await User.findById(req.user._id).populate("role_id") : null;
+    const isAdmin = userDoc?.role_id?.role_name?.toLowerCase() === "admin";
+    const isSuperAdmin = userDoc?.isSuperAdmin;
+    
+    // Sub-admin boundary logic
+    if (isAdmin && !isSuperAdmin) {
+      // Find all users/sellers assigned to this sub-admin
+      const assignedUserIds = await User.find({ assignedAdmin: req.user._id }).distinct("_id");
+      
+      // Sub-admin should see properties from their assigned sellers OR properties they created themselves
+      queryConditions.push({ 
+        $or: [
+          { seller: { $in: assignedUserIds } },
+          { seller: req.user._id },
+          { createdBy: req.user._id }
+        ]
+      });
+    }
     
     // Check if the requester is the owner of the properties being queried
     let isMe = false;
     if (requesterId && seller_id) {
-      // Normalize both to strings for a safe comparison
       const sid = String(seller_id);
       if (sid === "me" || sid === requesterId) {
         isMe = true;
       }
     }
     
+    // Public vs Admin Visibility
     if (!isAdmin && !isMe) {
-      queryConditions.push({ status: "Active" });
+      queryConditions.push({ status: { $in: ["Active", "Edit Pending Approval"] } });
     }
 
 
@@ -479,6 +510,7 @@ exports.getProperties = async (req, res) => {
           populate: { path: "role_id" },
         },
         { path: "businessType" },
+        { path: "createdBy", select: "name role_id", populate: { path: "role_id" } },
       ]);
 
       // For random, total pages/count might be less relevant or just use total count matches
@@ -491,6 +523,11 @@ exports.getProperties = async (req, res) => {
             populate: { path: "role_id" },
           },
           { path: "businessType" },
+          { 
+            path: "createdBy", 
+            select: "name role_id",
+            populate: { path: "role_id" } 
+          },
         ])
         .limit(limit * 1)
         .skip((page - 1) * limit)
@@ -523,10 +560,17 @@ exports.verifyProperty = async (req, res) => {
       if (property.status === "Pending") {
         property.status = "Active";
         property.approvedAt = property.approvedAt || new Date();
+      } else if (property.status === "Edit Pending Approval") {
+        if (property.pendingEdits) {
+          Object.assign(property, property.pendingEdits);
+          property.pendingEdits = null;
+        }
+        property.status = "Active";
+        property.approvedAt = property.approvedAt || new Date();
       }
     } else {
       // If unverified, take it down back to Pending
-      if (property.status === "Active") {
+      if (property.status === "Active" || property.status === "Edit Pending Approval") {
         property.status = "Pending";
       }
     }
@@ -536,6 +580,48 @@ exports.verifyProperty = async (req, res) => {
       message: `Property ${property.isVerified ? "verified" : "unverified"}`,
       property,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.rejectPropertyEdit = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) {
+      return res.status(404).json({ error: "Property not found" });
+    }
+
+    if (property.status === "Edit Pending Approval") {
+      property.pendingEdits = null;
+      property.status = "Active";
+      await property.save();
+      return res.json({ message: "Property edit rejected and reverted to live data", property });
+    }
+
+    res.status(400).json({ error: "Property is not pending an edit approval" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.approvePropertyEdit = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    if (property.status === "Edit Pending Approval") {
+      if (property.pendingEdits) {
+        Object.assign(property, property.pendingEdits);
+        property.pendingEdits = null;
+      }
+      property.status = "Active";
+      property.approvedAt = property.approvedAt || new Date();
+      await property.save();
+      return res.json({ message: "Property edit approved successfully", property });
+    }
+
+    res.status(400).json({ error: "Property is not pending an edit approval" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -878,12 +964,10 @@ exports.updateProperty = async (req, res) => {
     // Handle Image Deletion
     const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
     if (imagesToDelete.length > 0) {
-      // Find images to delete
       const invalidImages = (property.media?.images || []).filter((img) =>
         imagesToDelete.includes(img)
       );
 
-      // Delete files from filesystem
       invalidImages.forEach((img) => {
         try {
           const filePath = path.join(__dirname, "..", img);
@@ -896,10 +980,30 @@ exports.updateProperty = async (req, res) => {
       });
     }
 
+    // Handle Floor Plan Deletion
+    const floorPlansToDelete = parseJSON(req.body.floor_plans_to_delete) || [];
+    if (floorPlansToDelete.length > 0) {
+      const invalidFloorPlans = (property.media?.floorPlans || []).filter((fp) =>
+        floorPlansToDelete.includes(fp)
+      );
+
+      invalidFloorPlans.forEach((fp) => {
+        try {
+          const filePath = path.join(__dirname, "..", fp);
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+          }
+        } catch (err) {
+          console.error(`Failed to delete floor plan file: ${fp}`, err);
+        }
+      });
+    }
+
     const currentImages = property.media?.images || [];
     const remainingImages = currentImages.filter(img => !imagesToDelete.includes(img));
-
-    let floorPlanUrl = property.media?.floorPlan || "";
+    
+    const currentFloorPlans = property.media?.floorPlans || [];
+    const remainingFloorPlans = currentFloorPlans.filter(fp => !floorPlansToDelete.includes(fp));
 
     // Handle New Files
     if (req.files) {
@@ -907,8 +1011,9 @@ exports.updateProperty = async (req, res) => {
         const newImages = req.files.images.map((file) => `/uploads/properties/${file.filename}`);
         remainingImages.push(...newImages);
       }
-      if (req.files.floorPlan && req.files.floorPlan.length > 0) {
-        floorPlanUrl = `/uploads/properties/${req.files.floorPlan[0].filename}`;
+      if (req.files.floorPlans && req.files.floorPlans.length > 0) {
+        const newFloorPlans = req.files.floorPlans.map((file) => `/uploads/properties/${file.filename}`);
+        remainingFloorPlans.push(...newFloorPlans);
       }
     }
 
@@ -951,14 +1056,33 @@ exports.updateProperty = async (req, res) => {
       images: remainingImages,
       featuredImage: remainingImages.length > 0 ? remainingImages[0] : (property.media?.featuredImage || ""),
       video: mediaMetadata.video || property.media?.video || "",
-      floorPlan: floorPlanUrl
+      floorPlans: remainingFloorPlans,
+      floorPlan: remainingFloorPlans.length > 0 ? remainingFloorPlans[0] : (property.media?.floorPlan || "")
     };
 
     // Set top-level fields
     updates.video = updates.media.video;
     updates.floorPlan = updates.media.floorPlan;
 
-    Object.assign(property, updates);
+    const isAdmin = req.user?.role_id?.role_name?.toLowerCase() === "admin" || req.user?.role?.name?.toLowerCase() === "admin";
+    const isApproved = property.status === "Active" || property.status === "Edit Pending Approval";
+    
+    if (!isAdmin && isApproved) {
+      property.pendingEdits = updates;
+      property.status = "Edit Pending Approval";
+      
+      const io = req.app.get("socketio");
+      if (io) {
+        io.to("admin-room").emit("new-property-listed", {
+          propertyId: property._id,
+          title: property.basicInfo?.title || updates.basicInfo?.title,
+          isSellerProperty: true,
+          message: `Property edit pending approval: ${property.basicInfo?.title || updates.basicInfo?.title}`
+        });
+      }
+    } else {
+      Object.assign(property, updates);
+    }
 
     await property.save();
     res.json(property);

@@ -15,6 +15,7 @@ import {
   MessageCircle,
   FileText,
   ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
 
 const { Option } = Select;
@@ -142,6 +143,24 @@ const PostRequirementPage = () => {
                   />
                 </Form.Item>
 
+                <Form.Item
+                  name="heardFrom"
+                  label={<span className="font-semibold">Lead Source (Marketing)</span>}
+                >
+                  <Select placeholder="Select source">
+                    <Option value="Social Media">Social Media</Option>
+                    <Option value="Facebook">Facebook</Option>
+                    <Option value="Instagram">Instagram</Option>
+                    <Option value="YouTube">YouTube</Option>
+                    <Option value="LinkedIn">LinkedIn</Option>
+                    <Option value="WhatsApp">WhatsApp</Option>
+                    <Option value="Google Search">Google Search</Option>
+                    <Option value="Reference">Reference from Known Person</Option>
+                    <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+                    <Option value="Others">Others</Option>
+                  </Select>
+                </Form.Item>
+
 
                 <Form.Item
                   name="category"
@@ -258,6 +277,8 @@ const PostRequirementPage = () => {
                 >
                   <TextArea rows={3} placeholder="Any additional details or specific requirements..." />
                 </Form.Item>
+
+
               </div>
 
               <div className="mt-8 pt-6 flex flex-col items-center justify-center border-t border-gray-100">
@@ -311,6 +332,16 @@ const PostRequirementPage = () => {
                   <div>
                     <h3 className="font-bold text-slate-800">Curated Choices</h3>
                     <p className="text-sm text-slate-500 mt-1">Get the power to choose from the best handpicked properties.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white shadow-md shrink-0 flex items-center justify-center text-[#1e3a8a]">
+                    <ShieldCheck size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-800">Trusted Assistance</h3>
+                    <p className="text-sm text-slate-500 mt-1">Our verified agents or builders will contact you.</p>
                   </div>
                 </div>
               </div>

@@ -1,8 +1,55 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { ShieldCheck, ArrowRight, Zap, Target, MousePointerClick } from 'lucide-react';
 import illustration from '../../../../assets/builder-hero-illustration.png';
+import { checkPropertyListingLimit } from '@/utils/propertyLimits';
+import { useNav } from '@/context/NavContext';
 
 export const Hero = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const { setIsCallbackModalOpen } = useNav();
+
+  const handlePostProperty = () => {
+    if (isAuthenticated && user) {
+      const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
+
+      if (!canPost) {
+        message.warning({
+          content: limitMessage,
+          key: "verification-restricted"
+        });
+
+        if (reason === "unverified") {
+          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+          if (role === "SELLER") {
+            navigate("/seller/profile");
+          } else {
+            navigate("/user/profile");
+          }
+        } else if (reason === "limit_reached") {
+          navigate("/seller/upgrade-plan");
+        }
+        return;
+      }
+
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+      if (role === "SELLER") {
+        navigate("/seller/upgrade-plan");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/add-property");
+    }
+  };
+
+  const handleGetDemo = () => {
+    setIsCallbackModalOpen(true);
+  };
+
   return (
     <section className="bg-[#fffbf7] pt-24 pb-16 lg:pt-32 lg:pb-24 px-4 sm:px-6 lg:px-8 font-sans overflow-hidden">
       <div className="max-w-7xl mx-auto relative">
@@ -36,11 +83,17 @@ export const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-2">
-              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 group leading-none">
+              <button 
+                onClick={handleGetDemo}
+                className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 group leading-none"
+              >
                 Get Demo
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="flex items-center justify-center gap-2 px-8 py-3.5 bg-white border border-gray-100 cursor-pointer text-[#38526e] text-base font-bold rounded-xl hover:bg-gray-50 transition-all transform hover:-translate-y-1 active:scale-95 leading-none shadow-sm">
+              <button 
+                onClick={() => setIsCallbackModalOpen(true)}
+                className="flex items-center justify-center gap-2 px-8 py-3.5 bg-white border border-gray-100 cursor-pointer text-[#38526e] text-base font-bold rounded-xl hover:bg-gray-50 transition-all transform hover:-translate-y-1 active:scale-95 leading-none shadow-sm"
+              >
                 Contact Now
               </button>
             </div>
@@ -65,7 +118,7 @@ export const Hero = () => {
               <img 
                 src={illustration} 
                 alt="Modern Project Illustration" 
-                className="w-full h-auto object-contain mix-blend-multiply transition-all duration-700 group-hover:scale-105" 
+                className="w-full h-auto object-contain mix-blend-multiply transition-all duration-700" 
               />                         
             </div>
 

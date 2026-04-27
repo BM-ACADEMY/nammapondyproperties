@@ -215,7 +215,7 @@ const PropertyTypeList = () => {
                 </p>
                 <button
                   onClick={() => navigate("/post-property")}
-                  className="bg-[#166aa8] hover:bg-[#0078d7] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+                  className="bg-[#166aa8] hover:bg-[#0078d7] text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm cursor-pointer"
                 >
                   Post Property – It's FREE
                 </button>

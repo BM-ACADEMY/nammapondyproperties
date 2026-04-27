@@ -142,34 +142,17 @@ const UpgradePlan = () => {
               navigate("/seller/my-properties");
             }
           } catch (err) {
+            console.error("Payment Verification Error:", err);
             message.error(err.response?.data?.error || "Payment verification failed");
           }
         },
         prefill: {
           name: user?.name || "Customer",
           contact: user?.phone || "",
-          email: user?.builderProfile?.email || "support@nammapondy.com", // UPI works better with an email
-        },
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: "Pay via UPI",
-                instruments: [
-                  {
-                    method: "upi",
-                  },
-                ],
-              },
-            },
-            sequence: ["block.upi", "block.card", "block.netbanking"],
-            preferences: {
-              show_default_blocks: true,
-            },
-          },
+          email: user?.builderProfile?.email,
         },
         theme: {
-          color: "#002B49", // Using the navy color from your design
+          color: "#002B49",
         },
         retry: {
           enabled: true,
@@ -183,7 +166,8 @@ const UpgradePlan = () => {
       const paymentObject = new window.Razorpay(options);
       paymentObject.open();
     } catch (error) {
-      message.error(error.response?.data?.message || "Something went wrong");
+      console.error("Razorpay Order Creation Error:", error);
+      message.error(error.response?.data?.message || "Failed to initiate payment");
     } finally {
       setProcessingId(null);
     }
@@ -201,36 +185,33 @@ const UpgradePlan = () => {
           </p>
         </div>
 
-        <Row gutter={[32, 32]} justify="center" className="flex flex-wrap">
-          {plans.map((plan, index) => {
+        <Row gutter={[32, 32]} justify="center">
+          {plans && plans.length > 0 ? plans.map((plan, index) => {
             const isCurrent = currentSubscription?.plan?._id === plan._id || (plan._id === 'static_free' && !currentSubscription);
             const isPopular = plan.isPopular;
-            const isPremium = plan.name === "PREMIUM" || index === plans.length - 1;
 
             return (
-              <Col xs={24} sm={12} lg={8} key={plan._id} className="flex">
+              <Col xs={24} sm={12} lg={8} key={plan._id} style={{ display: 'flex' }}>
                 <Card
-                  className={`relative w-full h-full rounded-2xl border-none shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col overflow-hidden bg-white`}
-                  styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%' } }}
+                  className="relative w-full rounded-2xl border-none shadow-xl transition-all duration-300 hover:-translate-y-2 flex flex-col bg-white"
+                  bodyStyle={{ padding: 0, display: 'flex', flexDirection: 'column', height: '100%', flex: 1 }}
                 >
                   {/* Ribbon for Popular */}
                   {isPopular && (
-                    <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden z-20">
-                      <div className="absolute top-5 -left-10 w-40 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-lg">
+                    <div className="absolute top-0 left-0 w-32 h-32 overflow-hidden pointer-events-none">
+                      <div className="absolute top-6 -left-12 w-44 bg-[#e00d0d] text-white text-[10px] font-black uppercase py-1 text-center -rotate-45 shadow-xl border-b border-white/20">
                         Popular
                       </div>
                     </div>
                   )}
 
                   {/* Header */}
-                  <div className={`py-4 text-center border-b border-gray-50 bg-white`}>
-                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.name}</h2>
+                  <div className="py-4 text-center border-b border-gray-50 bg-white">
+                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.name || "PLAN"}</h2>
                   </div>
 
                   {/* Price Banner */}
-                  <div className={`py-3 text-center ${
-                    isPopular ? "bg-[#f97316]" : "bg-[#002B49]"
-                  }`}>
+                  <div className={`py-3 text-center ${isPopular ? "bg-[#f97316]" : "bg-[#002B49]"}`}>
                     <div className="flex items-center justify-center text-white gap-1">
                       {plan.price === 0 ? (
                         <span className="text-xl font-bold uppercase tracking-wider">Free</span>
@@ -247,16 +228,14 @@ const UpgradePlan = () => {
                   {/* Feature List */}
                   <div className="p-6 flex-1">
                     <div className="space-y-3">
-                      {/* Checkmarks */}
-                      {plan.features.map((feature, idx) => (
+                      {plan.features && plan.features.map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-4 group">
                           <Check size={18} className="text-green-500 shrink-0" strokeWidth={3} />
                           <span className="text-gray-700 font-semibold text-sm leading-tight">{feature}</span>
                         </div>
                       ))}
                       
-                      {/* Dynamic notIncluded crossmarks */}
-                      {plan.notIncluded?.map((feature, idx) => (
+                      {plan.notIncluded && plan.notIncluded.map((feature, idx) => (
                         <div key={`not-${idx}`} className="flex items-center gap-4 opacity-30">
                           <X size={18} className="text-red-500 shrink-0" strokeWidth={3} />
                           <span className="text-gray-500 font-medium text-sm line-through">{feature}</span>
@@ -291,7 +270,12 @@ const UpgradePlan = () => {
                 </Card>
               </Col>
             );
-          })}
+          }) : (
+            <div className="text-center p-10 bg-white rounded-xl shadow-sm w-full max-w-md">
+                <p className="text-gray-500 font-medium">No plans available at the moment.</p>
+                <Button onClick={fetchPlans} type="primary" className="mt-4">Retry Loading</Button>
+            </div>
+          )}
         </Row>
       </div>
       

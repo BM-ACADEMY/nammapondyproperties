@@ -158,7 +158,7 @@ const MarketingRequests = () => {
               {record.property_id?.title || "Property Not Found"}
             </div>
             <Tag color="cyan" bordered={false} className="m-0 mt-1 uppercase text-[10px] font-semibold">
-              {record.plan_id?.name} ({record.plan_id?.price})
+              {record.plan_id?.serviceName} (₹{record.plan_id?.priceRange})
             </Tag>
           </Space>
         </div>

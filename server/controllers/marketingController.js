@@ -107,7 +107,7 @@ exports.createRequest = async (req, res) => {
     // Populate for the notification
     const populatedRequest = await MarketingRequest.findById(request._id)
       .populate("seller_id", "name")
-      .populate("plan_id", "name");
+      .populate("plan_id", "serviceName");
 
     // Emit socket event to notify admins
     const io = req.app.get("socketio");
@@ -128,7 +128,7 @@ exports.getSellerRequests = async (req, res) => {
   try {
     const requests = await MarketingRequest.find({ seller_id: req.user._id })
       .populate("property_id", "title images price")
-      .populate("plan_id", "name price")
+      .populate("plan_id", "serviceName priceRange")
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: requests });
   } catch (error) {
@@ -143,7 +143,7 @@ exports.getAdminRequests = async (req, res) => {
     const requests = await MarketingRequest.find()
       .populate("seller_id", "name phone customId")
       .populate("property_id", "title images price location")
-      .populate("plan_id", "name price")
+      .populate("plan_id", "serviceName priceRange")
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: requests });
   } catch (error) {

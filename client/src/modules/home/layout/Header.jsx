@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
 import { useLocation as useAppLocation } from "@/context/LocationContext";
 import { getImageUrl } from "@/utils/imageUrl";
+import { slugify } from "@/utils/slugify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Menu,
@@ -25,19 +26,39 @@ import {
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 import PropertySearchBar from "../components/PropertySearchBar";
 import TopAnnouncementBar from "@/components/Common/TopAnnouncementBar";
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLoginMenuOpen, setIsLoginMenuOpen] = useState(false);
   const [isContactMenuOpen, setIsContactMenuOpen] = useState(false);
-  const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [activeBusinessDropdown, setActiveBusinessDropdown] = useState(null);
   const [expandedMobileBusiness, setExpandedMobileBusiness] = useState(null);
-  const { businessTypes, propertyCategories = [] } = useNav();
+  const { businessTypes, propertyCategories = [], isCallbackModalOpen, setIsCallbackModalOpen } = useNav();
+
+  // Sort business types: Agent -> Builder/Promoter -> Owner
+  const sortedBusinessTypes = [...businessTypes].sort((a, b) => {
+    const nameA = (typeof a.name === "string" ? a.name : a.name?.name || "").toLowerCase();
+    const nameB = (typeof b.name === "string" ? b.name : b.name?.name || "").toLowerCase();
+
+    const getIndex = (name) => {
+      if (name.includes("agent")) return 0;
+      if (name.includes("builder") || name.includes("promoter")) return 1;
+      if (name.includes("owner") || name.includes("individual")) return 2;
+      return 3;
+    };
+
+    return getIndex(nameA) - getIndex(nameB);
+  });
+
+  const builderType = businessTypes.find(t => {
+    const n = typeof t.name === "string" ? t.name : t.name?.name || "";
+    return n.toLowerCase().includes("builder") || n.toLowerCase().includes("promoter");
+  });
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
@@ -123,24 +144,28 @@ const Header = () => {
   const handlePostProperty = () => {
     setIsMenuOpen(false);
     if (isAuthenticated && user) {
-      const role =
-        user?.role_id?.role_name?.toUpperCase() ||
-        user?.role?.name?.toUpperCase();
+      const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
 
-      // 🛡️ Restriction: Unverified profiles can only list ONE property
-      if (role !== "ADMIN" && (user.propertyCount >= 1) && !user.badgeVerified) {
+      if (!canPost) {
         message.warning({
-          content: "First complete your profile, once verified your profile then only you listing other properties",
+          content: limitMessage,
           key: "verification-restricted"
         });
-        if (role === "SELLER") {
-          navigate("/seller/profile");
-        } else {
-          navigate("/user/profile");
+
+        if (reason === "unverified") {
+          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+          if (role === "SELLER") {
+            navigate("/seller/profile");
+          } else {
+            navigate("/user/profile");
+          }
+        } else if (reason === "limit_reached") {
+          navigate(redirectPath || "/seller/upgrade-plan");
         }
         return;
       }
 
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
       if (role === "ADMIN") {
         navigate("/admin/properties/add");
       } else if (role === "SELLER") {
@@ -217,7 +242,7 @@ const Header = () => {
               {/* Logo - Left Side */}
               <Link
                 to="/"
-                className={`flex-shrink-0 items-center group ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
+                className={`flex-shrink-0 items-center group cursor-pointer ${isMobileSearchOpen ? "hidden lg:flex" : "flex"}`}
                 onClick={() => {
                   const mainContent = document.getElementById("main-content");
                   if (mainContent) {
@@ -237,7 +262,7 @@ const Header = () => {
                 <button
                   onClick={detectLocation}
                   disabled={locationLoading}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
                 >
                   <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
                   <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
@@ -264,14 +289,14 @@ const Header = () => {
                       <Link
                         key={name}
                         to={`/properties?category=${encodeURIComponent(name)}`}
-                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide cursor-pointer"
                       >
                         {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
                     );
                   })}
 
-                  {businessTypes.map((type) => {
+                  {sortedBusinessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
                     const name =
                       typeof type.name === "string"
@@ -285,7 +310,7 @@ const Header = () => {
                         onMouseLeave={() => setActiveBusinessDropdown(null)}
                       >
                         <button
-                          className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none"
+                        className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none cursor-pointer"
                         >
                           <span>{name}</span>
                           <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${activeBusinessDropdown === id ? "rotate-180" : ""}`} />
@@ -302,7 +327,7 @@ const Header = () => {
                             >
                               <div className="px-2 space-y-0.5">
                                 <Link
-                                  to={`/business-user-list/${id}`}
+                                  to={`/business/${slugify(name)}`}
                                   className="flex items-center px-4 py-2 text-sm font-bold text-[#166aa8] hover:bg-blue-50 rounded-lg transition-colors capitalize"
                                 >
                                   {name}
@@ -317,13 +342,15 @@ const Header = () => {
                                   </Link>
                                 )}
                                 {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
-                                  <Link
-                                    to="/builder-info"
-                                    onClick={() => setActiveBusinessDropdown(null)}
-                                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
-                                  >
-                                    Builder Info
-                                  </Link>
+                                  <>
+                                    <Link
+                                      to="/builder-info"
+                                      onClick={() => setActiveBusinessDropdown(null)}
+                                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
+                                    >
+                                      Builder Info
+                                    </Link>
+                                  </>
                                 )}
                                 <button
                                   onClick={handlePostProperty}
@@ -373,7 +400,7 @@ const Header = () => {
                   onMouseEnter={() => setIsContactMenuOpen(true)}
                   onMouseLeave={() => setIsContactMenuOpen(false)}
                 >
-                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none">
+                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none cursor-pointer">
                     <Headphones className="h-5 w-5" />
                   </button>
 
@@ -438,7 +465,7 @@ const Header = () => {
                     onMouseEnter={() => setIsUserMenuOpen(true)}
                     onMouseLeave={() => setIsUserMenuOpen(false)}
                   >
-                    <button className="flex items-center space-x-1 focus:outline-none group py-1">
+                    <button className="flex items-center space-x-1 focus:outline-none group py-1 cursor-pointer">
                       <div className="relative">
                         <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center overflow-hidden border border-transparent group-hover:border-gray-400 transition-all duration-300 text-gray-900">
                           {user?.profile_image ? (
@@ -581,7 +608,7 @@ const Header = () => {
                     onMouseEnter={() => setIsLoginMenuOpen(true)}
                     onMouseLeave={() => setIsLoginMenuOpen(false)}
                   >
-                    <button className="flex items-center space-x-1 focus:outline-none group py-1">
+                    <button className="flex items-center space-x-1 focus:outline-none group py-1 cursor-pointer">
                       <div className="relative">
                         <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center text-gray-900 border border-transparent group-hover:border-gray-400 transition-all">
                           <User className="h-5 w-5" />
@@ -598,20 +625,29 @@ const Header = () => {
                           initial="hidden"
                           animate="visible"
                           exit="exit"
-                          className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 z-50 border border-gray-100 overflow-hidden"
+                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50 overflow-hidden"
                         >
-                          <div className="px-2">
+                          {/* Welcome Header */}
+                          <div className="px-5 py-4 border-b border-gray-100 bg-slate-50">
+                            <p className="text-sm font-bold text-gray-900 tracking-wide">
+                              Welcome to NammaPondy
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                              Login to manage your properties, leads and saved listings.
+                            </p>
+                          </div>
+
+                          {/* Login Action */}
+                          <div className="p-4">
                             <button
                               onClick={() => {
                                 setIsLoginMenuOpen(false);
                                 setLoginModalOpen(true);
                               }}
-                              className="w-full flex items-center px-4 py-3 mx-1 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors group"
+                              className="w-full flex items-center justify-center px-4 py-3 bg-[#166aa8] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-[0.98] group"
                             >
-                              <User className="h-4 w-4 mr-3 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                              <span className="group-hover:translate-x-1 transition-transform">
-                                Login
-                              </span>
+                              <User className="h-4 w-4 mr-2 text-white/80 group-hover:text-white transition-colors" />
+                              <span>Login / Register</span>
                             </button>
                           </div>
                         </motion.div>
@@ -823,7 +859,9 @@ const Header = () => {
                     );
                   })}
 
-                  {businessTypes.map((type) => {
+
+
+                  {sortedBusinessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
                     const name =
                       typeof type.name === "string"
@@ -852,7 +890,7 @@ const Header = () => {
                               className="overflow-hidden pl-6 space-y-1"
                             >
                               <Link
-                                to={`/business-user-list/${id}`}
+                                to={`/business/${slugify(name)}`}
                                 onClick={() => setIsMenuOpen(false)}
                                 className="flex items-center px-4 py-2.5 text-sm font-bold text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all capitalize"
                               >
@@ -868,13 +906,15 @@ const Header = () => {
                                 </Link>
                               )}
                               {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
-                                <Link
-                                  to="/builder-info"
-                                  onClick={() => setIsMenuOpen(false)}
-                                  className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
-                                >
-                                  Builder Info
-                                </Link>
+                                <>
+                                  <Link
+                                    to="/builder-info"
+                                    onClick={() => setIsMenuOpen(false)}
+                                    className="flex items-center px-4 py-2.5 text-sm text-slate-600 hover:text-[#166aa8] hover:bg-blue-50/50 rounded-lg transition-all"
+                                  >
+                                    Builder Info
+                                  </Link>
+                                </>
                               )}
                               <button
                                 onClick={handlePostProperty}

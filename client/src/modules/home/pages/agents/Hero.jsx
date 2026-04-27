@@ -1,8 +1,27 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { Building2, Users, BarChart3, Plus, ShieldCheck } from 'lucide-react';
 import illustration from '../../../../assets/agent-hero-illustration.png';
+import { checkPropertyListingLimit } from '@/utils/propertyLimits';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  const handlePostProperty = () => {
+    if (isAuthenticated && user) {
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+      if (role === "SELLER") {
+        navigate("/seller/upgrade-plan");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/add-property");
+    }
+  };
+
   return (
     <section className="bg-[#fffbf7] py-6 lg:py-12 px-4 sm:px-6 lg:px-8 font-sans overflow-x-hidden">
       <div className="mt-10 max-w-350 mx-auto relative overflow-hidden">
@@ -21,10 +40,6 @@ const HeroSection = () => {
                     className="w-full h-auto object-contain mix-blend-multiply" 
                   />
                   
-                  {/* Floating Elements (Subtle decoration) */}
-                  <div className="absolute top-1/4 -right-6 w-12 h-12 bg-white rounded-xl shadow-lg border border-slate-100 flex items-center justify-center animate-bounce duration-1000">
-                    <BarChart3 className="w-6 h-6 text-[#c19b48]" />
-                  </div>
               </div>
           </div>
 
@@ -80,7 +95,10 @@ const HeroSection = () => {
 
             {/* CTA Button Block */}
             <div className="pt-2 space-y-3">
-              <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none">
+              <button 
+                onClick={handlePostProperty}
+                className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none"
+              >
                 Get Buyers Now - Post FREE
               </button>
               <div className="text-[#38526e] font-bold text-base flex items-center gap-2">

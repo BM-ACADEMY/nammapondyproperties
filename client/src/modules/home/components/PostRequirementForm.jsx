@@ -94,6 +94,26 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
           <Input prefix={<Phone size={16} className="text-gray-400" />} placeholder="9876543210" />
         </Form.Item>
 
+        {/* How did you hear about us? */}
+        <Form.Item
+          name="heardFrom"
+          label="How did you hear about us?"
+          rules={[{ required: true, message: "Please select an option" }]}
+        >
+          <Select placeholder="Select source">
+            <Option value="Social Media">Social Media</Option>
+            <Option value="Facebook">Facebook</Option>
+            <Option value="Instagram">Instagram</Option>
+            <Option value="YouTube">YouTube</Option>
+            <Option value="LinkedIn">LinkedIn</Option>
+            <Option value="WhatsApp">WhatsApp</Option>
+            <Option value="Google Search">Google Search</Option>
+            <Option value="Reference">Reference from Known Person</Option>
+            <Option value="Newspaper/Ad">Newspaper/Ad</Option>
+            <Option value="Others">Others</Option>
+          </Select>
+        </Form.Item>
+
 
 
         {/* Category */}

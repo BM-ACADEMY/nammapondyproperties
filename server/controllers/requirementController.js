@@ -3,6 +3,8 @@ const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 const SharedLead = require("../models/SharedLead");
+const Property = require("../models/Property");
+const BusinessType = require("../models/BusinessType");
 
 // Create a new requirement
 exports.createRequirement = async (req, res) => {
@@ -19,10 +21,11 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
+      heardFrom,
     } = req.body;
 
-    // Optional: attach user ID if authenticated
     const userId = req.user ? req.user.id : null;
+    const isAdmin = req.user && (req.user.role_id?.role_name?.toLowerCase() === "admin" || req.user.role?.name?.toLowerCase() === "admin");
 
     const newRequirement = new Requirement({
       fullName,
@@ -36,7 +39,9 @@ exports.createRequirement = async (req, res) => {
       maxBudget,
       propertyPreferences,
       message,
+      heardFrom,
       user: userId,
+      createdBy: isAdmin ? req.user._id : null
     });
 
     const savedRequirement = await newRequirement.save();
@@ -68,22 +73,41 @@ exports.createRequirement = async (req, res) => {
 // Get all requirements (Admin only)
 exports.getRequirements = async (req, res) => {
   try {
-    const requirements = await Requirement.find()
+    const userDoc = await User.findById(req.user._id).populate("role_id");
+    const isAdmin = userDoc?.role_id?.role_name?.toLowerCase() === "admin";
+    const isSuperAdmin = userDoc?.isSuperAdmin;
+    const filter = {};
+
+
+
+    const requirements = await Requirement.find(filter)
       .sort({ createdAt: -1 })
-      .populate("user", "name email");
+      .populate("user", "name email")
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name");
 
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(
       requirements.map(async (reqDoc) => {
-        const sharedInfo = await SharedLead.findOne({ 
+        // Find if any record was accepted
+        const acceptedLead = await SharedLead.findOne({ 
           requirement: reqDoc._id, 
           status: "accepted" 
-        }).populate("acceptedBy", "name email phone");
+        }).populate({
+          path: "acceptedBy",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
+
+        // Get the highest priority match it was shared with (to show in table)
+        const anySharedLead = await SharedLead.findOne({ requirement: reqDoc._id })
+          .sort({ matchPriority: 1 }); // 1 is highest priority
 
         return {
           ...reqDoc.toObject(),
-          acceptedBy: sharedInfo ? sharedInfo.acceptedBy : null,
-          isShared: !!(await SharedLead.exists({ requirement: reqDoc._id })),
+          acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
+          isShared: !!anySharedLead,
+          matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
         };
       })
     );
@@ -116,9 +140,12 @@ exports.updateRequirementStatus = async (req, res) => {
 
     const requirement = await Requirement.findByIdAndUpdate(
       id,
-      { status },
+      { 
+        status,
+        updatedBy: req.user._id
+      },
       { new: true }
-    );
+    ).populate("updatedBy", "name");
 
     if (!requirement) {
       return res.status(404).json({
@@ -145,7 +172,6 @@ exports.updateRequirementStatus = async (req, res) => {
 exports.deleteRequirement = async (req, res) => {
   try {
     const { id } = req.params;
-
     const requirement = await Requirement.findByIdAndDelete(id);
 
     if (!requirement) {
@@ -168,41 +194,154 @@ exports.deleteRequirement = async (req, res) => {
   }
 };
 
+// Helper function to build the property matching query
+const getPropertyMatchQuery = (sellerId, requirement) => {
+  if (!requirement) return null;
+
+  const isRent = requirement.category === "Rent";
+  
+  // Fuzzy Matching Logic (80% - 120%)
+  // This automatically expands the requirement budget to find more relevant leads.
+  const minBudget = (requirement.minBudget || 0) * 0.8;
+  const maxBudget = requirement.maxBudget ? requirement.maxBudget * 1.2 : Infinity;
+
+  const priceField = isRent ? "pricing.rent.monthlyRent" : "pricing.sell.price";
+  const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
+  const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
+
+  // Base query
+  const matchQuery = {
+    seller: sellerId,
+    status: "Active",
+    "basicInfo.category": requirement.category,
+    "basicInfo.usageType": requirement.usageType,
+    "basicInfo.propertyType": requirement.propertyType,
+    $and: [
+      {
+        $or: [
+          { [priceField]: { $gte: minBudget, $lte: maxBudget } },
+          {
+            [minPriceField]: { $lte: maxBudget },
+            [maxPriceField]: { $gte: minBudget }
+          }
+        ]
+      }
+    ]
+  };
+
+  // Add Location matching if preferredLocation is provided
+  if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
+    const locTerm = requirement.preferredLocation.trim();
+    const locRegex = new RegExp(locTerm, "i");
+    matchQuery.$and.push({
+      $or: [
+        { "location.city": locRegex },
+        { "location.locality": locRegex },
+        { "location.subArea": locRegex }
+      ]
+    });
+  }
+
+  return matchQuery;
+};
+
 // Get subscription stats for lead sharing (Admin)
 exports.getSubscriptionStats = async (req, res) => {
   try {
-    const plans = await SubscriptionPlan.find({ status: "active" });
+    const { requirementId } = req.query;
+    let requirement = null;
     
+    if (requirementId) {
+      requirement = await Requirement.findById(requirementId);
+    }
+
+    const allPlans = await SubscriptionPlan.find({ status: "active" });
+    
+    // Group sub-plans by name to avoid duplicate entries in the UI
+    const planGroups = {};
+    allPlans.forEach(p => {
+      if (!planGroups[p.name]) planGroups[p.name] = [];
+      planGroups[p.name].push(p);
+    });
+
+    // Find if at least one Builder matches globally for Priority 1 logic
+    let hasGlobalBuilderMatch = false;
+
     const stats = await Promise.all(
-      plans.map(async (plan) => {
-        // Find active subscriptions for this plan
+      Object.entries(planGroups).map(async ([planName, plansInGroup]) => {
+        const planIds = plansInGroup.map(p => p._id);
+        
+        // Find active subscriptions for any plan in this group
         const activeSubscriptions = await Subscription.find({
-          plan: plan._id,
+          plan: { $in: planIds },
           status: "active",
           endDate: { $gt: new Date() },
-        }).populate("user", "name email phone");
+        }).populate({
+          path: "user",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
 
-        const sellers = activeSubscriptions
+        const sellers = await Promise.all(activeSubscriptions
           .filter(sub => sub.user)
-          .map(sub => ({
-            id: sub.user._id,
-            name: sub.user.name || "Unnamed Seller",
-            email: sub.user.email,
-            phone: sub.user.phone,
+          .map(async (sub) => {
+            const user = sub.user;
+            const businessType = user.businessType?.name || "";
+            const isBuilder = /Builder|Promoter/i.test(businessType);
+            const isAgent = /Agent/i.test(businessType);
+
+            let isMatch = false;
+            let matchPriority = 3; // Default: No match
+            let matchingProperties = [];
+
+            if (requirement) {
+              const matchQuery = getPropertyMatchQuery(user._id, requirement);
+              const props = await Property.find(matchQuery).select("basicInfo.title");
+              
+              if (props.length > 0) {
+                isMatch = true;
+                matchPriority = isBuilder ? 1 : isAgent ? 2 : 3;
+                if (isBuilder) hasGlobalBuilderMatch = true;
+                matchingProperties = props.map(p => p.basicInfo.title);
+              }
+            }
+
+            const planForSub = plansInGroup.find(p => p._id.toString() === sub.plan.toString());
+
+            return {
+              id: user._id,
+              name: user.name || "Unnamed Seller",
+              email: user.email,
+              phone: user.phone,
+              businessType: businessType,
+              isBuilder,
+              isAgent,
+              isMatch,
+              matchPriority,
+              matchingProperties,
+              leadsLimit: planForSub?.leadsLimit || 0,
+              leadsUsed: sub.leadsUsed || 0,
+            };
           }));
 
         return {
-          planId: plan._id,
-          planName: plan.name,
+          planId: plansInGroup[0]._id, // Representative ID for frontend reference
+          planName: planName,
           sellerCount: sellers.length,
           sellers: sellers,
+          // Plan level matches
+          hasBuilderMatch: sellers.some(s => s.isBuilder && s.isMatch),
+          hasAgentMatch: sellers.some(s => s.isAgent && s.isMatch),
         };
       })
     );
 
     res.status(200).json({
       success: true,
-      data: stats,
+      data: {
+        stats,
+        hasGlobalBuilderMatch
+      },
     });
   } catch (error) {
     console.error("Error fetching subscription stats:", error);
@@ -213,11 +352,14 @@ exports.getSubscriptionStats = async (req, res) => {
   }
 };
 
-// Share requirement with a subscription plan (Admin)
+// Share requirement with one or more subscription plans (Admin)
 exports.shareRequirement = async (req, res) => {
   try {
     const { id } = req.params; // Requirement ID
-    const { planId } = req.body;
+    let { planId, planIds, matchType, matchPriority } = req.body;
+    
+    // Coerce matchPriority to number to avoid type mismatch bugs (e.g. "3" === 3 is false)
+    matchPriority = Number(matchPriority) || 3;
 
     const requirement = await Requirement.findById(id);
     if (!requirement) {
@@ -227,11 +369,18 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
-    const plan = await SubscriptionPlan.findById(planId);
-    if (!plan) {
-      return res.status(404).json({
+    // Determine target plans
+    let targetPlanIds = [];
+    if (planIds && Array.isArray(planIds)) {
+      targetPlanIds = planIds;
+    } else if (planId) {
+      targetPlanIds = [planId];
+    }
+
+    if (targetPlanIds.length === 0) {
+      return res.status(400).json({
         success: false,
-        message: "Subscription plan not found.",
+        message: "No subscription plans provided.",
       });
     }
 
@@ -248,60 +397,165 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
-    // Find active sellers for this plan to record who it was shared with
-    const activeSubscriptions = await Subscription.find({
-      plan: planId,
-      status: "active",
-      endDate: { $gt: new Date() },
-    });
-    
-    const sellerIds = activeSubscriptions.map(sub => sub.user);
+    const results = [];
+    const io = req.app.get("socketio");
 
-    // Create or update SharedLead
-    // If already shared with this plan, we might want to update or error. 
-    // Request says "The lead is shared with all sellers under that selected plan only."
-    let sharedLead = await SharedLead.findOne({ requirement: id, plan: planId });
-    
-    if (sharedLead) {
-      return res.status(400).json({
-        success: false,
-        message: "This lead has already been shared with this plan.",
+    for (const pId of targetPlanIds) {
+      const selectedPlan = await SubscriptionPlan.findById(pId);
+      if (!selectedPlan) continue;
+
+      // Find all plan variants with the same name
+      const allMatchingPlans = await SubscriptionPlan.find({ 
+        name: selectedPlan.name,
+        status: "active" 
+      });
+      const allPlanVariantIds = allMatchingPlans.map(p => p._id);
+
+      // Check if already shared with this specific plan
+      const existingShare = await SharedLead.findOne({ requirement: id, plan: pId });
+      if (existingShare) {
+        results.push({ plan: selectedPlan.name, status: "already_shared" });
+        continue;
+      }
+
+      // Find active sellers for all plan variants
+      const activeSubscriptions = await Subscription.find({
+        plan: { $in: allPlanVariantIds },
+        status: "active",
+        endDate: { $gt: new Date() },
+      }).populate({
+        path: "user",
+        select: "name businessType",
+        populate: { path: "businessType", select: "name" }
+      });
+      
+      let sellerIds = [];
+      let skippedDueToLimit = 0;
+
+      // Improved Priority matching logic with property-level verification
+      if (matchPriority === 1) {
+        // Priority 1: ONLY Builders matching the criteria
+        const builderSubs = activeSubscriptions.filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name));
+        for (const sub of builderSubs) {
+          const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+          const leadsLimit = planForSub?.leadsLimit ?? 2;
+          
+          if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
+            skippedDueToLimit++;
+            continue;
+          }
+
+          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
+          if (await Property.exists(matchQuery)) {
+            sellerIds.push(sub.user._id);
+            // Deduct lead immediately for Exact Match
+            await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
+          }
+        }
+      } else if (matchPriority === 2) {
+        // Priority 2: ONLY Agents matching the criteria
+        const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
+        for (const sub of agentSubs) {
+          const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+          const leadsLimit = planForSub?.leadsLimit ?? 2;
+
+          if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
+            skippedDueToLimit++;
+            continue;
+          }
+
+          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
+          if (await Property.exists(matchQuery)) {
+            sellerIds.push(sub.user._id);
+            // Deduct lead immediately for Exact Match
+            await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
+          }
+        }
+      } else if (matchPriority === 3) {
+        // Priority 3 (Fallback): ALL Agents in the plan
+        const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
+        for (const sub of agentSubs) {
+           const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+           const leadsLimit = planForSub?.leadsLimit ?? 2;
+
+           if (leadsLimit === -1 || sub.leadsUsed < leadsLimit) {
+             sellerIds.push(sub.user._id);
+           } else {
+             skippedDueToLimit++;
+           }
+        }
+      } else {
+        // Safe fallback
+        sellerIds = activeSubscriptions
+          .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
+          .map(sub => sub.user._id);
+      }
+
+      if (sellerIds.length === 0) {
+        const status = skippedDueToLimit > 0 ? "no_credits" : "no_sellers";
+        results.push({ plan: selectedPlan.name, status });
+        continue;
+      }
+
+      const sharedLead = new SharedLead({
+        requirement: id,
+        plan: pId,
+        sharedWith: sellerIds,
+        status: "pending",
+        matchType: matchType || "not-exact",
+        matchPriority: matchPriority || 3
+      });
+
+      await sharedLead.save();
+
+      // Notify sellers
+      if (io) {
+        sellerIds.forEach(sellerId => {
+          io.to(`seller-${sellerId}`).emit("new-lead-shared", {
+            leadId: sharedLead._id,
+            requirement: {
+              category: requirement.category,
+              usageType: requirement.usageType,
+              propertyType: requirement.propertyType,
+              preferredLocation: requirement.preferredLocation,
+              propertyPreferences: requirement.propertyPreferences,
+              message: requirement.message,
+            },
+          });
+        });
+      }
+      results.push({ 
+        plan: selectedPlan.name, 
+        status: "success", 
+        count: sellerIds.length,
+        skipped: skippedDueToLimit
       });
     }
 
-    sharedLead = new SharedLead({
-      requirement: id,
-      plan: planId,
-      sharedWith: sellerIds,
-      status: "pending",
-    });
+    const successCount = results.filter(r => r.status === "success").length;
+    
+    if (successCount === 0) {
+      let message = "Failed to share lead with any of the selected plans.";
+      
+      if (results.every(r => r.status === "no_credits")) {
+        message = "Lead Share Failed: Matched sellers have exhausted their credits.";
+      } else if (results.every(r => r.status === "already_shared")) {
+        message = "Lead already shared with selected plans.";
+      } else if (results.every(r => r.status === "no_sellers")) {
+        message = "No matching sellers found in those plans.";
+      }
 
-    await sharedLead.save();
-
-    // Emit Socket.io event to all sellers in this plan
-    const io = req.app.get("socketio");
-    if (io) {
-      // We can emit to a room specific to the plan, or individual sellers
-      // The user index.js mentions join-seller-room (seller-ID)
-      // Since we want all sellers in the plan to see it, we can either emit to all or specific rooms
-      sellerIds.forEach(sellerId => {
-        io.to(`seller-${sellerId}`).emit("new-lead-shared", {
-          leadId: sharedLead._id,
-          requirement: {
-            category: requirement.category,
-            usageType: requirement.usageType,
-            propertyType: requirement.propertyType,
-            preferredLocation: requirement.preferredLocation,
-            propertyPreferences: requirement.propertyPreferences,
-            message: requirement.message,
-          },
-        });
+      return res.status(400).json({
+        success: false,
+        message,
+        details: results
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `Lead shared successfully with ${plan.name} plan users.`,
+      message: `Lead shared successfully with ${successCount} plan(s).`,
+      details: results
     });
   } catch (error) {
     console.error("Error sharing requirement:", error);
@@ -311,3 +565,4 @@ exports.shareRequirement = async (req, res) => {
     });
   }
 };
+

@@ -62,6 +62,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 const { Title, Text } = Typography;
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
 
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
@@ -341,10 +342,9 @@ const MyProperties = () => {
     );
   });
 
-  const planName = subscription?.plan?.name || settings?.defaultPlanName || "BASIC";
-  const propertyLimit = subscription?.plan?.propertyLimit || settings?.sellerPropertyLimit || 3;
-  const isLimitReached =
-    propertyLimit !== -1 && properties.length >= propertyLimit;
+  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user);
+  const isLimitReached = !canPost && reason === "limit_reached";
+  const planName = user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE";
 
   return (
     <div className="space-y-6">
@@ -389,7 +389,9 @@ const MyProperties = () => {
             ? `${planName} plan allows up to ${propertyLimit} property listings.`
             : planName === "Standard"
             ? "Standard plan supports up to 10 listings with better visibility."
-            : "Premium plan gives unlimited listings with top priority exposure."}
+            : planName === "Pro"
+            ? "Pro plan gives unlimited listings with the highest priority exposure."
+            : "Premium plan gives enhanced listings with top priority exposure."}
         </p>
       </div>
     </div>
@@ -435,11 +437,15 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            if (isLimitReached) {
-              message.warning(
-                `You have reached your limit of ${propertyLimit} properties. Please upgrade!`,
-              );
-              navigate("/seller/upgrade-plan");
+            const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
+            if (!canPost) {
+              message.warning(limitMessage);
+              if (reason === "unverified") {
+                const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+                navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
+              } else if (reason === "limit_reached") {
+                navigate(redirectPath || "/seller/upgrade-plan");
+              }
               return;
             }
             navigate("/seller/add-property");
@@ -473,7 +479,7 @@ const MyProperties = () => {
       </div> */}
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
@@ -487,7 +493,7 @@ const MyProperties = () => {
           ))}
         </div>
       ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredProperties.map((property) => (
             <div
               key={property._id}
@@ -770,8 +776,8 @@ const MyProperties = () => {
 
             {/* Reduced gap between cards from gap-6 to gap-4 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              {marketingPlans.map((plan, index) => {
-                const isPopular = index === 1;
+              {marketingPlans.map((plan) => {
+                const isPopular = plan.isPopular;
 
                 return (
                   <div
@@ -788,7 +794,7 @@ const MyProperties = () => {
                         isPopular ? "text-white" : "text-slate-900"
                       }`}
                     >
-                      {plan.name}
+                      {plan.serviceName}
                     </h3>
                     <p
                       className={`text-[13px] leading-snug mb-4 max-w-[200px] ${
@@ -808,7 +814,7 @@ const MyProperties = () => {
                               isPopular ? "text-white" : "text-slate-900"
                             }`}
                           >
-                            {plan.price}
+                            ₹{plan.priceRange}
                           </span>
                         </div>
                       </div>
@@ -845,42 +851,7 @@ const MyProperties = () => {
 
                     {/* Reduced spacing between features */}
                     <div className="space-y-2">
-                      {plan.features?.map((feature, idx) => (
-                        <div key={idx} className="flex items-start gap-2">
-                          {/* Reduced icon size */}
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 16 16"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="mt-[3px] shrink-0"
-                          >
-                            <path
-                              d="M7.75 14.75a7 7 0 1 0 0-14 7 7 0 0 0 0 14"
-                              stroke={isPopular ? "#F8FAFC" : "#62748e"}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="m5.65 7.752 1.4 1.4 2.8-2.8"
-                              stroke={isPopular ? "#F8FAFC" : "#62748e"}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          {/* Reduced feature text size */}
-                          <span
-                            className={`text-[13px] ${
-                              isPopular ? "text-slate-100" : "text-slate-600"
-                            }`}
-                          >
-                            {feature}
-                          </span>
-                        </div>
-                      ))}
+                       {/* Features list removed as per simplified fields */}
                     </div>
                   </div>
                 );

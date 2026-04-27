@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, User } from "lucide-react";
 import { useNav } from "../../../context/NavContext";
+import { slugify } from "../../../utils/slugify";
 
 const AdvertiserTypeSection = () => {
     const navigate = useNavigate();
@@ -22,7 +23,20 @@ const AdvertiserTypeSection = () => {
         <User className="w-8 h-8 text-[#c19b48] mt-2" />
     );
 
-    const displayTypes = businessTypes.slice(0, 4);
+    // Sort business types: Agent -> Builder/Promoter -> Owner
+    const displayTypes = [...businessTypes].sort((a, b) => {
+        const nameA = (typeof a.name === "string" ? a.name : a.name?.name || "").toLowerCase();
+        const nameB = (typeof b.name === "string" ? b.name : b.name?.name || "").toLowerCase();
+
+        const getIndex = (name) => {
+            if (name.includes("agent")) return 0;
+            if (name.includes("builder") || name.includes("promoter")) return 1;
+            if (name.includes("owner") || name.includes("individual")) return 2;
+            return 3;
+        };
+
+        return getIndex(nameA) - getIndex(nameB);
+    });
 
     if (displayTypes.length === 0) return null;
 
@@ -76,7 +90,7 @@ const AdvertiserTypeSection = () => {
                                     return (
                                         <div
                                             key={id}
-                                            onClick={() => navigate(`/business-user-list/${id}`)}
+                                            onClick={() => navigate(`/business/${slugify(name)}`)}
                                             className="group flex items-center justify-between py-3 cursor-pointer"
                                         >
                                             <div className="flex items-center gap-5">

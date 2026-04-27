@@ -2,10 +2,10 @@ const mongoose = require("mongoose");
 
 const marketingPlanSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true, unique: true },
-        price: { type: String, required: true }, // e.g. "₹4,999" or "Custom"
+        serviceName: { type: String, required: true, unique: true },
+        priceRange: { type: String, required: true },
         description: { type: String, required: true },
-        features: [{ type: String }],
+        isPopular: { type: Boolean, default: false },
         status: { type: String, enum: ["active", "inactive"], default: "active" },
     },
     { timestamps: true }

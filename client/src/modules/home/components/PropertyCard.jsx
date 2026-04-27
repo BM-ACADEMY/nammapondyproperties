@@ -18,7 +18,8 @@ const PropertyCard = ({ property }) => {
   const imgUrl = getImageUrl(property.media?.featuredImage || property.media?.images?.[0]);
   const locality = property.location?.locality || property.location?.city || "Pondicherry";
   const city = property.location?.city || "";
-  const posterType = property.businessType?.name || (typeof property.businessType === 'string' && property.businessType !== "" ? property.businessType : null) || "Owner";
+  const isPosterAdmin = property.seller?.role_id?.role_name === 'admin' || property.seller?.role?.name === 'admin';
+  const posterType = isPosterAdmin ? (property.seller?.name || "Admin") : (property.businessType?.name || (typeof property.businessType === 'string' && property.businessType !== "" ? property.businessType : null) || "Owner");
   const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
 
   // Price range display
@@ -41,7 +42,7 @@ const PropertyCard = ({ property }) => {
         <img
           src={imgUrl}
           alt={property.basicInfo?.title || "Property"}
-          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${property.isSold ? "grayscale-[0.8]" : ""}`}
+          className={`w-full h-full object-cover ${property.isSold ? "grayscale-[0.8]" : ""}`}
         />
 
         {/* Wishlist Button - Top Right */}

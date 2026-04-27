@@ -13,6 +13,7 @@ import {
   UserPlus,
   Home,
   ArrowRight,
+  Phone,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
@@ -54,8 +55,10 @@ const { Option } = Select;
 
 import Loader from "../../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
+import { useAuth } from "@/context/AuthContext";
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState("30d"); // 7d, 30d, 90d, all
@@ -76,6 +79,7 @@ const Dashboard = () => {
     recentUsers: [],
     recentProperties: [],
     recentEnquiries: [],
+    expiringSubscriptions: [],
   });
 
   useEffect(() => {
@@ -83,7 +87,8 @@ const Dashboard = () => {
       setLoading(true);
       try {
         const res = await api.get(`/properties/admin-stats?range=${range}`);
-        setData(res.data);
+        const expiringRes = await api.get("/subscriptions/admin/expiring-soon");
+        setData({ ...res.data, expiringSubscriptions: expiringRes.data });
       } catch (err) {
         console.error("Failed to fetch admin stats", err);
         setError("Failed to load dashboard data.");
@@ -189,7 +194,7 @@ const Dashboard = () => {
             style={{ margin: 0 }}
             className="bg-clip-text text-transparent bg-linear-to-r from-blue-600 to-indigo-600"
           >
-            Admin Insights
+            {user?.isSuperAdmin ? "Admin Insights" : "Support Team Insights"}
           </Title>
           <Text type="secondary">Real-time system performance & activity</Text>
         </div>
@@ -534,6 +539,106 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Expiring Soon Subscriptions */}
+      <Card
+        id="expiring-subscriptions-section"
+        title={
+          <div className="flex items-center gap-2">
+            <Clock size={20} className="text-amber-500" />
+            <span>Subscriptions Expiring Soon (7 Days)</span>
+          </div>
+        }
+        className="shadow-sm rounded-2xl border-0 mt-6"
+        styles={{ body: { padding: '24px' } }}
+      >
+        <Table
+          dataSource={data.expiringSubscriptions || []}
+          rowKey="_id"
+          pagination={{ pageSize: 5 }}
+          className="subscription-expiring-table"
+          columns={[
+            {
+              title: "Seller",
+              dataIndex: "user",
+              key: "user",
+              render: (user) => (
+                <div className="flex items-center gap-3">
+                  <Avatar className="bg-blue-100 text-blue-600">
+                    {user?.name?.charAt(0).toUpperCase() || "S"}
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <Text className="font-semibold text-gray-800">{user?.name || "N/A"}</Text>
+                    <Text type="secondary" className="text-xs">{user?.customId}</Text>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              title: "Plan",
+              dataIndex: "plan",
+              key: "plan",
+              render: (plan) => (
+                <Tag color="blue" className="rounded-md px-2 py-0.5 border-0 font-medium">
+                  {plan?.name || "N/A"}
+                </Tag>
+              ),
+            },
+            {
+              title: "Price",
+              dataIndex: "amountPaid",
+              key: "amountPaid",
+              render: (price) => <Text className="font-medium">₹{price?.toLocaleString('en-IN')}</Text>,
+            },
+            {
+              title: "Expiry Date",
+              dataIndex: "endDate",
+              key: "endDate",
+              render: (date) => {
+                const daysLeft = Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
+                return (
+                  <div className="flex flex-col">
+                    <Text className="font-medium">{new Date(date).toLocaleDateString('en-IN')}</Text>
+                    <Text type="danger" className="text-[10px] font-bold uppercase">{daysLeft} days left</Text>
+                  </div>
+                );
+              },
+            },
+            {
+              title: "Contact",
+              dataIndex: "user",
+              key: "contact",
+              render: (user) => (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    type="default" 
+                    size="small" 
+                    icon={<Phone size={14} />} 
+                    onClick={() => window.open(`tel:${user?.phone}`, '_self')}
+                    className="flex items-center justify-center"
+                  />
+                  <Text className="text-xs text-gray-500">{user?.phone}</Text>
+                </div>
+              ),
+            },
+            {
+              title: "Action",
+              key: "action",
+              render: (_, record) => (
+                <Link to={`/admin/sellers?id=${record.user?._id}`}>
+                  <Button type="link" size="small" className="text-blue-600 font-medium p-0">View Seller</Button>
+                </Link>
+              ),
+            },
+          ]}
+        />
+        {(!data.expiringSubscriptions || data.expiringSubscriptions.length === 0) && (
+          <div className="py-12 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+            <CheckCircle size={40} className="text-green-500 opacity-20 mx-auto mb-3" />
+            <Text type="secondary" className="text-sm font-medium">All subscriptions are up to date</Text>
+          </div>
+        )}
+      </Card>
 
     </div>
   );

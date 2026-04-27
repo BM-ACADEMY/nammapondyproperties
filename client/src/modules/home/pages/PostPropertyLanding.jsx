@@ -4,6 +4,8 @@ import { useNav } from "@/context/NavContext";
 import { useNavigate } from "react-router-dom";
 import { Check, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
+import { message } from "antd";
 import { PostPropertyRoute } from "../routes/PostPropertyRoute";
 
 const PostPropertyLanding = () => {
@@ -68,6 +70,27 @@ const PostPropertyLanding = () => {
         if (!isAuthenticated) {
             setLoginModalOpen(true);
         } else {
+            const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
+
+            if (!canPost) {
+                message.warning({
+                    content: limitMessage,
+                    key: "verification-restricted"
+                });
+
+                if (reason === "unverified") {
+                    const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+                    if (role === "SELLER") {
+                        navigate("/seller/profile");
+                    } else {
+                        navigate("/user/profile");
+                    }
+                } else if (reason === "limit_reached") {
+                    navigate(redirectPath || "/seller/upgrade-plan");
+                }
+                return;
+            }
+
             // Redirect based on role
             const role =
                 user?.role_id?.role_name?.toUpperCase() ||

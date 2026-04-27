@@ -1,27 +1,118 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message, Spin } from 'antd';
 import { ShieldCheck } from 'lucide-react';
+import api from '@/services/api';
 
 const BuilderPricing = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await api.get("/subscriptions/plans?allPlans=true");
+        // Filter plans for Builders/Promoters
+        const builderPlans = res.data.filter(p =>
+          p.businessType?.name?.toLowerCase().includes("builder") ||
+          p.businessType?.name?.toLowerCase().includes("promoter")
+        );
+
+        // Map to the structure we need
+        const formattedPlans = builderPlans.map(p => ({
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          duration: p.duration,
+          features: p.features || [],
+          notIncluded: p.notIncluded || [],
+          isPopular: p.isPopular || false
+        }));
+
+        // Add a fallback if empty (though usually Builders have specific plans)
+        if (formattedPlans.length === 0) {
+          formattedPlans.push({
+            id: 'static_basic',
+            name: "Basic",
+            price: 5000,
+            duration: 30,
+            features: ["Unlimited listings", "Platform visibility"],
+            notIncluded: ["No guaranteed leads"],
+            isPopular: false
+          });
+        }
+
+        setPlans(formattedPlans);
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+        setPlans([
+          {
+            id: 'static_basic',
+            name: "Basic",
+            price: 5000,
+            duration: 30,
+            features: ["Unlimited listings", "Platform visibility"],
+            notIncluded: ["No guaranteed leads"],
+            isPopular: false
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  const handlePlanClick = (e) => {
+    if (e) e.preventDefault();
+    if (isAuthenticated && user) {
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+      if (role === "ADMIN") {
+        // Admin should not go anywhere from public pricing buttons
+        return;
+      }
+      if (role === "SELLER") {
+        navigate("/seller/upgrade-plan");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/add-property");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center items-center py-20 bg-white p-4 font-sans">
-      
+
       {/* Main Container */}
       <div className="relative w-full max-w-6xl flex flex-col py-12 px-4 md:px-0">
-        
+
         {/* TOP BANNER (Background) */}
         <div className="w-full bg-[#FFF6E9] rounded-4xl pt-12 pb-32 px-8 md:px-16 flex flex-col justify-center items-center relative text-center">
-          
+
           <div className="max-w-2xl z-10 flex flex-col items-center">
             {/* Badge Tag */}
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-white px-4 py-1.5 rounded-full shadow-sm mb-4">
               <ShieldCheck className="w-4 h-4 text-[#c5a059]" />
               <span className="text-[#091E42] text-[11px] font-bold tracking-wider uppercase">
-                Builder Packages
+                Builder & Promoter Packages
               </span>
             </div>
-            
+
             <h1 className="text-3xl sm:text-4xl lg:text-[40px] font-bold text-[#091E42] leading-tight">
-              Pick a plan to sell properties Faster
+              Premium Plans for Builders & Promoters
             </h1>
           </div>
 
@@ -29,147 +120,81 @@ const BuilderPricing = () => {
 
         {/* CARDS GRID (Foreground/Overlapping) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-8 -mt-20 z-20">
-          
-          {/* --- CARD 1: Basic --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col group cursor-pointer">
-            {/* Top Icon Area (Orange House) */}
-            <div className="mb-5">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 38V22L24 12L38 22V38H10Z" fill="#F4B459"/>
-                <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
-                <circle cx="24" cy="18" r="4" fill="white"/>
-                <circle cx="24" cy="18" r="2" fill="#0078DB"/>
-                <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className={`bg-white border ${plan.isPopular ? 'border-[#c5a059] shadow-[0_12px_32px_rgba(197,160,89,0.15)]' : 'border-[#0078DB] shadow-[0_8px_24px_rgba(0,0,0,0.08)]'} rounded w-full p-6 transition-all duration-300 flex flex-col relative group cursor-pointer`}
+            >
+              {plan.isPopular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#c5a059] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                  Recommended
+                </div>
+              )}
 
-            {/* Title & Subtitle */}
-            <h2 className="text-[22px] font-bold text-[#091E42] mb-1">Basic</h2>
-            <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
-              Essential platform visibility for your listings.
-            </p>
-
-            {/* Pricing Info */}
-            <div className="mb-4">
-              <p className="text-[13px] text-[#091E42] font-medium uppercase tracking-wide">Unlimited Listings</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-[26px] font-bold text-[#091E42]">₹5,000</span>
-                <span className="text-[11px] text-[#8B95A5] font-bold lowercase">/month</span>
-              </div>
-            </div>
-
-            {/* Benefits List */}
-            <ul className="space-y-4 mb-5 mt-4">
-              <BenefitItem text="Unlimited listings" iconType="listings" />
-              <BenefitItem text="Platform visibility" iconType="visibility" />
-              <BenefitItem text="No guaranteed leads" iconType="leads" isNegative />
-            </ul>
-
-            {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-sm font-bold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
-              Get Basic
-            </button>
-          </div>
-
-          {/* --- CARD 2: Pro --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_12px_32px_rgba(0,0,0,0.12)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col relative group cursor-pointer">
-            
-            {/* Top Icon Area (Green House) */}
-            <div className="mb-5">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 38V22L24 12L38 22V38H10Z" fill="#36B37E"/>
-                <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
-                <circle cx="24" cy="18" r="4" fill="white"/>
-                <circle cx="24" cy="18" r="2" fill="#0078DB"/>
-                <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-
-            {/* Title & Subtitle */}
-            <h2 className="text-[22px] font-bold text-[#091E42] mb-1">Pro</h2>
-            <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
-              Dedicated project promotion and shared lead inquiries.
-            </p>
-
-            {/* Pricing Info */}
-            <div className="mb-4">
-              <p className="text-[13px] text-[#091E42] font-medium uppercase tracking-wide">Builder Pro Plan</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-[26px] font-bold text-[#091E42]">₹10k - 15k</span>
-                <span className="text-[11px] text-[#8B95A5] font-bold lowercase">/month</span>
-              </div>
-            </div>
-
-            {/* Benefits List */}
-            <ul className="space-y-4 mb-5 mt-4">
-              <BenefitItem text="Dedicated landing page" iconType="placement" />
-              <BenefitItem text="Shared leads" iconType="leads" />
-              <BenefitItem text="Homepage visibility" iconType="visibility" />
-              <BenefitItem text="WhatsApp promotion" iconType="leads" hasInfo />
-            </ul>
-
-            {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
-              Choose Pro
-            </button>
-          </div>
-
-          {/* --- CARD 3: Premium --- */}
-          <div className="bg-white border border-[#0078DB] rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-100 flex flex-col group relative cursor-pointer">
-            
-            {/* Top Icon Area (Purple House) */}
-            <div className="mb-5">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 38V22L24 12L38 22V38H10Z" fill="#8777D9"/>
-                <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
-                <circle cx="24" cy="18" r="4" fill="white"/>
-                <circle cx="24" cy="18" r="2" fill="#0078DB"/>
-                <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-
-            {/* Title & Subtitle */}
-            <h2 className="text-[22px] font-bold text-[#091E42] mb-1">Premium</h2>
-            <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
-              Maximum ROI with Meta ads and exclusive leads.
-            </p>
-
-            {/* Pricing Info */}
-            <div className="mb-4">
-              <p className="text-[13px] text-[#091E42] font-medium uppercase tracking-wide">Project Exclusive</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-[26px] font-bold text-[#091E42]">₹20k - 50k</span>
-                <span className="text-[11px] text-[#8B95A5] font-bold lowercase">/month</span>
-              </div>
-            </div>
-
-            {/* Benefits List */}
-            <ul className="space-y-4 mb-5 mt-4">
-              <BenefitItem text="Meta ads included" iconType="placement" />
-              <BenefitItem text="Exclusive leads" iconType="leads" />
-              <BenefitItem text="Full marketing" iconType="visibility" />
-              <BenefitItem text="Priority delivery" iconType="listings" hasInfo />
-            </ul>
-
-            {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3.5 rounded-lg font-semibold text-[14px] hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto shadow-md group-hover:scale-[1.02]">
-              Get Premium Leads
-            </button>
-          </div>
-
-
-        </div>
-        
-        {/* BOTTOM SECTION (Consistency Check) */}
-        <div className="mt-20 flex flex-col items-center text-center">
-            <p className="text-[#091E42] font-semibold text-lg mb-4">Want a custom plan for your project?</p>
-            <button className="flex items-center gap-2 bg-[#1aa554] text-white px-10 py-4 rounded-xl font-bold text-xl hover:bg-[#168a44] cursor-pointer transition-all transform hover:-translate-y-1 shadow-lg active:scale-95">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.21-2.21a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              {/* Top Icon Area */}
+              <div className="mb-5">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 38V22L24 12L38 22V38H10Z" fill={plan.price < 6000 ? "#F4B459" : plan.price < 16000 ? "#36B37E" : "#8777D9"}/>
+                  <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
+                  <circle cx="24" cy="18" r="4" fill="white"/>
+                  <circle cx="24" cy="18" r="2" fill="#0078DB"/>
+                  <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
-                Book Consultation
-            </button>
+              </div>
+
+              {/* Title & Subtitle */}
+              <h2 className="text-[22px] font-bold text-[#091E42] mb-1">{plan.name}</h2>
+              <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
+                {plan.price < 10000 ? "Essential platform visibility." : "Complete marketing solution."}
+              </p>
+
+              {/* Pricing Info */}
+              <div className="mb-4">
+                <p className="text-[13px] text-[#091E42] font-medium uppercase tracking-wide">
+                  {plan.duration} Days Package
+                </p>
+                <div className="flex items-baseline gap-1 mt-0.5">
+                  <span className="text-[26px] font-bold text-[#091E42]">₹{plan.price}</span>
+                  <span className="text-[11px] text-[#8B95A5] font-bold lowercase">/ {plan.duration} Days</span>
+                </div>
+              </div>
+
+              {/* Benefits List */}
+              <div className="mb-5 mt-4 flex-grow">
+                {plan.features?.length > 0 && (
+                  <>
+                    <p className="text-[11px] font-bold text-[#091E42] uppercase tracking-wider mb-2">Included</p>
+                    <ul className="space-y-4 mb-4">
+                      {plan.features.map((feature, idx) => (
+                        <BenefitItem key={idx} text={feature} iconType={idx === 0 ? "listings" : idx === 1 ? "visibility" : "placement"} />
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {plan.notIncluded?.length > 0 && (
+                  <>
+                    <p className="text-[11px] font-bold text-[#8B95A5] uppercase tracking-wider mb-2 mt-4 border-t border-gray-100 pt-3">Not Included</p>
+                    <ul className="space-y-4">
+                      {plan.notIncluded.map((feature, idx) => (
+                        <BenefitItem key={idx} text={feature} isNegative />
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={handlePlanClick}
+                className={`w-full ${plan.isPopular ? 'bg-[#c5a059]' : 'bg-[#091E42]'} text-white py-3.5 rounded-sm font-bold text-[14px] hover:opacity-90 cursor-pointer transition duration-200 mt-auto shadow-md`}
+              >
+                Get {plan.name}
+              </button>
+            </div>
+          ))}
         </div>
+
 
       </div>
     </div>

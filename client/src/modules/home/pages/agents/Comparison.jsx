@@ -1,8 +1,51 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message } from 'antd';
 import { XCircle, CheckCircle2, Home, Zap, MousePointerClick, ShieldCheck } from 'lucide-react';
+import { checkPropertyListingLimit } from '@/utils/propertyLimits';
 
 const Comparison = () => {
-  const issues = [
+    const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
+
+    const handlePostProperty = () => {
+        if (isAuthenticated && user) {
+            const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
+
+            if (!canPost) {
+                message.warning({
+                    content: limitMessage,
+                    key: "verification-restricted"
+                });
+
+                if (reason === "unverified") {
+                    const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+                    if (role === "SELLER") {
+                        navigate("/seller/profile");
+                    } else {
+                        navigate("/user/profile");
+                    }
+                } else if (reason === "limit_reached") {
+                    navigate(redirectPath || "/seller/upgrade-plan");
+                }
+                return;
+            }
+
+            const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+            if (role === "ADMIN") {
+                navigate("/admin/properties/add");
+            } else if (role === "SELLER") {
+                navigate("/seller/add-property");
+            } else {
+                navigate("/add-property");
+            }
+        } else {
+            navigate("/post-property");
+        }
+    };
+
+    const issues = [
     "No serious buyer calls",
     "Too much competition",
     "Time wasted on fake inquiries",
@@ -69,7 +112,10 @@ const Comparison = () => {
 
         {/* Footer CTA - Exact Hero Button Style */}
         <div className="mt-16 flex flex-col items-center gap-4">
-            <button className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2">
+            <button 
+                onClick={handlePostProperty}
+                className="w-full sm:w-auto px-8 py-3.5 bg-[#1aa554] hover:bg-[#168a44] cursor-pointer text-white text-xl font-bold rounded-xl shadow-lg shadow-green-500/20 transition-all transform hover:-translate-y-1 active:scale-95 leading-none flex items-center gap-2"
+            >
                 <MousePointerClick className="w-6 h-6" />
                 Get Buyers Now - Post FREE
             </button>

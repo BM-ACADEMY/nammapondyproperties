@@ -9,6 +9,7 @@ import {
   message,
   Popconfirm,
   Tag,
+  Switch,
 } from "antd";
 import { Plus, Edit, Trash2, Megaphone, CheckCircle, MoreVertical, IndianRupee } from "lucide-react";
 import axios from "axios";
@@ -53,7 +54,6 @@ const MarketingPlanManager = () => {
 
     form.setFieldsValue({
       ...record,
-      features: record.features?.join("\n"),
     });
 
     setIsModalOpen(true);
@@ -80,9 +80,6 @@ const MarketingPlanManager = () => {
 
       const payload = {
         ...values,
-        features: values.features
-          ? values.features.split("\n").filter((f) => f.trim())
-          : [],
       };
 
       if (editingPlan) {
@@ -110,7 +107,7 @@ const MarketingPlanManager = () => {
       <div className="p-6 pb-4 border-b border-gray-50 relative">
         <div className="flex items-center gap-3 mb-2">
           <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-            {plan.name}
+            {plan.serviceName}
           </h3>
           <Tag color={plan.status === "active" ? "green" : "red"} className="rounded-lg px-3 py-1 border-none shadow-sm capitalize">
             {plan.status}
@@ -159,24 +156,11 @@ const MarketingPlanManager = () => {
       {/* Plan Price */}
       <div className="px-6 py-4 bg-gray-50/50">
         <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
+          <span className="text-3xl font-bold text-gray-900">₹{plan.priceRange}</span>
         </div>
       </div>
 
-      {/* Plan Features */}
-      <div className="p-6 grow">
-        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">
-          What's Included
-        </h4>
-        <ul className="space-y-3">
-          {plan.features?.map((feature, idx) => (
-            <li key={idx} className="flex items-start gap-3">
-              <CheckCircle size={18} className="text-green-500 shrink-0 mt-0.5" />
-              <span className="text-gray-600 text-sm leading-relaxed">{feature}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+
 
       {/* Footer / Mobile Actions */}
       <div className="p-6 pt-0 mt-auto md:hidden">
@@ -254,16 +238,16 @@ const MarketingPlanManager = () => {
         <Form layout="vertical" form={form} onFinish={onFinish}>
 
           <Form.Item
-            name="name"
-            label="Plan Name"
+            name="serviceName"
+            label="Service Name"
             rules={[{ required: true }]}
           >
             <Input placeholder="Basic Package" />
           </Form.Item>
 
           <Form.Item
-            name="price"
-            label="Price Label"
+            name="priceRange"
+            label="Price Range"
             rules={[{ required: true }]}
           >
             <Input placeholder="₹4,999 / Custom" />
@@ -277,12 +261,8 @@ const MarketingPlanManager = () => {
             <Input.TextArea rows={3} placeholder="Short summary of the plan" />
           </Form.Item>
 
-          <Form.Item
-            name="features"
-            label="Features (one per line)"
-            rules={[{ required: true }]}
-          >
-            <Input.TextArea rows={4} />
+          <Form.Item name="isPopular" label="Mark as Popular" valuePropName="checked">
+            <Switch />
           </Form.Item>
 
           <Form.Item name="status" label="Status" initialValue="active">

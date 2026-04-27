@@ -1,75 +1,105 @@
 const SharedLead = require("../models/SharedLead");
 const Subscription = require("../models/Subscription");
 const Requirement = require("../models/Requirement");
+const User = require("../models/User");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 
 // Get leads shared with the seller's current plan
 exports.getSharedLeads = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 1. Get seller's active subscription to identify their plan
-    const activeSubscription = await Subscription.findOne({
+    // 1. Get seller's most recent subscription (active or expired)
+    const lastSubscription = await Subscription.findOne({
       user: userId,
-      status: "active",
-      endDate: { $gt: new Date() },
-    });
+    }).populate("plan").sort({ startDate: -1 });
 
-    if (!activeSubscription) {
+    if (!lastSubscription) {
       return res.status(200).json({
         success: true,
         data: [],
-        message: "No active subscription found. Subscribe to see leads.",
+        message: "No subscription found. Subscribe to see leads.",
       });
     }
 
-    // 2. Find leads shared with this plan
-    // We only show leads where the seller was in the "sharedWith" list or if it's open to the plan
+    const isActive = lastSubscription && lastSubscription.status === "active" && 
+                     (!lastSubscription.endDate || new Date(lastSubscription.endDate) > new Date());
+
+    // Identify all plan variants with the same name as the seller's plan
+    const sellerPlan = lastSubscription.plan;
+    const allMatchingPlans = await SubscriptionPlan.find({ 
+      name: sellerPlan.name,
+      status: "active" 
+    });
+    const planIds = allMatchingPlans.map(p => p._id);
+
+    // 2. Find leads shared with any of these plan variants
     const sharedLeads = await SharedLead.find({
-      plan: activeSubscription.plan,
+      plan: { $in: planIds },
     })
       .populate({
         path: "requirement",
-        select: "category usageType propertyType preferredLocation minBudget maxBudget propertyPreferences message createdAt" ,
+        select: "fullName phoneNumber email category usageType propertyType preferredLocation minBudget maxBudget propertyPreferences message createdAt" ,
       })
       .populate("acceptedBy", "name")
       .sort({ createdAt: -1 });
 
-    // Transform data to hide contact info if not accepted by THIS seller
-    const transformedLeads = sharedLeads.map((lead) => {
-      const isAccepted = lead.status === "accepted" || lead.status === "closed";
-      const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
+    // 3. Fetch current user with business type for visibility logic
+    const currentUser = await User.findById(userId).populate("businessType");
+    const sellerBusinessType = currentUser.businessType?.name || "";
+    const isBuilder = /Builder|Promoter/i.test(sellerBusinessType);
+    const isAgent = /Agent/i.test(sellerBusinessType);
 
-      return {
-        _id: lead._id,
-        requirement: lead.requirement,
-        status: lead.status,
-        acceptedBy: lead.acceptedBy ? lead.acceptedBy.name : null,
-        isAcceptedByMe: !!isAcceptedByMe,
-        // Only show contact info if accepted by me
-        contactInfo: isAcceptedByMe ? {
-          fullName: lead.requirement.fullName, // Note: Need to populate or fetch Requirement again for full details
-          email: lead.requirement.email,
-          phoneNumber: lead.requirement.phoneNumber
-        } : null
-      };
+    // Filter and Transform data
+    const filteredLeads = sharedLeads.filter(lead => {
+      // 1. Strict Role Matching Logic:
+      // Priority 1: Builders Only
+      if (lead.matchPriority === 1 && !isBuilder) return false;
+      // Priority 2 & 3: Agents Only
+      if ((lead.matchPriority === 2 || lead.matchPriority === 3) && !isAgent) return false;
+
+      return true;
     });
 
-    // To get contact info, we need to populate full requirement fields but only for the accepted one
-    // Let's refine the population
-    const fullLeads = await Promise.all(sharedLeads.map(async (lead) => {
+    const leadsLimit = sellerPlan.leadsLimit ?? 2;
+    const cycleStartDate = lastSubscription ? new Date(lastSubscription.startDate) : null;
+    const cycleEndDate = lastSubscription?.endDate ? new Date(lastSubscription.endDate) : null;
+
+    // Identify leads that belong to the most recent cycle
+    const currentCycleLeads = filteredLeads.filter(lead => {
+      const leadDate = new Date(lead.createdAt);
+      return leadDate >= cycleStartDate && (!cycleEndDate || leadDate <= cycleEndDate);
+    });
+    const totalInCycle = currentCycleLeads.length;
+
+    const fullLeads = await Promise.all(filteredLeads.map(async (lead) => {
       const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
+      const leadDate = new Date(lead.createdAt);
+      
+      // Visibility Logic:
+      // 1. If accepted by me -> Always show details
+      // 2. If it is an EXACT MATCH and was within quota when received -> Show details
+      
+      let isWithinLimit = true;
+      if (leadDate >= cycleStartDate && (!cycleEndDate || leadDate <= cycleEndDate)) {
+          // Lead is within the most recent cycle (active or expired)
+          const indexInCycle = currentCycleLeads.findIndex(e => e._id.toString() === lead._id.toString());
+          isWithinLimit = leadsLimit === -1 || (totalInCycle - indexInCycle) <= leadsLimit;
+      } else if (leadDate > cycleEndDate && !isActive) {
+          // Lead arrived AFTER plan expired
+          isWithinLimit = false; 
+      }
+      // If leadDate < cycleStartDate, isWithinLimit remains true (Historical/Legacy)
+
+      let showFullDetails = isAcceptedByMe || (lead.matchType === "exact" && isWithinLimit);
       
       let reqDetails = { ...lead.requirement._doc };
       
-      if (!isAcceptedByMe) {
-        // Remove sensitive fields
-        delete reqDetails.fullName;
-        delete reqDetails.email;
-        delete reqDetails.phoneNumber;
-      } else {
-        // If accepted by me, fetch the actual full requirement to be sure
-        const fullReq = await Requirement.findById(lead.requirement._id);
-        reqDetails = fullReq;
+      if (!showFullDetails) {
+        // Mask sensitive fields
+        reqDetails.fullName = "Contact Masked";
+        reqDetails.email = "masked@example.com";
+        reqDetails.phoneNumber = "XXXXXXXXXX";
       }
 
       return {
@@ -78,6 +108,9 @@ exports.getSharedLeads = async (req, res) => {
         status: lead.status,
         acceptedBy: lead.acceptedBy ? lead.acceptedBy.name : null,
         isAcceptedByMe,
+        matchType: lead.matchType,
+        matchPriority: lead.matchPriority,
+        showFullDetails,
         createdAt: lead.createdAt
       };
     }));
@@ -121,6 +154,28 @@ exports.acceptLead = async (req, res) => {
       });
     }
 
+    // 1.5 Verify Business Type matches lead priority
+    const user = await User.findById(userId).populate("businessType");
+    const businessType = user.businessType?.name || "";
+    const isBuilder = /Builder|Promoter/i.test(businessType);
+    const isAgent = /Agent/i.test(businessType);
+
+    if (lead.matchPriority === 1 && !isBuilder) {
+      return res.status(403).json({ success: false, message: "This lead is exclusively for Builders." });
+    }
+    if ((lead.matchPriority === 2 || lead.matchPriority === 3) && !isAgent) {
+      return res.status(403).json({ success: false, message: "This lead is reserved for Agents." });
+    }
+
+    // 1.7 Lead Count Limit Check
+    const leadsLimit = lead.plan.leadsLimit ?? 2;
+    if (leadsLimit !== -1 && activeSubscription.leadsUsed >= leadsLimit) {
+      return res.status(403).json({
+        success: false,
+        message: `Lead Limit Reached: Your current plan allows only ${leadsLimit} leads. Please upgrade your plan for more leads.`,
+      });
+    }
+
     // 2. Atomically accept the lead
     const updatedLead = await SharedLead.findOneAndUpdate(
       { _id: id, status: "pending" },
@@ -140,6 +195,9 @@ exports.acceptLead = async (req, res) => {
         acceptedBy: alreadyAcceptedLead.acceptedBy ? alreadyAcceptedLead.acceptedBy.name : "another seller"
       });
     }
+
+    // 3. Increment usage for all types of accepted leads
+    await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
 
     // 3. Update the parent Requirement status to "Closed"
     await Requirement.findByIdAndUpdate(updatedLead.requirement._id, { status: "Closed" });
@@ -182,6 +240,9 @@ exports.acceptLead = async (req, res) => {
           });
         }
       });
+
+      // Notify Admin to refresh the list
+      io.emit("admin-lead-updated", { requirementId: updatedLead.requirement._id });
     }
 
     res.status(200).json({

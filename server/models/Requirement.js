@@ -41,6 +41,22 @@ const requirementSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    heardFrom: {
+      type: String,
+      enum: [
+        "Social Media",
+        "Facebook",
+        "Instagram",
+        "YouTube",
+        "LinkedIn",
+        "WhatsApp",
+        "Google Search",
+        "Reference",
+        "Newspaper/Ad",
+        "Others",
+      ],
+      required: false,
+    },
     message: {
       type: String,
       trim: true,
@@ -50,7 +66,15 @@ const requirementSchema = new mongoose.Schema(
       enum: ["Pending", "Contacted", "Closed"],
       default: "Pending",
     },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },

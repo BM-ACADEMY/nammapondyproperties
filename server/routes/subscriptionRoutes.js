@@ -20,5 +20,6 @@ router.get("/admin/plans", authMiddleware, adminMiddleware, subscriptionPlanCont
 router.post("/admin/plans", authMiddleware, adminMiddleware, subscriptionPlanController.savePlan);
 router.delete("/admin/plans/:id", authMiddleware, adminMiddleware, subscriptionPlanController.deletePlan);
 router.get("/admin/payments", authMiddleware, adminMiddleware, subscriptionController.getPaymentHistory);
+router.get("/admin/expiring-soon", authMiddleware, adminMiddleware, subscriptionController.getExpiringSoonSubscriptions);
 
 module.exports = router;

@@ -122,7 +122,7 @@ const PrivacyPolicy = () => {
           <div className="space-y-8">
             {[
               { title: "1. General Policy", text: "All payments made to Namma Pondy Properties are non-refundable, unless explicitly stated." },
-              { title: "2. Listing Plans", text: "Payments for listing plans (Free, Standard, Premium) are non-refundable. Once a listing is activated, no refund will be issued." },
+              { title: "2. Listing Plans", text: "Payments for listing plans (Free, Standard, Premium, Pro) are non-refundable. Once a listing is activated, no refund will be issued." },
               { title: "3. Lead Generation Services", text: "Lead generation services are non-refundable once the campaign is started. No guarantee on the number of leads or conversions." },
               { 
                 title: "4. Marketing Services", 

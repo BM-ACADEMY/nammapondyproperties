@@ -18,7 +18,7 @@ const PostPropertyCTA = () => {
           </p>
           <button
             onClick={() => navigate("/post-property")}
-            className="bg-[#0b63e5] hover:bg-[#0950b3] text-white font-bold py-2 px-4 md:py-3.5 md:px-8 rounded-xl shadow-sm transition-colors text-xs md:text-base w-fit"
+            className="bg-[#0b63e5] hover:bg-[#0950b3] text-white font-bold py-2 px-4 md:py-3.5 md:px-8 rounded-xl shadow-sm transition-colors text-xs md:text-base w-fit cursor-pointer"
           >
             Post Property – It's FREE
           </button>

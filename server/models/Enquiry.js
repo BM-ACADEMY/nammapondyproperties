@@ -34,6 +34,14 @@ const enquirySchema = new mongoose.Schema(
       enum: ["new", "contacted", "closed"],
       default: "new",
     },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true },
 );

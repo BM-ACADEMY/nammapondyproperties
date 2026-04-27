@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, ChevronDown, Check, ChevronRight } from "lucide-react";
+import { Search, ChevronDown, Check, ChevronRight, AlertTriangle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
@@ -27,6 +27,7 @@ const PropertySearchBar = ({
     const [minPrice, setMinPrice] = useState("");
     const [maxPrice, setMaxPrice] = useState("");
 
+    const [error, setError] = useState("");
     // Property Type Selector State
     const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
     const [activeUsageTab, setActiveUsageTab] = useState("Residential");
@@ -51,9 +52,9 @@ const PropertySearchBar = ({
 
     // Animated Placeholder State
     const searchPlaceholders = [
-        "Search by city or locality...",
-        "Search by property title...",
-        "Looking for property in Pondy?",
+        'Search "Flats for rent in sector 77 Noida"',
+        'Search "3 BHK Villa in White Town"',
+        'Search "Commercial space for lease"',
     ];
     const [placeholderIdx, setPlaceholderIdx] = useState(0);
 
@@ -64,22 +65,22 @@ const PropertySearchBar = ({
     // --- EFFECTS ---
     useEffect(() => {
         const params = new URLSearchParams(locationObj.search);
-        
+
         const searchParam = params.get("search");
         if (searchParam !== null) setSearchQuery(searchParam);
-        
+
         const locParam = params.get("location");
         if (locParam !== null) setLocation(locParam);
-        
+
         const appParam = params.get("approval");
         if (appParam !== null) setApproval(appParam);
-        
+
         const minP = params.get("minPrice");
         if (minP !== null) setMinPrice(minP);
-        
+
         const maxP = params.get("maxPrice");
         if (maxP !== null) setMaxPrice(maxP);
-        
+
         const typeParam = params.get("type");
         if (typeParam !== null) {
             const types = typeParam.split(",");
@@ -124,7 +125,7 @@ const PropertySearchBar = ({
                     params: { query: searchQuery }
                 });
                 setSuggestions(response.data);
-                
+
                 // Only open if there is an active search query
                 if (searchQuery.length > 0) {
                     setIsSuggestionsOpen(true);
@@ -143,20 +144,38 @@ const PropertySearchBar = ({
         return () => clearTimeout(timeoutId);
     }, [searchQuery]);
 
+    useEffect(() => {
+        if (error) setError("");
+    }, [searchQuery, location, approval, minPrice, maxPrice, selectedTypes]);
+
+    // Auto-clear error after 4 seconds
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(""), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
     // --- HANDLERS ---
     const handleSearch = (overrideParams = {}) => {
-        const params = new URLSearchParams();
         const finalSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
         const finalLocation = overrideParams.location !== undefined ? overrideParams.location : location;
         const finalTypes = overrideParams.type !== undefined ? overrideParams.type : selectedTypes;
 
+        // Validation: If everything is empty
+        if (!finalSearch && !finalLocation && !approval && !minPrice && !maxPrice && finalTypes.length === 0) {
+            setError("Please try again with the location included!");
+            return;
+        }
+
+        const params = new URLSearchParams();
         if (finalSearch) params.append("search", finalSearch);
         if (finalLocation) params.append("location", finalLocation);
         if (approval) params.append("approval", approval);
         if (minPrice) params.append("minPrice", minPrice);
         if (maxPrice) params.append("maxPrice", maxPrice);
         if (finalTypes.length > 0) params.append("type", Array.isArray(finalTypes) ? finalTypes.join(",") : finalTypes);
-        
+
         navigate(`/properties?${params.toString()}`);
     };
 
@@ -197,7 +216,7 @@ const PropertySearchBar = ({
                 initial={isHeader ? { opacity: 0, scale: 0.95 } : { width: "10%", opacity: 0 }}
                 animate={isHeader ? { opacity: 1, scale: 1 } : { width: "100%", opacity: 1 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className={`bg-white p-2 rounded-full lg:rounded-2xl shadow-2xl flex flex-row items-center relative z-50 w-full overflow-visible ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
+                className={`bg-white p-2 rounded-full lg:rounded-2xl shadow-2xl flex flex-row items-center relative z-50 w-full overflow-visible cursor-text ${isHeader ? "h-12 border border-gray-200" : "h-14 md:h-[72px]"
                     }`}
             >
 
@@ -240,6 +259,7 @@ const PropertySearchBar = ({
                                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                             />
                         </div>
+
 
                         {/* Search Suggestions Dropdown */}
                         <AnimatePresence>
@@ -327,7 +347,7 @@ const PropertySearchBar = ({
                         <div className="relative flex-shrink-0 hidden lg:block" ref={typeRef}>
                             <button
                                 onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
-                                className={`flex items-center gap-1.5 rounded-l-2xl hover:bg-gray-50 font-semibold text-gray-700 transition border-r border-gray-200 h-full px-4 py-2 text-sm`}
+                                className={`flex items-center gap-1.5 rounded-l-2xl hover:bg-gray-50 font-semibold text-gray-700 transition border-r border-gray-200 h-full px-4 py-2 text-sm cursor-pointer`}
                             >
                                 <span className="max-w-[100px] truncate whitespace-nowrap">{getTypeSelectorLabel()}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isTypeDropdownOpen ? "rotate-180" : ""}`} />
@@ -434,7 +454,7 @@ const PropertySearchBar = ({
                         <div className="relative" ref={locationRef}>
                             <button
                                 onClick={() => setIsLocationDropdownOpen(!isLocationDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
                                 <span className="max-w-[80px] truncate">{location || "Location"}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isLocationDropdownOpen ? "rotate-180" : ""}`} />
@@ -470,7 +490,7 @@ const PropertySearchBar = ({
                         <div className="relative" ref={approvalRef}>
                             <button
                                 onClick={() => setIsApprovalDropdownOpen(!isApprovalDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
                                 <span className="max-w-[80px] truncate">{approval || "Approval"}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isApprovalDropdownOpen ? "rotate-180" : ""}`} />
@@ -506,7 +526,7 @@ const PropertySearchBar = ({
                         <div className="relative" ref={budgetRef}>
                             <button
                                 onClick={() => setIsBudgetDropdownOpen(!isBudgetDropdownOpen)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition ${isHeader ? "text-[10px]" : "text-sm"}`}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
                                 <span className="max-w-[100px] truncate">{getBudgetLabel()}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isBudgetDropdownOpen ? "rotate-180" : ""}`} />
@@ -546,6 +566,21 @@ const PropertySearchBar = ({
                 >
                     Search
                 </button>
+
+                {/* Validation Error Message - Tooltip Design */}
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute top-full left-0 mt-3 bg-[#fff9e6] border border-[#fef3c7] rounded-md px-6 py-2 flex items-center gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] w-[46%] before:content-[''] before:absolute before:bottom-full before:left-8 before:border-[10px] before:border-transparent before:border-b-[#fff9e6]"
+                        >
+                            <AlertTriangle className="w-4 h-4 text-amber-700 flex-shrink-0" />
+                            <span className="text-amber-900 text-sm font-semibold tracking-tight">{error}</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
         </div>
     );

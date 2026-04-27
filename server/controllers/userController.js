@@ -106,11 +106,33 @@ exports.verifyOtp = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate(["role_id", "businessType", "builderProfile"]);
+    const user = await User.findById(req.user.id).populate([
+      "role_id", 
+      "businessType", 
+      "builderProfile",
+      {
+        path: "activeSubscription",
+        populate: { path: "plan" }
+      }
+    ]);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Include property count for frontend verification checks
-    const propertyCount = await Property.countDocuments({ seller: user._id });
+    // [BOOTSTRAP LOGIC] 
+    // If no Super Admin exists in the system yet, promote the current admin to Super Admin
+    if (user.role_id.role_name === "admin" && !user.isSuperAdmin) {
+      const superAdminExists = await User.exists({ isSuperAdmin: true });
+      if (!superAdminExists) {
+        user.isSuperAdmin = true;
+        await user.save();
+        console.log(`Bootstrapped Super Admin: ${user.phone}`);
+      }
+    }
+
+    // Include property count for frontend verification checks (Active + Pending)
+    const propertyCount = await Property.countDocuments({ 
+      seller: user._id,
+      status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+    });
     
     // Add propertyCount to the user object (as a plain object property)
     const userData = user.toObject();
@@ -130,19 +152,29 @@ exports.getUsers = async (req, res) => {
     const { role, verified } = req.query;
     let query = {};
 
+    // Filter by role if provided
     if (role) {
       const roleDoc = await Role.findOne({ role_name: role.toLowerCase() });
       if (roleDoc) query.role_id = roleDoc._id;
       else return res.json([]);
     }
 
+    // Filter by verification status if provided
     if (verified !== undefined) {
       query.isVerified = verified === "true";
     }
 
+    // [ALLOCATION FILTERING]
+    // If not a Super Admin, only show users assigned to this admin
+    const requester = await User.findById(req.user.id);
+    if (requester && !requester.isSuperAdmin) {
+      query.assignedAdmin = requester._id;
+    }
+
     const users = await User.find(query)
       .populate(["role_id", "businessType", "builderProfile"])
-      .populate("createdBy", "name");
+      .populate("createdBy", "name")
+      .populate("assignedAdmin", "name phone");
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -160,7 +192,7 @@ exports.getPublicUsers = async (req, res) => {
     if (sellerRole) query.role_id = sellerRole._id;
 
     const users = await User.find(query)
-      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType slug")
       .populate(["role_id", "builderProfile", "businessType"])
       .limit(parseInt(limit) || 20);
 
@@ -170,10 +202,25 @@ exports.getPublicUsers = async (req, res) => {
   }
 };
 
+exports.getPublicAdmins = async (req, res) => {
+  try {
+    const adminRole = await Role.findOne({ role_name: "admin" });
+    if (!adminRole) return res.status(404).json({ error: "Admin role not found" });
+
+    const admins = await User.find({ role_id: adminRole._id })
+      .select("name profile_image role_id slug")
+      .populate("role_id");
+
+    res.json(admins);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getPublicUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType")
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType slug")
       .populate(["role_id", "builderProfile", "businessType"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
@@ -184,7 +231,9 @@ exports.getPublicUserById = async (req, res) => {
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate(["role_id", "businessType", "builderProfile"]);
+    const user = await User.findById(req.params.id)
+      .select("+slug")
+      .populate(["role_id", "businessType", "builderProfile"]);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (error) {
@@ -258,6 +307,16 @@ exports.updateUser = async (req, res) => {
         { upsert: true, new: true, runValidators: true }
       );
       updateData.builderProfile = bp._id;
+    }
+
+    // Restriction: Only Super Admins can update permissions, isSuperAdmin status, or assignedAdmin
+    if (updateData.permissions !== undefined || updateData.isSuperAdmin !== undefined || updateData.assignedAdmin !== undefined) {
+      const requester = await User.findById(req.user.id);
+      if (!requester || !requester.isSuperAdmin) {
+        delete updateData.permissions;
+        delete updateData.isSuperAdmin;
+        delete updateData.assignedAdmin;
+      }
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, { 
@@ -375,10 +434,20 @@ exports.upgradeToSeller = async (req, res) => {
 
 exports.refreshToken = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).populate(["role_id", "businessType"]);
+    const user = await User.findById(req.user.id).populate([
+      "role_id", 
+      "businessType",
+      {
+        path: "activeSubscription",
+        populate: { path: "plan" }
+      }
+    ]);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const propertyCount = await Property.countDocuments({ seller: user._id });
+    const propertyCount = await Property.countDocuments({ 
+      seller: user._id,
+      status: { $in: ["Active", "Pending", "Edit Pending Approval"] }
+    });
     const userData = user.toObject();
     userData.propertyCount = propertyCount;
 
@@ -394,8 +463,8 @@ exports.getSellersByPropertyBusinessType = async (req, res) => {
     const Property = require("../models/Property");
     const sellersIds = await Property.find({ businessType: businessTypeId }).distinct("seller");
     const sellers = await User.find({ _id: { $in: sellersIds } })
-      .select("name phone profile_image role_id isVerified badgeVerified")
-      .populate("role_id");
+      .select("name phone profile_image role_id isVerified badgeVerified builderProfile businessType slug")
+      .populate(["role_id", "builderProfile", "businessType"]);
     res.json(sellers);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -438,22 +507,60 @@ exports.getPendingBadgeRequestsCount = async (req, res) => {
 
 exports.createUserByAdmin = async (req, res) => {
   try {
-    const { name, phone, role_id } = req.body;
+    const { name, phone, role_id, permissions, isSuperAdmin } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ phone });
     if (existingUser) return res.status(400).json({ error: "User already exists with this phone number" });
+
+    // Only Super Admins can assign permissions or set Super Admin status
+    const requester = await User.findById(req.user.id);
+    const finalPermissions = requester?.isSuperAdmin ? (permissions || []) : [];
+    const finalIsSuperAdmin = requester?.isSuperAdmin ? (isSuperAdmin || false) : false;
 
     const user = new User({
       name,
       phone,
       role_id,
       isVerified: true, // Admin-created users are pre-verified
-      createdBy: req.user.id
+      createdBy: req.user.id,
+      permissions: finalPermissions,
+      isSuperAdmin: finalIsSuperAdmin,
+      // Auto-assign to sub-admin creator
+      assignedAdmin: !requester?.isSuperAdmin ? requester?._id : (req.body.assignedAdmin || undefined)
     });
 
     await user.save();
     res.status(201).json({ success: true, message: "User created by admin", user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.bulkAssignAdmin = async (req, res) => {
+  try {
+    const { userIds, assignedAdminId } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ error: "No users selected" });
+    }
+
+    // Only Super Admins can perform bulk assignment
+    const requester = await User.findById(req.user.id);
+    if (!requester || !requester.isSuperAdmin) {
+      return res.status(403).json({ error: "Access denied. Super Admin only." });
+    }
+
+    // Update all users in one go
+    await User.updateMany(
+      { _id: { $in: userIds } },
+      { $set: { assignedAdmin: assignedAdminId || null } }
+    );
+
+    res.json({ 
+      success: true, 
+      message: `${userIds.length} users updated successfully` 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -469,26 +576,51 @@ exports.getAdminNotificationCounts = async (req, res) => {
     const Property = require("../models/Property");
     const Role = require("../models/Role");
 
+    const requester = await User.findById(req.user.id);
+    const isSuperAdmin = requester?.isSuperAdmin;
+
     // 1. Pending Badge Requests
-    const badgeRequests = await User.countDocuments({ badgeRequestStatus: "pending" });
+    const badgeQuery = { badgeRequestStatus: "pending" };
+    if (!isSuperAdmin) {
+      badgeQuery.assignedAdmin = req.user.id;
+    }
+    const badgeRequests = await User.countDocuments(badgeQuery);
 
     // 2. Pending Seller Properties
     const sellerRole = await Role.findOne({ role_name: "seller" });
     let sellerProperties = 0;
     if (sellerRole) {
+      const sellerQuery = { role_id: sellerRole._id };
+      if (!isSuperAdmin) {
+        sellerQuery.assignedAdmin = req.user.id;
+      }
+      
+      const assignedSellerIds = await User.find(sellerQuery).distinct("_id");
+      
       sellerProperties = await Property.countDocuments({ 
         status: "Pending",
-        seller: { $in: await User.find({ role_id: sellerRole._id }).distinct("_id") }
+        seller: { $in: assignedSellerIds }
       });
     }
 
     // 3. New Enquiries
-    const enquiries = await Enquiry.countDocuments({ status: "new" });
+    let enquiryQuery = { status: "new" };
+    if (!isSuperAdmin) {
+      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
+      enquiryQuery.seller_id = { $in: assignedSellerIds };
+    }
+    const enquiries = await Enquiry.countDocuments(enquiryQuery);
 
     // 4. Pending Requirements
-    const requirements = await Requirement.countDocuments({ status: "Pending" });
+    let requirementQuery = { status: "Pending" };
+    if (!isSuperAdmin) {
+      const assignedUserIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
+      requirementQuery.user = { $in: assignedUserIds };
+    }
+    const requirements = await Requirement.countDocuments(requirementQuery);
 
     // 5. New Call Requests
+    // Note: If RequestCall doesn't have assigned user tracking, it remains global for now or Super Admin only
     const callRequests = await RequestCall.countDocuments({ status: "new" });
 
     // 6. New Contact Messages

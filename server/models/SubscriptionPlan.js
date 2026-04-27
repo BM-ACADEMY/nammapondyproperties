@@ -17,6 +17,11 @@ const subscriptionPlanSchema = new mongoose.Schema(
       required: true, 
       default: 3 
     }, // -1 or high number for unlimited
+    leadsLimit: {
+      type: Number,
+      required: true,
+      default: 2
+    }, // Total leads the seller can receive/accept
     duration: { 
       type: Number, 
       required: false, // Optional for lifetime plans

@@ -34,8 +34,8 @@ const protect = async (req, res, next) => {
 const admin = (req, res, next) => {
   if (
     req.user &&
-    req.user.role_id &&
-    req.user.role_id.role_name.toLowerCase() === "admin"
+    (req.user.isSuperAdmin || 
+     (req.user.role_id && req.user.role_id.role_name.toLowerCase() === "admin"))
   ) {
     next();
   } else {

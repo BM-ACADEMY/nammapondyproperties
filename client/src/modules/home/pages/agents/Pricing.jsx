@@ -1,8 +1,96 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { message, Spin } from 'antd';
+import { ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import api from '@/services/api';
 
-import { ShieldCheck } from 'lucide-react';
+// Swiper imports
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Autoplay } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
 
 const DealerPlanBanner = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await api.get("/subscriptions/plans?allPlans=true");
+        // Filter plans for Agents
+        const agentPlans = res.data.filter(p => 
+          p.businessType?.name?.toLowerCase().includes("agent")
+        );
+
+        // Map to the structure we need
+        const formattedPlans = agentPlans.map(p => ({
+          id: p._id,
+          name: p.name,
+          price: p.price,
+          duration: p.duration,
+          features: p.features || [],
+          notIncluded: p.notIncluded || [],
+          isPopular: p.isPopular || false
+        }));
+
+        // Add static free plan if not present (REMOVED AS PER USER REQUEST)
+        /*
+        if (!formattedPlans.some(p => p.price === 0)) {
+          formattedPlans.unshift({
+            id: 'static_free',
+            name: "Free",
+            price: 0,
+            duration: "Forever",
+            features: ["3 Listings included", "Basic visibility"],
+            notIncluded: ["No leads"],
+            isPopular: false
+          });
+        }
+        */
+
+        setPlans(formattedPlans);
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+        // Fallback to empty if API fails (REMOVED STATIC FREE FALLBACK)
+        setPlans([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  const handlePlanClick = (e) => {
+    if (e) e.preventDefault();
+    if (isAuthenticated && user) {
+      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+      if (role === "ADMIN") {
+        // Admin should not go anywhere from public pricing buttons
+        return;
+      }
+      if (role === "SELLER") {
+        navigate("/seller/upgrade-plan");
+      } else {
+        navigate("/add-property");
+      }
+    } else {
+      navigate("/add-property");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-white p-4 font-sans">
       
@@ -28,138 +116,118 @@ const DealerPlanBanner = () => {
 
         </div>
 
-        {/* CARDS GRID (Foreground/Overlapping) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-4 md:px-8 -mt-20 z-20">
-          
-          {/* --- CARD 1: Sachet Pack --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col cursor-pointer">
-            {/* Top Icon */}
-            <div className="mb-5">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" fill="transparent"/>
-                <path d="M10 38V22L24 12L38 22V38H10Z" fill="#F4B459"/>
-                <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
-                <circle cx="24" cy="18" r="4" fill="white"/>
-                <circle cx="24" cy="18" r="2" fill="#0078DB"/>
-                <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
+        {/* SLIDE SHOW (Foreground/Overlapping) */}
+        <div className="relative w-full px-4 md:px-8 -mt-20 z-20 group/carousel">
+          <Swiper
+            modules={[Navigation, Autoplay]}
+            spaceBetween={24}
+            slidesPerView={1}
+            navigation={{
+              prevEl: '.prev-plan',
+              nextEl: '.next-plan',
+            }}
+            autoplay={{
+              delay: 5000,
+              disableOnInteraction: false,
+              pauseOnMouseEnter: true
+            }}
+            breakpoints={{
+              640: {
+                slidesPerView: 2,
+                spaceBetween: 24,
+              },
+              1024: {
+                slidesPerView: 3,
+                spaceBetween: 30,
+              },
+            }}
+            className="!pb-12 !pt-6 !overflow-visible"
+          >
+            {plans.map((plan) => (
+              <SwiperSlide key={plan.id} className="!h-auto flex">
+                <div 
+                  className={`bg-white border ${plan.isPopular ? 'border-[#c5a059] shadow-[0_12px_32px_rgba(197,160,89,0.15)]' : 'border-[#0078DB] shadow-[0_8px_24px_rgba(0,0,0,0.08)]'} rounded w-full p-6 flex flex-col relative cursor-pointer group h-full`}
+                >
+                  {plan.isPopular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#c5a059] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider z-50 shadow-md whitespace-nowrap">
+                      Most Popular
+                    </div>
+                  )}
 
-            {/* Title & Subtitle */}
-            <h2 className="text-[22px] font-bold text-[#091E42] mb-2">Free</h2>
-            <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
-              Basic plan to get started with property listings.
-            </p>
+                  {/* Top Icon Area */}
+                  <div className="mb-5">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 38V22L24 12L38 22V38H10Z" fill={plan.price === 0 ? "#F4B459" : plan.price < 2000 ? "#36B37E" : "#8777D9"}/>
+                      <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
+                      <circle cx="24" cy="18" r="4" fill="white"/>
+                      <circle cx="24" cy="18" r="2" fill="#0078DB"/>
+                      <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
 
-            {/* Pricing Info */}
-            <div className="mb-4">
-              <p className="text-[13px] text-[#091E42] font-medium">3 Listings</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-[26px] font-bold text-[#091E42]">₹0</span>
-                <span className="text-[11px] text-[#8B95A5]">Forever Free</span>
-              </div>
-            </div>
+                  {/* Title & Subtitle */}
+                  <h2 className="text-[22px] font-bold text-[#091E42] mb-1">{plan.name}</h2>
+                  <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
+                    {plan.price === 0 ? "Basic plan to get started." : "Professional plan for better reach."}
+                  </p>
 
-            {/* Benefits List */}
-            <ul className="space-y-3.5 mb-5 mt-4">
-              <BenefitItem text="3 Listings included" iconType="listings" />
-              <BenefitItem text="Basic visibility" iconType="visibility" />
-              <BenefitItem text="No leads" iconType="leads" isNegative />
-            </ul>
+                  {/* Pricing Info */}
+                  <div className="mb-4">
+                    <p className="text-[13px] text-[#091E42] font-medium uppercase tracking-wide">
+                      {plan.price === 0 ? "3 Listings" : `${plan.duration} Days Plan`}
+                    </p>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-[26px] font-bold text-[#091E42]">₹{plan.price}</span>
+                      <span className="text-[11px] text-[#8B95A5] font-bold lowercase">
+                        {plan.price === 0 ? "/ Forever" : `/ ${plan.duration} Days`}
+                      </span>
+                    </div>
+                  </div>
 
-            {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
-              Get Started
-            </button>
-          </div>
+                  {/* Benefits List */}
+                  <div className="mb-5 mt-4 flex-grow">
+                    {plan.features?.length > 0 && (
+                      <>
+                        <p className="text-[11px] font-bold text-[#091E42] uppercase tracking-wider mb-2">Included</p>
+                        <ul className="space-y-3.5 mb-4">
+                          {plan.features.map((feature, idx) => (
+                            <BenefitItem key={idx} text={feature} iconType={idx === 0 ? "listings" : idx === 1 ? "visibility" : "placement"} />
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                    
+                    {plan.notIncluded?.length > 0 && (
+                      <>
+                        <p className="text-[11px] font-bold text-[#8B95A5] uppercase tracking-wider mb-2 mt-4 border-t border-gray-100 pt-3">Not Included</p>
+                        <ul className="space-y-3.5">
+                          {plan.notIncluded.map((feature, idx) => (
+                            <BenefitItem key={idx} text={feature} isNegative />
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </div>
 
-          {/* --- CARD 2: Standard --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col relative cursor-pointer">
-            
+                  {/* Action Button */}
+                  <button 
+                    onClick={handlePlanClick}
+                    className={`w-full ${plan.isPopular ? 'bg-[#c5a059]' : 'bg-[#091E42]'} text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:opacity-90 cursor-pointer transition duration-200 mt-auto`}
+                  >
+                    {plan.price === 0 ? "Get Started" : `Choose ${plan.name}`}
+                  </button>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
 
-            {/* Top Icon */}
-            <div className="mb-5">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" fill="transparent"/>
-                <path d="M10 38V22L24 12L38 22V38H10Z" fill="#36B37E"/>
-                <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
-                <circle cx="24" cy="18" r="4" fill="white"/>
-                <circle cx="24" cy="18" r="2" fill="#0078DB"/>
-                <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-
-            {/* Title & Subtitle */}
-            <h2 className="text-[22px] font-bold text-[#091E42] mb-2">Standard</h2>
-            <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
-              Ideal for growing agencies needing consistent lead generation.
-            </p>
-
-            {/* Pricing Info */}
-            <div className="mb-4">
-              <p className="text-[13px] text-[#091E42] font-medium">10 Listings</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-[26px] font-bold text-[#091E42]">₹999</span>
-                <span className="text-[11px] text-[#8B95A5]">/month</span>
-              </div>
-            </div>
-
-            {/* Benefits List */}
-            <ul className="space-y-3.5 mb-5 mt-4">
-              <BenefitItem text="10 Listings included" iconType="listings" />
-              <BenefitItem text="Priority placement" iconType="placement" />
-              <BenefitItem text="Limited shared leads" iconType="leads" hasInfo />
-            </ul>
-
-            {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
-              Choose Standard
-            </button>
-          </div>
-
-          {/* --- CARD 3: Premium Pack --- */}
-          <div className="bg-white border border-[#0078DB] rounded shadow-[0_8px_24px_rgba(0,0,0,0.08)] w-full p-6 transition-colors duration-300 hover:bg-gray-200 flex flex-col cursor-pointer">
-            {/* Top Icon */}
-            <div className="mb-5">
-              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" fill="transparent"/>
-                <path d="M10 38V22L24 12L38 22V38H10Z" fill="#8777D9"/>
-                <path d="M28 38V26H38V38H28Z" fill="#0078DB"/>
-                <circle cx="24" cy="18" r="4" fill="white"/>
-                <circle cx="24" cy="18" r="2" fill="#0078DB"/>
-                <path d="M14 18C14 18 19 12 24 12C29 12 34 18 34 18" stroke="#D1E4F9" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-
-            {/* Title & Subtitle */}
-            <h2 className="text-[22px] font-bold text-[#091E42] mb-2">Premium</h2>
-            <p className="text-[13px] text-[#5E6D82] leading-snug mb-6 h-10">
-              For top tier agencies looking for maximum market visibility.
-            </p>
-
-            {/* Pricing Info */}
-            <div className="mb-4">
-              <p className="text-[13px] text-[#091E42] font-medium">Unlimited Listings</p>
-              <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-[26px] font-bold text-[#091E42]">₹2,999</span>
-                <span className="text-[11px] text-[#8B95A5]">/month</span>
-              </div>
-            </div>
-
-            {/* Benefits List */}
-            <ul className="space-y-3.5 mb-5 mt-4">
-              <BenefitItem text="Unlimited Listings" iconType="listings" />
-              <BenefitItem text="Featured placement" iconType="placement" />
-              <BenefitItem text="Priority leads" iconType="leads" />
-              <BenefitItem text="Faster visibility" iconType="visibility" hasInfo />
-            </ul>
-
-            {/* Action Button */}
-            <button className="w-full bg-[#091E42] text-white py-3 rounded-[4px] font-semibold text-[14px] mb-2 hover:bg-[#c5a059] cursor-pointer transition duration-200 mt-auto">
-              Get Premium Leads
-            </button>
-          </div>
-
+          {/* Navigation Buttons */}
+          <button className="prev-plan absolute left-[-20px] lg:left-0 top-[60%] -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#c5a059] hover:border-[#c5a059] transition-all opacity-0 group-hover/carousel:opacity-100 cursor-pointer">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button className="next-plan absolute right-[-20px] lg:right-0 top-[60%] -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white shadow-xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#c5a059] hover:border-[#c5a059] transition-all opacity-0 group-hover/carousel:opacity-100 cursor-pointer">
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </div>

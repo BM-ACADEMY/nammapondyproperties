@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNav } from "@/context/NavContext";
 import { useAuth } from "@/context/AuthContext";
+import { message } from "antd";
+import { checkPropertyListingLimit } from "@/utils/propertyLimits";
+import { slugify } from "@/utils/slugify";
 import {
   Mail,
   Phone,
@@ -22,6 +25,27 @@ const Footer = () => {
 
   const handlePostProperty = () => {
     if (isAuthenticated && user) {
+      const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
+
+      if (!canPost) {
+        message.warning({
+          content: limitMessage,
+          key: "verification-restricted"
+        });
+
+        if (reason === "unverified") {
+          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+          if (role === "SELLER") {
+            navigate("/seller/profile");
+          } else {
+            navigate("/user/profile");
+          }
+        } else if (reason === "limit_reached") {
+          navigate(redirectPath || "/seller/upgrade-plan");
+        }
+        return;
+      }
+
       const role =
         user?.role_id?.role_name?.toUpperCase() ||
         user?.role?.name?.toUpperCase();
@@ -116,7 +140,7 @@ const Footer = () => {
               {businessTypes.map((type) => (
                 <li key={type._id}>
                   <Link
-                    to={`/business-user-list/${type._id}`}
+                    to={`/business/${slugify(type.name)}`}
                     className="text-gray-400 hover:text-white transition-colors capitalize underline-offset-4 hover:underline"
                   >
                     {type.name}
@@ -231,7 +255,7 @@ const Footer = () => {
               <li className="flex items-center justify-start gap-4">
                 {/* <Mail className="w-5 h-5 text-gray-400 shrink-0" /> */}
                 <span className="underline-offset-4 hover:underline cursor-pointer">
-                  info@nammapondy.com
+                  help@nammapondyproperties.com
                 </span>
               </li>
             </ul>

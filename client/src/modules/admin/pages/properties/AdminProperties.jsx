@@ -77,6 +77,7 @@ const AdminProperties = ({ mode }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const socket = useSocket();
+  const isUserAdmin = user?.role_id?.role_name?.toLowerCase() === 'admin' || user?.isSuperAdmin;
 
   const handleViewDetail = (property) => {
     setSelectedProperty(property);
@@ -172,6 +173,28 @@ const AdminProperties = ({ mode }) => {
     }
   };
 
+  const handleRejectEdit = async (id) => {
+    try {
+      await api.put(`/properties/reject-edit/${id}`);
+      message.success("Property edit discarded successfully");
+      fetchProperties();
+    } catch (error) {
+      console.error("Reject error:", error);
+      message.error("Failed to reject property edit");
+    }
+  };
+
+  const handleApproveEdit = async (id) => {
+    try {
+      await api.put(`/properties/approve-edit/${id}`);
+      message.success("Property edit approved successfully");
+      fetchProperties();
+    } catch (error) {
+      console.error("Approve error:", error);
+      message.error("Failed to approve property edit");
+    }
+  };
+
   const handleMarkAsSoldClick = (property) => {
     setPropertyToSell(property);
     setSoldPrice(property.soldPrice || "");
@@ -229,9 +252,9 @@ const AdminProperties = ({ mode }) => {
       key: "title",
       width: 200,
       render: (_, record) => (
-        <span className="font-medium text-gray-800 truncate" title={record.basicInfo?.title}>
+        <div className="font-medium text-gray-800 truncate max-w-[250px]" title={record.basicInfo?.title}>
           {record.basicInfo?.title || "Untitled"}
-        </span>
+        </div>
       ),
       filteredValue: [searchText],
       onFilter: (value, record) => {
@@ -278,20 +301,55 @@ const AdminProperties = ({ mode }) => {
       render: (loc) => loc?.city || "N/A",
     },
     {
-      title: "Added By",
+      title: "Owner / Manager",
       key: "addedBy",
       render: (_, record) => {
-        const isMe = user && record.seller?._id === user._id;
+        const isSellerMe = user && record.seller?._id === user._id;
+        const isCreatorMe = user && String(record.createdBy?._id || record.createdBy) === String(user?._id);
+        const isSellerAdmin = record.seller?.role_id?.role_name === 'admin';
+        
+        // Determine primary name and secondary attribution
+        let primaryName = record.seller?.name || "Owner";
+        let isPrimaryMe = isSellerMe;
+        let showAddedBy = record.createdBy && String(record.createdBy._id || record.createdBy) !== String(record.seller?._id);
+
+        // If it's an admin property, prioritize showing who actually added it
+        if (isSellerAdmin && record.createdBy) {
+          if (isCreatorMe) {
+            primaryName = "Me";
+            isPrimaryMe = true;
+            showAddedBy = false; // Already showing Me as primary
+          } else {
+            primaryName = record.createdBy.name || "Admin";
+            isPrimaryMe = false;
+            // Optionally show the legal owner (Super Admin) if needed, 
+            // but usually just showing the creator is enough for admin panel
+            showAddedBy = false; 
+          }
+        } else if (isSellerMe) {
+          primaryName = "Me";
+          isPrimaryMe = true;
+        }
+
         return (
-          <div className="flex items-center gap-2">
-            <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} className="shrink-0" />
-            <span className={isMe ? "font-bold text-blue-600 truncate max-w-30" : "text-gray-600 truncate max-w-30"}>
-              {isMe ? "Me" : (record.seller?.name || "Admin")}
-            </span>
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <Avatar size="small" icon={<User size={12} />} src={getImageUrl(record.seller?.profile_image)} className="shrink-0" />
+              <span className={isPrimaryMe ? "font-bold text-blue-600 truncate max-w-30" : "text-gray-600 truncate max-w-30"}>
+                {primaryName}
+              </span>
+            </div>
+            {showAddedBy && (
+              <div className="flex items-center gap-1 ml-6">
+                <span className="text-[10px] text-gray-400">Added by:</span>
+                <span className={isCreatorMe ? "text-[10px] font-bold text-blue-500 uppercase" : "text-[10px] font-medium text-indigo-500 uppercase"}>
+                  {isCreatorMe ? "Me" : (record.createdBy?.name || "Admin")}
+                </span>
+              </div>
+            )}
           </div>
         );
       },
-      // hidden: mode === "seller", // Allow showing on seller properties page as well
     },
     {
       title: "Status",
@@ -304,6 +362,7 @@ const AdminProperties = ({ mode }) => {
             case "available":
               return "green";
             case "pending":
+            case "edit pending approval":
               return "gold";
             case "sold":
             case "rented":
@@ -426,6 +485,25 @@ const AdminProperties = ({ mode }) => {
           },
         ];
 
+        if (record.status === "Edit Pending Approval") {
+          // Insert Approve and Reject Edit before delete
+          items.splice(items.length - 2, 0, 
+            {
+              key: "approve_edit",
+              label: "Approve Edit",
+              icon: <CheckCircle size={14} className="text-green-600" />,
+              onClick: () => handleApproveEdit(record._id),
+            },
+            {
+              key: "reject_edit",
+              label: "Reject Edit",
+              icon: <AlertCircle size={14} />,
+              onClick: () => handleRejectEdit(record._id),
+              danger: true,
+            }
+          );
+        }
+
         return (
           <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
             <Button
@@ -449,19 +527,6 @@ const AdminProperties = ({ mode }) => {
           <p className="text-gray-500 mt-1">Manage and monitor all property listings in one place.</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
-          {mode === "admin" && (
-            <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-100">
-              <Segmented
-                options={[
-                  { label: "All Properties", value: "all" },
-                  { label: "My Additions", value: "my" },
-                ]}
-                value={filterType}
-                onChange={setFilterType}
-                className="custom-segmented"
-              />
-            </div>
-          )}
           <Button
             type="primary"
             size="large"
@@ -539,12 +604,12 @@ const AdminProperties = ({ mode }) => {
             allowClear
           />
           <div className="text-gray-400 text-sm font-medium">
-            Showing {filterType === "my" ? properties.filter(p => p.seller?._id === user?._id).length : properties.length} properties
+            Showing {properties.length} properties
           </div>
         </div>
         <Table
           columns={columns.filter(col => !col.hidden)}
-          dataSource={filterType === "my" ? properties.filter(p => p.seller?._id === user?._id) : properties}
+          dataSource={properties}
           rowKey="_id"
           loading={loading}
           pagination={{ 

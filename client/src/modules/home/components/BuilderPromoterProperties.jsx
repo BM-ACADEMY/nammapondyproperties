@@ -159,10 +159,10 @@ const BuilderPromoterProperties = () => {
                         ))}
                     </Swiper>
 
-                    <button className="prev-builder-property absolute left-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all opacity-0 group-hover/carousel:opacity-100 hidden xl:flex">
+                    <button className="prev-builder-property absolute left-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all opacity-0 group-hover/carousel:opacity-100 hidden xl:flex cursor-pointer">
                         <ChevronLeft className="w-6 h-6" />
                     </button>
-                    <button className="next-builder-property absolute right-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all opacity-0 group-hover/carousel:opacity-100 hidden xl:flex">
+                    <button className="next-builder-property absolute right-[-20px] top-[40%] -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all opacity-0 group-hover/carousel:opacity-100 hidden xl:flex cursor-pointer">
                         <ChevronRight className="w-6 h-6" />
                     </button>
                 </div>
