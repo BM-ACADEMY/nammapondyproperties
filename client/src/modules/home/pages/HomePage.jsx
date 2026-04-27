@@ -13,7 +13,7 @@ import PostPropertyCTA from "../components/PostPropertyCTA";
 import RecommendedProperties from "../components/RecommendedProperties";
 import MeetKamar from "./MeetKamar";
 import AdvertiserTypeSection from "../components/AdvertiserTypeSection";
-xxxxxxx``
+
 const HomePage = () => {
   const [mapProperties, setMapProperties] = useState([]);
 

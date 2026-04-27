@@ -574,7 +574,7 @@ const PropertySearchBar = ({
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="absolute top-full left-0 mt-3 bg-[#fff9e6] border border-[#fef3c7] rounded-2xl px-6 py-4 flex items-center gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] w-[46%] before:content-[''] before:absolute before:bottom-full before:left-8 before:border-[10px] before:border-transparent before:border-b-[#fff9e6]"
+                            className="absolute top-full left-0 mt-3 bg-[#fff9e6] border border-[#fef3c7] rounded-md px-6 py-2 flex items-center gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-[100] w-[46%] before:content-[''] before:absolute before:bottom-full before:left-8 before:border-[10px] before:border-transparent before:border-b-[#fff9e6]"
                         >
                             <AlertTriangle className="w-4 h-4 text-amber-700 flex-shrink-0" />
                             <span className="text-amber-900 text-sm font-semibold tracking-tight">{error}</span>

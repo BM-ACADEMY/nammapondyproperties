@@ -40,6 +40,21 @@ const Header = () => {
   const [expandedMobileBusiness, setExpandedMobileBusiness] = useState(null);
   const { businessTypes, propertyCategories = [], isCallbackModalOpen, setIsCallbackModalOpen } = useNav();
 
+  // Sort business types: Agent -> Builder/Promoter -> Owner
+  const sortedBusinessTypes = [...businessTypes].sort((a, b) => {
+    const nameA = (typeof a.name === "string" ? a.name : a.name?.name || "").toLowerCase();
+    const nameB = (typeof b.name === "string" ? b.name : b.name?.name || "").toLowerCase();
+
+    const getIndex = (name) => {
+      if (name.includes("agent")) return 0;
+      if (name.includes("builder") || name.includes("promoter")) return 1;
+      if (name.includes("owner") || name.includes("individual")) return 2;
+      return 3;
+    };
+
+    return getIndex(nameA) - getIndex(nameB);
+  });
+
   const builderType = businessTypes.find(t => {
     const n = typeof t.name === "string" ? t.name : t.name?.name || "";
     return n.toLowerCase().includes("builder") || n.toLowerCase().includes("promoter");
@@ -281,7 +296,7 @@ const Header = () => {
                     );
                   })}
 
-                  {businessTypes.map((type) => {
+                  {sortedBusinessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
                     const name =
                       typeof type.name === "string"
@@ -846,7 +861,7 @@ const Header = () => {
 
 
 
-                  {businessTypes.map((type) => {
+                  {sortedBusinessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
                     const name =
                       typeof type.name === "string"
