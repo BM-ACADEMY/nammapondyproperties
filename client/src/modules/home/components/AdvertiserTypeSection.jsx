@@ -23,16 +23,20 @@ const AdvertiserTypeSection = () => {
         <User className="w-8 h-8 text-[#c19b48] mt-2" />
     );
 
-    const displayTypes = [...businessTypes.slice(0, 4)];
-    
-    // Add Administration manually if not present
-    if (!displayTypes.some(t => t.slug === "administration" || t.name === "Administration")) {
-        displayTypes.push({
-            _id: "administration",
-            name: "Administration",
-            slug: "administration"
-        });
-    }
+    // Sort business types: Agent -> Builder/Promoter -> Owner
+    const displayTypes = [...businessTypes].sort((a, b) => {
+        const nameA = (typeof a.name === "string" ? a.name : a.name?.name || "").toLowerCase();
+        const nameB = (typeof b.name === "string" ? b.name : b.name?.name || "").toLowerCase();
+
+        const getIndex = (name) => {
+            if (name.includes("agent")) return 0;
+            if (name.includes("builder") || name.includes("promoter")) return 1;
+            if (name.includes("owner") || name.includes("individual")) return 2;
+            return 3;
+        };
+
+        return getIndex(nameA) - getIndex(nameB);
+    });
 
     if (displayTypes.length === 0) return null;
 

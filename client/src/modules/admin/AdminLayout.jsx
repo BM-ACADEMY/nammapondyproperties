@@ -396,22 +396,21 @@ const AdminLayout = () => {
 
         <Content
           style={{
-            padding: isMobile ? "16px" : "24px",
+            padding: pathname.includes("/support") ? 0 : (isMobile ? "16px" : "24px"),
             height: "calc(100vh - 64px)",
-            overflowY: "auto",
-            background: "#f8fafc", // Subtle grey background for content area
+            overflowY: pathname.includes("/support") ? "hidden" : "auto",
+            background: pathname.includes("/support") ? "#fff" : "#f8fafc",
           }}
         >
-
-
           <div
             className="admin-content-wrapper"
             style={{
-              borderRadius: borderRadiusLG,
+              borderRadius: pathname.includes("/support") ? 0 : borderRadiusLG,
+              height: pathname.includes("/support") ? "100%" : "auto",
               minHeight: "100%",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              boxShadow: pathname.includes("/support") ? "none" : "0 1px 2px rgba(0,0,0,0.03)",
               background: colorBgContainer,
-              padding: 24,
+              padding: pathname.includes("/support") ? 0 : 24,
             }}
           >
             <Outlet />

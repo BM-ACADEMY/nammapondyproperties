@@ -57,7 +57,11 @@ exports.getSellerTickets = async (req, res) => {
 exports.getAllTickets = async (req, res) => {
   try {
     const tickets = await SupportTicket.find()
-      .populate("seller", "name email profile_image")
+      .populate({
+        path: "seller",
+        select: "name email profile_image phone businessType",
+        populate: { path: "businessType", select: "name" }
+      })
       .sort({ lastMessageAt: -1 });
     
     res.status(200).json({ success: true, tickets });
@@ -70,7 +74,11 @@ exports.getAllTickets = async (req, res) => {
 exports.getTicketById = async (req, res) => {
   try {
     const ticket = await SupportTicket.findById(req.params.id)
-      .populate("seller", "name email profile_image")
+      .populate({
+        path: "seller",
+        select: "name email profile_image phone businessType",
+        populate: { path: "businessType", select: "name" }
+      })
       .populate("messages.sender", "name email profile_image");
     
     if (!ticket) {
@@ -111,9 +119,12 @@ exports.getTicketById = async (req, res) => {
       }
     }
 
-    // Mark as read if admin is viewing (general ticket flag)
+    // Mark as read for the viewing party
     if (isUserAdmin && !ticket.isAdminRead) {
       ticket.isAdminRead = true;
+      await ticket.save();
+    } else if (!isUserAdmin && !ticket.isSellerRead) {
+      ticket.isSellerRead = true;
       await ticket.save();
     }
 
@@ -158,6 +169,7 @@ exports.addMessage = async (req, res) => {
 
     // Populate sender for frontend
     const populatedTicket = await SupportTicket.findById(ticketId)
+      .populate("seller", "name email profile_image")
       .populate("messages.sender", "name email profile_image");
     
     const latestPopulatedMessage = populatedTicket.messages[populatedTicket.messages.length - 1];
@@ -166,15 +178,15 @@ exports.addMessage = async (req, res) => {
     const io = req.app.get("socketio");
     if (io) {
       if (finalIsAdmin) {
-        // Admin sent message, mark as read
-        ticket.isAdminRead = true;
+        // Admin sent message, mark seller as unread
+        ticket.isSellerRead = false;
         // Notify seller
         io.to(`seller-${ticket.seller}`).emit("new-support-message", {
           ticketId,
           message: latestPopulatedMessage,
         });
       } else {
-        // Seller sent message, mark as unread
+        // Seller sent message, mark admin as unread
         ticket.isAdminRead = false;
         // Notify admins
         io.to("admin-room").emit("new-support-message", {

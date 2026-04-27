@@ -49,6 +49,10 @@ const supportTicketSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isSellerRead: {
+      type: Boolean,
+      default: true,
+    },
     resolvedAt: {
       type: Date,
     },

@@ -14,6 +14,8 @@ import {
   Select,
   Tooltip,
   Divider,
+  Dropdown,
+  Modal,
 } from "antd";
 import {
   SendOutlined,
@@ -27,6 +29,12 @@ import {
   ClockCircleOutlined,
   ArrowLeftOutlined,
   DeleteOutlined,
+  PlusOutlined,
+  SmileOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  ShopOutlined,
+  CalendarOutlined,
 } from "@ant-design/icons";
 import { useSocket } from "../../../context/SocketContext";
 import { useAuth } from "../../../context/AuthContext";
@@ -46,6 +54,8 @@ const SupportManagement = () => {
   const [messageText, setMessageText] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   
   const { user } = useAuth();
@@ -76,6 +86,11 @@ const SupportManagement = () => {
     const handleNewMessage = (data) => {
       const { ticketId, message: newMessage } = data;
       
+      // If the message is for the currently active ticket, mark it as read
+      if (activeTicket?._id === ticketId) {
+        fetchTicketDetails(ticketId);
+      }
+
       setTickets((prev) => {
         const updated = prev.map((t) =>
           t._id === ticketId
@@ -254,53 +269,41 @@ const SupportManagement = () => {
   };
 
   return (
-    <div className={`flex flex-col h-[calc(100vh-80px)] overflow-hidden ${isMobile ? "-m-4" : "-m-6"} bg-gray-100`}>
-      <Layout className="flex-1 bg-transparent">
+    <div className="flex flex-col h-full overflow-hidden bg-white">
+      <Layout className="flex-1 bg-white">
         {/* Sidebar */}
         {(!isMobile || !activeTicket) && (
           <Sider 
             width={isMobile ? "100%" : 400} 
-            className="bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-20" 
+            className="bg-white border-r border-gray-200 flex flex-col h-full z-20" 
             theme="light"
           >
-            <div className="p-6 bg-gray-50 border-b border-gray-200">
-              <div className="flex justify-between items-center mb-4">
-                <Title level={4} className="m-0 font-bold tracking-tight text-gray-800">Support Desk</Title>
-                <Tooltip title="Refresh Tickets">
-                  <Button 
-                    type="text" 
-                    shape="circle" 
-                    icon={<ReloadOutlined className="text-gray-500" />} 
-                    onClick={fetchTickets} 
-                    loading={loading}
-                  />
-                </Tooltip>
-              </div>
-              <div className="space-y-3">
-                <Input 
-                  placeholder="Search tickets..." 
-                  prefix={<SearchOutlined className="text-gray-500" />}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="rounded-xl bg-white border-gray-200 h-10 px-4 focus:border-blue-500 transition-all shadow-sm"
-                />
-                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {["all", "open", "resolved", "closed"].map((status) => (
-                    <Tag.CheckableTag
-                      key={status}
-                      checked={statusFilter === status}
-                      onChange={() => setStatusFilter(status)}
-                      className={`rounded-full px-4 py-1 text-[10px] font-bold border transition-all m-0 whitespace-nowrap ${
-                        statusFilter === status 
-                          ? "bg-blue-600 text-white border-blue-600 shadow-md" 
-                          : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"
-                      }`}
-                    >
-                      {status.toUpperCase()}
-                    </Tag.CheckableTag>
-                  ))}
-                </div>
-              </div>
+            
+            <div className=" pt-3 border-t border-gray-100 p-2 bg-white">
+              <Input 
+                placeholder="Search or start new chat" 
+                prefix={<SearchOutlined className="text-[#54656f] mr-2" />}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="rounded-lg bg-[#f0f2f5] border-none h-9 text-sm focus:ring-0"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar p-2 bg-white border-b border-gray-100">
+              {["all", "open", "resolved", "closed"].map((status) => (
+                <Tag.CheckableTag
+                  key={status}
+                  checked={statusFilter === status}
+                  onChange={() => setStatusFilter(status)}
+                  className={`rounded-full px-3 py-0.5 text-[12px] border transition-all m-0 whitespace-nowrap ${
+                    statusFilter === status 
+                      ? "bg-[#00a884] text-white border-[#00a884]" 
+                      : "bg-[#f0f2f5] text-[#54656f] border-transparent hover:bg-[#e9edef]"
+                  }`}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Tag.CheckableTag>
+              ))}
             </div>
 
             <div className="overflow-y-auto flex-1 bg-white">
@@ -309,48 +312,48 @@ const SupportManagement = () => {
                 dataSource={filteredTickets}
                 renderItem={(item) => (
                   <div
-                    className={`relative cursor-pointer transition-all border-b border-gray-100 hover:bg-blue-50/50 ${
-                      activeTicket?._id === item._id ? "bg-blue-50 shadow-[inset_4px_0_0_0_#2563eb]" : ""
+                    className={`relative cursor-pointer transition-all border-b border-gray-50 hover:bg-[#f5f6f6] ${
+                      activeTicket?._id === item._id ? "bg-[#ebebeb]" : ""
                     }`}
                     onClick={() => fetchTicketDetails(item._id)}
                   >
-                    {!item.isAdminRead && activeTicket?._id !== item._id && (
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center">
-                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.6)]" />
-                      </div>
-                    )}
-                    <div className="p-5">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3">
-                          <Avatar 
-                            size={40} 
-                            className="shadow-md border-2 border-white"
-                            src={item.seller?.profile_image ? (item.seller.profile_image.startsWith('http') ? item.seller.profile_image : `${import.meta.env.VITE_API_URL.replace('/api', '')}${item.seller.profile_image}`) : null} 
-                            icon={<UserOutlined />} 
-                          />
-                          <div className="flex flex-col">
-                            <Text strong className="text-sm text-gray-900 leading-tight">
+                    <div className="flex p-3 gap-3 items-center">
+                      <Avatar 
+                        size={48} 
+                        src={item.seller?.profile_image ? (item.seller.profile_image.startsWith('http') ? item.seller.profile_image : `${import.meta.env.VITE_API_URL.replace('/api', '')}${item.seller.profile_image}`) : null} 
+                        icon={<UserOutlined />} 
+                        className="flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-0.5">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <Text strong className="text-[16px] text-[#111b21] truncate">
                               {item.seller?.name || "Unknown"}
                             </Text>
-                            <Text className="text-[11px] text-gray-500 font-medium">
-                              {moment(item.lastMessageAt).fromNow()}
+                            <Text className="text-[10px] text-gray-400 font-mono mt-0.5 flex-shrink-0">
+                              #{item._id.slice(-6).toUpperCase()}
                             </Text>
-                            {item.resolvedAt && (
-                              <Text className="text-[9px] text-red-500 font-bold uppercase mt-0.5">
-                                Deletes in {Math.max(0, 30 - moment().diff(moment(item.resolvedAt), 'days'))} days
-                              </Text>
-                            )}
                           </div>
+                          <Text className={`text-[12px] ${!item.isAdminRead ? "text-[#a82a00] font-semibold" : "text-[#667781]"}`}>
+                            {moment(item.lastMessageAt).format("hh:mm A")}
+                          </Text>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Tag color={getStatusColor(item.status)} className="m-0 border-none px-2.5 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider shadow-sm">
-                            {item.status}
-                          </Tag>
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center min-w-0 flex-1">
+                            {item.status !== 'open' && (
+                               <Tag color={getStatusColor(item.status)} className="m-0 border-none px-1.5 py-0 rounded-sm text-[10px] uppercase font-bold mr-1">
+                                 {item.status}
+                               </Tag>
+                            )}
+                            <Text className="text-[14px] text-[#667781] truncate">
+                              {item.subject}
+                            </Text>
+                          </div>
+                          {!item.isAdminRead && (
+                             <div className="bg-[#ef0202] w-2.5 h-2.5 rounded-full flex-shrink-0 ml-2" />
+                          )}
                         </div>
                       </div>
-                      <Text className={`text-sm block font-semibold truncate ${activeTicket?._id === item._id ? "text-blue-700" : "text-gray-700"}`}>
-                        {item.subject}
-                      </Text>
                     </div>
                   </div>
                 )}
@@ -368,46 +371,79 @@ const SupportManagement = () => {
             {activeTicket ? (
               <>
                 {/* Chat Header */}
-                <div className={`px-4 lg:px-8 py-4 border-b border-gray-200 flex justify-between items-center bg-white shadow-sm sticky top-0 z-10`}>
-                  <div className="flex items-center gap-3 lg:gap-4 overflow-hidden">
+                <div className="px-4 py-2 border-b border-gray-200 flex justify-between items-center bg-[#f0f2f5] sticky top-0 z-10 h-[60px]">
+                  <div className="flex items-center gap-3 overflow-hidden cursor-pointer">
                     {isMobile && (
                       <Button 
                         type="text" 
-                        icon={<ArrowLeftOutlined className="text-gray-700" />} 
+                        icon={<ArrowLeftOutlined className="text-[#54656f]" />} 
                         onClick={() => setActiveTicket(null)} 
                         className="mr-1"
                       />
                     )}
-                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-xl lg:rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-100">
-                      <MessageOutlined className="text-lg lg:text-xl text-white" />
-                    </div>
-                    <div className="overflow-hidden">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <Title level={isMobile ? 5 : 4} className="m-0 font-bold truncate text-gray-800">{activeTicket.subject}</Title>
-                        {!isMobile && <Badge status={activeTicket.status === "open" ? "processing" : "default"} text={<span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">{activeTicket.status}</span>} />}
+                    <div 
+                      className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity overflow-hidden"
+                      onClick={() => {
+                        setSelectedUser(activeTicket.seller);
+                        setIsUserModalOpen(true);
+                      }}
+                    >
+                      <Avatar 
+                        size={40} 
+                        src={activeTicket.seller?.profile_image ? (activeTicket.seller.profile_image.startsWith('http') ? activeTicket.seller.profile_image : `${import.meta.env.VITE_API_URL.replace('/api', '')}${activeTicket.seller.profile_image}`) : null} 
+                        icon={<UserOutlined />} 
+                        className="flex-shrink-0"
+                      />
+                      <div className="flex flex-col min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Text strong className="text-[16px] text-[#111b21] truncate leading-tight">
+                            {activeTicket.seller?.name || "Unknown"}
+                          </Text>
+                          <Text className="text-[11px] text-[#667781] font-mono bg-white/50 px-1.5 rounded border border-gray-200">
+                            #{activeTicket._id.slice(-8).toUpperCase()}
+                          </Text>
+                        </div>
+                        <Text className="text-[12px] text-[#667781] truncate">
+                          {activeTicket.status === "open"
+                            ? `Status: ${activeTicket.status}`
+                            : `Status: ${activeTicket.status}`}
+                        </Text>
                       </div>
-                      <Text className="text-[10px] lg:text-xs truncate block text-gray-500 font-medium">
-                        {isMobile ? `ID: ${activeTicket._id.slice(-6).toUpperCase()}` : `Ref: ${activeTicket._id.slice(-8).toUpperCase()} • Seller: ${activeTicket.seller?.name}`}
-                      </Text>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Select 
-                      value={activeTicket.status} 
-                      onChange={(val) => handleUpdateStatus(activeTicket._id, val)}
-                      className={isMobile ? "w-24" : "w-32"}
-                      size={isMobile ? "small" : "middle"}
+                  <div className="flex items-center gap-4">
+                    <Dropdown
+                      menu={{
+                        items: [
+                          {
+                            key: "open",
+                            label: "Mark as Open",
+                            onClick: () => handleUpdateStatus(activeTicket._id, "open"),
+                            disabled: activeTicket.status === "open",
+                          },
+                          {
+                            key: "closed",
+                            label: "Mark as Closed",
+                            onClick: () => handleUpdateStatus(activeTicket._id, "closed"),
+                            disabled: activeTicket.status === "closed",
+                          },
+                          {
+                            key: "resolved",
+                            label: "Mark as Resolved",
+                            onClick: () => handleUpdateStatus(activeTicket._id, "resolved"),
+                            disabled: activeTicket.status === "resolved",
+                          },
+                        ],
+                      }}
+                      trigger={["click"]}
+                      placement="bottomRight"
                     >
-                      <Option value="open">Open</Option>
-                      <Option value="closed">Closed</Option>
-                      <Option value="resolved">Resolved</Option>
-                    </Select>
-                    {!isMobile && (
-                      <>
-                        <Divider type="vertical" className="h-8 border-gray-200" />
-                        <Button icon={<MoreOutlined className="text-gray-500" />} type="text" shape="circle" />
-                      </>
-                    )}
+                      <Button
+                        icon={<MoreOutlined className="text-[#000000]" />}
+                        type="text"
+                        shape="circle"
+                      />
+                    </Dropdown>
                   </div>
                 </div>
                 {/* Messages Container with WhatsApp Background */}
@@ -420,17 +456,17 @@ const SupportManagement = () => {
                   }}
                 >
                   <div className="flex flex-col items-center gap-2 mb-6">
-                    <div className="bg-[#fff9c2] px-3 py-1.5 rounded-lg border border-gray-200/50 shadow-sm flex items-center gap-2">
-                      <ClockCircleOutlined className="text-gray-500 text-[10px]" />
-                      <Text className="text-[11px] font-medium text-gray-700 uppercase tracking-wide">
+                    <div className="bg-[#fff0d4]/90 px-2.5 py-1 rounded-md border border-gray-200/50 shadow-sm flex items-center gap-1.5">
+                      <ClockCircleOutlined className="text-gray-500 text-[9px]" />
+                      <Text className="text-[5px] font-medium text-gray-600 tracking-wide">
                         Ticket Created {moment(activeTicket.createdAt).format("MMM DD, YYYY")}
                       </Text>
                     </div>
                     {activeTicket.resolvedAt && (
-                      <div className="bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 shadow-sm flex items-center gap-2">
-                        <DeleteOutlined className="text-red-500 text-[10px]" />
-                        <Text className="text-[11px] font-bold text-red-600 uppercase tracking-wide">
-                          Auto-deletion in {Math.max(0, 30 - moment().diff(moment(activeTicket.resolvedAt), 'days'))} days
+                      <div className="bg-red-50/90 px-2.5 py-1 rounded-md border border-red-100 shadow-sm flex items-center gap-1.5">
+                        <DeleteOutlined className="text-red-500 text-[9px]" />
+                        <Text className="text-[10px] font-medium text-red-600 tracking-wide">
+                          Auto-Deletion in {Math.max(0, 30 - moment().diff(moment(activeTicket.resolvedAt), "days"))} days
                         </Text>
                       </div>
                     )}
@@ -463,7 +499,7 @@ const SupportManagement = () => {
                           
                           <div className="absolute bottom-1 right-2 flex items-center gap-1">
                             <span className="text-[10px] text-[#667781] leading-none">
-                              {moment(msg.createdAt).format("HH:mm")}
+                              {moment(msg.createdAt).format("hh:mm A")}
                             </span>
                             {isMe && (
                               <div className="flex items-center -mb-0.5">
@@ -474,7 +510,7 @@ const SupportManagement = () => {
                                   </svg>
                                 ) : (
                                   <svg viewBox="0 0 16 11" width="16" height="11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M1.5 5.5L5.5 9.5L14.5 0.5" stroke="#667781" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M1.5 5.5L5.5 9.5L14.5 0.5" stroke="#8696a0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                                   </svg>
                                 )}
                               </div>
@@ -487,13 +523,13 @@ const SupportManagement = () => {
                   <div ref={messagesEndRef} className="h-4" />
                 </div>
                 {/* Input Area */}
-                <div className={`${isMobile ? "p-3" : "p-6"} bg-white border-t border-gray-100`}>
+                <div className="px-4 py-2 bg-[#f0f2f5] flex items-center gap-2">
                   {activeTicket.status === "open" ? (
-                    <div className="max-w-4xl mx-auto flex items-end gap-3 bg-gray-50/80 p-2 lg:p-2.5 rounded-[24px] lg:rounded-[30px] border border-gray-200 focus-within:border-blue-400 focus-within:bg-white focus-within:shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300">
-                      <div className="flex-1 flex items-center min-h-[44px] px-2">
+                    <>
+                      <div className="flex-1 px-3 flex items-center">
                         <Input.TextArea
                           autoSize={{ minRows: 1, maxRows: 6 }}
-                          placeholder="Type your message here..."
+                          placeholder="Type a message"
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
                           onPressEnter={(e) => {
@@ -502,33 +538,47 @@ const SupportManagement = () => {
                               handleSendMessage();
                             }
                           }}
-                          className="flex-1 border-none bg-transparent shadow-none focus:ring-0 text-sm lg:text-[15px] p-2 resize-none leading-relaxed text-gray-700"
+                          className="flex-1 border-none bg-transparent shadow-none focus:ring-0 text-[15px] py-2 px-1 resize-none leading-relaxed text-[#111b21]"
                           style={{ boxShadow: 'none' }}
                         />
                       </div>
-                      <div className="flex-shrink-0">
-                        <Button
-                          type="primary"
-                          icon={<SendOutlined className="text-lg" />}
-                          onClick={handleSendMessage}
-                          loading={sending}
-                          disabled={!messageText.trim()}
-                          className="bg-blue-600 hover:bg-blue-700 border-none h-11 w-11 flex items-center justify-center rounded-full shadow-lg shadow-blue-100 transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400"
-                        />
-                      </div>
-                    </div>
+                      <Button
+                        type="primary"
+                        shape="circle"
+                        style={{ 
+                          backgroundColor: messageText.trim() ? '#00a884' : 'transparent',
+                          boxShadow: 'none',
+                          width: '45px',
+                          height: '45px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: 'none'
+                        }}
+                        icon={
+                          <SendOutlined 
+                            style={{ 
+                              fontSize: '20px', 
+                              color: messageText.trim() ? '#fff' : '#54656f',
+                              marginLeft: messageText.trim() ? '3px' : '0'
+                            }} 
+                          />
+                        }
+                        onClick={handleSendMessage}
+                        loading={sending}
+                        disabled={!messageText.trim() && !sending}
+                        className="transition-all duration-200"
+                      />
+                    </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-4 bg-gray-100 rounded-2xl border border-dashed border-gray-300">
-                      <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mb-1">
-                        <CheckCircleOutlined className="text-gray-600 text-xs" />
-                      </div>
-                      <Text className="font-bold text-[9px] uppercase tracking-widest text-gray-500">
-                        {activeTicket.status}
+                    <div className="flex-1 flex flex-col items-center justify-center py-2 bg-[#fff9c2] rounded-lg border border-[#e1d9ad]">
+                      <Text className="text-[13px] text-[#54656f] font-medium">
+                        This ticket is {activeTicket.status}.
                       </Text>
                       <Button 
                         type="link" 
                         size="small"
-                        className="text-[10px] mt-0 text-blue-600 font-bold"
+                        className="text-[13px] text-[#00a884] font-bold p-0 h-auto"
                         onClick={() => handleUpdateStatus(activeTicket._id, "open")}
                       >
                         RE-OPEN TICKET
@@ -540,8 +590,8 @@ const SupportManagement = () => {
             ) : (
 
               <div className="h-full flex flex-col items-center justify-center text-center p-10 lg:p-20">
-                <div className="w-24 h-24 lg:w-32 lg:h-32 flex items-center justify-center mb-6 lg:mb-8">
-                  <MessageOutlined style={{ fontSize: isMobile ? 40 : 60 }} className="text-blue-500" />
+                <div className="w-72 h-72 lg:w-[400px] lg:h-[400px] flex items-center justify-center opacity-90">
+                  <img src="/chat/contact.svg" alt="Support" className="w-full h-full object-contain" />
                 </div>
                 <Title level={isMobile ? 4 : 3} className="text-gray-900 font-black mb-3">SUPPORT CONSOLE</Title>
                 <Text className="max-w-xs lg:max-w-md text-gray-500 text-xs lg:text-sm font-medium leading-relaxed uppercase tracking-tight">
@@ -552,11 +602,78 @@ const SupportManagement = () => {
           </Content>
         )}
       </Layout>
+      {/* User Details Modal */}
+      <Modal
+        title={null}
+        open={isUserModalOpen}
+        onCancel={() => setIsUserModalOpen(false)}
+        footer={null}
+        width={400}
+        centered
+        styles={{ body: { padding: 0 } }}
+        className="user-detail-modal"
+      >
+        {selectedUser && (
+          <div className="bg-white rounded-lg overflow-hidden">
+            {/* Header Section */}
+            <div className="p-8 pb-6 flex items-center gap-6 border-b border-gray-100">
+              <div className="relative">
+                <Avatar
+                  size={100}
+                  src={selectedUser.profile_image ? (selectedUser.profile_image.startsWith('http') ? selectedUser.profile_image : `${import.meta.env.VITE_API_URL.replace('/api', '')}${selectedUser.profile_image}`) : null}
+                  icon={<UserOutlined />}
+                  className="border-2 border-gray-100 shadow-sm bg-gray-50"
+                />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <Title level={3} className="m-0 text-[#111b21] font-bold truncate leading-tight">
+                  {selectedUser.name}
+                </Title>
+                <div className="flex items-center gap-2 mt-1">
+                  <Tag color="blue" className="m-0 rounded-full px-3 py-0.5 border-none text-[12px] font-medium bg-blue-50 text-blue-600">
+                    {selectedUser.businessType?.name || "Seller"}
+                  </Tag>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Section */}
+            <div className="p-8 space-y-8">
+              <div>
+                <Title level={5} className="text-gray-900 font-bold mb-6">Personal Information</Title>
+                <div className="grid grid-cols gap-y-8 gap-x-4">
+                  <div className="flex flex-col">
+                    <Text className="text-[13px] text-gray-400 font-medium mb-1">Full Name</Text>
+                    <Text className="text-[15px] text-gray-900 font-bold">{selectedUser.name}</Text>
+                  </div>
+                  <div className="flex flex-col">
+                    <Text className="text-[13px] text-gray-400 font-medium mb-1">Business Type</Text>
+                    <Text className="text-[15px] text-gray-900 font-bold">{selectedUser.businessType?.name || "N/A"}</Text>
+                  </div>
+                  <div className="flex flex-col">
+                    <Text className="text-[13px] text-gray-400 font-medium mb-1">Phone Number</Text>
+                    <Text className="text-[15px] text-gray-900 font-bold">{selectedUser.phone || "Not provided"}</Text>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Action */}
+            <div className="p-8 pt-0 flex gap-3">
+              <Button 
+                block 
+                size="large"
+                className="h-11 rounded-lg font-bold border-gray-200 text-gray-600 hover:text-blue-600 hover:border-blue-200 bg-white transition-all"
+                onClick={() => setIsUserModalOpen(false)}
+              >
+                DISMISS
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
-
 };
 
 export default SupportManagement;
-
-

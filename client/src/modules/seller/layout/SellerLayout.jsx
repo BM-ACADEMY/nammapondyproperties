@@ -216,7 +216,7 @@ const SellerLayout = () => {
                 <Button
                   type="text"
                   shape="circle"
-                  icon={<Bell size={24} className={supportCount > 0 ? "text-amber-500 animate-bounce" : ""} />}
+                  icon={<Bell size={24} className={supportCount > 0 ? "text-amber-500 animate-ring" : ""} />}
                   onClick={() => supportCount > 0 && navigate("/seller/support")}
                 />
               </Dropdown>
@@ -252,8 +252,11 @@ const SellerLayout = () => {
 
         <Content
           style={{
-            margin: isMobile ? "16px" : "24px",
-            minHeight: "calc(100vh - 112px)", // Adjust for header and margin
+            margin: pathname === "/seller/support" ? 0 : (isMobile ? "16px" : "24px"),
+            height: pathname === "/seller/support" ? "calc(100vh - 64px)" : "auto",
+            minHeight: pathname === "/seller/support" ? "calc(100vh - 64px)" : "calc(100vh - 112px)",
+            background: pathname === "/seller/support" ? "#fff" : "transparent",
+            overflow: pathname === "/seller/support" ? "hidden" : "visible",
           }}
         >
           {/* Subscription Status - Closable Right Aligned Alert */}
@@ -294,9 +297,11 @@ const SellerLayout = () => {
           <div
             className="seller-content-wrapper"
             style={{
-              borderRadius: borderRadiusLG,
+              borderRadius: pathname === "/seller/support" ? 0 : borderRadiusLG,
+              height: pathname === "/seller/support" ? "100%" : "auto",
               minHeight: "100%",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+              boxShadow: pathname === "/seller/support" ? "none" : "0 1px 2px rgba(0,0,0,0.03)",
+              background: pathname === "/seller/support" ? "#fff" : "transparent",
             }}
           >
             <Outlet />
