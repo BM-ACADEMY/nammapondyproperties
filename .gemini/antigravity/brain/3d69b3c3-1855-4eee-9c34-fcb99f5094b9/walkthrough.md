@@ -45,6 +45,11 @@ This walkthrough summarizes the implementation of the automated notification sys
 - **Detail-Rich Template:** Created `requirementNotification.js` which includes full user details, property type, budget range, and location preferences.
 - **Service & Controller:** Added `sendRequirementNotificationToAdmin` to `emailService.js` and integrated it into `requirementController.createRequirement`.
 
+### 10. Support Ticket Notification
+- **New Ticket Alert:** Admins are now notified via email only when a **new** support ticket is created by a seller.
+- **Message Filter:** Per user request, subsequent messages within the same ticket do not trigger additional emails to avoid inbox clutter.
+- **Implementation:** Created `supportTicketNotification.js` template and integrated it into `supportTicketController.createTicket`.
+
 ## Verification Results
 
 ### Automated Tests

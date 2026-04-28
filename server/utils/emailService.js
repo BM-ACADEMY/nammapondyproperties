@@ -10,6 +10,7 @@ const callRequestNotificationTemplate = require("../templates/emails/callRequest
 const subscriptionExpiryWarningTemplate = require("../templates/emails/subscriptionExpiryWarning");
 const subscriptionExpiredTemplate = require("../templates/emails/subscriptionExpired");
 const requirementNotificationTemplate = require("../templates/emails/requirementNotification");
+const supportTicketNotificationTemplate = require("../templates/emails/supportTicketNotification");
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -296,6 +297,29 @@ exports.sendRequirementNotificationToAdmin = async (requirement) => {
     return info;
   } catch (error) {
     console.error("Error sending property requirement notification email:", error);
+    return null;
+  }
+};
+
+/**
+ * Sends a notification email to the admin for a new support ticket
+ */
+exports.sendSupportTicketNotificationToAdmin = async (ticket, seller, firstMessage) => {
+  try {
+    const htmlContent = supportTicketNotificationTemplate(ticket, seller, firstMessage);
+
+    const mailOptions = {
+      from: `"Namma Pondy Properties" <${process.env.USER_EMAIL}>`,
+      to: process.env.USER_EMAIL, // Admin's email
+      subject: `New Support Ticket: ${ticket.subject}`,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Support ticket notification email sent to admin:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending support ticket notification email:", error);
     return null;
   }
 };

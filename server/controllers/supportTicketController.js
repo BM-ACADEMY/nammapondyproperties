@@ -1,4 +1,5 @@
 const SupportTicket = require("../models/SupportTicket");
+const { sendSupportTicketNotificationToAdmin } = require("../utils/emailService");
 
 // Create a new support ticket
 exports.createTicket = async (req, res) => {
@@ -19,7 +20,15 @@ exports.createTicket = async (req, res) => {
       isAdminRead: false,
     });
 
+
     await newTicket.save();
+
+    // Send email notification to admin
+    try {
+      await sendSupportTicketNotificationToAdmin(newTicket, req.user, message);
+    } catch (emailErr) {
+      console.error("Failed to send support ticket email:", emailErr);
+    }
 
     // Notify admins via socket
     const io = req.app.get("socketio");
