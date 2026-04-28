@@ -31,6 +31,20 @@ const requirementSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    lat: {
+      type: Number,
+    },
+    lng: {
+      type: Number,
+    },
+    locationText: {
+      type: String,
+      trim: true,
+    },
+    locality: {
+      type: String,
+      trim: true,
+    },
     minBudget: {
       type: Number,
     },

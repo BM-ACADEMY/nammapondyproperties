@@ -59,6 +59,7 @@ const propertySchema = new mongoose.Schema(
       locality: String,
       subArea: String,
       pincode: String,
+      locationText: String,
 
       coordinates: {
         lat: Number,
