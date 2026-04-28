@@ -170,7 +170,6 @@ exports.getMe = async (req, res) => {
       user: userData,
     });
   } catch (error) {
-    console.error("getMe error:", error);
     res.status(500).json({ error: "Server Error" });
   }
 };

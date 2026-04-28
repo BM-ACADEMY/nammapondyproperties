@@ -9,6 +9,7 @@ const contactMessageNotificationTemplate = require("../templates/emails/contactM
 const callRequestNotificationTemplate = require("../templates/emails/callRequestNotification");
 const subscriptionExpiryWarningTemplate = require("../templates/emails/subscriptionExpiryWarning");
 const subscriptionExpiredTemplate = require("../templates/emails/subscriptionExpired");
+const requirementNotificationTemplate = require("../templates/emails/requirementNotification");
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -272,6 +273,29 @@ exports.sendSubscriptionExpiredNotification = async (user, subscription) => {
     return info;
   } catch (error) {
     console.error("Error sending subscription expired notification email:", error);
+    return null;
+  }
+};
+
+/**
+ * Sends a notification email to the admin for a new property requirement
+ */
+exports.sendRequirementNotificationToAdmin = async (requirement) => {
+  try {
+    const htmlContent = requirementNotificationTemplate(requirement);
+
+    const mailOptions = {
+      from: `"Namma Pondy Properties" <${process.env.USER_EMAIL}>`,
+      to: process.env.USER_EMAIL, // Admin's email
+      subject: `New Property Requirement: ${requirement.fullName}`,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Property requirement notification email sent to admin:", info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending property requirement notification email:", error);
     return null;
   }
 };

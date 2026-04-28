@@ -6,6 +6,7 @@ const User = require("../models/User");
 const SharedLead = require("../models/SharedLead");
 const Property = require("../models/Property");
 const BusinessType = require("../models/BusinessType");
+const { sendRequirementNotificationToAdmin } = require("../utils/emailService");
 
 // Create a new requirement
 exports.createRequirement = async (req, res) => {
@@ -63,6 +64,13 @@ exports.createRequirement = async (req, res) => {
         fullName: savedRequirement.fullName,
         message: `New requirement posted by ${savedRequirement.fullName}`,
       });
+    }
+
+    // Send email notification to admin
+    try {
+      await sendRequirementNotificationToAdmin(savedRequirement);
+    } catch (emailErr) {
+      console.error("Failed to send requirement notification email:", emailErr);
     }
 
     res.status(201).json({

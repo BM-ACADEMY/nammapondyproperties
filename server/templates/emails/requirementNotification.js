@@ -1,8 +1,8 @@
 /**
- * Generates an HTML email template for a new contact message notification
- * @param {Object} contact - The contact message data
+ * Generates an HTML email template for a new property requirement notification
+ * @param {Object} requirement - The requirement data
  */
-const contactMessageNotificationTemplate = (contact) => {
+const requirementNotificationTemplate = (requirement) => {
   return `
     <!DOCTYPE html>
     <html>
@@ -29,37 +29,60 @@ const contactMessageNotificationTemplate = (contact) => {
       <div class="container">
         <div class="header">
           <img src="https://nammapondyproperties.com/Logo/logo1.png" alt="Namma Pondy Properties" style="height: 50px; width: auto; margin-bottom: 10px;">
-          <h1>New Contact Message</h1>
+          <h1>New Property Requirement</h1>
         </div>
         <div class="content">
           <p>Hello Admin,</p>
-          <p>You have received a new message from the contact form. Here are the details:</p>
+          <p>A new property requirement has been submitted. Here are the details:</p>
           
           <div class="section">
-            <div class="section-title">Contact Details</div>
+            <div class="section-title">User Details</div>
             <div class="info-item">
               <span class="label">Full Name</span>
-              <span class="value">${contact.name}</span>
-            </div>
-            <div class="info-item">
-              <span class="label">Email Address</span>
-              <span class="value">${contact.email}</span>
+              <span class="value">${requirement.fullName}</span>
             </div>
             <div class="info-item">
               <span class="label">Phone Number</span>
-              <span class="value">${contact.phone}</span>
+              <span class="value">${requirement.phoneNumber}</span>
             </div>
           </div>
 
           <div class="section">
-            <div class="section-title">Message Content</div>
+            <div class="section-title">Property Requirement</div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="50%" class="info-item">
+                  <span class="label">Category</span>
+                  <span class="value">${requirement.category}</span>
+                </td>
+                <td width="50%" class="info-item">
+                  <span class="label">Property Type</span>
+                  <span class="value">${requirement.usageType} - ${requirement.propertyType}</span>
+                </td>
+              </tr>
+              <tr>
+                <td class="info-item">
+                  <span class="label">Budget Range</span>
+                  <span class="value">₹${requirement.minBudget?.toLocaleString('en-IN') || 0} - ₹${requirement.maxBudget?.toLocaleString('en-IN') || 'Flexible'}</span>
+                </td>
+                <td class="info-item">
+                  <span class="label">Preferred Location</span>
+                  <span class="value">${requirement.locationText || requirement.preferredLocation || 'Not Specified'}</span>
+                </td>
+              </tr>
+            </table>
             <div class="info-item">
-              <span class="value">${contact.message || "No message provided."}</span>
+              <span class="label">Preferences</span>
+              <span class="value">${requirement.propertyPreferences || 'None'}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Message</span>
+              <span class="value">${requirement.message || "No message provided."}</span>
             </div>
           </div>
 
           <div style="text-align: center;">
-            <a href="${process.env.ADMIN_URL || 'https://admin.nammapondyproperties.com'}/forms/contact-messages" class="btn">View in Admin Panel</a>
+            <a href="${process.env.CLIENT_URL}/admin/requirements" class="btn">View in Admin Panel</a>
           </div>
         </div>
         <div class="footer">
@@ -72,4 +95,4 @@ const contactMessageNotificationTemplate = (contact) => {
   `;
 };
 
-module.exports = contactMessageNotificationTemplate;
+module.exports = requirementNotificationTemplate;
