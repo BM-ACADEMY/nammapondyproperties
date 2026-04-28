@@ -16,15 +16,21 @@ import {
   FileText,
   ChevronRight,
   ShieldCheck,
+  Search,
 } from "lucide-react";
+import axios from "axios";
 
 const { Option } = Select;
 const { TextArea } = Input;
+
+// No map helpers needed if map is removed
+
 
 const PostRequirementPage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [showOtherType, setShowOtherType] = useState(false);
+  const [searching, setSearching] = useState(false);
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { propertyTypes } = useNav();
@@ -85,6 +91,36 @@ const PostRequirementPage = () => {
 
   const handlePropertyTypeChange = (value) => {
     setShowOtherType(value === "Others");
+  };
+
+  const handleLocationSearch = async (value) => {
+    if (!value || value.length < 3) return;
+    setSearching(true);
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          value
+        )}&limit=1&addressdetails=1`
+      );
+      if (response.data && response.data.length > 0) {
+        const { lat, lon, display_name, address } = response.data[0];
+        const locality = address.suburb || address.town || address.village || address.hamlet || address.city_district || "";
+        
+        form.setFieldsValue({
+          lat: parseFloat(lat),
+          lng: parseFloat(lon),
+          locationText: display_name,
+          locality: locality,
+        });
+      } else {
+        message.warning("Location not found. Please try a different search term.");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      message.error("Error searching location.");
+    } finally {
+      setSearching(false);
+    }
   };
 
   return (
@@ -213,14 +249,42 @@ const PostRequirementPage = () => {
                   </Form.Item>
                 )}
 
-                <Form.Item
-                  name="preferredLocation"
-                  label={<span className="font-semibold">Preferred Location</span>}
-                  className=""
-                  rules={[{ required: true, message: "Please enter your preferred location" }]}
-                >
-                  <Input placeholder="e.g. Heritage Town, Pondicherry" />
-                </Form.Item>
+                <div className="lg:col-span-2 mb-4">
+                  <Form.Item
+                    label={<span className="font-semibold text-slate-700">Preferred Location</span>}
+                    required
+                    className="mb-0"
+                  >
+                    <div className="flex flex-col md:flex-row gap-3">
+                      <Input.Search
+                        placeholder="Type to search location (e.g. Kottakuppam)"
+                        onSearch={handleLocationSearch}
+                        loading={searching}
+                        enterButton={<Search size={18} />}
+                        className="w-full"
+                      />
+                      <Form.Item
+                        name="locationText"
+                        noStyle
+                        rules={[{ required: true, message: "Please search and select a location" }]}
+                      >
+                        <Input 
+                          placeholder="Verified location will appear here..." 
+                          prefix={<MapPin size={18} className="text-blue-500" />}
+                          readOnly
+                          className="bg-blue-50/50 border-blue-100 font-medium"
+                        />
+                      </Form.Item>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2 italic">
+                      Note: You must search and select a location from the search bar to ensure accurate matching.
+                    </p>
+                  </Form.Item>
+
+                  {/* Hidden inputs for coordinates */}
+                  <Form.Item name="lat" hidden><Input /></Form.Item>
+                  <Form.Item name="lng" hidden><Input /></Form.Item>
+                </div>
 
                 <Form.Item
                   label={<span className="font-semibold">Approx. Budget Range</span>}
