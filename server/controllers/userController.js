@@ -9,7 +9,8 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const Property = require("../models/Property");
-const { sendBadgeVerificationNotification, sendBadgeRequestNotificationToAdmin } = require("../utils/emailService");
+const Subscription = require("../models/Subscription");
+const { sendBadgeVerificationNotification, sendBadgeRequestNotificationToAdmin, sendSubscriptionExpiredNotification } = require("../utils/emailService");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -118,6 +119,31 @@ exports.getMe = async (req, res) => {
     ]);
     if (!user) return res.status(404).json({ error: "User not found" });
 
+    // --- Immediate Subscription Expiry Check ---
+    if (user.activeSubscription && user.activeSubscription.status === 'active') {
+      const now = new Date();
+      if (user.activeSubscription.endDate < now) {
+        console.log(`User ${user._id} subscription expired during panel access. Processing...`);
+        
+        // 1. Mark subscription as expired
+        const subscription = await Subscription.findById(user.activeSubscription._id).populate('plan');
+        subscription.status = "expired";
+        await subscription.save();
+        
+        // 2. Update user object and save
+        user.activeSubscription = null;
+        await user.save();
+        
+        // 3. Send Email Notification
+        try {
+          await sendSubscriptionExpiredNotification(user, subscription);
+        } catch (emailErr) {
+          console.error("Failed to send expiry email during panel access:", emailErr);
+        }
+      }
+    }
+    // -------------------------------------------
+
     // [BOOTSTRAP LOGIC] 
     // If no Super Admin exists in the system yet, promote the current admin to Super Admin
     if (user.role_id.role_name === "admin" && !user.isSuperAdmin) {
@@ -144,6 +170,7 @@ exports.getMe = async (req, res) => {
       user: userData,
     });
   } catch (error) {
+    console.error("getMe error:", error);
     res.status(500).json({ error: "Server Error" });
   }
 };

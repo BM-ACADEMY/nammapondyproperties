@@ -7,6 +7,8 @@ const badgeVerificationTemplate = require("../templates/emails/badgeVerification
 const badgeRequestNotificationTemplate = require("../templates/emails/badgeRequestNotification");
 const contactMessageNotificationTemplate = require("../templates/emails/contactMessageNotification");
 const callRequestNotificationTemplate = require("../templates/emails/callRequestNotification");
+const subscriptionExpiryWarningTemplate = require("../templates/emails/subscriptionExpiryWarning");
+const subscriptionExpiredTemplate = require("../templates/emails/subscriptionExpired");
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -201,5 +203,79 @@ exports.sendCallRequestNotificationToAdmin = async (request) => {
     return null;
   }
 };
+
+/**
+ * Sends a subscription expiry warning email to the user
+ */
+exports.sendSubscriptionExpiryWarning = async (user, subscription, daysLeft) => {
+  try {
+    // Determine the recipient's email
+    let recipientEmail = null;
+    if (user.builderProfile && user.builderProfile.email) {
+      recipientEmail = user.builderProfile.email;
+    }
+
+    if (!recipientEmail) {
+      console.warn(`No email found for user ${user._id}, cannot send subscription expiry warning.`);
+      return null;
+    }
+
+    const htmlContent = subscriptionExpiryWarningTemplate(user, subscription, daysLeft);
+    const subject = daysLeft === 1 
+      ? "Final Warning: Your subscription expires tomorrow"
+      : `Urgent: Your subscription is expiring in ${daysLeft} days`;
+
+    const mailOptions = {
+      from: `"Namma Pondy Properties" <${process.env.USER_EMAIL}>`,
+      to: recipientEmail,
+      subject: subject,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Subscription expiry warning sent to user ${user._id}:`, info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending subscription expiry warning email:", error);
+    return null;
+  }
+};
+
+/**
+ * Sends a subscription expired notification email to the user
+ */
+exports.sendSubscriptionExpiredNotification = async (user, subscription) => {
+  try {
+    // Determine the recipient's email
+    let recipientEmail = null;
+    if (user.builderProfile && user.builderProfile.email) {
+      recipientEmail = user.builderProfile.email;
+    }
+
+    if (!recipientEmail) {
+      console.warn(`No email found for user ${user._id}, cannot send subscription expired notification.`);
+      return null;
+    }
+
+    const htmlContent = subscriptionExpiredTemplate(user, subscription);
+    const subject = "Your subscription has expired - Namma Pondy Properties";
+
+    const mailOptions = {
+      from: `"Namma Pondy Properties" <${process.env.USER_EMAIL}>`,
+      to: recipientEmail,
+      subject: subject,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Subscription expired notification sent to user ${user._id}:`, info.messageId);
+    return info;
+  } catch (error) {
+    console.error("Error sending subscription expired notification email:", error);
+    return null;
+  }
+};
+
+
 
 
