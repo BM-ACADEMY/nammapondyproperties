@@ -45,6 +45,7 @@ import {
   shareRequirement,
   postRequirement
 } from "@/services/api";
+import axios from "axios";
 import { useNav } from "@/context/NavContext";
 import { useSocket } from "@/context/SocketContext";
 
@@ -68,6 +69,7 @@ const RequirementList = () => {
   const [fetchingStats, setFetchingStats] = useState(false);
   const [expandedPlans, setExpandedPlans] = useState([]);
   const [selectedPlanIds, setSelectedPlanIds] = useState([]);
+  const [searching, setSearching] = useState(false);
 
   const selectedUsageType = Form.useWatch("usageType", addForm);
 
@@ -197,6 +199,37 @@ const RequirementList = () => {
     );
   };
 
+  const handleLocationSearch = async (value) => {
+    if (!value || value.length < 3) return;
+    setSearching(true);
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          value
+        )}&limit=1&addressdetails=1`
+      );
+      if (response.data && response.data.length > 0) {
+        const { lat, lon, display_name, address } = response.data[0];
+        const locality = address.suburb || address.town || address.village || address.hamlet || address.city_district || "";
+        
+        addForm.setFieldsValue({
+          lat: parseFloat(lat),
+          lng: parseFloat(lon),
+          locationText: display_name,
+          locality: locality,
+        });
+        message.success("Location verified successfully!");
+      } else {
+        message.warning("Location not found.");
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      message.error("Error searching location.");
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const handleAddLead = async (values) => {
     setLoading(true);
     try {
@@ -255,6 +288,7 @@ const RequirementList = () => {
       item.phoneNumber?.includes(searchText) ||
       item.propertyType?.toLowerCase().includes(searchLower) ||
       item.preferredLocation?.toLowerCase().includes(searchLower) ||
+      item.locationText?.toLowerCase().includes(searchLower) ||
       item.createdBy?.name?.toLowerCase().includes(searchLower)
     );
   });
@@ -289,9 +323,9 @@ const RequirementList = () => {
           <Text className="text-xs mt-1">
             <span className="font-semibold">{record.usageType}:</span> {record.propertyType}
           </Text>
-          {record.preferredLocation && (
+          {(record.preferredLocation || record.locationText) && (
             <div className="flex items-center gap-1 text-[11px] text-slate-500 italic">
-              <MapPin size={10} /> {record.preferredLocation}
+              <MapPin size={10} /> {record.locationText || record.preferredLocation}
             </div>
           )}
         </div>
@@ -554,7 +588,7 @@ const RequirementList = () => {
                 <div className="mb-4">
                   <Text type="secondary" className="text-xs uppercase font-semibold">Location Preference</Text>
                   <p className="m-0 text-slate-700 font-medium">
-                    {selectedRequirement.preferredLocation || "Not specified"}
+                    {selectedRequirement.locationText || selectedRequirement.preferredLocation || "Not specified"}
                   </p>
                 </div>
 
@@ -1037,13 +1071,39 @@ const RequirementList = () => {
                 </Form.Item>
               )}
 
-              <Form.Item
-                name="preferredLocation"
-                label={<span className="font-semibold text-slate-700">Preferred Location</span>}
-                rules={[{ required: true, message: "Location is required" }]}
-              >
-                <Input placeholder="e.g. White Town, Pondy" className="rounded-lg h-10" />
-              </Form.Item>
+              <div className="md:col-span-2 mb-4">
+                <Form.Item
+                  label={<span className="font-semibold text-slate-700">Preferred Location</span>}
+                  required
+                >
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <Input.Search
+                      placeholder="Search location (e.g. White Town)"
+                      onSearch={handleLocationSearch}
+                      loading={searching}
+                      enterButton={<Search size={18} />}
+                      className="w-full"
+                    />
+                    <Form.Item
+                      name="locationText"
+                      noStyle
+                      rules={[{ required: true, message: "Please search and select a location" }]}
+                    >
+                      <Input 
+                        placeholder="Verified location" 
+                        prefix={<MapPin size={16} className="text-blue-500" />}
+                        readOnly
+                        className="bg-blue-50/30"
+                      />
+                    </Form.Item>
+                  </div>
+                </Form.Item>
+
+                {/* Hidden fields for coordinates and locality */}
+                <Form.Item name="lat" hidden><Input /></Form.Item>
+                <Form.Item name="lng" hidden><Input /></Form.Item>
+                <Form.Item name="locality" hidden><Input /></Form.Item>
+              </div>
 
               <Col span={24} className="p-0">
                  <div className="flex gap-4 w-full">

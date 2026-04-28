@@ -304,11 +304,12 @@ const PropertyForm = ({
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
           );
           if (response.data && response.data.length > 0) {
-            const { lat, lon } = response.data[0];
+            const { lat, lon, display_name } = response.data[0];
             const newPos = { lat: parseFloat(lat), lng: parseFloat(lon) };
             setMapPosition(newPos);
             setValue("location.coordinates.lat", newPos.lat);
             setValue("location.coordinates.lng", newPos.lng);
+            setValue("location.locationText", display_name);
           }
         } catch (error) {
           console.error("Geocoding error:", error);

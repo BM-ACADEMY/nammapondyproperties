@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Requirement = require("../models/Requirement");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const Subscription = require("../models/Subscription");
@@ -22,6 +23,10 @@ exports.createRequirement = async (req, res) => {
       propertyPreferences,
       message,
       heardFrom,
+      lat,
+      lng,
+      locationText,
+      locality,
     } = req.body;
 
     const userId = req.user ? req.user.id : null;
@@ -35,6 +40,10 @@ exports.createRequirement = async (req, res) => {
       usageType,
       propertyType,
       preferredLocation,
+      lat,
+      lng,
+      locationText,
+      locality,
       minBudget,
       maxBudget,
       propertyPreferences,
@@ -195,13 +204,12 @@ exports.deleteRequirement = async (req, res) => {
 };
 
 // Helper function to build the property matching query
-const getPropertyMatchQuery = (sellerId, requirement) => {
+const getPropertyMatchQuery = (sellerId, requirement, matchType = "exact") => {
   if (!requirement) return null;
 
   const isRent = requirement.category === "Rent";
   
   // Fuzzy Matching Logic (80% - 120%)
-  // This automatically expands the requirement budget to find more relevant leads.
   const minBudget = (requirement.minBudget || 0) * 0.8;
   const maxBudget = requirement.maxBudget ? requirement.maxBudget * 1.2 : Infinity;
 
@@ -209,9 +217,8 @@ const getPropertyMatchQuery = (sellerId, requirement) => {
   const minPriceField = isRent ? "pricing.rent.minRent" : "pricing.sell.minPrice";
   const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
 
-  // Base query
+  // Base query filters
   const matchQuery = {
-    seller: sellerId,
     status: "Active",
     "basicInfo.category": requirement.category,
     "basicInfo.usageType": requirement.usageType,
@@ -229,8 +236,45 @@ const getPropertyMatchQuery = (sellerId, requirement) => {
     ]
   };
 
-  // Add Location matching if preferredLocation is provided
-  if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
+  // Add seller filter ONLY if a specific sellerId is provided
+  if (sellerId && (typeof sellerId === "string" || sellerId instanceof mongoose.Types.ObjectId)) {
+    matchQuery.seller = sellerId;
+  }
+
+  // Location matching logic
+  if (requirement.lat && requirement.lng) {
+    const radiusInRadians = 5 / 6378.1;
+    
+    if (matchType === "exact") {
+      // Step 1: Strict Locality Match
+      let targetLocality = requirement.locality;
+      
+      // Fallback: If locality is missing (old data), try to get it from the start of locationText
+      if (!targetLocality && requirement.locationText) {
+        targetLocality = requirement.locationText.split(',')[0].trim();
+      }
+
+      if (targetLocality && targetLocality.trim() !== "") {
+        const localityRegex = new RegExp(`^${targetLocality.trim()}$`, "i");
+        matchQuery.$and.push({ "location.locality": localityRegex });
+        
+        console.log(`[DEBUG] Querying Exact Locality: "${targetLocality}"`);
+        console.log(`[DEBUG] Budget Range: ${minBudget} - ${maxBudget}`);
+      } else {
+        matchQuery.$and.push({ _id: null }); 
+      }
+    } else if (matchType === "radius") {
+      // Step 2: 5 km Radius Match ONLY
+      matchQuery.$and.push({
+        "location.locationPoint": {
+          $geoWithin: {
+            $centerSphere: [[requirement.lng, requirement.lat], radiusInRadians],
+          },
+        },
+      });
+    }
+  } else if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
+    // Step 3: Text-based Regex Fallback (for old data)
     const locTerm = requirement.preferredLocation.trim();
     const locRegex = new RegExp(locTerm, "i");
     matchQuery.$and.push({
@@ -267,6 +311,21 @@ exports.getSubscriptionStats = async (req, res) => {
     // Find if at least one Builder matches globally for Priority 1 logic
     let hasGlobalBuilderMatch = false;
 
+    // Determine if we should show Exact Matches or Radius Matches
+    let finalMatchType = "exact";
+    if (requirement.lat && requirement.lng) {
+      const globalExactQuery = getPropertyMatchQuery(null, requirement, "exact");
+      const exactExists = await Property.exists(globalExactQuery);
+      
+      console.log(`[DEBUG] Matching requirement: ${requirement.locationText || requirement.locality}`);
+      console.log(`[DEBUG] Global Exact Match exists? ${exactExists}`);
+      
+      if (!exactExists) {
+        finalMatchType = "radius";
+      }
+      console.log(`[DEBUG] Final Match Type selected: ${finalMatchType}`);
+    }
+
     const stats = await Promise.all(
       Object.entries(planGroups).map(async ([planName, plansInGroup]) => {
         const planIds = plansInGroup.map(p => p._id);
@@ -295,7 +354,7 @@ exports.getSubscriptionStats = async (req, res) => {
             let matchingProperties = [];
 
             if (requirement) {
-              const matchQuery = getPropertyMatchQuery(user._id, requirement);
+              const matchQuery = getPropertyMatchQuery(user._id, requirement, finalMatchType);
               const props = await Property.find(matchQuery).select("basicInfo.title");
               
               if (props.length > 0) {
@@ -397,6 +456,16 @@ exports.shareRequirement = async (req, res) => {
       });
     }
 
+    // Determine if we should show Exact Matches or Radius Matches (Exclusive Priority)
+    let finalMatchType = "exact";
+    if (requirement.lat && requirement.lng) {
+      const globalExactQuery = getPropertyMatchQuery(null, requirement, "exact");
+      const exactExists = await Property.exists(globalExactQuery);
+      if (!exactExists) {
+        finalMatchType = "radius";
+      }
+    }
+
     const results = [];
     const io = req.app.get("socketio");
 
@@ -445,7 +514,7 @@ exports.shareRequirement = async (req, res) => {
             continue;
           }
 
-          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
+          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement, finalMatchType);
           if (await Property.exists(matchQuery)) {
             sellerIds.push(sub.user._id);
             // Deduct lead immediately for Exact Match
@@ -464,7 +533,7 @@ exports.shareRequirement = async (req, res) => {
             continue;
           }
 
-          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement);
+          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement, finalMatchType);
           if (await Property.exists(matchQuery)) {
             sellerIds.push(sub.user._id);
             // Deduct lead immediately for Exact Match
