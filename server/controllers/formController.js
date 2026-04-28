@@ -1,5 +1,6 @@
 const Contact = require("../models/Contact");
 const RequestCall = require("../models/RequestCall");
+const { sendContactNotificationToAdmin, sendCallRequestNotificationToAdmin } = require("../utils/emailService");
 
 // --- Contact Form ---
 
@@ -17,6 +18,13 @@ exports.createContact = async (req, res) => {
         name: savedContact.name,
         message: `New contact message from ${savedContact.name}`,
       });
+    }
+
+    // Send Email Notification to Admin
+    try {
+      await sendContactNotificationToAdmin(savedContact);
+    } catch (emailError) {
+      console.error("Failed to send contact notification email:", emailError);
     }
 
     res.status(201).json({
@@ -87,6 +95,13 @@ exports.createRequestCall = async (req, res) => {
         fullName: savedRequest.fullName,
         message: `New callback request from ${savedRequest.fullName}`,
       });
+    }
+
+    // Send Email Notification to Admin
+    try {
+      await sendCallRequestNotificationToAdmin(savedRequest);
+    } catch (emailError) {
+      console.error("Failed to send callback request notification email:", emailError);
     }
 
     res.status(201).json({

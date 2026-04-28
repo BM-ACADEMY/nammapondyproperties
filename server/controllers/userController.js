@@ -9,6 +9,7 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const Property = require("../models/Property");
+const { sendBadgeVerificationNotification, sendBadgeRequestNotificationToAdmin } = require("../utils/emailService");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -339,6 +340,20 @@ exports.updateUser = async (req, res) => {
           sellerId: user._id,
         }); // Notify other admins
       }
+
+      // Send Email Notification
+      try {
+        let status = "none";
+        if (user.badgeVerified) status = "verified";
+        else if (user.badgeRequestStatus === "approved") status = "approved";
+        else if (user.badgeRequestStatus === "rejected") status = "rejected";
+
+        if (status !== "none") {
+          await sendBadgeVerificationNotification(user, status, req.body.badgeUpdateMessage || "");
+        }
+      } catch (emailError) {
+        console.error("Failed to send badge verification email:", emailError);
+      }
     }
 
     res.json(user);
@@ -488,6 +503,13 @@ exports.requestBadgeVerification = async (req, res) => {
         sellerPhone: user.phone,
         message: `New badge verification request from ${user.name || 'Seller'}`,
       });
+    }
+
+    // Send Email Notification to Admin
+    try {
+      await sendBadgeRequestNotificationToAdmin(user);
+    } catch (emailError) {
+      console.error("Failed to send badge request email to admin:", emailError);
     }
 
     res.json({ message: "Verification request sent", status: "pending" });

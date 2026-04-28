@@ -208,12 +208,24 @@ const UserList = () => {
       ),
     },
     {
+      title: "Verification",
+      key: "verification",
+      render: (_, record) => (
+        <Tag color={record.isVerified ? "success" : "warning"} className="rounded-full px-3 flex items-center w-fit">
+          {record.isVerified ? <CheckCircle size={14} className="mr-1" /> : <AlertCircle size={14} className="mr-1" />}
+          <span className="text-[11px] font-medium uppercase tracking-tight">
+            {record.isVerified ? "VERIFIED" : "UNVERIFIED"}
+          </span>
+        </Tag>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => (
         <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
-          <span className="inline-flex items-center whitespace-nowrap">
+          <span className="inline-flex items-center whitespace-nowrap text-[11px] font-medium uppercase tracking-tight">
             {status ? status.toUpperCase() : "ACTIVE"}
           </span>
         </Tag>
