@@ -1,5 +1,7 @@
 import { createContext, useState, useEffect } from "react";
 import CryptoJS from "crypto-js";
+import { subscribeToPushNotifications } from "../utils/pushNotification";
+
 
 export const AuthContext = createContext(null);
 
@@ -41,7 +43,11 @@ export const AuthProvider = ({ children }) => {
 
             // 🛡️ Validate with server immediately to ensure user still exists in DB
             await refetchUser();
+            
+            // 🔔 Subscribe to push notifications
+            subscribeToPushNotifications();
           }
+
         }
       } finally {
         setIsLoading(false);
@@ -69,7 +75,11 @@ export const AuthProvider = ({ children }) => {
     setToken(authToken);
     localStorage.setItem("token", authToken);
     localStorage.setItem("user", encryptData(userData));
+
+    // 🔔 Subscribe to push notifications
+    subscribeToPushNotifications();
   };
+
 
   const logout = () => {
     setUser(null);
