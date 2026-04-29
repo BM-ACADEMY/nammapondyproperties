@@ -648,7 +648,7 @@ const Support = () => {
               </>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-10 lg:p-20">
-                <div className="w-72 h-72 lg:w-[400px] lg:h-[400px] flex items-center justify-center opacity-90 transition-all duration-500 hover:scale-105">
+                <div className="w-72 h-72 lg:w-[400px] lg:h-[400px] flex items-center justify-center opacity-90">
                   <img
                     src="/chat/contact.svg"
                     alt="Support"

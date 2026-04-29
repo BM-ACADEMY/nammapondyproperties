@@ -242,9 +242,11 @@ const AdminProperties = ({ mode }) => {
             className="w-16 h-12 object-cover rounded"
           />
         ) : (
-          <div className="w-16 h-12 bg-gray-200 rounded flex items-center justify-center text-xs">
-            No Img
-          </div>
+          <img
+            src={getImageUrl(null)}
+            alt="No Image"
+            className="w-16 h-12 object-cover rounded border border-gray-100"
+          />
         ),
     },
     {
@@ -699,10 +701,11 @@ const AdminProperties = ({ mode }) => {
                   ))}
                 </Carousel>
               ) : (
-                <div className="h-[300px] bg-gray-200 flex items-center justify-center flex-col text-gray-400">
-                  <Building size={64} className="mb-2 opacity-50" />
-                  <span className="font-medium">No Images Available</span>
-                </div>
+                <img
+                  src={getImageUrl(null)}
+                  alt="No Property Images"
+                  className="w-full h-[300px] md:h-[400px] object-cover"
+                />
               )}
 
               {/* Overlay Content */}

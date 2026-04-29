@@ -126,14 +126,14 @@ const AddProperty = () => {
 
   if (verifyingLimit && !editId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50/50">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
         <Spin size="large" tip="Verifying your plan limits..." />
       </div>
     );
   }
 
   return (
-    <div className="p-4 mt-18 md:p-8 bg-gray-50/50 min-h-screen">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-full">
       <div className="max-w-8xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">

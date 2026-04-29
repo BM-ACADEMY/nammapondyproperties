@@ -318,7 +318,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 bg-[#fcfcfd] min-h-screen font-sans">
+    <div className="max-w-4xl mx-auto p-4 md:p-8 bg-[#f4f4f5] min-h-screen font-sans">
       {/* Header Section */}
       <div className="mb-10">
         <Title level={1} className="!text-3xl !mb-2 !font-semibold text-slate-800">Seller Profile</Title>
@@ -697,7 +697,7 @@ const Profile = () => {
         </Card>
 
         {/* Subscription Status Section */}
-        <Card 
+        {/* <Card 
           title={
             <div className="pt-2">
               <span className="text-lg font-semibold text-slate-800">Subscription Status</span>
@@ -741,7 +741,7 @@ const Profile = () => {
               Upgrade Plan
             </Button>
           </div>
-        </Card>
+        </Card> */}
       </div>
 
       <style>{`

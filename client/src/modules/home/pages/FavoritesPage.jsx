@@ -194,7 +194,7 @@ const FavoritesPage = () => {
     <div className="mt-20 min-h-[calc(100vh-80px)] bg-[#f6f9fa] font-['Outfit',_sans-serif] flex flex-col">
       {/* ── Page Header ── */}
       <div className="bg-transparent">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 pb-6">
           <div className="flex items-end justify-between gap-4">
             <div>
               {/* CHANGED: Applied the gold color to the top accent text */}

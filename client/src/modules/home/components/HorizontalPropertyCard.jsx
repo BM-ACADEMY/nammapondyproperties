@@ -10,9 +10,11 @@ import WishlistButton from "../../../components/Common/WishlistButton";
 const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) => {
     const images = property.media?.images && property.media.images.length > 0 
         ? property.media.images 
-        : [property.media?.featuredImage].filter(Boolean);
+        : (property.media?.featuredImage ? [property.media.featuredImage] : []);
         
-    const displayImages = images.length > 1 ? [...images, images[0]] : images;
+    const displayImages = images.length > 0 
+        ? (images.length > 1 ? [...images, images[0]] : images)
+        : [null]; // Show fallback image if no images available
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isHovering, setIsHovering] = useState(false);
     const [useTransition, setUseTransition] = useState(true);
@@ -103,12 +105,12 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                     ))}
                 </div>
 
-                <div className="absolute top-3 right-3 z-20">
+                <div className="absolute top-3 right-3 z-40">
                     <WishlistButton propertyId={property._id} />
                 </div>
 
                 {/* Top Left Badges */}
-                <div className="absolute top-3 left-3 z-20 flex flex-col gap-2 items-start pointer-events-none">
+                <div className="absolute top-3 left-3 z-40 flex flex-col gap-2 items-start pointer-events-none">
                     {/* Verified Badge */}
                     {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
                         <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200 pointer-events-auto">
@@ -126,12 +128,14 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                     )}
                 </div>
 
-                <div className="absolute bottom-3 right-3 z-20 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
-                    {(currentImageIndex % images.length) + 1}/{images.length || 1}
-                </div>
+                {images.length > 1 && (
+                    <div className="absolute bottom-3 right-3 z-40 bg-black/50 backdrop-blur-md px-1.5 py-0.5 rounded text-white text-[9px] font-medium flex items-center gap-1">
+                        {(currentImageIndex % images.length) + 1}/{images.length}
+                    </div>
+                )}
 
                 {property.view_count > 0 && (
-                    <div className="absolute bottom-3 left-3 z-20 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded flex items-center gap-1 border border-white/10 transition-all group-hover:bg-black/70">
+                    <div className="absolute bottom-3 left-3 z-40 bg-black/50 backdrop-blur-md px-2 py-0.5 rounded flex items-center gap-1 border border-white/10 transition-all group-hover:bg-black/70">
                         <Eye className="w-3 h-3 text-white/90" />
                         <span className="text-white text-[10px] font-bold tracking-tight">
                             {formatNumber(property.view_count)}
