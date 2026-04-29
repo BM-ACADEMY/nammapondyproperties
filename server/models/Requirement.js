@@ -92,6 +92,17 @@ const requirementSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    sharingStatus: {
+      type: String,
+      enum: ["none", "in-progress", "completed", "unclaimed"],
+      default: "none",
+    },
+    sharingConfig: {
+      plans: [String], // e.g. ["Pro", "Premium", "Standard"]
+      timer: Number, // in minutes
+      currentPlanIndex: { type: Number, default: 0 },
+      startTime: Date,
+    },
   },
   {
     timestamps: true,

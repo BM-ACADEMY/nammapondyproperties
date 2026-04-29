@@ -73,6 +73,8 @@ exports.getSharedLeads = async (req, res) => {
     const totalInCycle = currentCycleLeads.length;
 
     const fullLeads = await Promise.all(filteredLeads.map(async (lead) => {
+      if (!lead.requirement) return null; // Skip if requirement is missing
+
       const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
       const leadDate = new Date(lead.createdAt);
       
@@ -115,9 +117,12 @@ exports.getSharedLeads = async (req, res) => {
       };
     }));
 
+    // Filter out any null entries from missing requirements
+    const validLeads = fullLeads.filter(l => l !== null);
+
     res.status(200).json({
       success: true,
-      data: fullLeads,
+      data: validLeads,
     });
   } catch (error) {
     console.error("Error fetching shared leads:", error);
@@ -200,7 +205,9 @@ exports.acceptLead = async (req, res) => {
     await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
 
     // 3. Update the parent Requirement status to "Closed"
-    await Requirement.findByIdAndUpdate(updatedLead.requirement._id, { status: "Closed" });
+    if (updatedLead.requirement) {
+      await Requirement.findByIdAndUpdate(updatedLead.requirement._id, { status: "Closed" });
+    }
 
     // 4. Close all other platforms' shared leads for this same requirement
     // This ensures that if the lead was shared with multiple plans, it's closed for everyone
