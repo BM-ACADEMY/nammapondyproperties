@@ -330,7 +330,7 @@ const Header = () => {
                                   to={`/business/${slugify(name)}`}
                                   className="flex items-center px-4 py-2 text-sm font-bold text-[#166aa8] hover:bg-blue-50 rounded-lg transition-colors capitalize"
                                 >
-                                  {name}
+                                  Our {name}
                                 </Link>
                                 {name.toLowerCase().includes("agent") && (
                                   <Link

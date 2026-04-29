@@ -257,12 +257,42 @@ const SellerList = () => {
       ),
     },
     {
+      title: "Badge Verification",
+      key: "badgeVerification",
+      render: (_, record) => {
+        let color = "default";
+        let text = "None";
+        let icon = <AlertCircle size={14} className="mr-1" />;
+
+        if (record.badgeVerified) {
+          color = "success";
+          text = "Verified";
+          icon = <ShieldCheck size={14} className="mr-1" />;
+        } else if (record.badgeRequestStatus === "pending") {
+          color = "warning";
+          text = "Pending Request";
+          icon = <Clock size={14} className="mr-1" />;
+        } else if (record.badgeRequestStatus === "rejected") {
+          color = "error";
+          text = "Rejected";
+          icon = <XCircle size={14} className="mr-1" />;
+        }
+
+        return (
+          <Tag color={color} className="rounded-full px-3 flex items-center w-fit">
+            {icon}
+            <span className="text-[11px] font-medium uppercase tracking-tight">{text}</span>
+          </Tag>
+        );
+      },
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
       render: (status) => (
         <Tag color={status === "active" ? "green" : "red"} className="rounded-full px-3">
-          <span className="inline-flex items-center whitespace-nowrap">
+          <span className="inline-flex items-center whitespace-nowrap text-[11px] font-medium uppercase tracking-tight">
             {status ? status.toUpperCase() : "ACTIVE"}
           </span>
         </Tag>

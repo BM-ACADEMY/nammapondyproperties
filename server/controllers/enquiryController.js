@@ -3,6 +3,7 @@ const Property = require("../models/Property");
 const Subscription = require("../models/Subscription");
 const Role = require("../models/Role");
 const User = require("../models/User");
+const emailService = require("../utils/emailService");
 
 exports.createEnquiry = async (req, res) => {
   try {
@@ -49,7 +50,28 @@ exports.createEnquiry = async (req, res) => {
       await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
     }
 
+    // Trigger email notification to admin
+    try {
+      const fullProperty = await Property.findById(property_id);
+      const seller = await User.findById(seller_id);
+      if (fullProperty && seller) {
+        emailService.sendEnquiryNotification(enquiry, seller, fullProperty);
+      }
+    } catch (emailErr) {
+      console.error("Failed to send enquiry email:", emailErr);
+    }
+
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-enquiry", {
+        message: `New enquiry from ${enquiryData.enquirer_name || "a user"}`,
+        enquiry,
+      });
+    }
+
     res.status(201).json({ message: "Enquiry recorded successfully", enquiry });
+
   } catch (error) {
     console.error("Error creating enquiry:", error);
     res.status(500).json({ error: "Failed to record enquiry" });
@@ -321,6 +343,19 @@ exports.updateStatus = async (req, res) => {
     lead.status = status;
     lead.updatedBy = req.user._id;
     await lead.save();
+
+    // Trigger email notification for status update
+    try {
+      const fullProperty = await Property.findById(lead.property_id);
+      const seller = await User.findById(lead.seller_id);
+      const updater = await User.findById(req.user._id);
+      
+      if (fullProperty && seller) {
+        emailService.sendEnquiryNotification(lead, seller, fullProperty, updater, true);
+      }
+    } catch (emailErr) {
+      console.error("Failed to send status update email:", emailErr);
+    }
 
     res.json({ message: "Status updated successfully", lead });
   } catch (error) {

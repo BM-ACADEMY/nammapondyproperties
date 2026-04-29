@@ -549,7 +549,7 @@ const BusinessUserList = () => {
                             <img
                               src={getImageUrl(user.profile_image)}
                               alt={user.name}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover transition-transform duration-500"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-slate-50 text-[#174685] text-6xl font-medium uppercase">
@@ -637,27 +637,40 @@ const BusinessUserList = () => {
                             {/* Share Profile Button (Refined Top Right) */}
                             <button 
                               onClick={handleShareProfile}
-                              className="absolute top-4 sm:top-6 right-6 sm:right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white/40 hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer" 
+                              className="absolute top-4 sm:top-6 right-6 sm:right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer" 
                               title="Share profile"
                             >
                               <Share2 size={16} className="group-hover:scale-110 transition-transform" />
                               <span className="text-[10px] font-bold uppercase tracking-widest hidden lg:inline">Share</span>
                             </button>
 
-                            {/* Profile Image with Modern Outline */}
+                            {/* Profile Image with Refined Thin Gold Ring */}
                             <div className="flex flex-col items-center shrink-0 gap-4 sm:gap-5">
-                              <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-full border-[5px] sm:border-[6px] border-white/10 p-1 bg-white/5 shadow-2xl overflow-hidden backdrop-blur-sm">
-                                {selectedSeller?.profile_image ? (
-                                  <img
-                                    src={getImageUrl(selectedSeller.profile_image)}
-                                    alt={selectedSeller?.name}
-                                    className="w-full h-full object-cover rounded-full"
-                                  />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-[#0f3468] text-white/90 text-5xl font-bold rounded-full">
-                                    {selectedSeller?.name?.charAt(0).toUpperCase()}
+                              <div className="relative group/avatar">
+                                {/* Radiant Glow for Gold Ring */}
+                                <div className="absolute -inset-4 bg-[#D4AF37]/15 rounded-full blur-2xl opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-700" />
+                                
+                                <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-full p-[5px] sm:p-[4px] bg-[conic-gradient(from_0deg,#8A6628,#E6BE08,#F9F295,#E6BE08,#8A6628,#E6BE08,#F9F295,#E6BE08,#8A6628)] shadow-[0_12px_30px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.7)]">
+                                  {/* Beveled Edge Highlight */}
+                                  <div className="absolute inset-[0.5px] rounded-full border border-white/15 pointer-events-none" />
+                                  
+                                  {/* Inner Groove for Depth */}
+                                  <div className="w-full h-full rounded-full p-[2px] bg-[#5D4037] shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+                                    <div className="w-full h-full rounded-full border-[2.5px] border-[#0f3468] overflow-hidden bg-[#0f3468]">
+                                      {selectedSeller?.profile_image ? (
+                                        <img
+                                          src={getImageUrl(selectedSeller.profile_image)}
+                                          alt={selectedSeller?.name}
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-[#0f3468] text-white/90 text-5xl font-bold rounded-full">
+                                          {selectedSeller?.name?.charAt(0).toUpperCase()}
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
-                                )}
+                                </div>
                               </div>
                               {/* Verified Badge (Fully Separated) */}
                               {(selectedSeller?.badgeVerified || selectedSeller?.role_id?.role_name === "admin") && (
@@ -732,7 +745,7 @@ const BusinessUserList = () => {
                           {(selectedSeller?.builderProfile?.companyLogo || selectedSeller?.builderProfile?.companyName || (selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link))) && (
                             <div className="w-full md:w-[200px] lg:w-[240px] shrink-0 flex flex-col items-start md:items-end justify-center border-t md:border-t-0 md:border-l border-white/10 pt-8 md:pt-0 md:pl-8 lg:pl-10">
                               {selectedSeller?.builderProfile?.companyLogo && (
-                                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl flex items-center justify-center mb-5 hover:scale-105 transition-transform duration-500">
+                                <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white rounded-2xl p-4 sm:p-5 lg:p-6 shadow-2xl flex items-center justify-center mb-5 transition-transform duration-500">
                                   <img
                                     src={getImageUrl(selectedSeller.builderProfile.companyLogo)}
                                     className="max-h-full max-w-full object-contain"

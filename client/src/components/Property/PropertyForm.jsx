@@ -164,8 +164,8 @@ const PropertyForm = ({
       addressLine1: data?.location?.addressLine1 || data?.location?.address_line_1 || "",
       addressLine2: data?.location?.addressLine2 || data?.location?.address_line_2 || "",
       country: data?.location?.country || "IN",
-      state: data?.location?.state || "",
-      city: data?.location?.city || "",
+      state: data?.location?.state || "PY",
+      city: data?.location?.city || "Puducherry",
       locality: data?.location?.locality || "",
       subArea: data?.location?.subArea || data?.location?.sub_area || "",
       pincode: data?.location?.pincode || "",
@@ -304,11 +304,12 @@ const PropertyForm = ({
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
           );
           if (response.data && response.data.length > 0) {
-            const { lat, lon } = response.data[0];
+            const { lat, lon, display_name } = response.data[0];
             const newPos = { lat: parseFloat(lat), lng: parseFloat(lon) };
             setMapPosition(newPos);
             setValue("location.coordinates.lat", newPos.lat);
             setValue("location.coordinates.lng", newPos.lng);
+            setValue("location.locationText", display_name);
           }
         } catch (error) {
           console.error("Geocoding error:", error);
@@ -522,8 +523,8 @@ const PropertyForm = ({
   const nextStep = async () => {
     const fieldsToValidate = {
       1: isAdmin 
-        ? ["basicInfo.title", "basicInfo.description", "businessType"] 
-        : ["basicInfo.title", "basicInfo.description"],
+        ? ["basicInfo.title", "basicInfo.description", "businessType", "basicInfo.category", "basicInfo.usageType", "basicInfo.propertyType"] 
+        : ["basicInfo.title", "basicInfo.description", "basicInfo.category", "basicInfo.usageType", "basicInfo.propertyType"],
       2: ["location.addressLine1", "location.locality", "location.pincode"],
       3: categoryWatch === "Sell/Buy" 
         ? ["pricing.sell.minPrice", "pricing.sell.maxPrice", "specifications.area.minArea"] 
@@ -557,7 +558,7 @@ const PropertyForm = ({
   return (
     <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
       {/* Sidebar - Desktop Only */}
-      <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-8 h-fit">
+      <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-24 h-fit self-start">
         {/* Stepper Card */}
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
           <div className="space-y-10 relative">
@@ -646,7 +647,7 @@ const PropertyForm = ({
           <div className="space-y-8">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-10">
               <div>
-                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">I'm looking to</p>
+                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">I'm looking to <span className="text-red-500">*</span></p>
                 <div className="flex flex-wrap gap-4">
                   {["Sell/Buy", "Rent"].map((cat) => (
                     <button
@@ -665,14 +666,14 @@ const PropertyForm = ({
               </div>
 
               <div>
-                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">What kind of property do you have?</p>
+                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">What kind of property do you have? <span className="text-red-500">*</span></p>
                 <div className="flex gap-8 mb-6">
                   {["Residential", "Commercial"].map((type) => (
                     <label key={type} className="flex items-center gap-3 cursor-pointer group">
                       <div className="relative flex items-center justify-center">
                         <input
                           type="radio"
-                          {...register("basicInfo.usageType")}
+                          {...register("basicInfo.usageType", { required: "Usage type is required" })}
                           value={type}
                           className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-full checked:border-blue-600 transition-all"
                         />
@@ -684,6 +685,8 @@ const PropertyForm = ({
                 </div>
 
                 <div className="flex flex-wrap gap-3">
+                  <input type="hidden" {...register("basicInfo.category", { required: "Category is required" })} />
+                  <input type="hidden" {...register("basicInfo.propertyType", { required: "Property type is required" })} />
                   {propertyTypes
                     .filter(t => t.usageType === watch("basicInfo.usageType"))
                     .map((type) => (

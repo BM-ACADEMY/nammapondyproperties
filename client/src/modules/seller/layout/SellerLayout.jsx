@@ -162,6 +162,7 @@ const SellerLayout = () => {
               ? COLLAPSED_WIDTH
               : SIDEBAR_WIDTH,
           transition: "margin-left 0.2s cubic-bezier(0.645, 0.045, 0.355, 1)",
+          background: "#f9fafb", // Match gray-50/50 background
         }}
       >
         <Header

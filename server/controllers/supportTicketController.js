@@ -1,4 +1,5 @@
 const SupportTicket = require("../models/SupportTicket");
+const { sendSupportTicketNotificationToAdmin } = require("../utils/emailService");
 
 // Create a new support ticket
 exports.createTicket = async (req, res) => {
@@ -19,7 +20,15 @@ exports.createTicket = async (req, res) => {
       isAdminRead: false,
     });
 
+
     await newTicket.save();
+
+    // Send email notification to admin
+    try {
+      await sendSupportTicketNotificationToAdmin(newTicket, req.user, message);
+    } catch (emailErr) {
+      console.error("Failed to send support ticket email:", emailErr);
+    }
 
     // Notify admins via socket
     const io = req.app.get("socketio");
@@ -177,21 +186,23 @@ exports.addMessage = async (req, res) => {
     // Real-time notification
     const io = req.app.get("socketio");
     if (io) {
+      const socketPayload = {
+        ticketId,
+        message: latestPopulatedMessage,
+        subject: ticket.subject,
+      };
+
       if (finalIsAdmin) {
         // Admin sent message, mark seller as unread
         ticket.isSellerRead = false;
         // Notify seller
-        io.to(`seller-${ticket.seller}`).emit("new-support-message", {
-          ticketId,
-          message: latestPopulatedMessage,
-        });
+        io.to(`seller-${ticket.seller}`).emit("new-support-message", socketPayload);
       } else {
         // Seller sent message, mark admin as unread
         ticket.isAdminRead = false;
         // Notify admins
         io.to("admin-room").emit("new-support-message", {
-          ticketId,
-          message: latestPopulatedMessage,
+          ...socketPayload,
           isAdminRead: false
         });
       }

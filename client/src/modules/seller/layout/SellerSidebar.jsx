@@ -125,16 +125,16 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       className: !hasHistory ? "!cursor-not-allowed" : "",
     },
     {
-      key: "/seller/profile",
-      icon: <User size={20} />,
-      label: "Profile",
-      onClick: () => handleMenuClick("/seller/profile"),
-    },
-    {
       key: "/seller/support",
       icon: <Headphones size={20} />,
       label: "Support Team",
       onClick: () => handleMenuClick("/seller/support"),
+    },
+    {
+      key: "/seller/profile",
+      icon: <User size={20} />,
+      label: "Profile",
+      onClick: () => handleMenuClick("/seller/profile"),
     },
   ];
 

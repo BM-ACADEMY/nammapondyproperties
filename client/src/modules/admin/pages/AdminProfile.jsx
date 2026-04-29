@@ -10,8 +10,10 @@ import {
   Row,
   Col,
   Upload,
+  Select,
+  InputNumber,
 } from "antd";
-import { User, Mail, Phone, Lock, Save, Camera } from "lucide-react";
+import { User, Mail, Phone, Lock, Save, Camera, ShieldCheck, Briefcase, Share2, Edit3, X, Hash, UserPlus } from "lucide-react";
 import ImgCrop from "antd-img-crop";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -19,7 +21,7 @@ import Loader from "../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
 
 const { Title, Text } = Typography;
-import { Hash, UserPlus } from "lucide-react"; // Import hash for UserID and UserPlus for Referral
+const { Option } = Select;
 
 const AdminProfile = () => {
   const [loading, setLoading] = useState(false);
@@ -27,9 +29,28 @@ const AdminProfile = () => {
   const [form] = Form.useForm();
   const { user, refreshUser } = useAuth();
   const [fileList, setFileList] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   const [hasInitialImage, setHasInitialImage] = useState(false);
   const [imageSize, setImageSize] = useState(null);
+
+  const [logoFileList, setLogoFileList] = useState([]);
+  const [hasInitialLogo, setHasInitialLogo] = useState(false);
+  const [logoSize, setLogoSize] = useState(null);
+  const [businessTypes, setBusinessTypes] = useState([]);
+  const [selectedBusinessType, setSelectedBusinessType] = useState(null);
+
+  useEffect(() => {
+    const fetchBusinessTypes = async () => {
+      try {
+        const response = await api.get("/business-types");
+        setBusinessTypes(response.data);
+      } catch (error) {
+        console.error("Failed to fetch business types", error);
+      }
+    };
+    fetchBusinessTypes();
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,20 +58,50 @@ const AdminProfile = () => {
       try {
         const response = await api.get("/users/me");
         if (response.data.success) {
-          form.setFieldsValue(response.data.user);
+          const userData = response.data.user;
+          const initialValues = {
+            ...userData,
+            ...userData.builderProfile,
+            businessType: userData.businessType?._id,
+            languagesKnown: userData.builderProfile?.languagesKnown?.join(", "),
+            website: userData.builderProfile?.socialLinks?.website,
+            instagram: userData.builderProfile?.socialLinks?.instagram,
+            facebook: userData.builderProfile?.socialLinks?.facebook,
+            linkedin: userData.builderProfile?.socialLinks?.linkedin,
+          };
+          form.setFieldsValue(initialValues);
+          setSelectedBusinessType(userData.businessType?._id);
+
           // Set initial image if exists
-          if (response.data.user.profile_image) {
+          if (userData.profile_image) {
             setHasInitialImage(true);
             setFileList([
               {
                 uid: "-1",
                 name: "profile.png",
                 status: "done",
-                url: getImageUrl(response.data.user.profile_image),
+                url: getImageUrl(userData.profile_image),
               },
             ]);
           } else {
             setHasInitialImage(false);
+            setFileList([]);
+          }
+
+          // Set initial logo if exists
+          if (userData.builderProfile?.companyLogo) {
+            setHasInitialLogo(true);
+            setLogoFileList([
+              {
+                uid: "-2",
+                name: "logo.png",
+                status: "done",
+                url: getImageUrl(userData.builderProfile.companyLogo),
+              },
+            ]);
+          } else {
+            setHasInitialLogo(false);
+            setLogoFileList([]);
           }
         }
       } catch (error) {
@@ -71,12 +122,45 @@ const AdminProfile = () => {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("phone", values.phone);
+      formData.append("businessType", values.businessType);
+
+      const selectedBT = businessTypes.find(bt => bt._id === values.businessType);
+      const isBuilder = selectedBT?.name?.match(/Builder|Promoter/i);
+
+      if (isBuilder) {
+        const builderDetailResource = {
+          phonePrimary: values.phonePrimary || values.phone,
+          email: values.email,
+          companyName: values.companyName,
+          gstNumber: values.gstNumber,
+          officeAddress: values.officeAddress,
+          experienceYears: values.experienceYears,
+          aboutCompany: values.aboutCompany,
+          reraNumber: values.reraNumber,
+          nationality: values.nationality,
+          languagesKnown: values.languagesKnown
+            ? values.languagesKnown.split(",").map((s) => s.trim())
+            : [],
+          socialLinks: {
+            website: values.website,
+            instagram: values.instagram,
+            facebook: values.facebook,
+            linkedin: values.linkedin,
+          },
+        };
+        formData.append("builderDetail", JSON.stringify(builderDetailResource));
+      }
 
       if (fileList.length > 0 && fileList[0].originFileObj) {
         formData.append("profile_image", fileList[0].originFileObj);
       } else if (fileList.length === 0 && hasInitialImage) {
-        // User had an image but now fileList is empty implies removal
         formData.append("remove_image", "true");
+      }
+
+      if (logoFileList.length > 0 && logoFileList[0].originFileObj) {
+        formData.append("company_logo", logoFileList[0].originFileObj);
+      } else if (logoFileList.length === 0 && hasInitialLogo) {
+        formData.append("remove_company_logo", "true");
       }
 
       const response = await api.put(
@@ -91,19 +175,64 @@ const AdminProfile = () => {
 
       if (response.data) {
         message.success("Profile updated successfully!");
-        // Update local state to reflect change
-        if (fileList.length > 0) {
-          setHasInitialImage(true);
-        } else if (formData.get("remove_image")) {
-          setHasInitialImage(false);
-        }
+        if (fileList.length > 0) setHasInitialImage(true);
+        else if (formData.get("remove_image")) setHasInitialImage(false);
+
+        if (logoFileList.length > 0) setHasInitialLogo(true);
+        else if (formData.get("remove_company_logo")) setHasInitialLogo(false);
+
         if (refreshUser) refreshUser(response.data);
+        setIsEditing(false);
       }
     } catch (error) {
       console.error("Update failed", error);
       message.error(error.response?.data?.error || "Failed to update profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    // Reset form values to current user state
+    const initialValues = {
+      ...user,
+      ...user.builderProfile,
+      businessType: user.businessType?._id,
+      languagesKnown: user.builderProfile?.languagesKnown?.join(", "),
+      website: user.builderProfile?.socialLinks?.website,
+      instagram: user.builderProfile?.socialLinks?.instagram,
+      facebook: user.builderProfile?.socialLinks?.facebook,
+      linkedin: user.builderProfile?.socialLinks?.linkedin,
+    };
+    form.setFieldsValue(initialValues);
+    setSelectedBusinessType(user.businessType?._id);
+
+    if (user.profile_image) {
+      setFileList([{ uid: "-1", name: "profile.png", status: "done", url: getImageUrl(user.profile_image) }]);
+      setHasInitialImage(true);
+    } else {
+      setFileList([]);
+      setHasInitialImage(false);
+    }
+
+    if (user.builderProfile?.companyLogo) {
+      setLogoFileList([{ uid: "-2", name: "logo.png", status: "done", url: getImageUrl(user.builderProfile.companyLogo) }]);
+      setHasInitialLogo(true);
+    } else {
+      setLogoFileList([]);
+      setHasInitialLogo(false);
+    }
+  };
+
+  const onLogoChange = ({ fileList: newFileList }) => {
+    setLogoFileList(newFileList);
+    if (newFileList.length > 0 && newFileList[0].originFileObj) {
+      const file = newFileList[0].originFileObj;
+      const size = file.size / 1024 / 1024;
+      setLogoSize(size < 1 ? `${(file.size / 1024).toFixed(2)} KB` : `${size.toFixed(2)} MB`);
+    } else {
+      setLogoSize(null);
     }
   };
 
@@ -142,145 +271,390 @@ const AdminProfile = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <Title level={2}>Account Settings</Title>
-        <Text type="secondary">
-          Manage your profile details and security settings
+    <div className="max-w-4xl mx-auto p-4 md:p-8 bg-[#f4f4f5] min-h-screen font-sans">
+      {/* Header Section */}
+      <div className="mb-10">
+        <Title level={1} className="!text-3xl !mb-2 !font-semibold text-slate-800">Admin Profile</Title>
+        <Text className="text-slate-500 text-base">
+          Manage your account details and security settings
         </Text>
       </div>
 
-      <Row gutter={[24, 24]} justify="start">
-        {/* Profile Details Section */}
-        <Col xs={24} md={18} lg={12}>
-          <Card title="Profile Information" className="shadow-sm h-full">
-            <div className="flex justify-center mb-6">
-              <ImgCrop rotationSlider>
-                <Upload
-                  action={null} // Manual upload
-                  listType="picture-card"
-                  fileList={fileList}
-                  onChange={onChange}
-                  onPreview={onPreview}
-                  beforeUpload={(file) => {
-                    const isJpgOrPngOrSvg =
-                      file.type === "image/jpeg" ||
-                      file.type === "image/png" ||
-                      file.type === "image/svg+xml";
-                    if (!isJpgOrPngOrSvg) {
-                      message.error("You can only upload JPG/PNG/SVG file!");
-                      return Upload.LIST_IGNORE;
-                    }
-                    return false; // Prevent auto upload
-                  }}
-                  maxCount={1}
-                >
-                  {fileList.length < 1 && (
-                    <div className="flex flex-col items-center">
-                      <Camera size={20} className="text-gray-400 mb-2" />
-                      <div className="text-xs text-gray-500">Upload</div>
-                    </div>
-                  )}
-                </Upload>
-              </ImgCrop>
-              {imageSize && (
-                <div className="text-xs text-gray-500 mt-2">{imageSize}</div>
-              )}
-            </div>
-            {fileList.length > 0 && (
-              <div className="flex justify-center -mt-4 mb-6">
-                <Button
-                  type="text"
-                  danger
-                  size="small"
-                  onClick={() => {
-                    setFileList([]);
-                    // If saving immediately is desired:
-                    // handleUpdateProfile({ ...form.getFieldsValue(), remove_image: true });
-                    // But typically user clicks Save.
-                    // We need to store "isRemoved" state or check fileList on save.
-                  }}
-                >
-                  Remove Photo
-                </Button>
+      <div className="space-y-8">
+        {/* Profile Information Section */}
+        <Card 
+          title={<span className="text-lg font-semibold text-slate-800 pt-2 block">Profile Information</span>}
+          className="shadow-sm border-slate-200 rounded-2xl overflow-hidden"
+          styles={{ 
+            header: { borderBottom: 'none', padding: '24px 32px 0' },
+            body: { padding: '32px' } 
+          }}
+        >
+          <Form form={form} layout="vertical" onFinish={handleUpdateProfile} className="space-y-6">
+            {/* Upload Section Centered */}
+            <div className="flex flex-col items-center justify-center mb-8">
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative group">
+                  <ImgCrop rotationSlider aspect={1/1} showGrid>
+                    <Upload
+                      action={null}
+                      listType="picture-card"
+                      fileList={fileList}
+                      onChange={onChange}
+                      onPreview={onPreview}
+                      beforeUpload={(file) => {
+                        const isJpgOrPngOrSvg =
+                          file.type === "image/jpeg" ||
+                          file.type === "image/png" ||
+                          file.type === "image/svg+xml";
+                        if (!isJpgOrPngOrSvg) {
+                          message.error("You can only upload JPG/PNG/SVG file!");
+                          return Upload.LIST_IGNORE;
+                        }
+                        return false;
+                      }}
+                      maxCount={1}
+                      disabled={!isEditing}
+                      className="profile-uploader"
+                    >
+                      {fileList.length < 1 && (
+                        <div className="flex flex-col items-center justify-center h-full w-full">
+                          <div className="bg-blue-600 p-3 rounded-full mb-3 shadow-md shadow-blue-200">
+                            <User size={24} className="text-white" />
+                          </div>
+                          <div className="text-sm text-slate-600 font-medium">Upload profile photo</div>
+                        </div>
+                      )}
+                    </Upload>
+                  </ImgCrop>
+                </div>
+                
+                {isEditing && fileList.length > 0 && (
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    className="hover:!bg-transparent text-xs font-medium"
+                    onClick={() => setFileList([])}
+                  >
+                    Remove Photo
+                  </Button>
+                )}
               </div>
-            )}
+            </div>
 
-            <Form form={form} layout="vertical" onFinish={handleUpdateProfile}>
+            {/* Inputs Section */}
+            <div className="space-y-5">
               <Form.Item
                 name="name"
-                label="Full Name"
+                label={<span className="text-slate-600 font-medium">Full Name</span>}
                 rules={[{ required: true, message: "Please enter your name" }]}
+                required={false}
+                className="!mb-0"
               >
                 <Input
-                  prefix={<User size={18} className="text-gray-400" />}
-                  placeholder="Your Name"
-                  size="large"
+                  disabled={!isEditing}
+                  prefix={<User size={18} className="text-slate-400 mr-2" />}
+                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
                 />
               </Form.Item>
 
               <Form.Item
-                name="phone"
-                label="Phone Number"
-                rules={[
-                  { required: true, message: "Please enter phone number" },
-                  {
-                    pattern: /^\d{10}$/,
-                    message: "Phone number must be exactly 10 digits",
-                  },
-                ]}
+                name="businessType"
+                label={<span className="text-slate-600 font-medium">Business Type</span>}
+                className="!mb-0"
               >
-                <Input
-                  prefix={<Phone size={18} className="text-gray-400" />}
-                  placeholder="Phone Number"
-                  size="large"
-                  maxLength={10}
-                  onKeyPress={(event) => {
-                    if (!/[0-9]/.test(event.key)) {
-                      event.preventDefault();
-                    }
-                  }}
-                />
+                <Select
+                  disabled={!isEditing}
+                  placeholder="Select Business Type"
+                  className={`h-12 w-full rounded-xl custom-select-height ${!isEditing ? "bg-slate-50 cursor-not-allowed" : ""}`}
+                  onChange={(val) => setSelectedBusinessType(val)}
+                  prefix={<Briefcase size={18} className="text-slate-400 mr-2" />}
+                >
+                  {businessTypes.map((bt) => (
+                    <Option key={bt._id} value={bt._id}>
+                      {bt.name}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
 
-              <Row gutter={16}>
+              <Row gutter={20}>
                 <Col span={12}>
-                  <Form.Item name="userId" label="User ID">
+                  <Form.Item name="userId" label={<span className="text-slate-600 font-medium">User ID</span>} className="!mb-0">
                     <Input
-                      prefix={<Hash size={18} className="text-gray-400" />}
+                      prefix={<Hash size={18} className="text-slate-400 mr-2" />}
                       disabled
-                      className="bg-gray-50 text-gray-500 font-mono"
-                      size="large"
+                      className="h-12 rounded-xl border-slate-200 bg-slate-50 text-slate-500 font-medium cursor-not-allowed shadow-sm"
                     />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name="referralCode" label="Referral ID">
+                  <Form.Item name="referralCode" label={<span className="text-slate-600 font-medium">Referral ID</span>} className="!mb-0">
                     <Input
-                      prefix={<UserPlus size={18} className="text-gray-400" />}
+                      prefix={<Share2 size={18} className="text-slate-400 mr-2" />}
                       disabled
-                      className="bg-gray-50 text-gray-500 font-mono"
-                      size="large"
+                      className="h-12 rounded-xl border-slate-200 bg-slate-50 text-slate-500 font-medium cursor-not-allowed shadow-sm"
                     />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <div className="flex justify-end pt-4">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<Save size={18} />}
-                  loading={saving}
-                  size="large"
-                >
-                  Save Profile
-                </Button>
+              <Form.Item
+                name="phone"
+                label={<span className="text-slate-600 font-medium">Contact Phone Number</span>}
+                rules={[
+                  { required: true, message: "Please enter phone number" },
+                  { pattern: /^\d{10}$/, message: "Must be 10 digits" },
+                ]}
+                required={false}
+                className="!mb-0"
+              >
+                <Input
+                  disabled={!isEditing}
+                  prefix={<Phone size={18} className="text-slate-400 mr-2" />}
+                  placeholder="8270652229"
+                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                  maxLength={10}
+                  onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
+                />
+              </Form.Item>
+
+              {/* Builder Specific Fields */}
+              {businessTypes.find(bt => bt._id === selectedBusinessType)?.name?.match(/Builder|Promoter/i) && (
+                <>
+                  <div className="pt-8 border-t border-slate-100">
+                    <Title level={4} className="!text-lg !font-bold text-slate-800 mb-6 flex items-center gap-2">
+                       <ShieldCheck size={20} className="text-blue-600" />
+                       Builder Details
+                    </Title>
+                    
+                    <Row gutter={20}>
+                      <Col span={24}>
+                        <Form.Item name="email" label={<span className="text-slate-600 font-medium">Email Address (Optional)</span>} className="!mb-4">
+                          <Input disabled={!isEditing} prefix={<Mail size={18} className="text-slate-400 mr-2" />} className="h-12 rounded-xl shadow-sm" placeholder="builder@example.com" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+
+                  <div className="pt-6">
+                    <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Company Information</Title>
+                    
+                    <div className="mb-6 flex flex-col items-center">
+                       <Text className="text-slate-500 text-xs mb-3 font-semibold uppercase">Company Logo</Text>
+                       <ImgCrop rotationSlider aspect={1/1}>
+                         <Upload
+                           action={null}
+                           listType="picture-card"
+                           fileList={logoFileList}
+                           onChange={onLogoChange}
+                           onPreview={onPreview}
+                           disabled={!isEditing}
+                           className="logo-uploader"
+                           maxCount={1}
+                         >
+                           {logoFileList.length < 1 && (
+                             <div className="flex flex-col items-center">
+                               <Camera size={20} className="text-slate-400 mb-2" />
+                               <div className="text-[10px] text-slate-500 font-bold uppercase">Upload Logo</div>
+                             </div>
+                           )}
+                         </Upload>
+                       </ImgCrop>
+                       {isEditing && logoFileList.length > 0 && (
+                          <Button type="text" danger size="small" className="mt-2 text-[10px] font-bold uppercase" onClick={() => setLogoFileList([])}>Remove Logo</Button>
+                       )}
+                    </div>
+
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="companyName" label={<span className="text-slate-600 font-medium">Company Name</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="ABC Constructions" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="gstNumber" label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="22AAAAA0000A1Z5" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Form.Item name="officeAddress" label={<span className="text-slate-600 font-medium">Office Address</span>} className="!mb-4">
+                      <Input.TextArea disabled={!isEditing} rows={2} className="rounded-xl shadow-sm" placeholder="123, Business Park, Chennai" />
+                    </Form.Item>
+
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="experienceYears" label={<span className="text-slate-600 font-medium">Years of Experience</span>} className="!mb-4">
+                          <InputNumber disabled={!isEditing} className="w-full h-12 rounded-xl flex items-center shadow-sm" placeholder="10" min={0} />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="reraNumber" label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="TN/01/Building/0001" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <Form.Item 
+                      name="aboutCompany" 
+                      label={<span className="text-slate-600 font-medium">About Company</span>}
+                      rules={[{ max: 250, message: "About Company cannot exceed 250 characters" }]}
+                    >
+                      <Input.TextArea 
+                        disabled={!isEditing} 
+                        rows={4} 
+                        className="rounded-xl shadow-sm" 
+                        placeholder="Briefly describe your company and achievements..." 
+                        showCount 
+                        maxLength={250} 
+                      />
+                    </Form.Item>
+                  </div>
+
+                  <div className="pt-6">
+                    <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Personal Details</Title>
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="nationality" label={<span className="text-slate-600 font-medium">Nationality</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="Indian" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="languagesKnown" label={<span className="text-slate-600 font-medium">Languages Known (comma separated)</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="English, Tamil, Hindi" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+
+                  <div className="pt-10">
+                    <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Social Links</Title>
+                    <Row gutter={20}>
+                      <Col span={12}>
+                        <Form.Item name="website" label={<span className="text-slate-600 font-medium">Website</span>} className="!mb-4">
+                          <Input disabled={!isEditing} prefix={<Share2 size={16} />} className="h-12 rounded-xl shadow-sm" placeholder="https://abc.com" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="linkedin" label={<span className="text-slate-600 font-medium">LinkedIn</span>} className="!mb-4">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="linkedin.com/in/builder" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="instagram" label={<span className="text-slate-600 font-medium">Instagram</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="instagram.com/builder" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={12}>
+                        <Form.Item name="facebook" label={<span className="text-slate-600 font-medium">Facebook</span>} className="!mb-0">
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="facebook.com/builder" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Actions Row */}
+            <div className="pt-6">
+              <div className="flex justify-end gap-4">
+                {!isEditing ? (
+                  <Button
+                    type="default"
+                    icon={<Edit3 size={20} className="mr-2" />}
+                    className="h-12 px-8 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold text-base bg-white transition-all shadow-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsEditing(true);
+                    }}
+                  >
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      type="default"
+                      icon={<X size={20} className="mr-2" />}
+                      className="h-12 px-6 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold text-base transition-all"
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      icon={<Save size={20} className="mr-2" />}
+                      loading={saving}
+                      className="h-12 px-8 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold text-base shadow-lg shadow-blue-200/50 flex items-center transition-all"
+                    >
+                      Save Profile
+                    </Button>
+                  </>
+                )}
               </div>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+
+              <div className="text-center mt-6">
+                <span className="text-slate-400 text-sm font-medium">* indicates required field</span>
+              </div>
+            </div>
+          </Form>
+        </Card>
+      </div>
+
+      <style>{`
+        .profile-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {
+          width: 280px !important;
+          height: 160px !important;
+          border-radius: 24px !important;
+          border: 1px solid #e2e8f0 !important;
+          background: #f8fbff !important;
+          margin: 0 !important;
+          overflow: hidden !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .profile-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select:hover {
+          border-color: #3b82f6 !important;
+          background: #f0f7ff !important;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05) !important;
+        }
+
+        .profile-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list-item-container,
+        .profile-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list-item {
+          width: 280px !important;
+          height: 160px !important;
+          border-radius: 24px !important;
+        }
+
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select,
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list-item-container,
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload-list-item {
+          width: 120px !important;
+          height: 120px !important;
+          border-radius: 16px !important;
+        }
+
+        .logo-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {
+          border: 1px dashed #ced4da !important;
+          background: #f8fbff !important;
+        }
+        
+        .custom-select-height .ant-select-selector {
+          height: 48px !important;
+          padding-top: 8px !important;
+          border-radius: 12px !important;
+          border-color: #e2e8f0 !important;
+        }
+        
+        .custom-select-height.ant-select-disabled .ant-select-selector {
+          background-color: #f8fafc !important;
+          color: #64748b !important;
+        }
+      `}</style>
     </div>
   );
 };

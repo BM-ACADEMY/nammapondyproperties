@@ -479,7 +479,7 @@ const MyProperties = () => {
       </div> */}
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
@@ -493,29 +493,21 @@ const MyProperties = () => {
           ))}
         </div>
       ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2  lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
           {filteredProperties.map((property) => (
             <div
               key={property._id}
-              className="bg-white rounded-xl shadow-sm hover:shadow-xl  transition-all duration-500 border border-gray-400/50 overflow-hidden group flex flex-col h-full"
+              className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-400/50 overflow-hidden group flex flex-col h-full max-w-[400px] w-full mx-auto md:mx-0"
             >
               {/* Image Section */}
               <div className="relative h-56 overflow-hidden">
-                {property.media?.featuredImage ||
-                (property.media?.images && property.media.images.length > 0) ? (
-                  <img
-                    src={getImageUrl(
-                      property.media?.featuredImage || property.media.images[0],
-                    )}
-                    alt={property.basicInfo?.title || "Property"}
-                    className="w-full h-full object-cover transform transition-transform duration-700"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-50 flex flex-col items-center justify-center text-gray-300">
-                    <Building size={48} strokeWidth={1.5} />
-                    <span className="text-xs font-medium mt-2">No Image</span>
-                  </div>
-                )}
+                <img
+                  src={getImageUrl(
+                    property.media?.featuredImage || (property.media?.images && property.media.images.length > 0 ? property.media.images[0] : null),
+                  )}
+                  alt={property.basicInfo?.title || "Property"}
+                  className="w-full h-full object-cover transform transition-transform duration-700"
+                />
 
                 {/* Status Badges Overlay */}
                 <div className="absolute top-4 right-4 flex flex-row gap-2 z-10">
@@ -938,10 +930,11 @@ const MyProperties = () => {
                   ))}
                 </Carousel>
               ) : (
-                <div className="h-75 bg-gray-200 flex items-center justify-center flex-col text-gray-400">
-                  <Building size={64} className="mb-2 opacity-50" />
-                  <span className="font-medium">No Images Available</span>
-                </div>
+                <img
+                  src={getImageUrl(null)}
+                  alt="No Property Images"
+                  className="w-full h-75 md:h-100 object-cover"
+                />
               )}
 
               {/* Overlay Content */}

@@ -9,6 +9,8 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const Property = require("../models/Property");
+const Subscription = require("../models/Subscription");
+const { sendBadgeVerificationNotification, sendBadgeRequestNotificationToAdmin, sendSubscriptionExpiredNotification } = require("../utils/emailService");
 
 // Generate JWT
 const generateToken = (id) => {
@@ -116,6 +118,31 @@ exports.getMe = async (req, res) => {
       }
     ]);
     if (!user) return res.status(404).json({ error: "User not found" });
+
+    // --- Immediate Subscription Expiry Check ---
+    if (user.activeSubscription && user.activeSubscription.status === 'active') {
+      const now = new Date();
+      if (user.activeSubscription.endDate < now) {
+        console.log(`User ${user._id} subscription expired during panel access. Processing...`);
+        
+        // 1. Mark subscription as expired
+        const subscription = await Subscription.findById(user.activeSubscription._id).populate('plan');
+        subscription.status = "expired";
+        await subscription.save();
+        
+        // 2. Update user object and save
+        user.activeSubscription = null;
+        await user.save();
+        
+        // 3. Send Email Notification
+        try {
+          await sendSubscriptionExpiredNotification(user, subscription);
+        } catch (emailErr) {
+          console.error("Failed to send expiry email during panel access:", emailErr);
+        }
+      }
+    }
+    // -------------------------------------------
 
     // [BOOTSTRAP LOGIC] 
     // If no Super Admin exists in the system yet, promote the current admin to Super Admin
@@ -339,6 +366,20 @@ exports.updateUser = async (req, res) => {
           sellerId: user._id,
         }); // Notify other admins
       }
+
+      // Send Email Notification
+      try {
+        let status = "none";
+        if (user.badgeVerified) status = "verified";
+        else if (user.badgeRequestStatus === "approved") status = "approved";
+        else if (user.badgeRequestStatus === "rejected") status = "rejected";
+
+        if (status !== "none") {
+          await sendBadgeVerificationNotification(user, status, req.body.badgeUpdateMessage || "");
+        }
+      } catch (emailError) {
+        console.error("Failed to send badge verification email:", emailError);
+      }
     }
 
     res.json(user);
@@ -490,6 +531,13 @@ exports.requestBadgeVerification = async (req, res) => {
       });
     }
 
+    // Send Email Notification to Admin
+    try {
+      await sendBadgeRequestNotificationToAdmin(user);
+    } catch (emailError) {
+      console.error("Failed to send badge request email to admin:", emailError);
+    }
+
     res.json({ message: "Verification request sent", status: "pending" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -575,6 +623,11 @@ exports.getAdminNotificationCounts = async (req, res) => {
     const Contact = require("../models/Contact");
     const Property = require("../models/Property");
     const Role = require("../models/Role");
+    const MarketingRequest = require("../models/MarketingRequest");
+    const SupportTicket = require("../models/SupportTicket");
+    const WhatsappLead = require("../models/WhatsappLead");
+
+
 
     const requester = await User.findById(req.user.id);
     const isSuperAdmin = requester?.isSuperAdmin;
@@ -603,13 +656,16 @@ exports.getAdminNotificationCounts = async (req, res) => {
       });
     }
 
-    // 3. New Enquiries
-    let enquiryQuery = { status: "new" };
-    if (!isSuperAdmin) {
-      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
-      enquiryQuery.seller_id = { $in: assignedSellerIds };
-    }
-    const enquiries = await Enquiry.countDocuments(enquiryQuery);
+    // 3. New Enquiries (Admin-owned properties only)
+    const adminRole = await Role.findOne({ role_name: { $regex: /admin/i } });
+    const adminUserIds = await User.find({ role_id: adminRole?._id }).distinct("_id");
+    
+    let enquiryQuery = { status: "new", seller_id: { $in: adminUserIds } };
+    
+    const enquiryCount = await Enquiry.countDocuments(enquiryQuery);
+    const whatsappCount = await WhatsappLead.countDocuments(enquiryQuery); // Uses same filter
+    const enquiries = enquiryCount + whatsappCount;
+
 
     // 4. Pending Requirements
     let requirementQuery = { status: "Pending" };
@@ -626,6 +682,23 @@ exports.getAdminNotificationCounts = async (req, res) => {
     // 6. New Contact Messages
     const contactMessages = await Contact.countDocuments({ status: "new" });
 
+    // 7. Pending Marketing Requests
+    let marketingQuery = { status: "pending" };
+    if (!isSuperAdmin) {
+      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
+      marketingQuery.seller_id = { $in: assignedSellerIds };
+    }
+    const marketingRequests = await MarketingRequest.countDocuments(marketingQuery);
+
+    // 8. New Support Tickets (Unread by Admin)
+    let supportQuery = { isAdminRead: false };
+    if (!isSuperAdmin) {
+      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
+      supportQuery.seller = { $in: assignedSellerIds };
+    }
+    const supportTickets = await SupportTicket.countDocuments(supportQuery);
+
+
     res.json({
       success: true,
       counts: {
@@ -634,7 +707,9 @@ exports.getAdminNotificationCounts = async (req, res) => {
         enquiries,
         requirements,
         callRequests,
-        contactMessages
+        contactMessages,
+        marketingRequests,
+        supportTickets
       }
     });
   } catch (error) {

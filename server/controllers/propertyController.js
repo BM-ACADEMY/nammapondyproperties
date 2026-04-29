@@ -12,6 +12,7 @@ const BusinessType = require("../models/BusinessType");
 const Subscription = require("../models/Subscription");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const WebsiteSetting = require("../models/WebsiteSetting");
+const { sendPropertyNotification } = require("../utils/emailService");
 
 const parseJSON = (data) => {
   if (typeof data === "string") {
@@ -217,6 +218,14 @@ exports.createProperty = async (req, res) => {
         isSellerProperty: isSellerProperty,
         message: `New property listed: ${property.basicInfo?.title}`,
       });
+    }
+
+    // Send email notification for new listing
+    try {
+      const seller = await User.findById(property.seller);
+      await sendPropertyNotification(property, seller, "new_listing");
+    } catch (emailError) {
+      console.error("Email notification error (create):", emailError);
     }
   } catch (error) {
     console.error("Create Property Error:", error); // Log full error
@@ -1079,6 +1088,14 @@ exports.updateProperty = async (req, res) => {
           isSellerProperty: true,
           message: `Property edit pending approval: ${property.basicInfo?.title || updates.basicInfo?.title}`
         });
+      }
+
+      // Send email notification for edit pending approval
+      try {
+        const seller = await User.findById(property.seller);
+        await sendPropertyNotification(property, seller, "edit_pending");
+      } catch (emailError) {
+        console.error("Email notification error (update):", emailError);
       }
     } else {
       Object.assign(property, updates);

@@ -93,16 +93,19 @@ const initCronJobs = (io) => {
     }
   });
   
-  // Schedule task to run every day at 00:05 AM for subscription expiry
-  cron.schedule("5 0 * * *", async () => {
-    console.log("🕒 Running daily check for expired subscriptions...");
+  // Schedule task to run every 30 minutes for subscription expiry
+  cron.schedule("*/30 * * * *", async () => {
+    console.log("🕒 Running periodic check for expired subscriptions...");
     try {
       const now = new Date();
       // 1. Find all active subscriptions that have passed their end date
       const expiredSubscriptions = await Subscription.find({
         status: "active",
         endDate: { $lt: now }
-      });
+      }).populate({
+        path: "user",
+        populate: { path: "builderProfile" }
+      }).populate("plan");
 
       if (expiredSubscriptions.length === 0) {
         // console.log("✅ No expired subscriptions found.");
@@ -120,8 +123,14 @@ const initCronJobs = (io) => {
         await User.findByIdAndUpdate(sub.user, {
           activeSubscription: null
         });
+
+        // 4. Send Email Notification
+        const { sendSubscriptionExpiredNotification } = require("./emailService");
+        if (sub.user) {
+          await sendSubscriptionExpiredNotification(sub.user, sub);
+        }
         
-        console.log(`User ${sub.user} subscription expired and moved to default plan.`);
+        console.log(`User ${sub.user._id} subscription expired and moved to default plan.`);
       }
 
       console.log(`✅ Successfully processed ${expiredSubscriptions.length} expired subscriptions.`);
@@ -129,6 +138,91 @@ const initCronJobs = (io) => {
       console.error("❌ Error in subscription expiry cron job:", error);
     }
   });
+
+  // Schedule task to run every hour for subscription expiry warning (7 days)
+  cron.schedule("0 * * * *", async () => {
+    console.log("🕒 Running periodic check for subscriptions expiring in 7 days...");
+    try {
+      const sevenDaysFromNowStart = new Date();
+      sevenDaysFromNowStart.setDate(sevenDaysFromNowStart.getDate() + 7);
+      sevenDaysFromNowStart.setHours(0, 0, 0, 0);
+
+      const sevenDaysFromNowEnd = new Date();
+      sevenDaysFromNowEnd.setDate(sevenDaysFromNowEnd.getDate() + 7);
+      sevenDaysFromNowEnd.setHours(23, 59, 59, 999);
+
+      // 1. Find all active subscriptions that expire in 7 days
+      const expiringSubscriptions = await Subscription.find({
+        status: "active",
+        endDate: { $gte: sevenDaysFromNowStart, $lte: sevenDaysFromNowEnd }
+      }).populate({
+        path: "user",
+        populate: { path: "builderProfile" }
+      }).populate("plan");
+
+      if (expiringSubscriptions.length === 0) {
+        // console.log("✅ No subscriptions expiring in 7 days.");
+        return;
+      }
+
+      console.log(`Found ${expiringSubscriptions.length} subscriptions expiring in 7 days. Sending warnings...`);
+
+      const { sendSubscriptionExpiryWarning } = require("./emailService");
+
+      for (const sub of expiringSubscriptions) {
+        if (sub.user) {
+          await sendSubscriptionExpiryWarning(sub.user, sub, 7);
+        }
+      }
+
+      console.log(`✅ Successfully sent ${expiringSubscriptions.length} subscription expiry warnings.`);
+    } catch (error) {
+      console.error("❌ Error in subscription expiry warning cron job:", error);
+    }
+  });
+
+  // Schedule task to run every hour for subscription expiry warning (1 day)
+  cron.schedule("15 * * * *", async () => {
+    console.log("🕒 Running periodic check for subscriptions expiring in 1 day...");
+    try {
+      const tomorrowStart = new Date();
+      tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+      tomorrowStart.setHours(0, 0, 0, 0);
+
+      const tomorrowEnd = new Date();
+      tomorrowEnd.setDate(tomorrowEnd.getDate() + 1);
+      tomorrowEnd.setHours(23, 59, 59, 999);
+
+      // 1. Find all active subscriptions that expire tomorrow
+      const expiringSubscriptions = await Subscription.find({
+        status: "active",
+        endDate: { $gte: tomorrowStart, $lte: tomorrowEnd }
+      }).populate({
+        path: "user",
+        populate: { path: "builderProfile" }
+      }).populate("plan");
+
+      if (expiringSubscriptions.length === 0) {
+        // console.log("✅ No subscriptions expiring tomorrow.");
+        return;
+      }
+
+      console.log(`Found ${expiringSubscriptions.length} subscriptions expiring tomorrow. Sending final warnings...`);
+
+      const { sendSubscriptionExpiryWarning } = require("./emailService");
+
+      for (const sub of expiringSubscriptions) {
+        if (sub.user) {
+          await sendSubscriptionExpiryWarning(sub.user, sub, 1);
+        }
+      }
+
+      console.log(`✅ Successfully sent ${expiringSubscriptions.length} final subscription expiry warnings.`);
+    } catch (error) {
+      console.error("❌ Error in subscription expiry warning (1 day) cron job:", error);
+    }
+  });
+
 
   console.log(
     "🚀 Property & Subscription cron jobs initialized.",

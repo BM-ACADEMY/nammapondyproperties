@@ -28,7 +28,17 @@ exports.createWhatsappLead = async (req, res) => {
         }
     }
 
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-whatsapp-lead", {
+        message: `New WhatsApp lead from ${req.body.enquirer_name || "a user"}`,
+        lead: whatsappLead,
+      });
+    }
+
     res.status(201).json(whatsappLead);
+
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

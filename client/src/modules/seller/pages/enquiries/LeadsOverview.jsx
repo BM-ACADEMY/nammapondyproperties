@@ -350,7 +350,7 @@ const LeadsOverview = () => {
             key: "available",
             label: (
               <span className="flex items-center gap-2 px-2 py-1">
-                AVAILABLE LEADS
+                Available Leads
                 <Badge count={availableLeads.length} overflowCount={99} className="scale-75 translate-x-1" style={{ backgroundColor: '#6366f1' }} />
               </span>
             ),
@@ -381,7 +381,7 @@ const LeadsOverview = () => {
             key: "myLeads",
             label: (
               <span className="flex items-center gap-2 px-2 py-1">
-                MY ACCEPTED LEADS
+                My Accepted Leads
                 <Badge count={myLeads.length} overflowCount={99} className="scale-75 translate-x-1" style={{ backgroundColor: '#10b981' }} />
               </span>
             ),
@@ -406,8 +406,8 @@ const LeadsOverview = () => {
           {
             key: "closed",
             label: (
-              <span className="flex items-center gap-2 px-2 py-1 text-slate-400">
-                HISTORY / CLOSED
+              <span className="flex items-center gap-2 px-2 py-1">
+                History / Closed
                 <Badge count={closedLeads.length} overflowCount={99} className="scale-75 translate-x-1" style={{ backgroundColor: '#ef4444' }} />
               </span>
             ),
@@ -437,10 +437,9 @@ const LeadsOverview = () => {
           border-bottom: 2px solid #f1f5f9;
         }
         .custom-leads-tabs .ant-tabs-tab {
-          font-weight: 800 !important;
-          letter-spacing: 0.05em;
-          font-size: 11px;
-          color: #94a3b8;
+          font-weight: 700 !important;
+          font-size: 15px;
+          color: #475569;
           transition: all 0.3s ease;
         }
         .custom-leads-tabs .ant-tabs-tab-active {

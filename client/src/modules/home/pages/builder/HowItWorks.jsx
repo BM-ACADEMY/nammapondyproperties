@@ -76,7 +76,7 @@ const HowItWorks = () => {
             >
               {displaySteps.map((step, index) => (
                 <div key={index} className="w-full md:w-1/2 shrink-0 px-4">
-                  <div className="bg-white rounded-2xl p-8 h-full shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col items-start text-left group transition-all duration-500 hover:shadow-2xl cursor-pointer">
+                  <div className="bg-white rounded-2xl p-8 h-full mb-5 border border-gray-200 flex flex-col items-start text-left group transition-all duration-500 cursor-pointer">
                     <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                       {React.cloneElement(step.icon, { className: 'w-6 h-6 text-[#c19b48]' })}
                     </div>

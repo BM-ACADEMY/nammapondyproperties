@@ -55,9 +55,11 @@ const SellerAdvertisements = () => {
               className="w-14 h-14 rounded-xl object-cover border border-gray-100 shadow-sm"
             />
           ) : (
-            <div className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center border border-gray-200">
-              <Home className="text-gray-400" size={20} />
-            </div>
+            <img
+              src={getImageUrl(null)}
+              alt="No Image"
+              className="w-14 h-14 rounded-xl object-cover border border-gray-200 shadow-sm"
+            />
           )}
           <div className="flex flex-col">
             <span className="font-semibold text-gray-800 text-base">

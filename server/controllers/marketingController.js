@@ -1,6 +1,8 @@
 const MarketingPlan = require("../models/MarketingPlan");
 const MarketingRequest = require("../models/MarketingRequest");
 const Property = require("../models/Property");
+const emailService = require("../utils/emailService");
+const User = require("../models/User");
 
 // --- Marketing Plans (Admin) ---
 
@@ -116,6 +118,18 @@ exports.createRequest = async (req, res) => {
         message: `New marketing request from ${populatedRequest.seller_id?.name || "a seller"}`,
         request: populatedRequest,
       });
+    }
+
+    // Send email notification to admin
+    try {
+      const seller = await User.findById(req.user._id);
+      const plan = await MarketingPlan.findById(plan_id);
+      
+      if (seller && property && plan) {
+        emailService.sendMarketingLeadNotification(request, seller, property, plan);
+      }
+    } catch (err) {
+      console.error("Failed to trigger marketing lead email:", err);
     }
 
     res.status(201).json({ success: true, data: request });
