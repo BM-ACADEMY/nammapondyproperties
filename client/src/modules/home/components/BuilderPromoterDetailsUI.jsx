@@ -114,10 +114,10 @@ const BuilderPromoterDetailsUI = ({
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "about", label: "About Project" },
-    { id: "location", label: "Location" },
     ...(hasFloorPlan ? [{ id: "plans", label: "Plans" }] : []),
     { id: "amenities", label: "Amenities" },
     { id: "highlights", label: "Highlights" },
+    { id: "location", label: "Location" },
     { id: "gallery", label: "Gallery" },
   ];
 
@@ -171,9 +171,9 @@ const BuilderPromoterDetailsUI = ({
   };
 
   return (
-    <div className="bg-slate-50 pt-20 min-h-screen pb-20 font-sans">
+    <div className="bg-slate-50 pt-24 min-h-screen pb-20 font-sans">
       {/* 1. HERO BANNER */}
-      <section className="relative h-100 md:h-137.5 w-full overflow-hidden">
+      <section className="relative h-[400px] md:h-[550px] w-full overflow-hidden">
         <img
           src={getImageUrl(property.media?.featuredImage || mainImage)}
           alt={property.basicInfo?.title}
@@ -269,7 +269,7 @@ const BuilderPromoterDetailsUI = ({
       </section>
 
       {/* 2. STICKY TABS */}
-      <nav className="sticky top-19 z-40 bg-white border-b border-gray-100 shadow-sm overflow-x-auto scrollbar-hide">
+      <nav className="sticky top-[100px] z-40 bg-white border-b border-gray-100 shadow-sm overflow-x-auto scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="container mx-auto max-w-7xl px-4 flex gap-8">
           {tabs.map((tab) => (
             <button
@@ -549,88 +549,93 @@ const BuilderPromoterDetailsUI = ({
               </div>
             )}
 
-            {/* MAP + HIGHLIGHTS GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-              {/* Left Column: Amenities & Highlights */}
-              <div className="space-y-8 flex flex-col h-full">
-                {property.amenities && property.amenities.length > 0 && (
-                  <div
-                    id="amenities"
-                    ref={scrollRefs.amenities}
-                    className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full"
-                  >
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                      Amenities
-                    </h3>
-                    <div className="flex flex-wrap gap-3 mt-auto">
-                      {property.amenities?.map((amenity, i) => (
-                        <div
-                          key={i}
-                          className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full flex items-center gap-2 group hover:bg-red-50 transition-all"
-                        >
-                          <CheckCircle2
-                            size={14}
-                            className="text-green-500 group-hover:text-red-500"
-                          />
-                          <span className="text-sm font-bold text-gray-700 group-hover:text-red-700">
-                            {amenity}
-                          </span>
-                        </div>
-                      ))}
+            {/* AMENITIES SECTION */}
+            {property.amenities && property.amenities.length > 0 && (
+              <div
+                id="amenities"
+                ref={scrollRefs.amenities}
+                className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm"
+              >
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                  Amenities
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {property.amenities?.map((amenity, i) => (
+                    <div
+                      key={i}
+                      className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-full flex items-center gap-2 group hover:bg-red-50 transition-all"
+                    >
+                      <CheckCircle2
+                        size={14}
+                        className="text-green-500 group-hover:text-red-500"
+                      />
+                      <span className="text-sm font-bold text-gray-700 group-hover:text-red-700">
+                        {amenity}
+                      </span>
                     </div>
-                  </div>
-                )}
-
-                {(property.specifications?.utilities?.waterSupply ||
-                  property.specifications?.utilities?.powerBackup) && (
-                  <div
-                    id="highlights"
-                    ref={scrollRefs.highlights}
-                    className="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm"
-                  >
-                    <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                      Essential Utilities
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {property.specifications?.utilities?.waterSupply && (
-                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 text-center shadow-sm hover:shadow-md transition-shadow">
-                          <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
-                            <Droplet size={20} />
-                          </div>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                            Water Supply
-                          </span>
-                          <span className="text-sm font-bold text-gray-800 leading-none">
-                            {property.specifications.utilities.waterSupply}
-                          </span>
-                        </div>
-                      )}
-                      {property.specifications?.utilities?.powerBackup && (
-                        <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 text-center shadow-sm hover:shadow-md transition-shadow">
-                          <div className="w-10 h-10 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center">
-                            <Zap size={20} />
-                          </div>
-                          <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-                            Power Backup
-                          </span>
-                          <span className="text-sm font-bold text-gray-800 leading-none">
-                            Available
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
+            )}
 
-              {/* Right Column: Location Map */}
-              {property.location?.coordinates?.lat && (
-                <div
-                  id="location"
-                  ref={scrollRefs.location}
-                  className="bg-white md:bg-blue-50 md:p-2 rounded-[32px] border border-gray-100 md:border-blue-100 shadow-sm h-full min-h-[400px]"
-                >
-                  <div className="h-full w-full rounded-[24px] overflow-hidden relative min-h-[400px]">
+            {/* UTILITIES SECTION */}
+            {(property.specifications?.utilities?.waterSupply ||
+              property.specifications?.utilities?.powerBackup) && (
+              <div
+                id="highlights"
+                ref={scrollRefs.highlights}
+                className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm"
+              >
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                  Essential Utilities
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {property.specifications?.utilities?.waterSupply && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 text-center shadow-sm">
+                      <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
+                        <Droplet size={20} />
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Water Supply
+                      </span>
+                      <span className="text-sm font-bold text-gray-800">
+                        {property.specifications.utilities.waterSupply}
+                      </span>
+                    </div>
+                  )}
+                  {property.specifications?.utilities?.powerBackup && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col items-center gap-2 text-center shadow-sm">
+                      <div className="w-10 h-10 bg-yellow-50 text-yellow-500 rounded-full flex items-center justify-center">
+                        <Zap size={20} />
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Power Backup
+                      </span>
+                      <span className="text-sm font-bold text-gray-800">
+                        Available
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* LOCATION SECTION */}
+            {property.location?.coordinates?.lat && (
+              <div
+                id="location"
+                ref={scrollRefs.location}
+                className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-gray-900">Project Location</h3>
+                  <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                    <MapPin size={16} className="text-red-500" />
+                    {property.location?.locality}, {property.location?.city}
+                  </div>
+                </div>
+                <div className="bg-slate-50 p-2 rounded-[32px] border border-slate-100 shadow-inner h-[400px] md:h-[500px]">
+                  <div className="h-full w-full rounded-[24px] overflow-hidden relative shadow-sm">
                     <MapContainer
                       center={[
                         property.location.coordinates.lat,
@@ -648,16 +653,10 @@ const BuilderPromoterDetailsUI = ({
                           />
                         </BaseLayer>
                         <BaseLayer checked name="Satellite View">
-                          <LayerGroup>
-                            <TileLayer
-                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                            />
-                            <TileLayer
-                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-                            />
-                          </LayerGroup>
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                          />
                         </BaseLayer>
                       </LayersControl>
                       <Marker
@@ -667,13 +666,22 @@ const BuilderPromoterDetailsUI = ({
                         ]}
                         icon={CustomIcon}
                       >
-                        <Popup>{property.basicInfo?.title}</Popup>
+                        <Popup className="rounded-xl overflow-hidden">
+                          <div className="p-1">
+                            <p className="font-bold text-gray-900 mb-1">
+                              {property.basicInfo?.title}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {property.location?.locality}
+                            </p>
+                          </div>
+                        </Popup>
                       </Marker>
                     </MapContainer>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* GALLERY */}
             <div id="gallery" ref={scrollRefs.gallery} className="space-y-6">
@@ -773,9 +781,9 @@ const BuilderPromoterDetailsUI = ({
                            <div className="mt-4">
                              <PostRequirementCard />
                            </div>
-            </div>
-          </div>
-        </div>
+             </div>
+           </div>
+         </div>
 
         {/* More Properties / Recommended Properties Section */}
         {moreProperties && moreProperties.length > 0 && (

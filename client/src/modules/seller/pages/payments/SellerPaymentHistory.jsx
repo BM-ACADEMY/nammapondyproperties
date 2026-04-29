@@ -289,7 +289,7 @@ const SellerPaymentHistory = () => {
                     <div className="shrink-0 scale-110">
                       <Progress
                         type="dashboard"
-                        percent={leadsLimit === -1 ? 100 : Math.min(100, (leadsUsed / (leadsLimit || 1)) * 100)}
+                        percent={leadsLimit === -1 ? 100 : Math.round(Math.min(100, (leadsUsed / (leadsLimit || 1)) * 100))}
                         gapDegree={60}
                         strokeWidth={12}
                         size={120}
@@ -300,7 +300,7 @@ const SellerPaymentHistory = () => {
                         trailColor="#F1F5F9"
                         format={(percent) => (
                           <span className={`${leadsLimit !== -1 && leadsUsed > leadsLimit ? "text-red-500" : "text-indigo-600"} text-lg font-black`}>
-                            {percent}%
+                            {Math.round(percent)}%
                           </span>
                         )}
                       />

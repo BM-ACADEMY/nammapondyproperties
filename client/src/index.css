@@ -25,6 +25,8 @@
     }
   }
 
+
+
   --animate-ring: ring 2s ease infinite;
   @keyframes ring {
     0% { transform: rotate(0); }
@@ -51,12 +53,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #166aa8;
+  background: #cbd5e1;
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #115585; /* Slightly darker shade for hover */
+  background: #94a3b8;
 }
 
 /* Popover Styling */

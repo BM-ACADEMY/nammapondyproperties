@@ -63,11 +63,13 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
     const areaUnit = property.specifications?.area?.unit || "sqft";
 
     // Build area display string
-    const areaDisplay = (minArea && maxArea)
+    const areaDisplay = (minArea && maxArea && !isNaN(minArea) && !isNaN(maxArea))
         ? `${Number(minArea).toLocaleString()} - ${Number(maxArea).toLocaleString()} ${areaUnit}`
-        : minArea
+        : (minArea && !isNaN(minArea))
         ? `${Number(minArea).toLocaleString()}+ ${areaUnit}`
-        : `${Number(totalArea).toLocaleString()} ${areaUnit}`;
+        : (totalArea && !isNaN(totalArea) && String(totalArea).toLowerCase() !== "nan")
+        ? `${Number(totalArea).toLocaleString()} ${areaUnit}`
+        : "N/A";
 
     const areaLabel = (minArea || maxArea) ? "Area Range" : (property.specifications?.area?.totalArea ? "Total Area" : "Built Area");
 
