@@ -28,9 +28,16 @@ router.delete("/:id", protect, admin, requirementController.deleteRequirement);
 // @access  Admin
 router.get("/subscription-stats", protect, admin, requirementController.getSubscriptionStats);
 
-// @route   POST /api/requirements/:id/share
-// @desc    Share requirement with a subscription plan
+// @route   POST /api/requirements/:id/trigger-timer
+// @desc    Trigger automated lead sharing with timer
 // @access  Admin
+router.post("/:id/trigger-timer", protect, admin, requirementController.triggerLeadSharingTimer);
+
+// @route   POST /api/requirements/:id/stop-timer
+// @desc    Stop automated lead sharing timer
+// @access  Admin
+router.post("/:id/stop-timer", protect, admin, requirementController.stopLeadSharingTimer);
+
 router.post("/:id/share", protect, admin, requirementController.shareRequirement);
 
 module.exports = router;

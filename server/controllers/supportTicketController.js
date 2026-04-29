@@ -1,5 +1,8 @@
 const SupportTicket = require("../models/SupportTicket");
 const { sendSupportTicketNotificationToAdmin } = require("../utils/emailService");
+const { sendPushNotification, sendPushNotificationToMultiple } = require("../utils/pushNotification");
+const User = require("../models/User");
+
 
 // Create a new support ticket
 exports.createTicket = async (req, res) => {
@@ -39,6 +42,30 @@ exports.createTicket = async (req, res) => {
         subject: newTicket.subject,
       });
     }
+
+    // Send push notification to admins
+    try {
+      const admins = await User.find({ 
+        $or: [
+          { isSuperAdmin: true },
+          { role_id: { $exists: true } } // This might need more specific role filtering based on your role model
+        ]
+      }).select("_id");
+      
+      const adminIds = admins.map(admin => admin._id);
+      await sendPushNotificationToMultiple(adminIds, {
+        title: "New Support Ticket",
+        body: `${req.user.name} created a new ticket: ${subject}`,
+        icon: "/logo.png",
+        data: {
+          url: `/admin/support/${newTicket._id}`
+        }
+      });
+
+    } catch (pushErr) {
+      console.error("Failed to send push notification to admins:", pushErr);
+    }
+
 
     res.status(201).json({
       success: true,
@@ -186,28 +213,64 @@ exports.addMessage = async (req, res) => {
     // Real-time notification
     const io = req.app.get("socketio");
     if (io) {
-      const socketPayload = {
-        ticketId,
-        message: latestPopulatedMessage,
-        subject: ticket.subject,
-      };
-
       if (finalIsAdmin) {
         // Admin sent message, mark seller as unread
         ticket.isSellerRead = false;
         // Notify seller
-        io.to(`seller-${ticket.seller}`).emit("new-support-message", socketPayload);
+        io.to(`seller-${ticket.seller}`).emit("new-support-message", {
+          ticketId,
+          message: latestPopulatedMessage,
+        });
       } else {
         // Seller sent message, mark admin as unread
         ticket.isAdminRead = false;
         // Notify admins
         io.to("admin-room").emit("new-support-message", {
-          ...socketPayload,
+          ticketId,
+          message: latestPopulatedMessage,
           isAdminRead: false
         });
       }
       await ticket.save();
+
+      // Send push notification
+      try {
+        if (finalIsAdmin) {
+          // Notify seller
+          await sendPushNotification(ticket.seller, {
+            title: "New Message from Support",
+            body: content.length > 50 ? content.substring(0, 50) + "..." : content,
+            icon: "/logo.png",
+            data: {
+              url: `/seller/support/${ticketId}`
+            }
+          });
+
+        } else {
+          // Notify admins
+          const admins = await User.find({ 
+            $or: [
+              { isSuperAdmin: true },
+              { role_id: { $exists: true } }
+            ]
+          }).select("_id");
+          const adminIds = admins.map(admin => admin._id);
+          
+          await sendPushNotificationToMultiple(adminIds, {
+            title: "New Support Message",
+            body: `${req.user.name}: ${content.length > 50 ? content.substring(0, 50) + "..." : content}`,
+            icon: "/logo.png",
+            data: {
+              url: `/admin/support/${ticketId}`
+            }
+          });
+
+        }
+      } catch (pushErr) {
+        console.error("Failed to send push notification for message:", pushErr);
+      }
     }
+
 
     res.status(200).json({
       success: true,
@@ -248,6 +311,22 @@ exports.updateStatus = async (req, res) => {
       // Notify admins
       io.to("admin-room").emit("ticket-status-updated", { ticket });
     }
+
+    // Send push notification to seller
+    try {
+      await sendPushNotification(ticket.seller._id, {
+        title: "Ticket Status Updated",
+        body: `Your support ticket status has been updated to: ${status}`,
+        icon: "/logo.png",
+        data: {
+          url: `/seller/support/${ticketId}`
+        }
+      });
+
+    } catch (pushErr) {
+      console.error("Failed to send push notification for status update:", pushErr);
+    }
+
 
     res.status(200).json({ success: true, ticket });
   } catch (error) {

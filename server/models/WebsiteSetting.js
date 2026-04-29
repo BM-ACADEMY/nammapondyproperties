@@ -8,7 +8,10 @@ const websiteSettingSchema = new mongoose.Schema({
   address: { type: String },
   footer_text: { type: String },
   sellerPropertyLimit: { type: Number, default: 5 },
-  defaultPlanName: { type: String, default: "BASIC" }
+  defaultPlanName: { type: String, default: "BASIC" },
+  leadSharingTimerEnabled: { type: Boolean, default: false },
+  leadSharingPlans: { type: [String], default: ["Pro", "Premium", "Standard"] },
+  leadSharingInterval: { type: Number, default: 10 } // in minutes
 }, { timestamps: true });
 
 module.exports = mongoose.model('WebsiteSetting', websiteSettingSchema);

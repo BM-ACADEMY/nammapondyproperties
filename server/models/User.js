@@ -37,7 +37,18 @@ const userSchema = new mongoose.Schema(
     isSuperAdmin: { type: Boolean, default: false },
     assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     slug: { type: String, unique: true, sparse: true },
+    pushSubscriptions: [
+      {
+        endpoint: { type: String },
+        expirationTime: { type: Number },
+        keys: {
+          p256dh: { type: String },
+          auth: { type: String },
+        },
+      },
+    ],
   },
+
   { timestamps: true },
 );
 

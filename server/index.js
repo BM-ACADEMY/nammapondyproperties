@@ -34,6 +34,8 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const leadRoutes = require("./routes/leadRoutes");
 
 const supportTicketRoutes = require("./routes/supportTicketRoute");
+const notificationRoutes = require("./routes/notificationRoute");
+
 
 const app = express();
 app.set("trust proxy", true);
@@ -115,6 +117,8 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/shared-leads", leadRoutes);
 
 app.use("/api/support-tickets", supportTicketRoutes);
+app.use("/api/notifications", notificationRoutes);
+
 
 /* ===============================
    404 Handler (must be last route)
@@ -194,3 +198,4 @@ const startServer = async () => {
 };
 
 startServer();
+ 

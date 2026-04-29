@@ -18,6 +18,7 @@ import {
   Checkbox,
   Form,
   InputNumber,
+  Switch,
 } from "antd";
 import { 
   Trash2, 
@@ -43,7 +44,11 @@ import {
   deleteRequirement,
   getSubscriptionStats,
   shareRequirement,
-  postRequirement
+  postRequirement,
+  triggerLeadSharingTimer,
+  stopLeadSharingTimer,
+  getWebsiteSettings,
+  updateWebsiteSetting
 } from "@/services/api";
 import axios from "axios";
 import { useNav } from "@/context/NavContext";
@@ -70,6 +75,13 @@ const RequirementList = () => {
   const [expandedPlans, setExpandedPlans] = useState([]);
   const [selectedPlanIds, setSelectedPlanIds] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
+  const [timerLoading, setTimerLoading] = useState(false);
+  const [timerForm] = Form.useForm();
+  const [globalSettings, setGlobalSettings] = useState(null);
+  const [isGlobalModalOpen, setIsGlobalModalOpen] = useState(false);
+  const [globalForm] = Form.useForm();
 
   const selectedUsageType = Form.useWatch("usageType", addForm);
 
@@ -109,7 +121,19 @@ const RequirementList = () => {
 
   useEffect(() => {
     fetchRequirements();
+    fetchGlobalSettings();
   }, []);
+
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await getWebsiteSettings();
+      if (response.data && response.data.length > 0) {
+        setGlobalSettings(response.data[0]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch global settings", error);
+    }
+  };
 
   useEffect(() => {
     if (socket) {
@@ -159,6 +183,91 @@ const RequirementList = () => {
     setSelectedRequirement(record);
     setIsShareModalOpen(true);
     fetchStats(record._id);
+  };
+
+  const showTimerModal = (record) => {
+    if (record) {
+      setSelectedRequirement(record);
+    }
+    setIsTimerModalOpen(true);
+    timerForm.setFieldsValue({
+      plans: ["Pro", "Premium", "Standard"],
+      timer: 10
+    });
+  };
+
+  const handleStartTimer = async (values) => {
+    setTimerLoading(true);
+    try {
+      if (selectedRowKeys.length > 0 && !selectedRequirement) {
+        // Bulk mode
+        let successCount = 0;
+        for (const id of selectedRowKeys) {
+          try {
+            await triggerLeadSharingTimer(id, values);
+            successCount++;
+          } catch (err) {
+            console.error(`Failed to start timer for ${id}`, err);
+          }
+        }
+        message.success(`Lead sharing timer started for ${successCount} requirements!`);
+        setSelectedRowKeys([]);
+      } else if (selectedRequirement) {
+        // Single mode
+        await triggerLeadSharingTimer(selectedRequirement._id, values);
+        message.success("Lead sharing timer started successfully!");
+      }
+      
+      setIsTimerModalOpen(false);
+      setSelectedRequirement(null);
+      fetchRequirements();
+    } catch (error) {
+      message.error(error.response?.data?.message || "Failed to start lead sharing timer");
+    } finally {
+      setTimerLoading(false);
+    }
+  };
+
+  const handleSaveGlobalTimer = async (values) => {
+    setTimerLoading(true);
+    try {
+      if (!globalSettings?._id) {
+         message.error("System settings not found. Please contact support.");
+         return;
+      }
+      await updateWebsiteSetting(globalSettings._id, {
+        leadSharingTimerEnabled: values.leadSharingTimerEnabled,
+        leadSharingPlans: values.plans,
+        leadSharingInterval: values.timer
+      });
+      
+      message.success("Global lead timer settings updated!");
+      fetchGlobalSettings();
+      setIsGlobalModalOpen(false);
+    } catch (error) {
+      message.error("Failed to update global settings");
+    } finally {
+      setTimerLoading(false);
+    }
+  };
+
+  const showGlobalModal = () => {
+    setIsGlobalModalOpen(true);
+    globalForm.setFieldsValue({
+      leadSharingTimerEnabled: globalSettings?.leadSharingTimerEnabled || false,
+      plans: globalSettings?.leadSharingPlans || ["Pro", "Premium", "Standard"],
+      timer: globalSettings?.leadSharingInterval || 10
+    });
+  };
+
+  const handleStopTimer = async (id) => {
+    try {
+      await stopLeadSharingTimer(id);
+      message.success("Lead sharing timer stopped");
+      fetchRequirements();
+    } catch (error) {
+      message.error("Failed to stop lead sharing timer");
+    }
   };
 
   const fetchStats = async (requirementId) => {
@@ -388,6 +497,47 @@ const RequirementList = () => {
             </div>
           );
         }
+        if (record.sharingStatus === "in-progress") {
+          const plans = record.sharingConfig?.plans || [];
+          const currentPlan = plans[record.sharingConfig?.currentPlanIndex] || "N/A";
+          return (
+            <div className="flex flex-col gap-1">
+              <Tag color="processing" icon={<Clock size={12} className="animate-pulse" />} className="m-0 font-bold uppercase text-[10px]">
+                Timer: {currentPlan}
+              </Tag>
+              <Button 
+                type="link" 
+                danger 
+                size="small" 
+                className="p-0 h-auto text-[10px] text-left"
+                onClick={() => handleStopTimer(record._id)}
+              >
+                Stop Timer
+              </Button>
+            </div>
+          );
+        }
+
+        if (record.sharingStatus === "unclaimed") {
+          return (
+            <div className="flex flex-col gap-1">
+              <Tag color="error" className="m-0 font-bold uppercase text-[10px]">Unclaimed</Tag>
+              <Button 
+                type="link" 
+                size="small" 
+                className="p-0 h-auto text-[10px] text-left text-indigo-600 font-bold"
+                onClick={() => showTimerModal(record)}
+              >
+                Reshare Lead
+              </Button>
+            </div>
+          );
+        }
+
+        if (record.sharingStatus === "completed") {
+           return <Tag color="success" className="m-0 font-bold uppercase text-[10px]">Shared & Accepted</Tag>;
+        }
+
         if (record.isShared) {
           let label = "Shared (Pending)";
           let color = "orange";
@@ -518,6 +668,13 @@ const RequirementList = () => {
             className="rounded-lg w-full md:w-64"
           />
           <Button 
+            icon={<Clock size={18} />} 
+            className="bg-orange-500 hover:bg-orange-600 h-10 px-6 rounded-lg font-bold flex items-center gap-2 text-white border-none shadow-lg shadow-orange-100"
+            onClick={showGlobalModal}
+          >
+            Lead Timer
+          </Button>
+          <Button 
             type="primary" 
             icon={<Plus size={18} />} 
             className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 rounded-lg font-bold flex items-center gap-2"
@@ -530,6 +687,13 @@ const RequirementList = () => {
 
       <Card className="shadow-sm border-none overflow-hidden">
         <Table
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys),
+            getCheckboxProps: (record) => ({
+              disabled: !!record.acceptedBy || record.sharingStatus === "in-progress",
+            }),
+          }}
           columns={columns}
           dataSource={filteredData}
           rowKey="_id"
@@ -660,6 +824,18 @@ const RequirementList = () => {
           <Button key="close" onClick={() => setIsShareModalOpen(false)} className="rounded-lg h-9 px-5 border-gray-200 text-slate-700 font-medium">
             Cancel
           </Button>,
+          selectedRequirement?.sharingStatus !== "in-progress" && (
+            <Button 
+              key="trigger-timer"
+              className="bg-[#fff7ed] text-[#ea580c] border-[#ffedd5] hover:bg-[#ffedd5] h-9 px-5 rounded-lg font-bold flex items-center gap-2"
+              onClick={() => {
+                setIsShareModalOpen(false);
+                showTimerModal(selectedRequirement);
+              }}
+            >
+              <Clock size={16} /> Timer Mode
+            </Button>
+          ),
           selectedPlanIds.length > 0 && (
             <Button 
               key="share-selected" 
@@ -1201,6 +1377,190 @@ const RequirementList = () => {
             </div>
           </Form>
         </div>
+      </Modal>
+      {/* Global Lead Timer Settings Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-4 border-b border-gray-200 pb-5 mb-1">
+            <div className="w-12 h-12 rounded-[14px] bg-[#fff7ed] text-[#ea580c] flex items-center justify-center shrink-0">
+              <Clock size={24} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-bold m-0 text-slate-800">Global Lead Timer</h3>
+              <Text type="secondary" className="text-[13.5px] text-slate-500">Automatically distribute leads as they arrive.</Text>
+            </div>
+          </div>
+        }
+        open={isGlobalModalOpen}
+        onCancel={() => setIsGlobalModalOpen(false)}
+        footer={null}
+        width={500}
+        destroyOnClose
+      >
+        <Form
+          form={globalForm}
+          layout="vertical"
+          onFinish={handleSaveGlobalTimer}
+          className="mt-6"
+        >
+          <Form.Item
+            name="leadSharingTimerEnabled"
+            valuePropName="checked"
+            className="mb-6"
+          >
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+              <div>
+                <div className="font-bold text-indigo-900 text-[15px]">Auto-Distribution Mode</div>
+                <div className="text-[12px] text-indigo-600 font-medium">New leads will follow this timer automatically</div>
+              </div>
+              <Switch checkedChildren="ON" unCheckedChildren="OFF" />
+            </div>
+          </Form.Item>
+
+          <Form.Item
+            name="plans"
+            label={<span className="font-bold text-slate-700 uppercase text-[12px] tracking-wider">Plan Priority Order</span>}
+            rules={[{ required: true, message: "Please select at least one plan" }]}
+          >
+            <Checkbox.Group className="w-full">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-slate-200 transition-colors">
+                  <Checkbox value="Pro" className="font-semibold text-slate-700">Pro Plan</Checkbox>
+                  <Tag color="gold" className="m-0 uppercase text-[10px] font-black border-none px-2 bg-gold-50 text-gold-600">Priority 1</Tag>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-slate-200 transition-colors">
+                  <Checkbox value="Premium" className="font-semibold text-slate-700">Premium Plan</Checkbox>
+                  <Tag color="blue" className="m-0 uppercase text-[10px] font-black border-none px-2 bg-blue-50 text-blue-600">Priority 2</Tag>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-slate-200 transition-colors">
+                  <Checkbox value="Standard" className="font-semibold text-slate-700">Standard Plan</Checkbox>
+                  <Tag color="cyan" className="m-0 uppercase text-[10px] font-black border-none px-2 bg-cyan-50 text-cyan-600">Priority 3</Tag>
+                </div>
+              </div>
+            </Checkbox.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="timer"
+            label={<span className="font-bold text-slate-700 uppercase text-[12px] tracking-wider">Interval (Minutes)</span>}
+            rules={[{ required: true, message: "Please set a timer" }]}
+            extra={<Text className="text-[11px] text-slate-400 italic">This time applies to each tier before moving to the next.</Text>}
+          >
+            <InputNumber 
+              min={1} 
+              style={{ width: "100%" }} 
+              className="rounded-xl h-11 flex items-center bg-slate-50 border-slate-200" 
+              placeholder="e.g. 10"
+              suffix={<span className="text-slate-400 font-bold mr-3">min</span>}
+            />
+          </Form.Item>
+
+          <div className="mt-8 flex flex-col gap-3 pt-4 border-t border-slate-100">
+            {selectedRowKeys.length > 0 && (
+              <Button 
+                onClick={() => {
+                  const values = globalForm.getFieldsValue();
+                  handleStartTimer({ plans: values.plans, timer: values.timer });
+                }}
+                className="w-full h-11 rounded-xl font-bold text-orange-600 border-orange-200 hover:border-orange-500 hover:text-orange-700 flex items-center justify-center gap-2"
+              >
+                Trigger Timer for {selectedRowKeys.length} Selected Leads
+              </Button>
+            )}
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={timerLoading}
+              className="w-full bg-slate-900 hover:bg-black border-none rounded-xl h-11 font-bold flex items-center justify-center gap-2 shadow-xl shadow-slate-200"
+            >
+              Save Global Settings
+            </Button>
+          </div>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={
+          <div className="flex items-center gap-4 border-b border-gray-200 pb-5 mb-1">
+            <div className="w-12 h-12 rounded-[14px] bg-[#fff7ed] text-[#ea580c] flex items-center justify-center shrink-0">
+              <Clock size={24} strokeWidth={2} />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-bold m-0 text-slate-800">Lead Sharing Timer</h3>
+              <Text type="secondary" className="text-[13.5px] text-slate-500">Automatically distribute lead across plans.</Text>
+            </div>
+          </div>
+        }
+        open={isTimerModalOpen}
+        onCancel={() => setIsTimerModalOpen(false)}
+        footer={null}
+        width={500}
+        destroyOnClose
+      >
+        <Form
+          form={timerForm}
+          layout="vertical"
+          onFinish={handleStartTimer}
+          className="mt-6"
+        >
+          <Form.Item
+            name="plans"
+            label={<span className="font-bold text-slate-700">Select Plans (Priority Order)</span>}
+            rules={[{ required: true, message: "Please select at least one plan" }]}
+          >
+            <Checkbox.Group className="w-full">
+              <Row gutter={[0, 12]}>
+                <Col span={24}>
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                    <Checkbox value="Pro" className="font-semibold text-slate-700">Pro Plan</Checkbox>
+                    <Tag color="gold" className="m-0 uppercase text-[10px] font-black border-none">Priority 1</Tag>
+                  </div>
+                </Col>
+                <Col span={24}>
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                    <Checkbox value="Premium" className="font-semibold text-slate-700">Premium Plan</Checkbox>
+                    <Tag color="blue" className="m-0 uppercase text-[10px] font-black border-none">Priority 2</Tag>
+                  </div>
+                </Col>
+                <Col span={24}>
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                    <Checkbox value="Standard" className="font-semibold text-slate-700">Standard Plan</Checkbox>
+                    <Tag color="cyan" className="m-0 uppercase text-[10px] font-black border-none">Priority 3</Tag>
+                  </div>
+                </Col>
+              </Row>
+            </Checkbox.Group>
+          </Form.Item>
+
+          <Form.Item
+            name="timer"
+            label={<span className="font-bold text-slate-700">Interval (Minutes)</span>}
+            rules={[{ required: true, message: "Please set a timer" }]}
+            extra={<Text className="text-[11px] text-slate-400 italic">Example: If set to 10m, it waits 10m for Pro, then 10m for Premium, etc.</Text>}
+          >
+            <InputNumber 
+              min={1} 
+              style={{ width: "100%" }} 
+              className="rounded-lg h-10 flex items-center" 
+              placeholder="e.g. 10"
+              suffix={<span className="text-slate-400 font-medium mr-2">minutes</span>}
+            />
+          </Form.Item>
+
+          <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+            <Button onClick={() => setIsTimerModalOpen(false)} className="rounded-lg h-10 px-6">
+              Cancel
+            </Button>
+            <Button 
+              type="primary" 
+              htmlType="submit" 
+              loading={timerLoading}
+              className="bg-orange-600 hover:bg-orange-700 border-none rounded-lg h-10 px-8 font-bold flex items-center gap-2 shadow-lg shadow-orange-100"
+            >
+              Start Timer Mode
+            </Button>
+          </div>
+        </Form>
       </Modal>
     </div>
   );
