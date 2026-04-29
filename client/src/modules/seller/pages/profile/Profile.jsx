@@ -544,8 +544,19 @@ const Profile = () => {
                       </Col>
                     </Row>
 
-                    <Form.Item name="aboutCompany" label={<span className="text-slate-600 font-medium">About Company</span>}>
-                      <Input.TextArea disabled={!isEditing} rows={4} className="rounded-xl shadow-sm" placeholder="Briefly describe your company and achievements..." />
+                    <Form.Item 
+                      name="aboutCompany" 
+                      label={<span className="text-slate-600 font-medium">About Company</span>}
+                      rules={[{ max: 250, message: "About Company cannot exceed 250 characters" }]}
+                    >
+                      <Input.TextArea 
+                        disabled={!isEditing} 
+                        rows={4} 
+                        className="rounded-xl shadow-sm" 
+                        placeholder="Briefly describe your company and achievements..." 
+                        showCount 
+                        maxLength={250} 
+                      />
                     </Form.Item>
                   </div>
 
