@@ -6,6 +6,7 @@ const User = require("../models/User");
 const SharedLead = require("../models/SharedLead");
 const Property = require("../models/Property");
 const BusinessType = require("../models/BusinessType");
+const WebsiteSetting = require("../models/WebsiteSetting");
 const { sendRequirementNotificationToAdmin } = require("../utils/emailService");
 
 // Create a new requirement
@@ -73,6 +74,51 @@ exports.createRequirement = async (req, res) => {
       console.error("Failed to send requirement notification email:", emailErr);
     }
 
+    // NEW: Check global lead sharing timer settings
+    try {
+      const settings = await WebsiteSetting.findOne();
+      if (settings && settings.leadSharingTimerEnabled) {
+        console.log(`🤖 Auto-triggering lead sharing timer for requirement ${savedRequirement._id}`);
+        
+        const plans = settings.leadSharingPlans || ["Pro", "Premium", "Standard"];
+        const timer = settings.leadSharingInterval || 10;
+        
+        savedRequirement.sharingStatus = "in-progress";
+        savedRequirement.sharingConfig = {
+          plans: plans,
+          timer: timer,
+          currentPlanIndex: 0,
+          startTime: new Date()
+        };
+        await savedRequirement.save();
+
+        // Execute first step (or skip to next if no sellers)
+        let currentPlanIndex = 0;
+        let success = false;
+
+        while (currentPlanIndex < plans.length && !success) {
+          const currentPlan = plans[currentPlanIndex];
+          const result = await exports.internalShareLeadWithPlanName(savedRequirement._id, currentPlan, io, 3);
+          
+          if (result.status === "success") {
+            success = true;
+            savedRequirement.sharingConfig.currentPlanIndex = currentPlanIndex;
+            savedRequirement.sharingConfig.startTime = new Date();
+            await savedRequirement.save();
+          } else {
+            currentPlanIndex++;
+          }
+        }
+
+        if (!success) {
+          savedRequirement.sharingStatus = "unclaimed";
+          await savedRequirement.save();
+        }
+      }
+    } catch (settingErr) {
+      console.error("Failed to auto-trigger lead sharing timer:", settingErr);
+    }
+
     res.status(201).json({
       success: true,
       data: savedRequirement,
@@ -125,6 +171,8 @@ exports.getRequirements = async (req, res) => {
           acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
           isShared: !!anySharedLead,
           matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
+          sharingStatus: reqDoc.sharingStatus,
+          sharingConfig: reqDoc.sharingConfig,
         };
       })
     );
@@ -420,49 +468,28 @@ exports.getSubscriptionStats = async (req, res) => {
 };
 
 // Share requirement with one or more subscription plans (Admin)
-exports.shareRequirement = async (req, res) => {
+// Internal helper to share lead with all agents in a plan by name
+exports.internalShareLeadWithPlanName = async (requirementId, planName, io, matchPriority = 3) => {
   try {
-    const { id } = req.params; // Requirement ID
-    let { planId, planIds, matchType, matchPriority } = req.body;
-    
-    // Coerce matchPriority to number to avoid type mismatch bugs (e.g. "3" === 3 is false)
-    matchPriority = Number(matchPriority) || 3;
+    const requirement = await Requirement.findById(requirementId);
+    if (!requirement) return { status: "error", message: "Requirement not found" };
 
-    const requirement = await Requirement.findById(id);
-    if (!requirement) {
-      return res.status(404).json({
-        success: false,
-        message: "Requirement not found.",
-      });
-    }
-
-    // Determine target plans
-    let targetPlanIds = [];
-    if (planIds && Array.isArray(planIds)) {
-      targetPlanIds = planIds;
-    } else if (planId) {
-      targetPlanIds = [planId];
-    }
-
-    if (targetPlanIds.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No subscription plans provided.",
-      });
-    }
-
-    // Check if the lead is already accepted by anyone in any plan
-    const alreadyAccepted = await SharedLead.findOne({ 
-      requirement: id, 
-      status: "accepted" 
+    // Find all plan variants with the same name
+    const allMatchingPlans = await SubscriptionPlan.find({ 
+      name: planName,
+      status: "active" 
     });
+    if (allMatchingPlans.length === 0) return { status: "no_sellers", plan: planName };
     
-    if (alreadyAccepted) {
-      return res.status(400).json({
-        success: false,
-        message: "This deal is already closed/accepted by a seller and cannot be reshared.",
-      });
-    }
+    const allPlanVariantIds = allMatchingPlans.map(p => p._id);
+    const representativePlanId = allMatchingPlans[0]._id;
+
+    // Check if already shared with this plan group
+    const existingShare = await SharedLead.findOne({ 
+      requirement: requirementId, 
+      plan: { $in: allPlanVariantIds } 
+    });
+    if (existingShare) return { status: "already_shared", plan: planName };
 
     // Determine if we should show Exact Matches or Radius Matches (Exclusive Priority)
     let finalMatchType = "exact";
@@ -474,172 +501,238 @@ exports.shareRequirement = async (req, res) => {
       }
     }
 
+    // Find active sellers for all plan variants
+    const activeSubscriptions = await Subscription.find({
+      plan: { $in: allPlanVariantIds },
+      status: "active",
+      endDate: { $gt: new Date() },
+    }).populate({
+      path: "user",
+      select: "name businessType",
+      populate: { path: "businessType", select: "name" }
+    });
+    
+    let sellerIds = [];
+    let skippedDueToLimit = 0;
+
+    // Matching logic
+    if (matchPriority === 1) {
+      // Priority 1: ONLY Builders matching the criteria
+      const builderSubs = activeSubscriptions.filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name));
+      for (const sub of builderSubs) {
+        const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+        const leadsLimit = planForSub?.leadsLimit ?? 2;
+        if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
+          skippedDueToLimit++;
+          continue;
+        }
+        const matchQuery = getPropertyMatchQuery(sub.user._id, requirement, finalMatchType);
+        if (await Property.exists(matchQuery)) {
+          sellerIds.push(sub.user._id);
+          await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
+        }
+      }
+    } else if (matchPriority === 2) {
+      // Priority 2: ONLY Agents matching the criteria
+      const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
+      for (const sub of agentSubs) {
+        const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+        const leadsLimit = planForSub?.leadsLimit ?? 2;
+        if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
+          skippedDueToLimit++;
+          continue;
+        }
+        const matchQuery = getPropertyMatchQuery(sub.user._id, requirement, finalMatchType);
+        if (await Property.exists(matchQuery)) {
+          sellerIds.push(sub.user._id);
+          await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
+        }
+      }
+    } else {
+      // Priority 3 (Fallback): ALL Agents in the plan
+      const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
+      for (const sub of agentSubs) {
+         const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
+         const leadsLimit = planForSub?.leadsLimit ?? 2;
+         if (leadsLimit === -1 || sub.leadsUsed < leadsLimit) {
+           sellerIds.push(sub.user._id);
+         } else {
+           skippedDueToLimit++;
+         }
+      }
+    }
+
+    if (sellerIds.length === 0) {
+      return { status: skippedDueToLimit > 0 ? "no_credits" : "no_sellers", plan: planName };
+    }
+
+    const sharedLead = new SharedLead({
+      requirement: requirementId,
+      plan: representativePlanId,
+      sharedWith: sellerIds,
+      status: "pending",
+      matchType: "not-exact", // Default for automated sharing
+      matchPriority: matchPriority
+    });
+
+    await sharedLead.save();
+
+    // Notify sellers
+    if (io) {
+      sellerIds.forEach(sellerId => {
+        io.to(`seller-${sellerId}`).emit("new-lead-shared", {
+          leadId: sharedLead._id,
+          requirement: {
+            category: requirement.category,
+            usageType: requirement.usageType,
+            propertyType: requirement.propertyType,
+            preferredLocation: requirement.preferredLocation,
+            propertyPreferences: requirement.propertyPreferences,
+            message: requirement.message,
+          },
+        });
+      });
+    }
+
+    return { status: "success", plan: planName, count: sellerIds.length };
+  } catch (error) {
+    console.error(`Error in internalShareLeadWithPlanName for ${planName}:`, error);
+    return { status: "error", message: error.message };
+  }
+};
+
+// Share requirement with one or more subscription plans (Admin)
+exports.shareRequirement = async (req, res) => {
+  try {
+    const { id } = req.params; // Requirement ID
+    let { planId, planIds, matchPriority } = req.body;
+    
+    matchPriority = Number(matchPriority) || 3;
+
+    const requirement = await Requirement.findById(id);
+    if (!requirement) {
+      return res.status(404).json({ success: false, message: "Requirement not found." });
+    }
+
+    // Check if the lead is already accepted
+    const alreadyAccepted = await SharedLead.findOne({ requirement: id, status: "accepted" });
+    if (alreadyAccepted) {
+      return res.status(400).json({ success: false, message: "This deal is already closed/accepted." });
+    }
+
+    let targetPlanIds = planIds && Array.isArray(planIds) ? planIds : (planId ? [planId] : []);
+    if (targetPlanIds.length === 0) {
+      return res.status(400).json({ success: false, message: "No subscription plans provided." });
+    }
+
     const results = [];
     const io = req.app.get("socketio");
 
     for (const pId of targetPlanIds) {
       const selectedPlan = await SubscriptionPlan.findById(pId);
       if (!selectedPlan) continue;
-
-      // Find all plan variants with the same name
-      const allMatchingPlans = await SubscriptionPlan.find({ 
-        name: selectedPlan.name,
-        status: "active" 
-      });
-      const allPlanVariantIds = allMatchingPlans.map(p => p._id);
-
-      // Check if already shared with this specific plan
-      const existingShare = await SharedLead.findOne({ requirement: id, plan: pId });
-      if (existingShare) {
-        results.push({ plan: selectedPlan.name, status: "already_shared" });
-        continue;
-      }
-
-      // Find active sellers for all plan variants
-      const activeSubscriptions = await Subscription.find({
-        plan: { $in: allPlanVariantIds },
-        status: "active",
-        endDate: { $gt: new Date() },
-      }).populate({
-        path: "user",
-        select: "name businessType",
-        populate: { path: "businessType", select: "name" }
-      });
       
-      let sellerIds = [];
-      let skippedDueToLimit = 0;
-
-      // Improved Priority matching logic with property-level verification
-      if (matchPriority === 1) {
-        // Priority 1: ONLY Builders matching the criteria
-        const builderSubs = activeSubscriptions.filter(sub => sub.user && /Builder|Promoter/i.test(sub.user.businessType?.name));
-        for (const sub of builderSubs) {
-          const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
-          const leadsLimit = planForSub?.leadsLimit ?? 2;
-          
-          if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
-            skippedDueToLimit++;
-            continue;
-          }
-
-          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement, finalMatchType);
-          if (await Property.exists(matchQuery)) {
-            sellerIds.push(sub.user._id);
-            // Deduct lead immediately for Exact Match
-            await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
-          }
-        }
-      } else if (matchPriority === 2) {
-        // Priority 2: ONLY Agents matching the criteria
-        const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
-        for (const sub of agentSubs) {
-          const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
-          const leadsLimit = planForSub?.leadsLimit ?? 2;
-
-          if (leadsLimit !== -1 && sub.leadsUsed >= leadsLimit) {
-            skippedDueToLimit++;
-            continue;
-          }
-
-          const matchQuery = getPropertyMatchQuery(sub.user._id, requirement, finalMatchType);
-          if (await Property.exists(matchQuery)) {
-            sellerIds.push(sub.user._id);
-            // Deduct lead immediately for Exact Match
-            await Subscription.findByIdAndUpdate(sub._id, { $inc: { leadsUsed: 1 } });
-          }
-        }
-      } else if (matchPriority === 3) {
-        // Priority 3 (Fallback): ALL Agents in the plan
-        const agentSubs = activeSubscriptions.filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name));
-        for (const sub of agentSubs) {
-           const planForSub = allMatchingPlans.find(p => p._id.toString() === sub.plan.toString());
-           const leadsLimit = planForSub?.leadsLimit ?? 2;
-
-           if (leadsLimit === -1 || sub.leadsUsed < leadsLimit) {
-             sellerIds.push(sub.user._id);
-           } else {
-             skippedDueToLimit++;
-           }
-        }
-      } else {
-        // Safe fallback
-        sellerIds = activeSubscriptions
-          .filter(sub => sub.user && /Agent/i.test(sub.user.businessType?.name))
-          .map(sub => sub.user._id);
-      }
-
-      if (sellerIds.length === 0) {
-        const status = skippedDueToLimit > 0 ? "no_credits" : "no_sellers";
-        results.push({ plan: selectedPlan.name, status });
-        continue;
-      }
-
-      const sharedLead = new SharedLead({
-        requirement: id,
-        plan: pId,
-        sharedWith: sellerIds,
-        status: "pending",
-        matchType: matchType || "not-exact",
-        matchPriority: matchPriority || 3
-      });
-
-      await sharedLead.save();
-
-      // Notify sellers
-      if (io) {
-        sellerIds.forEach(sellerId => {
-          io.to(`seller-${sellerId}`).emit("new-lead-shared", {
-            leadId: sharedLead._id,
-            requirement: {
-              category: requirement.category,
-              usageType: requirement.usageType,
-              propertyType: requirement.propertyType,
-              preferredLocation: requirement.preferredLocation,
-              propertyPreferences: requirement.propertyPreferences,
-              message: requirement.message,
-            },
-          });
-        });
-      }
-      results.push({ 
-        plan: selectedPlan.name, 
-        status: "success", 
-        count: sellerIds.length,
-        skipped: skippedDueToLimit
-      });
+      const result = await internalShareLeadWithPlanName(id, selectedPlan.name, io, matchPriority);
+      results.push(result);
     }
 
     const successCount = results.filter(r => r.status === "success").length;
-    
     if (successCount === 0) {
-      let message = "Failed to share lead with any of the selected plans.";
-      
-      if (results.every(r => r.status === "no_credits")) {
-        message = "Lead Share Failed: Matched sellers have exhausted their credits.";
-      } else if (results.every(r => r.status === "already_shared")) {
-        message = "Lead already shared with selected plans.";
-      } else if (results.every(r => r.status === "no_sellers")) {
-        message = "No matching sellers found in those plans.";
-      }
+      return res.status(400).json({ success: false, message: "Failed to share lead.", details: results });
+    }
 
-      return res.status(400).json({
-        success: false,
-        message,
-        details: results
+    res.status(200).json({ success: true, message: `Lead shared with ${successCount} plan(s).`, details: results });
+  } catch (error) {
+    console.error("Error sharing requirement:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// Trigger automated lead sharing with timer
+exports.triggerLeadSharingTimer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { plans, timer } = req.body; // plans: ["Pro", "Premium", "Standard"], timer: minutes
+
+    if (!plans || !Array.isArray(plans) || plans.length === 0) {
+      return res.status(400).json({ success: false, message: "Please select at least one plan." });
+    }
+
+    const requirement = await Requirement.findById(id);
+    if (!requirement) {
+      return res.status(404).json({ success: false, message: "Requirement not found." });
+    }
+
+    // NEW: Clean up all previous shared leads for this requirement to start fresh
+    await SharedLead.deleteMany({ requirement: id });
+
+    // Initialize sharing config
+    requirement.sharingStatus = "in-progress";
+    requirement.acceptedBy = null; // Clear previous acceptance if resharing
+    requirement.sharingConfig = {
+      plans: plans,
+      timer: Number(timer) || 10,
+      currentPlanIndex: 0,
+      startTime: new Date()
+    };
+
+    await requirement.save();
+
+    // Execute first step (or skip to next if no sellers)
+    const io = req.app.get("socketio");
+    let currentPlanIndex = 0;
+    let success = false;
+
+    while (currentPlanIndex < plans.length && !success) {
+      const currentPlan = plans[currentPlanIndex];
+      const result = await exports.internalShareLeadWithPlanName(id, currentPlan, io, 3);
+      
+      if (result.status === "success") {
+        success = true;
+        requirement.sharingConfig.currentPlanIndex = currentPlanIndex;
+        requirement.sharingConfig.startTime = new Date();
+        await requirement.save();
+      } else {
+        currentPlanIndex++;
+      }
+    }
+
+    if (!success) {
+      requirement.sharingStatus = "unclaimed";
+      await requirement.save();
+      return res.status(200).json({
+        success: true,
+        message: "Timer mode started, but no eligible sellers found in any selected plans. Marked as unclaimed.",
+        data: requirement
       });
     }
 
     res.status(200).json({
       success: true,
-      message: `Lead shared successfully with ${successCount} plan(s).`,
-      details: results
+      message: `Lead sharing timer started. Currently sharing with ${plans[currentPlanIndex]} agents.`,
+      data: requirement
     });
   } catch (error) {
-    console.error("Error sharing requirement:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server Error: Could not share requirement.",
-    });
+    console.error("Error triggering lead sharing timer:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// Stop lead sharing timer manually
+exports.stopLeadSharingTimer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const requirement = await Requirement.findById(id);
+    if (!requirement) return res.status(404).json({ success: false, message: "Requirement not found." });
+
+    requirement.sharingStatus = "none";
+    requirement.sharingConfig = undefined;
+    await requirement.save();
+
+    res.status(200).json({ success: true, message: "Lead sharing timer stopped." });
+  } catch (error) {
+    console.error("Error stopping lead sharing timer:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 

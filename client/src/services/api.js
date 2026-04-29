@@ -43,6 +43,12 @@ export const updateRequirementStatus = (id, status) => api.patch(`/requirements/
 export const deleteRequirement = (id) => api.delete(`/requirements/${id}`);
 export const getSubscriptionStats = (requirementId) => api.get("/requirements/subscription-stats", { params: { requirementId } });
 export const shareRequirement = (id, data) => api.post(`/requirements/${id}/share`, data);
+export const triggerLeadSharingTimer = (id, data) => api.post(`/requirements/${id}/trigger-timer`, data);
+export const stopLeadSharingTimer = (id) => api.post(`/requirements/${id}/stop-timer`);
+
+// Website Settings
+export const getWebsiteSettings = () => api.get("/website-settings");
+export const updateWebsiteSetting = (id, data) => api.patch(`/website-settings/${id}`, data);
 
 // Seller Shared Leads
 export const getMySharedLeads = () => api.get("/shared-leads/my-leads");

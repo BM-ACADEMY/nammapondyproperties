@@ -10,6 +10,7 @@ router.get('/', websiteSettingController.getWebsiteSettings);
 // Get a website setting by ID
 router.get('/:id', websiteSettingController.getWebsiteSettingById);
 // Update a website setting
+router.patch('/:id', websiteSettingController.updateWebsiteSetting);
 router.put('/:id', websiteSettingController.updateWebsiteSetting);
 // Delete a website setting
 router.delete('/:id', websiteSettingController.deleteWebsiteSetting);
