@@ -186,23 +186,21 @@ exports.addMessage = async (req, res) => {
     // Real-time notification
     const io = req.app.get("socketio");
     if (io) {
-      const socketPayload = {
-        ticketId,
-        message: latestPopulatedMessage,
-        subject: ticket.subject,
-      };
-
       if (finalIsAdmin) {
         // Admin sent message, mark seller as unread
         ticket.isSellerRead = false;
         // Notify seller
-        io.to(`seller-${ticket.seller}`).emit("new-support-message", socketPayload);
+        io.to(`seller-${ticket.seller}`).emit("new-support-message", {
+          ticketId,
+          message: latestPopulatedMessage,
+        });
       } else {
         // Seller sent message, mark admin as unread
         ticket.isAdminRead = false;
         // Notify admins
         io.to("admin-room").emit("new-support-message", {
-          ...socketPayload,
+          ticketId,
+          message: latestPopulatedMessage,
           isAdminRead: false
         });
       }
