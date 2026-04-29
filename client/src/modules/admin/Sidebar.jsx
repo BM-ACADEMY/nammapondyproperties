@@ -60,6 +60,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           setNewRequirementCount(counts.requirements || 0);
           setNewCallRequestCount(counts.callRequests || 0);
           setNewContactCount(counts.contactMessages || 0);
+          setNewLeadsCount(counts.marketingRequests || 0);
+          setNewSupportTicketCount(counts.supportTickets || 0);
+
         }
       } catch (error) {
         console.error("Error fetching notification counts:", error);
@@ -115,6 +118,13 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         }
       };
 
+      const handleNewWhatsappLead = (data) => {
+        if (pathname !== "/admin/enquiries") {
+          setNewEnquiryCount((prev) => prev + 1);
+        }
+      };
+
+
       const handleNewRequirement = (data) => {
         if (pathname !== "/admin/requirements") {
           setNewRequirementCount((prev) => prev + 1);
@@ -133,21 +143,35 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         }
       };
 
+      const handleNewMarketingRequest = (data) => {
+        if (pathname !== "/admin/marketing-requests") {
+          setNewLeadsCount((prev) => prev + 1);
+        }
+      };
+
       socket.on("badge-verification-requested", handleNewBadgeRequest);
       socket.on("new-property-listed", handleNewProperty);
       socket.on("new-enquiry", handleNewEnquiry);
+      socket.on("new-whatsapp-lead", handleNewWhatsappLead);
       socket.on("new-requirement", handleNewRequirement);
+
       socket.on("new-call-request", handleNewCallRequest);
       socket.on("new-contact-message", handleNewContactMessage);
+      socket.on("new-marketing-request", handleNewMarketingRequest);
+
 
       return () => {
         socket.off("badge-verification-requested", handleNewBadgeRequest);
         socket.off("new-property-listed", handleNewProperty);
         socket.off("new-enquiry", handleNewEnquiry);
+        socket.off("new-whatsapp-lead", handleNewWhatsappLead);
         socket.off("new-requirement", handleNewRequirement);
+
         socket.off("new-call-request", handleNewCallRequest);
         socket.off("new-contact-message", handleNewContactMessage);
+        socket.off("new-marketing-request", handleNewMarketingRequest);
       };
+
     }
   }, [socket, pathname]);
 
@@ -465,10 +489,15 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     {
       key: "/admin/support",
       icon: (
-        <Badge count={newSupportTicketCount} size="small" offset={[10, 0]}>
+        newSupportTicketCount > 0 ? (
+          <Badge count={newSupportTicketCount} size="small" offset={[10, 0]}>
+            <Headphones size={20} />
+          </Badge>
+        ) : (
           <Headphones size={20} />
-        </Badge>
+        )
       ),
+
       label: (
         <div className="flex justify-between items-center pr-4">
           <span>Support Tickets</span>

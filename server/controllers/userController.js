@@ -623,6 +623,11 @@ exports.getAdminNotificationCounts = async (req, res) => {
     const Contact = require("../models/Contact");
     const Property = require("../models/Property");
     const Role = require("../models/Role");
+    const MarketingRequest = require("../models/MarketingRequest");
+    const SupportTicket = require("../models/SupportTicket");
+    const WhatsappLead = require("../models/WhatsappLead");
+
+
 
     const requester = await User.findById(req.user.id);
     const isSuperAdmin = requester?.isSuperAdmin;
@@ -651,13 +656,16 @@ exports.getAdminNotificationCounts = async (req, res) => {
       });
     }
 
-    // 3. New Enquiries
-    let enquiryQuery = { status: "new" };
-    if (!isSuperAdmin) {
-      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
-      enquiryQuery.seller_id = { $in: assignedSellerIds };
-    }
-    const enquiries = await Enquiry.countDocuments(enquiryQuery);
+    // 3. New Enquiries (Admin-owned properties only)
+    const adminRole = await Role.findOne({ role_name: { $regex: /admin/i } });
+    const adminUserIds = await User.find({ role_id: adminRole?._id }).distinct("_id");
+    
+    let enquiryQuery = { status: "new", seller_id: { $in: adminUserIds } };
+    
+    const enquiryCount = await Enquiry.countDocuments(enquiryQuery);
+    const whatsappCount = await WhatsappLead.countDocuments(enquiryQuery); // Uses same filter
+    const enquiries = enquiryCount + whatsappCount;
+
 
     // 4. Pending Requirements
     let requirementQuery = { status: "Pending" };
@@ -674,6 +682,23 @@ exports.getAdminNotificationCounts = async (req, res) => {
     // 6. New Contact Messages
     const contactMessages = await Contact.countDocuments({ status: "new" });
 
+    // 7. Pending Marketing Requests
+    let marketingQuery = { status: "pending" };
+    if (!isSuperAdmin) {
+      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
+      marketingQuery.seller_id = { $in: assignedSellerIds };
+    }
+    const marketingRequests = await MarketingRequest.countDocuments(marketingQuery);
+
+    // 8. New Support Tickets (Unread by Admin)
+    let supportQuery = { isAdminRead: false };
+    if (!isSuperAdmin) {
+      const assignedSellerIds = await User.find({ assignedAdmin: req.user.id }).distinct("_id");
+      supportQuery.seller = { $in: assignedSellerIds };
+    }
+    const supportTickets = await SupportTicket.countDocuments(supportQuery);
+
+
     res.json({
       success: true,
       counts: {
@@ -682,7 +707,9 @@ exports.getAdminNotificationCounts = async (req, res) => {
         enquiries,
         requirements,
         callRequests,
-        contactMessages
+        contactMessages,
+        marketingRequests,
+        supportTickets
       }
     });
   } catch (error) {

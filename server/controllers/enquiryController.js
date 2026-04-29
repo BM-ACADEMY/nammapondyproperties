@@ -61,7 +61,17 @@ exports.createEnquiry = async (req, res) => {
       console.error("Failed to send enquiry email:", emailErr);
     }
 
+    // Emit socket event for real-time notification
+    const io = req.app.get("socketio");
+    if (io) {
+      io.to("admin-room").emit("new-enquiry", {
+        message: `New enquiry from ${enquiryData.enquirer_name || "a user"}`,
+        enquiry,
+      });
+    }
+
     res.status(201).json({ message: "Enquiry recorded successfully", enquiry });
+
   } catch (error) {
     console.error("Error creating enquiry:", error);
     res.status(500).json({ error: "Failed to record enquiry" });
