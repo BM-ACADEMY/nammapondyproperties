@@ -14,7 +14,7 @@ const sharedLeadSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "closed"],
+      enum: ["pending", "accepted", "closed", "Deal Closed (Plan Level)"],
       default: "pending",
     },
     acceptedBy: {

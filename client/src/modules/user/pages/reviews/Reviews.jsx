@@ -31,7 +31,7 @@ const ReviewCard = memo(({ testimonial, getStatusBadgeStyles, handleEdit, handle
     <div className="flex items-center gap-4">
       {/* Avatar */}
       <div className="w-[52px] h-[52px] rounded-full bg-[#E2EAF4] flex items-center justify-center shrink-0 overflow-hidden">
-        <User className="w-[42px] h-[42px] text-[#547CB4] mt-2.5" fill="currentColor" strokeWidth={1.5} />
+        <User className="w-[42px] h-[42px] text-[#547CB4]" fill="currentColor" />
       </div>
 
       {/* Info */}
@@ -39,6 +39,9 @@ const ReviewCard = memo(({ testimonial, getStatusBadgeStyles, handleEdit, handle
         <h3 className="text-[20px] font-bold text-slate-800 leading-tight">
           {testimonial.name}
         </h3>
+        {testimonial.role && (
+          <p className="text-[14px] text-slate-500 font-medium mt-0.5">{testimonial.role}</p>
+        )}
         
         <div className="flex items-center gap-3 mt-1.5">
           <div className="flex gap-[1px]">
@@ -214,6 +217,15 @@ const Reviews = () => {
     form.resetFields();
   };
 
+  const handleWriteNewReview = () => {
+    form.resetFields();
+    form.setFieldsValue({
+      role: user?.user?.businessType?.name || user?.businessType?.name || ""
+    });
+    setEditingTestimonial(null);
+    setIsModalOpen(true);
+  };
+
   const getStatusBadgeStyles = (status) => {
     switch (status) {
       case "approved":
@@ -246,16 +258,17 @@ const Reviews = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-white py-4 md:py-6 flex flex-col items-center">
-      <div className="container mx-auto px-4 max-w-7xl w-full flex-1 flex flex-col justify-center">
-        <div className="bg-[#eff7f3] rounded-[32px] p-6 lg:p-8 relative">
-          {/* Subtle background element */}
-          <div className="absolute inset-0 overflow-hidden rounded-[32px] pointer-events-none">
-            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-tr from-teal-50/50 to-transparent"></div>
-          </div>
+    <div className="w-full flex-1 bg-[#eff7f3] py-4 md:py-6 flex flex-col relative overflow-hidden">
+      {/* Subtle background element */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-tr from-teal-50/50 to-transparent"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 max-w-7xl w-full flex-1 flex flex-col relative z-10">
+        <div className="p-6 lg:p-8 relative">
 
           {/* Modern Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 relative z-10">
+          <div className="flex flex-row justify-between items-center mb-8 gap-4 relative z-10 w-full">
             <div>
               <h1 className="text-[32px] font-bold text-slate-800">
                 My Reviews
@@ -265,8 +278,8 @@ const Reviews = () => {
               </p>
             </div>
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-[#4678E6] hover:bg-[#3461c3] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all font-medium text-[15px] shadow-sm relative z-10"
+              onClick={handleWriteNewReview}
+              className="bg-[#166aa8] hover:bg-[#0078d7]! cursor-pointer text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all font-medium text-[15px] shadow-sm relative z-10"
             >
               <Plus className="w-5 h-5" />
               Write New Review
@@ -373,6 +386,20 @@ const Reviews = () => {
           {/* </div> */}
 
           <Form.Item
+            name="role"
+            label={
+              <span className="font-medium text-slate-700">Your Role</span>
+            }
+            rules={[{ required: true, message: "Please specify your role" }]}
+          >
+            <Input 
+              placeholder="e.g., Property Seller, Home Buyer, Agent"
+              className="rounded-lg border-slate-300 focus:border-slate-500 hover:border-slate-400 py-2"
+              disabled={!!(user?.user?.businessType?.name || user?.businessType?.name)}
+            />
+          </Form.Item>
+
+          <Form.Item
             name="rating"
             label={
               <span className="font-medium text-slate-700">Overall Rating</span>
@@ -392,7 +419,7 @@ const Reviews = () => {
             <TextArea
               rows={5}
               placeholder="Share your experience with our service..."
-              maxLength={500}
+              maxLength={250}
               showCount
               className="rounded-lg border-slate-300 focus:border-slate-500 hover:border-slate-400"
             />
@@ -411,7 +438,7 @@ const Reviews = () => {
               htmlType="submit"
               loading={submitLoading}
               size="large"
-              className="bg-slate-900 hover:bg-slate-800 border-none shadow-md"
+              className="bg-[#166aa8] hover:bg-[#0078d7]! border-none shadow-md"
             >
               {editingTestimonial ? "Update Review" : "Submit Review"}
             </Button>

@@ -74,46 +74,51 @@ exports.createRequirement = async (req, res) => {
       console.error("Failed to send requirement notification email:", emailErr);
     }
 
-    // NEW: Check global lead sharing timer settings
+    // NEW: Always trigger lead sharing timer for new requirements
     try {
       const settings = await WebsiteSetting.findOne();
-      if (settings && settings.leadSharingTimerEnabled) {
-        console.log(`🤖 Auto-triggering lead sharing timer for requirement ${savedRequirement._id}`);
-        
-        const plans = settings.leadSharingPlans || ["Pro", "Premium", "Standard"];
-        const timer = settings.leadSharingInterval || 10;
-        
-        savedRequirement.sharingStatus = "in-progress";
-        savedRequirement.sharingConfig = {
-          plans: plans,
-          timer: timer,
-          currentPlanIndex: 0,
-          startTime: new Date()
-        };
-        await savedRequirement.save();
-
-        // Execute first step (or skip to next if no sellers)
-        let currentPlanIndex = 0;
-        let success = false;
-
-        while (currentPlanIndex < plans.length && !success) {
-          const currentPlan = plans[currentPlanIndex];
-          const result = await exports.internalShareLeadWithPlanName(savedRequirement._id, currentPlan, io, 3);
-          
-          if (result.status === "success") {
-            success = true;
-            savedRequirement.sharingConfig.currentPlanIndex = currentPlanIndex;
-            savedRequirement.sharingConfig.startTime = new Date();
-            await savedRequirement.save();
-          } else {
-            currentPlanIndex++;
-          }
+      console.log(`🤖 Auto-triggering lead sharing timer for requirement ${savedRequirement._id}`);
+      
+      const plans = ["Pro", "Premium", "Standard"];
+      let timer = 10;
+      if (settings) {
+        timer = settings.leadSharingInterval || 10;
+        if (settings.leadSharingIntervalUnit === "hours") {
+          timer = timer * 60;
         }
+      }
+      
+      savedRequirement.sharingStatus = "in-progress";
+      savedRequirement.sharingConfig = {
+        plans: plans,
+        timer: timer,
+        currentPlanIndex: 0,
+        startTime: new Date()
+      };
+      await savedRequirement.save();
 
-        if (!success) {
-          savedRequirement.sharingStatus = "unclaimed";
+      // Execute first step (or skip to next if no sellers)
+      let currentPlanIndex = 0;
+      let success = false;
+
+      while (currentPlanIndex < plans.length && !success) {
+        const currentPlan = plans[currentPlanIndex];
+        const result = await exports.internalShareLeadWithPlanName(savedRequirement._id, currentPlan, io, 3);
+        
+        if (result.status === "success") {
+          success = true;
+          savedRequirement.sharingConfig.currentPlanIndex = currentPlanIndex;
+          savedRequirement.sharingConfig.startTime = new Date();
           await savedRequirement.save();
+        } else {
+          currentPlanIndex++;
         }
+      }
+
+      if (!success) {
+        savedRequirement.sharingStatus = "expired";
+        savedRequirement.status = "Closed";
+        await savedRequirement.save();
       }
     } catch (settingErr) {
       console.error("Failed to auto-trigger lead sharing timer:", settingErr);
@@ -652,10 +657,12 @@ exports.shareRequirement = async (req, res) => {
 exports.triggerLeadSharingTimer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { plans, timer } = req.body; // plans: ["Pro", "Premium", "Standard"], timer: minutes
-
-    if (!plans || !Array.isArray(plans) || plans.length === 0) {
-      return res.status(400).json({ success: false, message: "Please select at least one plan." });
+    let { timer, timerUnit } = req.body;
+    
+    const plans = ["Pro", "Premium", "Standard"];
+    let finalTimer = Number(timer) || 10;
+    if (timerUnit === "hours") {
+      finalTimer = finalTimer * 60;
     }
 
     const requirement = await Requirement.findById(id);
@@ -671,7 +678,7 @@ exports.triggerLeadSharingTimer = async (req, res) => {
     requirement.acceptedBy = null; // Clear previous acceptance if resharing
     requirement.sharingConfig = {
       plans: plans,
-      timer: Number(timer) || 10,
+      timer: finalTimer,
       currentPlanIndex: 0,
       startTime: new Date()
     };
@@ -691,6 +698,7 @@ exports.triggerLeadSharingTimer = async (req, res) => {
         success = true;
         requirement.sharingConfig.currentPlanIndex = currentPlanIndex;
         requirement.sharingConfig.startTime = new Date();
+        requirement.markModified('sharingConfig');
         await requirement.save();
       } else {
         currentPlanIndex++;
@@ -698,11 +706,12 @@ exports.triggerLeadSharingTimer = async (req, res) => {
     }
 
     if (!success) {
-      requirement.sharingStatus = "unclaimed";
+      requirement.sharingStatus = "expired";
+      requirement.status = "Closed";
       await requirement.save();
       return res.status(200).json({
         success: true,
-        message: "Timer mode started, but no eligible sellers found in any selected plans. Marked as unclaimed.",
+        message: "Timer mode started, but no eligible sellers found. Marked as expired.",
         data: requirement
       });
     }

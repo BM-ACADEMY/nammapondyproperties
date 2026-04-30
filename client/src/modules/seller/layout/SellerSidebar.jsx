@@ -10,7 +10,8 @@ import {
   Lock,
   CreditCard,
   ClipboardList,
-  Headphones
+  Headphones,
+  Star
 } from "lucide-react";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -129,6 +130,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
       icon: <Headphones size={20} />,
       label: "Support Team",
       onClick: () => handleMenuClick("/seller/support"),
+    },
+    {
+      key: "/seller/reviews",
+      icon: <Star size={20} />,
+      label: "My Reviews",
+      onClick: () => handleMenuClick("/seller/reviews"),
     },
     {
       key: "/seller/profile",

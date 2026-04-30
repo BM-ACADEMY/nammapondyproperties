@@ -11,7 +11,8 @@ const websiteSettingSchema = new mongoose.Schema({
   defaultPlanName: { type: String, default: "BASIC" },
   leadSharingTimerEnabled: { type: Boolean, default: false },
   leadSharingPlans: { type: [String], default: ["Pro", "Premium", "Standard"] },
-  leadSharingInterval: { type: Number, default: 10 } // in minutes
+  leadSharingInterval: { type: Number, default: 10 }, // numeric value
+  leadSharingIntervalUnit: { type: String, enum: ["minutes", "hours"], default: "minutes" }
 }, { timestamps: true });
 
 module.exports = mongoose.model('WebsiteSetting', websiteSettingSchema);

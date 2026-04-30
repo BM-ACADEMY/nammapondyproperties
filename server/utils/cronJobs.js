@@ -4,12 +4,13 @@ const Subscription = require("../models/Subscription");
 const User = require("../models/User");
 const Requirement = require("../models/Requirement");
 const SharedLead = require("../models/SharedLead");
+const SubscriptionPlan = require("../models/SubscriptionPlan");
 const fs = require("fs");
 const path = require("path");
 
 const initCronJobs = (io) => {
   // Schedule task to run every minute for automated lead sharing
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("*/5 * * * * *", async () => {
     // console.log("🕒 Checking lead sharing timers...");
     try {
       const requirementsInProgress = await Requirement.find({ 
@@ -42,6 +43,18 @@ const initCronJobs = (io) => {
 
         if (diffInMinutes >= timerInMinutes) {
           const plans = req.sharingConfig.plans || [];
+          const currentPlanName = plans[req.sharingConfig.currentPlanIndex];
+          console.log(`⏭ Timer expired for ${currentPlanName}. Marking as "Deal Closed (Plan Level)" and moving to next...`);
+          
+          // Mark the current plan's share as "Deal Closed (Plan Level)"
+          const matchingPlans = await SubscriptionPlan.find({ name: currentPlanName });
+          const planIds = matchingPlans.map(p => p._id);
+          
+          await SharedLead.updateMany(
+            { requirement: req._id, plan: { $in: planIds }, status: "pending" },
+            { status: "Deal Closed (Plan Level)" }
+          );
+
           let nextIndex = req.sharingConfig.currentPlanIndex + 1;
           let success = false;
 
@@ -55,8 +68,13 @@ const initCronJobs = (io) => {
               success = true;
               req.sharingConfig.currentPlanIndex = nextIndex;
               req.sharingConfig.startTime = now;
+              req.markModified("sharingConfig");
               await req.save();
-              console.log(`✅ Successfully moved to ${nextPlan}`);
+              console.log(`✅ Successfully moved to ${nextPlan} (Requirement: ${req._id})`);
+              if (io) {
+                io.emit("admin-lead-updated", { requirementId: req._id });
+                io.emit("lead-expired-for-plan", { requirementId: req._id });
+              }
             } else {
               console.log(`⚠️ No sellers in ${nextPlan}, skipping to next...`);
               nextIndex++;
@@ -65,19 +83,22 @@ const initCronJobs = (io) => {
 
           if (!success) {
             // No more plans with agents left
-            req.sharingStatus = "unclaimed";
+            req.sharingStatus = "expired";
+            req.status = "Closed";
+            req.markModified("sharingStatus");
             await req.save();
 
             // Move all pending shared leads for this requirement to "closed"
             // This moves them from "New Leads" to "History/Closed" for the sellers
             await SharedLead.updateMany(
               { requirement: req._id, status: "pending" },
-              { status: "closed" }
+              { status: "Deal Closed (Plan Level)" }
             );
 
             // Notify sellers via socket to refresh their lists
             if (io) {
               io.emit("admin-lead-updated", { requirementId: req._id });
+              io.emit("lead-expired-for-plan", { requirementId: req._id });
             }
 
             console.log(`❌ All plans exhausted for requirement ${req._id}. Marked as unclaimed and closed for sellers.`);
