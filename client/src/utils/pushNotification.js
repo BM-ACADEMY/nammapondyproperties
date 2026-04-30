@@ -18,8 +18,9 @@ function urlBase64ToUint8Array(base64String) {
 
 export const subscribeToPushNotifications = async () => {
   console.log("Attempting to subscribe to push notifications...");
-  // alert("Push Notification Subscription Started");
   try {
+
+
 
     if (!("serviceWorker" in navigator)) {
       console.warn("Service workers are not supported in this browser");
@@ -92,9 +93,10 @@ export const subscribeToPushNotifications = async () => {
 
 
     console.log("Push Subscribed...");
-    // alert("Push Subscribed Successfully");
 
     // Send subscription to server
+
+
 
     await api.post("/notifications/subscribe", {
       subscription,
