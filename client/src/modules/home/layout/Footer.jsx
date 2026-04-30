@@ -97,7 +97,7 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="bg-[#151c22] text-gray-300 pt-20 pb-10 relative font-sans border-t border-gray-800">
+    <footer className="bg-[#151c22] text-gray-300 pt-20 pb-10 relative font-sans border-t border-gray-800 h-auto overflow-visible shrink-0">
       <div className="container mx-auto px-4 sm:px-6 lg:px-20 xl:px-32">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 text-left">
           {/* Column 1: Brand Info */}
@@ -242,21 +242,32 @@ const Footer = () => {
             <ul className="space-y-5 text-sm text-gray-400 mb-10">
               <li className="flex items-start justify-start gap-4">
                 {/* <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" /> */}
-                <span className="underline-offset-4 hover:underline cursor-pointer">
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=123,+Anna+Salai,+Pondicherry+-+605001"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline-offset-4 hover:underline cursor-pointer hover:text-white transition-colors"
+                >
                   123, Anna Salai, Pondicherry - 605001
-                </span>
+                </a>
               </li>
               <li className="flex items-center justify-start gap-4">
                 {/* <Phone className="w-5 h-5 text-gray-400 shrink-0" /> */}
-                <span className="underline-offset-4 hover:underline cursor-pointer">
+                <a
+                  href="tel:+919403892971"
+                  className="underline-offset-4 hover:underline cursor-pointer hover:text-white transition-colors"
+                >
                   +91 94038 92971
-                </span>
+                </a>
               </li>
               <li className="flex items-center justify-start gap-4">
                 {/* <Mail className="w-5 h-5 text-gray-400 shrink-0" /> */}
-                <span className="underline-offset-4 hover:underline cursor-pointer">
+                <a
+                  href="mailto:help@nammapondyproperties.com"
+                  className="underline-offset-4 hover:underline cursor-pointer hover:text-white transition-colors"
+                >
                   help@nammapondyproperties.com
-                </span>
+                </a>
               </li>
             </ul>
             
@@ -283,7 +294,7 @@ const Footer = () => {
         {/* Footer Bottom */}
         <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-6">
           {/* Copyright & Credits */}
-          <div className="text-[11px] text-gray-500 font-medium whitespace-nowrap">
+          <div className="text-[11px] text-gray-500 font-medium text-center md:text-left">
             &copy; {new Date().getFullYear()} Namma Pondy Properties. All rights reserved. | Designed by <a href="https://bmtechx.in" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">BM TechX</a>
           </div>
 

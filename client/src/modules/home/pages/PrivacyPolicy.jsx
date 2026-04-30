@@ -101,7 +101,7 @@ const PrivacyPolicy = () => {
             <Title level={4} className="text-gray-800 mb-3">9. Contact Us</Title>
             <Paragraph className="mb-0 text-gray-700">
               For any queries:<br />
-              Phone: <strong>+91 94038 92971</strong><br />
+              Phone: <a href="tel:+919403892971" className="text-blue-600 hover:underline"><strong>+91 94038 92971</strong></a><br />
               Email: <a href="mailto:info@nammapondy.com" className="text-blue-600 hover:underline"><strong>info@nammapondy.com</strong></a>
             </Paragraph>
           </div>
@@ -144,7 +144,7 @@ const PrivacyPolicy = () => {
               <Title level={4} className="text-gray-800 mb-3">7. Contact</Title>
               <Paragraph className="mb-0 text-gray-700">
                 For refund-related queries:<br />
-                Phone: <strong>+91 94038 92971</strong><br />
+                Phone: <a href="tel:+919403892971" className="text-blue-600 hover:underline"><strong>+91 94038 92971</strong></a><br />
                 Email: <a href="mailto:info@nammapondy.com" className="text-blue-600 hover:underline"><strong>info@nammapondy.com</strong></a>
               </Paragraph>
             </div>
@@ -208,7 +208,7 @@ const PrivacyPolicy = () => {
                 By using our platform and receiving leads, you agree to this agreement.
               </Paragraph>
               <Paragraph className="mb-0 text-gray-700">
-                Phone: <strong>+91 94038 92971</strong><br />
+                Phone: <a href="tel:+919403892971" className="text-blue-600 hover:underline"><strong>+91 94038 92971</strong></a><br />
                 Email: <a href="mailto:info@nammapondy.com" className="text-blue-600 hover:underline"><strong>info@nammapondy.com</strong></a>
               </Paragraph>
             </div>
