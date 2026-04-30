@@ -7,11 +7,22 @@ self.addEventListener("push", (event) => {
     icon: data.icon || "/logo.png",
     badge: data.badge || "/logo.png",
     data: data.data || {},
-
+    requireInteraction: true,
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // If any window is already focused, don't show a browser notification
+      const isFocused = clientList.some((client) => client.focused);
+      if (isFocused) {
+        console.log("App is in foreground, skipping browser notification");
+        return;
+      }
+      return self.registration.showNotification(data.title, options);
+    })
+  );
 });
+
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();

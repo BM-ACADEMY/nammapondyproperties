@@ -38,14 +38,26 @@ exports.sendPushNotification = async (userId, payload) => {
       ...legacySubscriptions
     ];
 
-    if (allSubscriptions.length === 0) {
-      console.log(`No subscriptions found for user ${userId}`);
+    // Deduplicate by endpoint
+    const uniqueSubscriptions = [];
+    const seenEndpoints = new Set();
+
+    for (const sub of allSubscriptions) {
+      if (sub && sub.endpoint && !seenEndpoints.has(sub.endpoint)) {
+        seenEndpoints.add(sub.endpoint);
+        uniqueSubscriptions.push(sub);
+      }
+    }
+
+    if (uniqueSubscriptions.length === 0) {
+      console.log(`No unique subscriptions found for user ${userId}`);
       return;
     }
 
-    const notifications = allSubscriptions.map((sub) => {
+    const notifications = uniqueSubscriptions.map((sub) => {
       return webpush
         .sendNotification(sub, JSON.stringify(payload))
+
         .catch(async (err) => {
           if (err.statusCode === 404 || err.statusCode === 410 || err.statusCode === 403) {
             console.log(`Subscription invalid (${err.statusCode}). Removing for user ${userId}...`);
