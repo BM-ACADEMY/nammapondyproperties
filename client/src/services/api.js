@@ -45,6 +45,7 @@ export const getSubscriptionStats = (requirementId) => api.get("/requirements/su
 export const shareRequirement = (id, data) => api.post(`/requirements/${id}/share`, data);
 export const triggerLeadSharingTimer = (id, data) => api.post(`/requirements/${id}/trigger-timer`, data);
 export const stopLeadSharingTimer = (id) => api.post(`/requirements/${id}/stop-timer`);
+export const checkRequirementExpiry = (id) => api.post(`/requirements/${id}/check-expiry`);
 
 // Website Settings
 export const getWebsiteSettings = () => api.get("/website-settings");

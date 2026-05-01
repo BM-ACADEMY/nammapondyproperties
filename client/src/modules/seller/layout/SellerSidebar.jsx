@@ -13,6 +13,7 @@ import {
   Headphones,
   ChevronDown,
   ChevronRight,
+  Star
 } from "lucide-react";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -455,6 +456,12 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   ];
 
   const otherItems = [
+    {
+      key: "/seller/reviews",
+      icon: <Star size={20} />,
+      label: "My Reviews",
+      onClick: () => handleMenuClick("/seller/reviews"),
+    },
     {
       key: "/seller/profile",
       icon: <User size={18} />,

@@ -94,7 +94,7 @@ const requirementSchema = new mongoose.Schema(
     },
     sharingStatus: {
       type: String,
-      enum: ["none", "in-progress", "completed", "unclaimed"],
+      enum: ["none", "in-progress", "completed", "unclaimed", "expired"],
       default: "none",
     },
     sharingConfig: {

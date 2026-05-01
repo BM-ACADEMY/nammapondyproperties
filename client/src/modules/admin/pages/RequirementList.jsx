@@ -47,6 +47,7 @@ import {
   postRequirement,
   triggerLeadSharingTimer,
   stopLeadSharingTimer,
+  checkRequirementExpiry,
   getWebsiteSettings,
   updateWebsiteSetting
 } from "@/services/api";
@@ -56,6 +57,34 @@ import { useSocket } from "@/context/SocketContext";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+const CountdownTimer = ({ startTime, timerInMinutes, onExpire }) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const start = new Date(startTime);
+      const diffMs = (start.getTime() + timerInMinutes * 60000) - now.getTime();
+
+      if (diffMs <= 0) {
+        setTimeLeft("00:00");
+        if (onExpire) onExpire();
+        return;
+      }
+
+      const minutes = Math.floor(diffMs / 60000);
+      const seconds = Math.floor((diffMs % 60000) / 1000);
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, timerInMinutes]);
+
+  return <span className="text-orange-600 font-mono font-bold tracking-wider ml-2">{timeLeft}</span>;
+};
 
 const RequirementList = () => {
   const [requirements, setRequirements] = useState([]);
@@ -76,9 +105,7 @@ const RequirementList = () => {
   const [selectedPlanIds, setSelectedPlanIds] = useState([]);
   const [searching, setSearching] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [isTimerModalOpen, setIsTimerModalOpen] = useState(false);
   const [timerLoading, setTimerLoading] = useState(false);
-  const [timerForm] = Form.useForm();
   const [globalSettings, setGlobalSettings] = useState(null);
   const [isGlobalModalOpen, setIsGlobalModalOpen] = useState(false);
   const [globalForm] = Form.useForm();
@@ -185,16 +212,7 @@ const RequirementList = () => {
     fetchStats(record._id);
   };
 
-  const showTimerModal = (record) => {
-    if (record) {
-      setSelectedRequirement(record);
-    }
-    setIsTimerModalOpen(true);
-    timerForm.setFieldsValue({
-      plans: ["Pro", "Premium", "Standard"],
-      timer: 10
-    });
-  };
+
 
   const handleStartTimer = async (values) => {
     setTimerLoading(true);
@@ -236,9 +254,8 @@ const RequirementList = () => {
          return;
       }
       await updateWebsiteSetting(globalSettings._id, {
-        leadSharingTimerEnabled: values.leadSharingTimerEnabled,
-        leadSharingPlans: values.plans,
-        leadSharingInterval: values.timer
+        leadSharingInterval: values.timer,
+        leadSharingIntervalUnit: values.timerUnit
       });
       
       message.success("Global lead timer settings updated!");
@@ -254,9 +271,8 @@ const RequirementList = () => {
   const showGlobalModal = () => {
     setIsGlobalModalOpen(true);
     globalForm.setFieldsValue({
-      leadSharingTimerEnabled: globalSettings?.leadSharingTimerEnabled || false,
-      plans: globalSettings?.leadSharingPlans || ["Pro", "Premium", "Standard"],
-      timer: globalSettings?.leadSharingInterval || 10
+      timer: globalSettings?.leadSharingInterval || 10,
+      timerUnit: globalSettings?.leadSharingIntervalUnit || "minutes"
     });
   };
 
@@ -502,8 +518,21 @@ const RequirementList = () => {
           const currentPlan = plans[record.sharingConfig?.currentPlanIndex] || "N/A";
           return (
             <div className="flex flex-col gap-1">
-              <Tag color="processing" icon={<Clock size={12} className="animate-pulse" />} className="m-0 font-bold uppercase text-[10px]">
-                Timer: {currentPlan}
+              <Tag color="processing" icon={<Clock size={12} className="animate-pulse" />} className="m-0 font-bold uppercase text-[10px] flex items-center justify-between">
+                <span>Timer: {currentPlan}</span>
+                <CountdownTimer 
+                  startTime={record.sharingConfig?.startTime} 
+                  timerInMinutes={record.sharingConfig?.timer} 
+                  onExpire={async () => {
+                    try {
+                      await checkRequirementExpiry(record._id);
+                      fetchRequirements();
+                    } catch (err) {
+                      console.error("Auto-expiry trigger failed:", err);
+                      fetchRequirements();
+                    }
+                  }}
+                />
               </Tag>
               <Button 
                 type="link" 
@@ -518,15 +547,29 @@ const RequirementList = () => {
           );
         }
 
-        if (record.sharingStatus === "unclaimed") {
+        if (record.sharingStatus === "expired") {
           return (
             <div className="flex flex-col gap-1">
-              <Tag color="error" className="m-0 font-bold uppercase text-[10px]">Unclaimed</Tag>
+              <Tag color="error" className="m-0 font-bold uppercase text-[10px]">Deal Closed (Plan Level)</Tag>
               <Button 
                 type="link" 
                 size="small" 
                 className="p-0 h-auto text-[10px] text-left text-indigo-600 font-bold"
-                onClick={() => showTimerModal(record)}
+                onClick={async () => {
+                  try {
+                    setTimerLoading(true);
+                    await triggerLeadSharingTimer(record._id, {
+                       timer: globalSettings?.leadSharingInterval || 10,
+                       timerUnit: globalSettings?.leadSharingIntervalUnit || "minutes"
+                    });
+                    message.success("Lead sharing timer started successfully!");
+                    fetchRequirements();
+                  } catch (error) {
+                    message.error(error.response?.data?.message || "Failed to start lead sharing timer");
+                  } finally {
+                    setTimerLoading(false);
+                  }
+                }}
               >
                 Reshare Lead
               </Button>
@@ -824,16 +867,29 @@ const RequirementList = () => {
           <Button key="close" onClick={() => setIsShareModalOpen(false)} className="rounded-lg h-9 px-5 border-gray-200 text-slate-700 font-medium">
             Cancel
           </Button>,
-          selectedRequirement?.sharingStatus !== "in-progress" && (
+          selectedRequirement?.sharingStatus !== "in-progress" && !isInMatchMode && (
             <Button 
               key="trigger-timer"
               className="bg-[#fff7ed] text-[#ea580c] border-[#ffedd5] hover:bg-[#ffedd5] h-9 px-5 rounded-lg font-bold flex items-center gap-2"
-              onClick={() => {
-                setIsShareModalOpen(false);
-                showTimerModal(selectedRequirement);
+              onClick={async () => {
+                try {
+                  setTimerLoading(true);
+                  await triggerLeadSharingTimer(selectedRequirement._id, {
+                     timer: globalSettings?.leadSharingInterval || 10,
+                     timerUnit: globalSettings?.leadSharingIntervalUnit || "minutes"
+                  });
+                  message.success("Automated lead sharing started successfully!");
+                  setIsShareModalOpen(false);
+                  fetchRequirements();
+                } catch (error) {
+                  message.error(error.response?.data?.message || "Failed to start automated lead sharing");
+                } finally {
+                  setTimerLoading(false);
+                }
               }}
+              loading={timerLoading}
             >
-              <Clock size={16} /> Timer Mode
+              <Clock size={16} /> Start Automated Sharing
             </Button>
           ),
           selectedPlanIds.length > 0 && (
@@ -990,15 +1046,19 @@ const RequirementList = () => {
                                 </Popover>
                                 <Button 
                                   type="primary"
-                                  className="h-9 px-4 rounded-xl shadow-none font-bold text-xs bg-indigo-600 hover:bg-indigo-700 border-none"
+                                  className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs border-none ${plan.isAlreadyShared ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-indigo-600 hover:bg-indigo-700'}`}
                                   disabled={sharingLoading}
                                   loading={sharingLoading}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (plan.isAlreadyShared) {
+                                      message.info("This lead has already been shared with this plan.");
+                                      return;
+                                    }
                                     handleShare(plan.planId, "exact", hasGlobalBuilderMatch ? 1 : 2);
                                   }}
                                 >
-                                  Share Now
+                                  {plan.isAlreadyShared ? "Already Shared" : "Share Now"}
                                 </Button>
                             </div>
                           </div>
@@ -1020,20 +1080,9 @@ const RequirementList = () => {
                   </div>
 
                   <div className="flex items-center justify-between mb-4 bg-slate-100/50 p-3 rounded-xl border border-slate-200">
-                     <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                           <div className="w-2 h-6 bg-slate-500 rounded-full shadow-sm shadow-slate-200"></div>
-                           <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-slate-700 m-0">NOT MATCH REQUIREMENT</h4>
-                        </div>
-                        <Button 
-                          type="text" 
-                          size="small" 
-                          icon={<CheckCircle2 size={14} />}
-                          className="text-slate-600 font-bold text-[11px] hover:bg-slate-200/50 flex items-center gap-1.5 px-2 bg-slate-200/50 rounded-lg"
-                          onClick={() => selectAllFallbacks(subscriptionStats)}
-                        >
-                          Select All Agents
-                        </Button>
+                     <div className="flex items-center gap-2">
+                        <div className="w-2 h-6 bg-slate-500 rounded-full shadow-sm shadow-slate-200"></div>
+                        <h4 className="text-[15px] font-extrabold uppercase tracking-tight text-slate-700 m-0">NOT MATCH REQUIREMENT</h4>
                      </div>
                      <Tag className="m-0 border-none bg-slate-600 text-white font-bold uppercase text-[9px] rounded-md py-0.5">Agents Only</Tag>
                   </div>
@@ -1046,22 +1095,11 @@ const RequirementList = () => {
                       return (
                         <div 
                           key={`not-match-${plan.planId}`} 
-                          className={`flex flex-col rounded-[20px] border transition-all duration-300 ${hasAgents ? (selectedPlanIds.includes(plan.planId) ? 'border-slate-500 bg-slate-50' : 'border-slate-200 bg-white shadow-sm') : 'border-slate-100 bg-slate-50 opacity-40 grayscale pointer-events-none'}`}
-                          onClick={() => hasAgents && togglePlanSelection(plan.planId)}
+                          className={`flex flex-col rounded-[20px] border transition-all duration-300 ${hasAgents ? 'border-slate-200 bg-white shadow-sm' : 'border-slate-100 bg-slate-50 opacity-40 grayscale pointer-events-none'}`}
                         >
-                           <div className="flex items-center justify-between p-5 cursor-pointer">
+                           <div className="flex items-center justify-between p-5">
                               <div className="flex items-center gap-4">
-                                {hasAgents && (
-                                  <div className="shrink-0 pt-0.5">
-                                    <Checkbox 
-                                      checked={selectedPlanIds.includes(plan.planId)} 
-                                      className="scale-110 custom-slate-checkbox"
-                                      onClick={(e) => e.stopPropagation()}
-                                      onChange={() => togglePlanSelection(plan.planId)}
-                                    />
-                                  </div>
-                                )}
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasAgents ? (selectedPlanIds.includes(plan.planId) ? 'bg-slate-800' : 'bg-slate-700') + ' text-white shadow-md shadow-slate-100' : 'bg-slate-200 text-slate-400'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasAgents ? 'bg-slate-700 text-white shadow-md shadow-slate-100' : 'bg-slate-200 text-slate-400'}`}>
                                    {plan.planName.charAt(0)}
                                 </div>
                                 <div className="flex flex-col">
@@ -1114,15 +1152,19 @@ const RequirementList = () => {
                                    </Popover>
                                  )}
                                  <Button 
-                                  className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs transition-all ${hasAgents ? 'bg-slate-800 text-white hover:bg-slate-900 border-none' : 'bg-slate-200 text-slate-400 border-none'}`}
+                                  className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs transition-all border-none ${!hasAgents ? 'bg-slate-200 text-slate-400' : plan.isAlreadyShared ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-white hover:bg-slate-900'}`}
                                   disabled={!hasAgents || sharingLoading}
                                   loading={sharingLoading}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (plan.isAlreadyShared) {
+                                      message.info("This lead has already been shared with this plan.");
+                                      return;
+                                    }
                                     handleShare(plan.planId, "not-exact", 3);
                                   }}
                                 >
-                                  Send Fallback
+                                  {plan.isAlreadyShared ? "Already Shared" : "Send Fallback"}
                                 </Button>
                               </div>
                             </div>
@@ -1403,56 +1445,29 @@ const RequirementList = () => {
           onFinish={handleSaveGlobalTimer}
           className="mt-6"
         >
-          <Form.Item
-            name="leadSharingTimerEnabled"
-            valuePropName="checked"
-            className="mb-6"
-          >
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-              <div>
-                <div className="font-bold text-indigo-900 text-[15px]">Auto-Distribution Mode</div>
-                <div className="text-[12px] text-indigo-600 font-medium">New leads will follow this timer automatically</div>
-              </div>
-              <Switch checkedChildren="ON" unCheckedChildren="OFF" />
-            </div>
-          </Form.Item>
+
 
           <Form.Item
-            name="plans"
-            label={<span className="font-bold text-slate-700 uppercase text-[12px] tracking-wider">Plan Priority Order</span>}
-            rules={[{ required: true, message: "Please select at least one plan" }]}
-          >
-            <Checkbox.Group className="w-full">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-slate-200 transition-colors">
-                  <Checkbox value="Pro" className="font-semibold text-slate-700">Pro Plan</Checkbox>
-                  <Tag color="gold" className="m-0 uppercase text-[10px] font-black border-none px-2 bg-gold-50 text-gold-600">Priority 1</Tag>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-slate-200 transition-colors">
-                  <Checkbox value="Premium" className="font-semibold text-slate-700">Premium Plan</Checkbox>
-                  <Tag color="blue" className="m-0 uppercase text-[10px] font-black border-none px-2 bg-blue-50 text-blue-600">Priority 2</Tag>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/30 hover:border-slate-200 transition-colors">
-                  <Checkbox value="Standard" className="font-semibold text-slate-700">Standard Plan</Checkbox>
-                  <Tag color="cyan" className="m-0 uppercase text-[10px] font-black border-none px-2 bg-cyan-50 text-cyan-600">Priority 3</Tag>
-                </div>
-              </div>
-            </Checkbox.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="timer"
-            label={<span className="font-bold text-slate-700 uppercase text-[12px] tracking-wider">Interval (Minutes)</span>}
-            rules={[{ required: true, message: "Please set a timer" }]}
+            label={<span className="font-bold text-slate-700 uppercase text-[12px] tracking-wider">Interval (Time Duration)</span>}
+            required
             extra={<Text className="text-[11px] text-slate-400 italic">This time applies to each tier before moving to the next.</Text>}
           >
-            <InputNumber 
-              min={1} 
-              style={{ width: "100%" }} 
-              className="rounded-xl h-11 flex items-center bg-slate-50 border-slate-200" 
-              placeholder="e.g. 10"
-              suffix={<span className="text-slate-400 font-bold mr-3">min</span>}
-            />
+            <div className="flex gap-2">
+              <Form.Item name="timer" noStyle rules={[{ required: true, message: "Please set a timer" }]}>
+                <InputNumber 
+                  min={1} 
+                  style={{ width: "100%" }} 
+                  className="rounded-xl h-11 bg-slate-50 border-slate-200 w-full" 
+                  placeholder="e.g. 10"
+                />
+              </Form.Item>
+              <Form.Item name="timerUnit" noStyle>
+                <Select className="h-11 w-32">
+                  <Select.Option value="minutes">Minutes</Select.Option>
+                  <Select.Option value="hours">Hours</Select.Option>
+                </Select>
+              </Form.Item>
+            </div>
           </Form.Item>
 
           <div className="mt-8 flex flex-col gap-3 pt-4 border-t border-slate-100">
@@ -1460,7 +1475,7 @@ const RequirementList = () => {
               <Button 
                 onClick={() => {
                   const values = globalForm.getFieldsValue();
-                  handleStartTimer({ plans: values.plans, timer: values.timer });
+                  handleStartTimer({ timer: values.timer, timerUnit: values.timerUnit });
                 }}
                 className="w-full h-11 rounded-xl font-bold text-orange-600 border-orange-200 hover:border-orange-500 hover:text-orange-700 flex items-center justify-center gap-2"
               >
@@ -1477,91 +1492,7 @@ const RequirementList = () => {
             </Button>
           </div>
         </Form>
-      </Modal>
-
-      <Modal
-        title={
-          <div className="flex items-center gap-4 border-b border-gray-200 pb-5 mb-1">
-            <div className="w-12 h-12 rounded-[14px] bg-[#fff7ed] text-[#ea580c] flex items-center justify-center shrink-0">
-              <Clock size={24} strokeWidth={2} />
-            </div>
-            <div>
-              <h3 className="text-[18px] font-bold m-0 text-slate-800">Lead Sharing Timer</h3>
-              <Text type="secondary" className="text-[13.5px] text-slate-500">Automatically distribute lead across plans.</Text>
-            </div>
-          </div>
-        }
-        open={isTimerModalOpen}
-        onCancel={() => setIsTimerModalOpen(false)}
-        footer={null}
-        width={500}
-        destroyOnClose
-      >
-        <Form
-          form={timerForm}
-          layout="vertical"
-          onFinish={handleStartTimer}
-          className="mt-6"
-        >
-          <Form.Item
-            name="plans"
-            label={<span className="font-bold text-slate-700">Select Plans (Priority Order)</span>}
-            rules={[{ required: true, message: "Please select at least one plan" }]}
-          >
-            <Checkbox.Group className="w-full">
-              <Row gutter={[0, 12]}>
-                <Col span={24}>
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
-                    <Checkbox value="Pro" className="font-semibold text-slate-700">Pro Plan</Checkbox>
-                    <Tag color="gold" className="m-0 uppercase text-[10px] font-black border-none">Priority 1</Tag>
-                  </div>
-                </Col>
-                <Col span={24}>
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
-                    <Checkbox value="Premium" className="font-semibold text-slate-700">Premium Plan</Checkbox>
-                    <Tag color="blue" className="m-0 uppercase text-[10px] font-black border-none">Priority 2</Tag>
-                  </div>
-                </Col>
-                <Col span={24}>
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
-                    <Checkbox value="Standard" className="font-semibold text-slate-700">Standard Plan</Checkbox>
-                    <Tag color="cyan" className="m-0 uppercase text-[10px] font-black border-none">Priority 3</Tag>
-                  </div>
-                </Col>
-              </Row>
-            </Checkbox.Group>
-          </Form.Item>
-
-          <Form.Item
-            name="timer"
-            label={<span className="font-bold text-slate-700">Interval (Minutes)</span>}
-            rules={[{ required: true, message: "Please set a timer" }]}
-            extra={<Text className="text-[11px] text-slate-400 italic">Example: If set to 10m, it waits 10m for Pro, then 10m for Premium, etc.</Text>}
-          >
-            <InputNumber 
-              min={1} 
-              style={{ width: "100%" }} 
-              className="rounded-lg h-10 flex items-center" 
-              placeholder="e.g. 10"
-              suffix={<span className="text-slate-400 font-medium mr-2">minutes</span>}
-            />
-          </Form.Item>
-
-          <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
-            <Button onClick={() => setIsTimerModalOpen(false)} className="rounded-lg h-10 px-6">
-              Cancel
-            </Button>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={timerLoading}
-              className="bg-orange-600 hover:bg-orange-700 border-none rounded-lg h-10 px-8 font-bold flex items-center gap-2 shadow-lg shadow-orange-100"
-            >
-              Start Timer Mode
-            </Button>
-          </div>
-        </Form>
-      </Modal>
+          </Modal>
     </div>
   );
 };
