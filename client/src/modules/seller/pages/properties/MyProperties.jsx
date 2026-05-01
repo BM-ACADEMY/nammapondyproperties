@@ -347,10 +347,10 @@ const MyProperties = () => {
   const planName = user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-4">
       {/* Subscription Banner */}
      <div className="relative rounded-3xl p-[1px] ">
-  <div className="bg-white rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-center gap-6">
+  <div className="bg-white rounded-3xl p-5 md:p-6 flex flex-col md:flex-row justify-between items-center gap-6">
 
     {/* LEFT SECTION */}
     <div className="flex items-center gap-5 w-full">
@@ -426,7 +426,7 @@ const MyProperties = () => {
   </div>
 </div>
       {/* Header & Add Button */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <Title level={2} style={{ margin: 0 }}>
             My Properties
@@ -479,7 +479,12 @@ const MyProperties = () => {
       </div> */}
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div 
+          className="grid gap-6"
+          style={{ 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' 
+          }}
+        >
           {[1, 2, 3, 4].map((n) => (
             <div
               key={n}
@@ -493,11 +498,16 @@ const MyProperties = () => {
           ))}
         </div>
       ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+        <div 
+          className="grid gap-6"
+          style={{ 
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' 
+          }}
+        >
           {filteredProperties.map((property) => (
             <div
               key={property._id}
-              className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-400/50 overflow-hidden group flex flex-col h-full max-w-[400px] w-full mx-auto md:mx-0"
+              className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-400/50 overflow-hidden group flex flex-col h-full w-full mx-auto sm:mx-0"
             >
               {/* Image Section */}
               <div className="relative h-56 overflow-hidden">

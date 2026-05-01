@@ -238,7 +238,7 @@ const Header = () => {
         <TopAnnouncementBar />
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 xl:space-x-4">
               {/* Logo - Left Side */}
               <Link
                 to="/"
@@ -262,10 +262,10 @@ const Header = () => {
                 <button
                   onClick={detectLocation}
                   disabled={locationLoading}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  className={`flex items-center space-x-1.5 xl:space-x-2 lg:px-2 xl:px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
                 >
                   <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
-                  <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
+                  <span className="text-[10px] xl:text-xs font-bold truncate max-w-[80px] xl:max-w-[100px] uppercase tracking-wider">
                     {locationLoading ? "Locating..." : city}
                   </span>
                 </button>
@@ -273,23 +273,23 @@ const Header = () => {
             </div>
 
             {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
-            <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
+            <div className="hidden lg:flex items-center flex-1 justify-end lg:space-x-3 xl:space-x-8">
 
               {/* Scrolling Search Bar (Reuses PropertySearchBar) */}
               {(isScrolled && isHomePage) || isPropertiesPage ? (
-                <div className="flex-1 max-w-4xl mx-8">
+                <div className="flex-1 max-w-4xl lg:mx-4 xl:mx-8">
                   <PropertySearchBar variant="header" showFilters={false} />
                 </div>
               ) : (
                 /* Desktop Navigation */
-                <nav className="flex items-center space-x-5 xl:space-x-6">
+                <nav className="flex items-center lg:space-x-3 xl:space-x-6">
                   {propertyCategories.map((category) => {
                     const name = category; // Sell, Rent
                     return (
                       <Link
                         key={name}
                         to={`/properties?category=${encodeURIComponent(name)}`}
-                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide cursor-pointer"
+                        className="text-white hover:text-yellow-300 font-medium transition-colors lg:text-[13px] xl:text-[15px] tracking-wide cursor-pointer"
                       >
                         {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
@@ -310,9 +310,10 @@ const Header = () => {
                         onMouseLeave={() => setActiveBusinessDropdown(null)}
                       >
                         <button
-                        className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none cursor-pointer"
+                        className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors lg:text-[13px] xl:text-[15px] tracking-wide capitalize focus:outline-none cursor-pointer"
                         >
-                          <span>{name}</span>
+                          <span className="lg:hidden xl:inline">{name}</span>
+                          <span className="hidden lg:inline xl:hidden">{name.includes('/') ? name.split('/')[0].trim() : name}</span>
                           <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${activeBusinessDropdown === id ? "rotate-180" : ""}`} />
                         </button>
 
@@ -382,13 +383,13 @@ const Header = () => {
               <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
               {/* Actions */}
-              <div className="flex items-center space-x-4 lg:space-x-5">
+              <div className="flex items-center lg:space-x-3 xl:space-x-5">
                 {/* Post Property Button */}
                 <button
                   onClick={handlePostProperty}
-                  className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
+                  className="flex items-center cursor-pointer bg-white text-gray-900 lg:px-2 xl:px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
                 >
-                  <span className="text-[14px]">Post property</span>
+                  <span className="lg:text-[12px] xl:text-[14px]">Post property</span>
                   <span className="relative overflow-hidden ml-2 bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded before:absolute before:inset-0 before:-translate-x-full before:animate-[shine_3s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent">
                     FREE
                   </span>
@@ -426,9 +427,12 @@ const Header = () => {
                             <p className="text-[#A0AEC0] text-[13px] font-medium tracking-wide">
                               (Mon-Sun)
                             </p>
-                            <p className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide">
+                            <a
+                              href="tel:+919403892971"
+                              className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide hover:text-[#166aa8] transition-colors"
+                            >
                               +91 94038 92971
-                            </p>
+                            </a>
                           </div>
                         </div>
 

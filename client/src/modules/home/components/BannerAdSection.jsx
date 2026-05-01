@@ -32,17 +32,18 @@ const BannerAdSection = () => {
 
   if (loading)
     return (
-      <section className="w-full my-4 md:my-8">
-        <div className="w-full h-[250px] md:h-[350px] lg:h-[450px] bg-gray-200 animate-pulse"></div>
+      <section className="w-full my-2">
+        <div className="w-full aspect-[4/1] bg-gray-200 animate-pulse"></div>
       </section>
     );
 
   if (activeAds.length === 0) return null;
 
   return (
-    <section className="container mx-auto px-4 sm:px-6 lg:px-8 my-4 md:my-8">
-      <div className="w-full overflow-hidden rounded-xl md:rounded-2xl">
+    <section className="w-full my-0">
+      <div className="w-full overflow-hidden shadow-sm">
         <Swiper
+          autoHeight={true}
           modules={[Autoplay, Pagination]}
           spaceBetween={0}
           slidesPerView={1}
@@ -61,7 +62,7 @@ const BannerAdSection = () => {
           {activeAds.map((ad) => (
             <SwiperSlide key={ad._id} className="!w-full !m-0 !p-0">
               <div
-                className={`relative w-full h-full duration-500 ${ad.linkUrl?.trim() ? "hover:shadow-2xl cursor-pointer" : ""}`}
+                className={`relative w-full h-auto duration-500 ${ad.linkUrl?.trim() ? "hover:opacity-95 cursor-pointer" : ""}`}
               >
                 {ad.linkUrl?.trim() ? (
                   <a
@@ -85,13 +86,11 @@ const BannerAdSection = () => {
 };
 
 const AdContent = ({ ad }) => (
-  <div className="relative w-full h-[250px] md:h-[350px] lg:h-[450px] overflow-hidden">
-    <img
-      src={getImageUrl(ad.imageUrl)}
-      alt={ad.title}
-      className="w-full h-full object-cover block transition-transform duration-700"
-    />
-  </div>
+  <img
+    src={getImageUrl(ad.imageUrl)}
+    alt={ad.title}
+    className="w-full h-auto block transition-transform duration-700"
+  />
 );
 
 export default BannerAdSection;

@@ -87,9 +87,6 @@ const AddProperty = () => {
 
   return (
     <div className="min-h-screen">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">
-        {editId ? "Edit Property" : "Add New Property"}
-      </h1>
       <PropertyForm
         onSubmit={onSubmit}
         loading={loading}
