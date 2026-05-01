@@ -12,6 +12,7 @@ import SellerPaymentHistory from "../pages/payments/SellerPaymentHistory";
 import LeadsOverview from "../pages/enquiries/LeadsOverview";
 import Support from "../pages/Support";
 import Reviews from "../../user/pages/reviews/Reviews";
+import PropertyAnalytics from "../pages/properties/PropertyAnalytics";
 
 
 const SellerRoute = () => {
@@ -31,6 +32,7 @@ const SellerRoute = () => {
         <Route path="leads-overview" element={<LeadsOverview />} />
         <Route path="support" element={<Support />} />
         <Route path="reviews" element={<Reviews />} />
+        <Route path="property-analytics" element={<PropertyAnalytics />} />
 
       </Route>
     </Routes>

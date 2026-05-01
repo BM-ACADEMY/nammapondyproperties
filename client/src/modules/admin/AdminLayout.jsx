@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu as MenuIcon, Bell, Search, User, LogOut } from "lucide-react";
+import { Bell, Search, User, LogOut } from "lucide-react";
+import { RiSidebarFoldFill, RiSidebarUnfoldFill } from "react-icons/ri";
 import {
   Layout,
   Button,
@@ -320,7 +321,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<MenuIcon size={20} />}
+              icon={collapsed ? <RiSidebarUnfoldFill size={22} /> : <RiSidebarFoldFill size={22} />}
               onClick={() => setCollapsed(!collapsed)}
               className="lg:hidden" // Hide on large screens
               style={{
@@ -396,7 +397,7 @@ const AdminLayout = () => {
 
         <Content
           style={{
-            padding: pathname.includes("/support") ? 0 : (isMobile ? "16px" : "24px"),
+            padding: 0,
             height: "calc(100vh - 64px)",
             overflowY: pathname.includes("/support") ? "hidden" : "auto",
             background: pathname.includes("/support") ? "#fff" : "#f8fafc",
@@ -405,12 +406,8 @@ const AdminLayout = () => {
           <div
             className="admin-content-wrapper"
             style={{
-              borderRadius: pathname.includes("/support") ? 0 : borderRadiusLG,
-              height: pathname.includes("/support") ? "100%" : "auto",
-              minHeight: "100%",
-              boxShadow: pathname.includes("/support") ? "none" : "0 1px 2px rgba(0,0,0,0.03)",
-              background: colorBgContainer,
-              padding: pathname.includes("/support") ? 0 : 24,
+              padding: pathname.includes("/support") ? 0 : (pathname === "/admin/dashboard" || pathname === "/admin/seller-listings" ? 0 : 24),
+              borderRadius: 0,
             }}
           >
             <Outlet />

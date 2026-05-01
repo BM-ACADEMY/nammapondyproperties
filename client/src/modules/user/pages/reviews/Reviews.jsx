@@ -258,8 +258,8 @@ const Reviews = () => {
   }
 
   return (
-    <div className="w-full flex-1 bg-[#eff7f3] py-4 md:py-6 flex flex-col relative overflow-hidden">
-      {/* Subtle background element */}
+    <div className="w-full min-h-screen flex-1 bg-[#eff7f3] py-4 md:py-6 flex flex-col relative overflow-hidden">
+      {/* Subtle background element */} 
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-tr from-teal-50/50 to-transparent"></div>
       </div>

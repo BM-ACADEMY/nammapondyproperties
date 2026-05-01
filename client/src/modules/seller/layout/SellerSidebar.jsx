@@ -37,7 +37,6 @@ const S = {
     display: "flex",
     flexDirection: "column",
     zIndex: 20,
-    boxShadow: "4px 0 24px rgba(0,0,0,0.45)",
     transition: "width 0.25s cubic-bezier(.4,0,.2,1)",
     overflow: "hidden",
   },
@@ -50,10 +49,11 @@ const S = {
     display: "flex",
     alignItems: "center",
     gap: 12,
-    padding: "18px 16px 14px",
+    padding: "0 16px",
     borderBottom: "1px solid rgba(255,255,255,0.06)",
     flexShrink: 0,
     textDecoration: "none",
+    height: 64,
   },
   logoIcon: {
     width: 38,
@@ -69,8 +69,7 @@ const S = {
   logoText: {
     display: "flex",
     flexDirection: "column",
-    lineHeight: 1,
-    overflow: "hidden",
+    lineHeight: 1.2,
   },
   logoTitle: {
     color: "#fff",
@@ -80,7 +79,7 @@ const S = {
     whiteSpace: "nowrap",
   },
   logoSubtitle: {
-    color: "rgba(255,255,255,0.4)",
+    color: "rgba(255,255,255,0.6)",
     fontSize: 11,
     whiteSpace: "nowrap",
     marginTop: 2,
@@ -107,7 +106,7 @@ const S = {
     scrollbarWidth: "none",
   },
   sectionLabel: {
-    color: "rgba(255,255,255,0.28)",
+    color: "rgba(255,255,255,0.6)",
     fontSize: 10,
     fontWeight: 700,
     letterSpacing: "0.12em",
@@ -622,6 +621,9 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
         {!collapsed && (
           <div style={S.logoText}>
             <span style={S.logoTitle}>Seller Panel</span>
+            {user?.businessType?.name && (
+              <span style={S.logoSubtitle}>{user.businessType.name}</span>
+            )}
           </div>
         )}
       </Link>
@@ -702,6 +704,34 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
               <div style={S.profileName}>{displayName}</div>
               <div style={S.profileRole}>Verified Account</div>
             </div>
+
+            <button
+              onClick={logout}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "rgba(255,255,255,0.45)",
+                padding: "8px",
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "all 0.2s",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(239,68,68,0.15)";
+                e.currentTarget.style.color = "#f87171";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "none";
+                e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+              }}
+              title="Logout"
+            >
+              <LogOut size={18} />
+            </button>
           </div>
         )}
       </div>

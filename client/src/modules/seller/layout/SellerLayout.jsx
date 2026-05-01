@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu as MenuIcon, User, LogOut, Bell, MessageSquare } from "lucide-react";
+import { User, LogOut, Bell, MessageSquare } from "lucide-react";
+import { RiSidebarFoldFill, RiSidebarUnfoldFill } from "react-icons/ri";
 
 import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme, Alert, Modal, Tag, Badge } from "antd";
 
@@ -179,7 +180,7 @@ const SellerLayout = () => {
           <div className="flex items-center gap-4">
             <Button
               type="text"
-              icon={<MenuIcon size={20} />}
+              icon={collapsed ? <RiSidebarUnfoldFill size={22} /> : <RiSidebarFoldFill size={22} />}
               onClick={() => setCollapsed(!collapsed)}
               className="hover:bg-gray-100 flex items-center justify-center"
               style={{ width: 40, height: 40 }}
@@ -250,7 +251,7 @@ const SellerLayout = () => {
 
         <Content
           style={{
-            margin: pathname === "/seller/support" ? 0 : (isMobile ? "16px" : "24px"),
+            margin: 0,
             height: pathname === "/seller/support" ? "calc(100vh - 64px)" : "auto",
             minHeight: pathname === "/seller/support" ? "calc(100vh - 64px)" : "auto",
             background: pathname === "/seller/support" ? "#fff" : "transparent",
@@ -295,7 +296,7 @@ const SellerLayout = () => {
           <div
             className="seller-content-wrapper flex flex-col"
             style={{
-              borderRadius: pathname === "/seller/support" ? 0 : borderRadiusLG,
+              borderRadius: 0,
               height: pathname === "/seller/support" ? "100%" : "auto",
               minHeight: "100%",
               boxShadow: pathname === "/seller/support" ? "none" : "0 1px 2px rgba(0,0,0,0.03)",
