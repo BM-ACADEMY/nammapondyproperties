@@ -98,7 +98,7 @@ const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
           : "bg-amber-50 text-amber-600 border-amber-100"
       }`}
     >
-      <span className="text-[11px] font-bold whitespace-nowrap">
+      <span className="text-[11px] font-medium whitespace-nowrap">
         {isAdmin ? displayTime : `Exp: ${displayTime}`}
       </span>
     </div>
@@ -422,14 +422,15 @@ const SellerEnquiries = () => {
               <div className="w-8 h-1 bg-blue-600 rounded-full" />
               <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Enquiry Dashboard</span>
             </div>
-            <Title level={1} className="m-0! text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Property Enquiries <span className="text-blue-600">(Leads)</span></Title>
+            <Title level={1} className="m-0! text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">Property Enquiries <span className="text-blue-600">(Leads)</span></Title>
             <p className="text-gray-500 mt-2 max-w-lg text-xs sm:text-sm font-medium">Manage and track all incoming enquiries for your properties with real-time analytics and distribution insights.</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
             <Button
+              type="primary"
               icon={<Download size={18} />}
               onClick={downloadCSV}
-              className="h-11 px-6 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#166aa8]! text-white! hover:bg-[#0078d7]! hover:text-white! border-gray-200 hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm w-full sm:w-auto"
+              className="h-11 px-6 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-none text-white shadow-[0_4px_14px_rgba(37,99,235,0.25)] transition-all hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 active:scale-[0.98] w-full sm:w-auto"
             >
               Export Leads (CSV)
             </Button>
@@ -446,7 +447,7 @@ const SellerEnquiries = () => {
                 <Lock size={28} strokeWidth={2.5} />
               </div>
               <div className="text-center md:text-left">
-                <h3 className="text-lg font-black text-amber-900 m-0">
+                <h3 className="text-lg font-semibold text-amber-900 m-0">
                   {subscriptionState.isLimitReached ? "Lead Limit Reached" : "Detail Access Restricted"}
                 </h3>
                 <p className="text-amber-800/70 text-sm m-0 mt-1 font-medium max-w-md">
@@ -480,7 +481,7 @@ const SellerEnquiries = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">Total</span>
-                <span className="text-3xl font-black text-slate-900 leading-none">{loading ? "..." : stats.total}</span>
+                <span className="text-3xl font-semibold text-slate-900 leading-none">{loading ? "..." : stats.total}</span>
               </div>
             </div>
           </Card>
@@ -493,7 +494,7 @@ const SellerEnquiries = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">New</span>
-                <span className="text-3xl font-black text-slate-900 leading-none">{loading ? "..." : stats.new}</span>
+                <span className="text-3xl font-semibold text-slate-900 leading-none">{loading ? "..." : stats.new}</span>
               </div>
             </div>
           </Card>
@@ -506,7 +507,7 @@ const SellerEnquiries = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">Portal</span>
-                <span className="text-3xl font-black text-slate-900 leading-none">{loading ? "..." : stats.portal}</span>
+                <span className="text-3xl font-semibold text-slate-900 leading-none">{loading ? "..." : stats.portal}</span>
               </div>
             </div>
           </Card>
@@ -520,10 +521,10 @@ const SellerEnquiries = () => {
               <div className="flex flex-col">
                 <span className="text-slate-400 font-extrabold text-[10px] uppercase tracking-widest mb-1">Lead Allotment</span>
                 <div className="flex items-baseline gap-1">
-                  <span className={`text-2xl font-black leading-none ${subscriptionState.isLimitReached ? 'text-red-600' : 'text-slate-900'}`}>
+                  <span className={`text-2xl font-semibold leading-none ${subscriptionState.isLimitReached ? 'text-red-600' : 'text-slate-900'}`}>
                     {loading ? "..." : subscriptionState.used}
                   </span>
-                  <span className="text-slate-400 text-sm font-bold">
+                  <span className="text-slate-400 text-sm font-medium">
                     / {subscriptionState.limit === -1 ? "∞" : subscriptionState.limit}
                   </span>
                 </div>
@@ -534,68 +535,61 @@ const SellerEnquiries = () => {
       </Row>
 
       <Card className="shadow-sm border-none overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col gap-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <Title level={4} className="mb-0 text-gray-800! whitespace-nowrap">
+              <Title level={4} className="m-0! text-gray-800! whitespace-nowrap">
                 Recent Enquiries
               </Title>
-              <Tag color="blue" className="rounded-full border-none px-3 font-semibold whitespace-nowrap">
-                {filteredEnquiries.length} results
+              <Tag color="blue" className="rounded-full border-none px-4 py-1 font-bold whitespace-nowrap bg-blue-50 text-blue-600">
+                {filteredEnquiries.length}
               </Tag>
             </div>
-            {(searchText || filterStatus !== "new" || dateRange) && (
-              <Button type="link" onClick={clearFilters} className="text-blue-600 font-bold p-0">
-                Clear Filters
-              </Button>
-            )}
-          </div>
 
-          <Row gutter={[16, 16]} align="bottom">
-            <Col xs={24} md={12} lg={6}>
-              <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Search</span>
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 flex-1 xl:justify-end max-w-5xl">
+              <div className="w-full md:w-64">
                 <Input
-                  prefix={<Search size={18} className="text-slate-300 mr-1" />}
-                  placeholder="Name, Phone, Property..."
+                  prefix={<Search size={18} className="text-slate-400 mr-1.5" />}
+                  placeholder="Search Enquiries..."
                   allowClear
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  className="rounded-xl border-slate-200 bg-white hover:border-blue-400 focus:border-blue-500 transition-all h-12 shadow-sm"
+                  className="rounded-xl border-slate-200 bg-white hover:border-blue-400 focus:border-blue-500 transition-all h-11 shadow-xs"
                 />
               </div>
-            </Col>
-            <Col xs={24} md={12} lg={6}>
-              <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Status</span>
+              <div className="w-full md:w-44">
                 <Select
                   value={filterStatus}
                   onChange={setFilterStatus}
-                  className="w-full enquiries-select-main"
-                  suffixIcon={<ArrowRight size={16} className="rotate-90 text-slate-300" />}
+                  className="w-full enquiries-select-compact"
+                  suffixIcon={<ArrowRight size={16} className="rotate-90 text-slate-400" />}
                 >
                   <Option value="all">All Status</Option>
-                  <Option value="new">New</Option>
-                  <Option value="contacted">Contact</Option>
+                  <Option value="new">New Leads</Option>
+                  <Option value="contacted">Contacted</Option>
                   <Option value="closed">Closed</Option>
                 </Select>
               </div>
-            </Col>
-            <Col xs={24} md={24} lg={12}>
-              <div className="flex flex-col gap-2">
-                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider ml-1">Date Range</span>
+              <div className="w-full md:w-80">
                 <RangePicker
                   value={dateRange}
                   onChange={setDateRange}
-                  className="w-full rounded-xl border-slate-200 bg-white h-12 hover:border-blue-400 transition-all enquiries-range-main shadow-sm"
+                  className="w-full rounded-xl border-slate-200 bg-white h-11 hover:border-blue-400 transition-all enquiries-range-compact shadow-xs"
                   format="DD MMM YYYY"
-                  placeholder={["Start date", "End date"]}
-                  separator={<span className="text-slate-300">→</span>}
+                  placeholder={["Start", "End"]}
+                  separator={<span className="text-slate-300 mx-0.5">→</span>}
                 />
               </div>
-            </Col>
-          </Row>
-        </div>
+              {(searchText || filterStatus !== "new" || dateRange) && (
+                <Button 
+                  type="link" 
+                  onClick={clearFilters} 
+                  className="text-blue-600 font-bold p-0 h-auto hover:text-blue-700 whitespace-nowrap"
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
 
         <div className="overflow-x-auto">
           <Table
@@ -637,41 +631,61 @@ const SellerEnquiries = () => {
           border-radius: 10px;
         }
 
-        .enquiries-select-main .ant-select-selector {
-          height: 48px !important;
+        .enquiries-select-compact .ant-select-selector {
+          height: 44px !important;
           border-radius: 12px !important;
           border-color: #e2e8f0 !important;
           background-color: #ffffff !important;
           display: flex;
           align-items: center;
           transition: all 0.3s ease !important;
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
         }
-        .enquiries-select-main .ant-select-selector:hover {
+        .enquiries-select-compact .ant-select-selector:hover {
           border-color: #60a5fa !important;
         }
-        .enquiries-select-main .ant-select-selection-item {
+        .enquiries-select-compact .ant-select-selection-item {
           font-weight: 600;
           color: #334155;
-          font-size: 14px;
+          font-size: 13px;
         }
-        .enquiries-range-main {
+        .enquiries-range-compact {
           border-radius: 12px !important;
           border-color: #e2e8f0 !important;
           background-color: #ffffff !important;
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-          padding: 4px 15px !important;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03) !important;
+          padding: 4px 12px !important;
+          height: 44px !important;
         }
-        .enquiries-range-main input {
+        .enquiries-range-compact input {
           font-weight: 500;
           color: #334155;
+          font-size: 13px;
+        }
+        .enquiries-range-compact .ant-picker-range-separator {
+          padding: 0 4px;
+        }
+        .enquiries-range-compact .ant-picker-suffix {
+          color: #cbd5e1 !important;
           font-size: 14px;
         }
-        .enquiries-range-main .ant-picker-range-separator {
-          padding: 0 8px;
+
+        .enquiries-table .ant-table-thead > tr > th {
+          background-color: #f8fafc !important;
+          color: #64748b !important;
+          font-weight: 700 !important;
+          text-transform: uppercase !important;
+          font-size: 11px !important;
+          letter-spacing: 0.05em !important;
+          padding: 16px 20px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
         }
-        .enquiries-range-main .ant-picker-suffix {
-          color: #cbd5e1 !important;
+        .enquiries-table .ant-table-tbody > tr > td {
+          padding: 16px 20px !important;
+          border-bottom: 1px solid #f8fafc !important;
+        }
+        .enquiries-table .ant-table-tbody > tr:hover > td {
+          background-color: #fcfdfe !important;
         }
 
         .status-select {

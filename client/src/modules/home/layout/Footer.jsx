@@ -101,7 +101,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-20 xl:px-32">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 text-left">
           {/* Column 1: Brand Info */}
-          <div className="pl-4 lg:pl-8">
+          <div>
             <div className="mb-6">
               <img src="/Logo/logo1.png" alt="Namma Pondy Logo" className="h-16 w-auto object-contain" />
             </div>
