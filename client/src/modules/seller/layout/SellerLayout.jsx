@@ -293,7 +293,7 @@ const SellerLayout = () => {
           </div>
 
           <div
-            className="seller-content-wrapper"
+            className="seller-content-wrapper flex flex-col"
             style={{
               borderRadius: pathname === "/seller/support" ? 0 : borderRadiusLG,
               height: pathname === "/seller/support" ? "100%" : "auto",

@@ -35,14 +35,52 @@ import { useSocket } from "@/context/SocketContext";
 
 const { Title, Text, Paragraph } = Typography;
 
+const CountdownTimer = ({ startTime, timerInMinutes, onExpire }) => {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const start = new Date(startTime);
+      const diffMs = (start.getTime() + timerInMinutes * 60000) - now.getTime();
+
+      if (diffMs <= 0) {
+        setTimeLeft("00:00");
+        if (onExpire) onExpire();
+        return;
+      }
+
+      const minutes = Math.floor(diffMs / 60000);
+      const seconds = Math.floor((diffMs % 60000) / 1000);
+      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(interval);
+  }, [startTime, timerInMinutes]);
+
+  return (
+    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-orange-50 text-orange-600 rounded-md border border-orange-100 shadow-sm">
+      <Clock size={12} className="animate-pulse" />
+      <span className="font-mono font-black text-[11px] tabular-nums tracking-tighter">
+        {timeLeft}
+      </span>
+    </div>
+  );
+};
+
 // Helper to get status tag (moved outside for reuse)
 const getStatusTag = (lead) => {
   if (lead.isAcceptedByMe) return <Tag color="success" icon={<CheckCircle2 size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">Accepted By You</Tag>;
   
-  if (lead.status === "closed" || lead.status === "accepted") {
+  if (lead.status === "closed" || lead.status === "accepted" || lead.status === "Deal Closed (Plan Level)") {
+    const isPlanLevel = lead.status === "Deal Closed (Plan Level)";
     return (
-      <Tooltip title={`Accepted by ${lead.acceptedBy || "another seller"}`}>
-        <Tag color="error" icon={<XCircle size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">Deal Closed</Tag>
+      <Tooltip title={isPlanLevel ? "Timer expired for your plan level" : `Accepted by ${lead.acceptedBy || "another seller"}`}>
+        <Tag color="error" icon={<XCircle size={14} className="mr-1" />} className="px-3 py-0.5 rounded-lg font-bold border-none">
+          {isPlanLevel ? "Deal Closed (Plan Level)" : "Deal Closed"}
+        </Tag>
       </Tooltip>
     );
   }
@@ -55,16 +93,25 @@ const getStatusTag = (lead) => {
 };
 
 // Extracted LeadCard for better performance and debugging
-const LeadCard = ({ lead, onAccept, acceptingId }) => (
+const LeadCard = ({ lead, onAccept, acceptingId, onExpire }) => (
   <Card 
     className={`h-full rounded-2xl border-none shadow-md overflow-hidden transition-all hover:shadow-lg ${lead.isAcceptedByMe ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}
     bodyStyle={{ padding: 0 }}
   >
     <div className={`p-4 border-b flex justify-between items-start ${lead.isAcceptedByMe ? 'bg-emerald-50' : lead.matchType === 'exact' ? 'bg-amber-50/50' : 'bg-slate-50'}`}>
       <div className="flex flex-col gap-1">
-        <Text type="secondary" className="text-[10px] uppercase font-black tracking-widest text-slate-400">
-          Shared {new Date(lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-        </Text>
+        <div className="flex items-center gap-2">
+          <Text type="secondary" className="text-[10px] uppercase font-black tracking-widest text-slate-400">
+            Shared {new Date(lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+          </Text>
+          {lead.status === "pending" && lead.requirement?.sharingConfig?.startTime && (
+            <CountdownTimer 
+              startTime={lead.requirement.sharingConfig.startTime} 
+              timerInMinutes={lead.requirement.sharingConfig.timer} 
+              onExpire={onExpire}
+            />
+          )}
+        </div>
         <div className="flex gap-2 items-center">
            <Tag color="blue" className="m-0 text-[10px] px-2 rounded-md border-none font-black uppercase tracking-wider">{lead.requirement.category}</Tag>
            {lead.matchType === 'exact' && (
@@ -194,7 +241,7 @@ const LeadCard = ({ lead, onAccept, acceptingId }) => (
         </div>
       )}
 
-      {(lead.status === 'accepted' || lead.status === 'closed') && !lead.isAcceptedByMe && (
+      {(lead.status === 'accepted' || lead.status === 'closed' || lead.status === 'Deal Closed (Plan Level)') && !lead.isAcceptedByMe && (
         <div className="mt-6">
           <Button 
             block 
@@ -202,7 +249,7 @@ const LeadCard = ({ lead, onAccept, acceptingId }) => (
             className="bg-slate-200 border-none rounded-xl h-12 font-bold text-slate-500 cursor-not-allowed"
             disabled
           >
-            Deal Closed
+            {lead.status === 'Deal Closed (Plan Level)' ? 'Deal Closed (Plan Level)' : 'Deal Closed'}
           </Button>
         </div>
       )}
@@ -275,9 +322,15 @@ const LeadsOverview = () => {
         );
       });
 
+      socket.on("lead-expired-for-plan", (data) => {
+        // Refresh leads to get the "Deal Closed (Plan Level)" status
+        fetchLeads();
+      });
+
       return () => {
         socket.off("new-lead-shared");
         socket.off("lead-accepted-by-other");
+        socket.off("lead-expired-for-plan");
       };
     }
   }, [socket]);
@@ -369,7 +422,12 @@ const LeadsOverview = () => {
                   <Row gutter={[24, 24]}>
                     {availableLeads.map((lead) => (
                       <Col xs={24} md={12} lg={8} key={lead._id}>
-                        <LeadCard lead={lead} onAccept={handleAcceptLead} acceptingId={acceptingId} />
+                        <LeadCard 
+                          lead={lead} 
+                          onAccept={handleAcceptLead} 
+                          acceptingId={acceptingId} 
+                          onExpire={fetchLeads}
+                        />
                       </Col>
                     ))}
                   </Row>
@@ -395,7 +453,12 @@ const LeadsOverview = () => {
                   <Row gutter={[24, 24]}>
                     {myLeads.map((lead) => (
                       <Col xs={24} md={12} lg={8} key={lead._id}>
-                        <LeadCard lead={lead} onAccept={handleAcceptLead} acceptingId={acceptingId} />
+                        <LeadCard 
+                          lead={lead} 
+                          onAccept={handleAcceptLead} 
+                          acceptingId={acceptingId} 
+                          onExpire={fetchLeads}
+                        />
                       </Col>
                     ))}
                   </Row>
@@ -421,7 +484,12 @@ const LeadsOverview = () => {
                   <Row gutter={[24, 24]}>
                     {closedLeads.map((lead) => (
                       <Col xs={24} md={12} lg={8} key={lead._id}>
-                        <LeadCard lead={lead} onAccept={handleAcceptLead} acceptingId={acceptingId} />
+                        <LeadCard 
+                          lead={lead} 
+                          onAccept={handleAcceptLead} 
+                          acceptingId={acceptingId} 
+                          onExpire={fetchLeads}
+                        />
                       </Col>
                     ))}
                   </Row>

@@ -39,5 +39,6 @@ router.post("/:id/trigger-timer", protect, admin, requirementController.triggerL
 router.post("/:id/stop-timer", protect, admin, requirementController.stopLeadSharingTimer);
 
 router.post("/:id/share", protect, admin, requirementController.shareRequirement);
+router.post("/:id/check-expiry", protect, admin, requirementController.checkRequirementExpiry);
 
 module.exports = router;
