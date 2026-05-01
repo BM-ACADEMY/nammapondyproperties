@@ -47,6 +47,7 @@ import {
   postRequirement,
   triggerLeadSharingTimer,
   stopLeadSharingTimer,
+  checkRequirementExpiry,
   getWebsiteSettings,
   updateWebsiteSetting
 } from "@/services/api";
@@ -68,10 +69,7 @@ const CountdownTimer = ({ startTime, timerInMinutes, onExpire }) => {
 
       if (diffMs <= 0) {
         setTimeLeft("00:00");
-        if (onExpire) {
-          // Wait 2 seconds to allow backend cron to process
-          setTimeout(onExpire, 2000);
-        }
+        if (onExpire) onExpire();
         return;
       }
 
@@ -525,7 +523,15 @@ const RequirementList = () => {
                 <CountdownTimer 
                   startTime={record.sharingConfig?.startTime} 
                   timerInMinutes={record.sharingConfig?.timer} 
-                  onExpire={fetchRequirements}
+                  onExpire={async () => {
+                    try {
+                      await checkRequirementExpiry(record._id);
+                      fetchRequirements();
+                    } catch (err) {
+                      console.error("Auto-expiry trigger failed:", err);
+                      fetchRequirements();
+                    }
+                  }}
                 />
               </Tag>
               <Button 
@@ -861,7 +867,7 @@ const RequirementList = () => {
           <Button key="close" onClick={() => setIsShareModalOpen(false)} className="rounded-lg h-9 px-5 border-gray-200 text-slate-700 font-medium">
             Cancel
           </Button>,
-          selectedRequirement?.sharingStatus !== "in-progress" && (
+          selectedRequirement?.sharingStatus !== "in-progress" && !isInMatchMode && (
             <Button 
               key="trigger-timer"
               className="bg-[#fff7ed] text-[#ea580c] border-[#ffedd5] hover:bg-[#ffedd5] h-9 px-5 rounded-lg font-bold flex items-center gap-2"
@@ -1040,15 +1046,19 @@ const RequirementList = () => {
                                 </Popover>
                                 <Button 
                                   type="primary"
-                                  className="h-9 px-4 rounded-xl shadow-none font-bold text-xs bg-indigo-600 hover:bg-indigo-700 border-none"
+                                  className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs border-none ${plan.isAlreadyShared ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-indigo-600 hover:bg-indigo-700'}`}
                                   disabled={sharingLoading}
                                   loading={sharingLoading}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (plan.isAlreadyShared) {
+                                      message.info("This lead has already been shared with this plan.");
+                                      return;
+                                    }
                                     handleShare(plan.planId, "exact", hasGlobalBuilderMatch ? 1 : 2);
                                   }}
                                 >
-                                  Share Now
+                                  {plan.isAlreadyShared ? "Already Shared" : "Share Now"}
                                 </Button>
                             </div>
                           </div>
@@ -1142,15 +1152,19 @@ const RequirementList = () => {
                                    </Popover>
                                  )}
                                  <Button 
-                                  className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs transition-all ${hasAgents ? 'bg-slate-800 text-white hover:bg-slate-900 border-none' : 'bg-slate-200 text-slate-400 border-none'}`}
+                                  className={`h-9 px-4 rounded-xl shadow-none font-bold text-xs transition-all border-none ${!hasAgents ? 'bg-slate-200 text-slate-400' : plan.isAlreadyShared ? 'bg-emerald-500 text-white' : 'bg-slate-800 text-white hover:bg-slate-900'}`}
                                   disabled={!hasAgents || sharingLoading}
                                   loading={sharingLoading}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (plan.isAlreadyShared) {
+                                      message.info("This lead has already been shared with this plan.");
+                                      return;
+                                    }
                                     handleShare(plan.planId, "not-exact", 3);
                                   }}
                                 >
-                                  Send Fallback
+                                  {plan.isAlreadyShared ? "Already Shared" : "Send Fallback"}
                                 </Button>
                               </div>
                             </div>

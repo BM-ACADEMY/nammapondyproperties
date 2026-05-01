@@ -46,10 +46,7 @@ const CountdownTimer = ({ startTime, timerInMinutes, onExpire }) => {
 
       if (diffMs <= 0) {
         setTimeLeft("00:00");
-        if (onExpire) {
-          // Wait 2 seconds to allow backend cron to process
-          setTimeout(onExpire, 2000);
-        }
+        if (onExpire) onExpire();
         return;
       }
 

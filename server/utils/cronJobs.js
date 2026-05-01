@@ -7,6 +7,7 @@ const SharedLead = require("../models/SharedLead");
 const SubscriptionPlan = require("../models/SubscriptionPlan");
 const fs = require("fs");
 const path = require("path");
+const { processLeadSharingExpiry } = require("./leadSharingUtils");
 
 const initCronJobs = (io) => {
   // Schedule task to run every minute for automated lead sharing
@@ -22,88 +23,7 @@ const initCronJobs = (io) => {
       const { internalShareLeadWithPlanName } = require("../controllers/requirementController");
 
       for (const req of requirementsInProgress) {
-        // 1. Check if lead has been accepted
-        const acceptedLead = await SharedLead.findOne({ 
-          requirement: req._id, 
-          status: "accepted" 
-        });
-
-        if (acceptedLead) {
-          req.sharingStatus = "completed";
-          await req.save();
-          console.log(`✅ Lead sharing completed for requirement ${req._id} (Accepted)`);
-          continue;
-        }
-
-        // 2. Check if timer has expired
-        const now = new Date();
-        const startTime = new Date(req.sharingConfig.startTime);
-        const timerInMinutes = req.sharingConfig.timer;
-        const diffInMinutes = (now - startTime) / (1000 * 60);
-
-        if (diffInMinutes >= timerInMinutes) {
-          const plans = req.sharingConfig.plans || [];
-          const currentPlanName = plans[req.sharingConfig.currentPlanIndex];
-          console.log(`⏭ Timer expired for ${currentPlanName}. Marking as "Deal Closed (Plan Level)" and moving to next...`);
-          
-          // Mark the current plan's share as "Deal Closed (Plan Level)"
-          const matchingPlans = await SubscriptionPlan.find({ name: currentPlanName });
-          const planIds = matchingPlans.map(p => p._id);
-          
-          await SharedLead.updateMany(
-            { requirement: req._id, plan: { $in: planIds }, status: "pending" },
-            { status: "Deal Closed (Plan Level)" }
-          );
-
-          let nextIndex = req.sharingConfig.currentPlanIndex + 1;
-          let success = false;
-
-          while (nextIndex < plans.length && !success) {
-            const nextPlan = plans[nextIndex];
-            console.log(`⏭ Attempting to move to next plan: ${nextPlan} for requirement ${req._id}`);
-            
-            const result = await internalShareLeadWithPlanName(req._id, nextPlan, io, 3);
-            
-            if (result.status === "success") {
-              success = true;
-              req.sharingConfig.currentPlanIndex = nextIndex;
-              req.sharingConfig.startTime = now;
-              req.markModified("sharingConfig");
-              await req.save();
-              console.log(`✅ Successfully moved to ${nextPlan} (Requirement: ${req._id})`);
-              if (io) {
-                io.emit("admin-lead-updated", { requirementId: req._id });
-                io.emit("lead-expired-for-plan", { requirementId: req._id });
-              }
-            } else {
-              console.log(`⚠️ No sellers in ${nextPlan}, skipping to next...`);
-              nextIndex++;
-            }
-          }
-
-          if (!success) {
-            // No more plans with agents left
-            req.sharingStatus = "expired";
-            req.status = "Closed";
-            req.markModified("sharingStatus");
-            await req.save();
-
-            // Move all pending shared leads for this requirement to "closed"
-            // This moves them from "New Leads" to "History/Closed" for the sellers
-            await SharedLead.updateMany(
-              { requirement: req._id, status: "pending" },
-              { status: "Deal Closed (Plan Level)" }
-            );
-
-            // Notify sellers via socket to refresh their lists
-            if (io) {
-              io.emit("admin-lead-updated", { requirementId: req._id });
-              io.emit("lead-expired-for-plan", { requirementId: req._id });
-            }
-
-            console.log(`❌ All plans exhausted for requirement ${req._id}. Marked as unclaimed and closed for sellers.`);
-          }
-        }
+        await processLeadSharingExpiry(req, io);
       }
     } catch (error) {
       console.error("❌ Error in lead sharing cron job:", error);
