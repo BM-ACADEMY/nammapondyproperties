@@ -294,7 +294,7 @@ const SellerLayout = () => {
           </div>
 
           <div
-            className="seller-content-wrapper flex flex-col"
+            className={`seller-content-wrapper flex flex-col ${pathname === "/seller/support" ? "" : "p-4 md:p-6"}`}
             style={{
               borderRadius: 0,
               height: pathname === "/seller/support" ? "100%" : "auto",
