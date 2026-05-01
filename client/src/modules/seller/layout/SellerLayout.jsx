@@ -58,7 +58,7 @@ const SellerLayout = () => {
 
   // Responsive Width Settings
   const SIDEBAR_WIDTH = 250;
-  const COLLAPSED_WIDTH = 80;
+  const COLLAPSED_WIDTH = 72;
 
   useEffect(() => {
     const handleResize = () => {
@@ -98,9 +98,6 @@ const SellerLayout = () => {
         <div className="px-1 py-1">
           <p className="font-semibold text-gray-800 m-0">
             {user?.name || "Seller User"}
-          </p>
-          <p className="text-xs text-gray-500 m-0">
-            {user?.email || "seller@example.com"}
           </p>
         </div>
       ),
@@ -255,7 +252,7 @@ const SellerLayout = () => {
           style={{
             margin: pathname === "/seller/support" ? 0 : (isMobile ? "16px" : "24px"),
             height: pathname === "/seller/support" ? "calc(100vh - 64px)" : "auto",
-            minHeight: pathname === "/seller/support" ? "calc(100vh - 64px)" : "calc(100vh - 112px)",
+            minHeight: pathname === "/seller/support" ? "calc(100vh - 64px)" : "auto",
             background: pathname === "/seller/support" ? "#fff" : "transparent",
             overflow: pathname === "/seller/support" ? "hidden" : "visible",
           }}

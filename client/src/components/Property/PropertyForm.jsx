@@ -557,8 +557,31 @@ const PropertyForm = ({
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
+      {/* Mobile Header */}
+      <div className="lg:hidden mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {isEdit ? "Edit Property" : "Add New Property"}
+        </h1>
+        <p className="text-gray-500">
+          {isEdit
+            ? "Update your property details and information."
+            : "Fill in the details below to list a new property."}
+        </p>
+      </div>
+
       {/* Sidebar - Desktop Only */}
       <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-24 h-fit self-start">
+        <div className="mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {isEdit ? "Edit Property" : "Add New Property"}
+          </h1>
+          <p className="text-gray-500">
+            {isEdit
+              ? "Update your property details and information."
+              : "Fill in the details below to list a new property."}
+          </p>
+        </div>
+
         {/* Stepper Card */}
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
           <div className="space-y-10 relative">
