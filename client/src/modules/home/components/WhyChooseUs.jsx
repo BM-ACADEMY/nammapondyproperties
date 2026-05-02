@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, ShieldCheck, BadgeDollarSign, Users, Handshake } from 'lucide-react';
 import { motion } from 'framer-motion';
-import logo from '../../../../public/Logo/logo1.png'; 
+import logo from '../../../../public/Logo/logo.webp'; 
 
 const WhyChooseUs = () => {
     const brandBlue = "#1a65a4";

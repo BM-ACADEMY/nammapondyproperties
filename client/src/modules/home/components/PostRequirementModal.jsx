@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-
 const PostRequirementModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
@@ -93,7 +92,7 @@ const PostRequirementModal = () => {
                   onClick={handleAction}
                   className="bg-[#166aa8] cursor-pointer hover:bg-[#0078d7] text-white font-bold py-4 px-10 uppercase tracking-widest text-[11px] transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                 Post Requirement
+                  Post Requirement
                 </button>
 
                 <p className="mt-4 text-[10px] text-[#303030] font-bold uppercase tracking-widest">
@@ -104,7 +103,7 @@ const PostRequirementModal = () => {
               {/* Right Side: Professional Advisor */}
               <div className="hidden md:block w-[40%] relative">
                 <img
-                  src="/properties/adsman.png"
+                  src="/properties/adsman.webp"
                   alt="Property Advisor"
                   className="w-full h-full object-cover object-top filter brightness-105"
                 />

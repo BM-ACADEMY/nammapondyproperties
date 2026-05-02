@@ -14,25 +14,25 @@ const WhatWeDo = () => {
       title: "Residential Plots",
       sub: "For Sale in Pondicherry",
       icon: <EnvironmentOutlined />,
-      img: "/plot.png.png"
+      img: "/about/plot.webp"
     },
     {
       title: "Commercial Properties",
       sub: "Business Spaces",
       icon: <BankOutlined />,
-      img: "/commercial.png"
+      img: "/about/commercial.webp"
     },
     {
       title: "Investment Properties",
       sub: "High Value Assets",
       icon: <RiseOutlined />,
-      img: "/investment.png"
+      img: "/about/investment.webp"
     },
     {
       title: "Property Selling Assistance",
       sub: "End-to-End Support",
       icon: <SafetyCertificateOutlined />,
-      img: "/propperty.png"
+      img: "/about/propperty.webp"
     },
   ];
 

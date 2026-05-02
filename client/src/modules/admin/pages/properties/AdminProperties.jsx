@@ -523,7 +523,7 @@ const AdminProperties = ({ mode }) => {
     <div className="p-0 bg-transparent min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 pt-2">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-3xl font-semibold text-gray-900 tracking-tight">
             {mode === "seller" ? "Seller Listings" : "Properties Management"}
           </h1>
           <p className="text-gray-500 mt-1">Manage and monitor all property listings in one place.</p>
@@ -578,13 +578,13 @@ const AdminProperties = ({ mode }) => {
         ].map((stat, index) => (
           <Card key={index} className="rounded-2xl border-0 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="flex flex-col gap-2">
-              <span className="text-gray-500 font-semibold text-sm tracking-tight">{stat.label}</span>
+              <span className="text-gray-500 font-medium text-sm tracking-tight">{stat.label}</span>
               <div className="flex items-center gap-4">
                 <div className={`p-2.5 ${stat.bgColor} ${stat.textColor} rounded-xl flex items-center justify-center shadow-inner`}>
                   {stat.icon}
                 </div>
                 <span 
-                  className="text-3xl font-black tracking-tight leading-none"
+                  className="text-3xl font-semibold tracking-tight leading-none"
                   style={{ color: stat.valueColor }}
                 >
                   {stat.value}

@@ -92,10 +92,13 @@ const Support = () => {
       setTickets((prev) => {
         const updated = prev.map((t) =>
           t._id === ticketId
-            ? { 
-                ...t, 
+            ? {
+                ...t,
                 lastMessageAt: newMessage.createdAt,
-                isSellerRead: activeTicketRef.current === ticketId || !newMessage.isAdmin ? t.isSellerRead : false
+                isSellerRead:
+                  activeTicketRef.current === ticketId || !newMessage.isAdmin
+                    ? t.isSellerRead
+                    : false,
               }
             : t,
         );
@@ -224,7 +227,9 @@ const Support = () => {
       if (response.data.success) {
         setActiveTicket(response.data.ticket);
         // Mark as read in the list locally to hide red dot
-        setTickets(prev => prev.map(t => t._id === id ? { ...t, isSellerRead: true } : t));
+        setTickets((prev) =>
+          prev.map((t) => (t._id === id ? { ...t, isSellerRead: true } : t)),
+        );
       }
     } catch (error) {}
   };
@@ -650,7 +655,7 @@ const Support = () => {
               <div className="h-full flex flex-col items-center justify-center text-center p-10 lg:p-20">
                 <div className="w-72 h-72 lg:w-[400px] lg:h-[400px] flex items-center justify-center opacity-90">
                   <img
-                    src="/chat/contact.svg"
+                    src="/chat/contact.webp"
                     alt="Support"
                     className="w-full h-full object-contain"
                   />

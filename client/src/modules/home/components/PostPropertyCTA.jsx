@@ -7,7 +7,6 @@ const PostPropertyCTA = () => {
   return (
     <section className="bg-white py-12 md:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-[1000px] mx-auto rounded-3xl bg-[#eef7f0] relative font-sans shadow-sm border border-[#e2efe4] flex items-center min-h-[190px] md:min-h-[300px]">
-
         {/* Left: Text and CTA */}
         <div className="w-[56%] p-6 md:p-16 z-10 flex flex-col justify-center">
           <h2 className="text-lg md:text-4xl font-bold text-[#0f172a] mb-1 md:mb-3 tracking-tight leading-snug">
@@ -18,7 +17,7 @@ const PostPropertyCTA = () => {
           </p>
           <button
             onClick={() => navigate("/post-property")}
-            className="bg-[#0b63e5] hover:bg-[#0950b3] text-white font-bold py-2 px-4 md:py-3.5 md:px-8 rounded-xl shadow-sm transition-colors text-xs md:text-base w-fit cursor-pointer"
+            className="bg-[#166aa8] hover:bg-[#0078d7] text-white font-bold py-2 px-4 md:py-3.5 md:px-8 rounded-xl shadow-sm transition-colors text-xs md:text-base w-fit cursor-pointer"
           >
             Post Property – It's FREE
           </button>
@@ -27,12 +26,11 @@ const PostPropertyCTA = () => {
         {/* Right: Image — anchored to card bottom, overflows top only */}
         <div className="absolute right-0 bottom-0 w-[44%] h-[130%] pointer-events-none flex items-end">
           <img
-            src="/properties/adsman.png"
+            src="/properties/adsman.webp"
             alt="Customer showing app"
             className="w-full h-full object-contain object-bottom drop-shadow-xl"
           />
         </div>
-
       </div>
     </section>
   );

@@ -73,12 +73,15 @@ const PropertyTypeList = () => {
   return (
     <section className="pt-12 md:pt-16 pb-10 bg-white font-sans overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1450px] flex flex-col lg:flex-row gap-10">
-        
         {/* Left Section: Main Content */}
         <div className="flex-1 w-full overflow-visible min-w-0">
           <div className="mb-6 md:pt-15 pt-1">
-            <h2 className="text-[28px] font-bold text-[#1E293B]">Explore Properties</h2>
-            <p className="text-[15px] text-[#64748B] mt-1">Discover exceptional properties and landscapes</p>
+            <h2 className="text-[28px] font-bold text-[#1E293B]">
+              Explore Properties
+            </h2>
+            <p className="text-[15px] text-[#64748B] mt-1">
+              Discover exceptional properties and landscapes
+            </p>
           </div>
 
           {/* Loading State */}
@@ -99,7 +102,6 @@ const PropertyTypeList = () => {
             </div>
           ) : (
             <div className="relative group/slider w-full">
-              
               {/* Custom Navigation */}
               <button className="swiper-prev-btn absolute -left-5 top-1/2 -translate-y-1/2 z-30 w-11 h-11 flex items-center justify-center bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 rounded-full transition hover:scale-105 hover:text-blue-600 disabled:opacity-0 disabled:pointer-events-none hidden md:flex cursor-pointer text-[#475569]">
                 <ChevronLeft className="w-6 h-6 ml-[-2px]" />
@@ -136,7 +138,7 @@ const PropertyTypeList = () => {
                     <div
                       onClick={() =>
                         navigate(
-                          `/properties?type=${encodeURIComponent(item.originalType)}`
+                          `/properties?type=${encodeURIComponent(item.originalType)}`,
                         )
                       }
                       // ⬇️ FIXED: Responsive height so it doesn't stay stuck at 400px on small screens
@@ -170,15 +172,18 @@ const PropertyTypeList = () => {
 
         {/* Right Section: Sidebar */}
         <div className="w-full lg:w-[320px] flex-shrink-0 flex flex-col gap-6 lg:mt-29.5">
-          
           {/* Activity Widget - Only for guests */}
           {!isAuthenticated && (
             <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-              <p className="text-xs text-[#64748B] mb-3 font-semibold uppercase tracking-wider">Your Recent Activity</p>
+              <p className="text-xs text-[#64748B] mb-3 font-semibold uppercase tracking-wider">
+                Your Recent Activity
+              </p>
 
               <div className="bg-orange-50/70 rounded-lg p-4 mb-4 flex justify-between items-start border border-orange-100">
                 <div>
-                  <span className="text-2xl font-bold block text-slate-800">{visitCount}</span>
+                  <span className="text-2xl font-bold block text-slate-800">
+                    {visitCount}
+                  </span>
                   <span className="text-sm text-slate-600">Viewed</span>
                 </div>
                 <span className="text-orange-400 text-lg leading-none">
@@ -199,9 +204,7 @@ const PropertyTypeList = () => {
           )}
 
           {/* Post by Requirement - Only for authenticated users */}
-          {isAuthenticated && (
-            <PostRequirementCard />
-          )}
+          {isAuthenticated && <PostRequirementCard />}
 
           {/* Promo Widget - At Bottom */}
           <div className="mt-auto">
@@ -225,11 +228,10 @@ const PropertyTypeList = () => {
               <div
                 // ⬇️ FIXED: Added responsive minimum widths so the agent image never disappears completely
                 className="absolute bottom-0 right-0 w-[40%] min-w-[100px] sm:min-w-[120px] h-[95%] bg-contain bg-no-repeat bg-bottom"
-                style={{ backgroundImage: "url(./properties/adsman.png)" }}
+                style={{ backgroundImage: "url(./properties/adsman.webp)" }}
               ></div>
             </div>
           </div>
-
         </div>
       </div>
     </section>

@@ -21,7 +21,7 @@ import {
   Search,
   ChevronRight,
   MapPin,
-  LocateFixed
+  LocateFixed,
 } from "lucide-react";
 import RequestCallBackModal from "@/components/Common/RequestCallBackModal";
 import PropertySearchBar from "../components/PropertySearchBar";
@@ -38,12 +38,21 @@ const Header = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [activeBusinessDropdown, setActiveBusinessDropdown] = useState(null);
   const [expandedMobileBusiness, setExpandedMobileBusiness] = useState(null);
-  const { businessTypes, propertyCategories = [], isCallbackModalOpen, setIsCallbackModalOpen } = useNav();
+  const {
+    businessTypes,
+    propertyCategories = [],
+    isCallbackModalOpen,
+    setIsCallbackModalOpen,
+  } = useNav();
 
   // Sort business types: Agent -> Builder/Promoter -> Owner
   const sortedBusinessTypes = [...businessTypes].sort((a, b) => {
-    const nameA = (typeof a.name === "string" ? a.name : a.name?.name || "").toLowerCase();
-    const nameB = (typeof b.name === "string" ? b.name : b.name?.name || "").toLowerCase();
+    const nameA = (
+      typeof a.name === "string" ? a.name : a.name?.name || ""
+    ).toLowerCase();
+    const nameB = (
+      typeof b.name === "string" ? b.name : b.name?.name || ""
+    ).toLowerCase();
 
     const getIndex = (name) => {
       if (name.includes("agent")) return 0;
@@ -55,9 +64,12 @@ const Header = () => {
     return getIndex(nameA) - getIndex(nameB);
   });
 
-  const builderType = businessTypes.find(t => {
+  const builderType = businessTypes.find((t) => {
     const n = typeof t.name === "string" ? t.name : t.name?.name || "";
-    return n.toLowerCase().includes("builder") || n.toLowerCase().includes("promoter");
+    return (
+      n.toLowerCase().includes("builder") ||
+      n.toLowerCase().includes("promoter")
+    );
   });
 
   const userMenuRef = useRef(null);
@@ -112,7 +124,7 @@ const Header = () => {
         const scrollTop = mainContent.scrollTop;
         const threshold = window.innerWidth < 1024 ? 130 : 170;
 
-        setIsScrolled(prev => {
+        setIsScrolled((prev) => {
           if (scrollTop > threshold && !prev) {
             return true;
           } else if (scrollTop <= threshold && prev) {
@@ -144,16 +156,22 @@ const Header = () => {
   const handlePostProperty = () => {
     setIsMenuOpen(false);
     if (isAuthenticated && user) {
-      const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
+      const {
+        canPost,
+        reason,
+        message: limitMessage,
+      } = checkPropertyListingLimit(user);
 
       if (!canPost) {
         message.warning({
           content: limitMessage,
-          key: "verification-restricted"
+          key: "verification-restricted",
         });
 
         if (reason === "unverified") {
-          const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+          const role =
+            user?.role_id?.role_name?.toUpperCase() ||
+            user?.role?.name?.toUpperCase();
           if (role === "SELLER") {
             navigate("/seller/profile");
           } else {
@@ -165,7 +183,9 @@ const Header = () => {
         return;
       }
 
-      const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
+      const role =
+        user?.role_id?.role_name?.toUpperCase() ||
+        user?.role?.name?.toUpperCase();
       if (role === "ADMIN") {
         navigate("/admin/properties/add");
       } else if (role === "SELLER") {
@@ -225,20 +245,23 @@ const Header = () => {
     <>
       <header
         className={`z-[1000] transition-all duration-500
-          ${isHomePage
-            ? "lg:fixed lg:top-0 lg:left-0 lg:right-0 relative"
-            : "fixed top-0 left-0 right-0"}
-          ${isHomePage
-            ? isScrolled
-              ? "bg-[#166aa8] shadow-lg py-1"
-              : "bg-[white] lg:bg-transparent lg:border-transparent py-0 lg:py-0"
-            : "bg-[#166aa8] shadow-lg py-1"
+          ${
+            isHomePage
+              ? "lg:fixed lg:top-0 lg:left-0 lg:right-0 relative"
+              : "fixed top-0 left-0 right-0"
+          }
+          ${
+            isHomePage
+              ? isScrolled
+                ? "bg-[#166aa8] shadow-lg py-1"
+                : "bg-[white] lg:bg-transparent lg:border-transparent py-0 lg:py-0"
+              : "bg-[#166aa8] shadow-lg py-1"
           }`}
       >
         <TopAnnouncementBar />
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 xl:space-x-4">
               {/* Logo - Left Side */}
               <Link
                 to="/"
@@ -251,7 +274,7 @@ const Header = () => {
                 }}
               >
                 <img
-                  src="/Logo/logo1.png"
+                  src="/Logo/logo.webp"
                   alt="NammaPondy Logo"
                   className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 />
@@ -262,10 +285,12 @@ const Header = () => {
                 <button
                   onClick={detectLocation}
                   disabled={locationLoading}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  className={`flex items-center space-x-1.5 xl:space-x-2 lg:px-2 xl:px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
                 >
-                  <MapPin className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`} />
-                  <span className="text-xs font-bold truncate max-w-[100px] uppercase tracking-wider">
+                  <MapPin
+                    className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`}
+                  />
+                  <span className="text-[10px] xl:text-xs font-bold truncate max-w-[80px] xl:max-w-[100px] uppercase tracking-wider">
                     {locationLoading ? "Locating..." : city}
                   </span>
                 </button>
@@ -273,23 +298,22 @@ const Header = () => {
             </div>
 
             {/* Right Side Container (Navigation + Actions) - Visible on lg and above */}
-            <div className="hidden lg:flex items-center flex-1 justify-end space-x-6 xl:space-x-8">
-
+            <div className="hidden lg:flex items-center flex-1 justify-end lg:space-x-3 xl:space-x-8">
               {/* Scrolling Search Bar (Reuses PropertySearchBar) */}
               {(isScrolled && isHomePage) || isPropertiesPage ? (
-                <div className="flex-1 max-w-4xl mx-8">
+                <div className="flex-1 max-w-4xl lg:mx-4 xl:mx-8">
                   <PropertySearchBar variant="header" showFilters={false} />
                 </div>
               ) : (
                 /* Desktop Navigation */
-                <nav className="flex items-center space-x-5 xl:space-x-6">
+                <nav className="flex items-center lg:space-x-3 xl:space-x-6">
                   {propertyCategories.map((category) => {
                     const name = category; // Sell, Rent
                     return (
                       <Link
                         key={name}
                         to={`/properties?category=${encodeURIComponent(name)}`}
-                        className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide cursor-pointer"
+                        className="text-white hover:text-yellow-300 font-medium transition-colors lg:text-[13px] xl:text-[15px] tracking-wide cursor-pointer"
                       >
                         {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
@@ -309,11 +333,16 @@ const Header = () => {
                         onMouseEnter={() => setActiveBusinessDropdown(id)}
                         onMouseLeave={() => setActiveBusinessDropdown(null)}
                       >
-                        <button
-                        className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide capitalize focus:outline-none cursor-pointer"
-                        >
-                          <span>{name}</span>
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${activeBusinessDropdown === id ? "rotate-180" : ""}`} />
+                        <button className="flex items-center space-x-1 text-white hover:text-yellow-300 font-medium transition-colors lg:text-[13px] xl:text-[15px] tracking-wide capitalize focus:outline-none cursor-pointer">
+                          <span className="lg:hidden xl:inline">{name}</span>
+                          <span className="hidden lg:inline xl:hidden">
+                            {name.includes("/")
+                              ? name.split("/")[0].trim()
+                              : name}
+                          </span>
+                          <ChevronDown
+                            className={`h-3.5 w-3.5 transition-transform duration-300 ${activeBusinessDropdown === id ? "rotate-180" : ""}`}
+                          />
                         </button>
 
                         <AnimatePresence>
@@ -335,17 +364,22 @@ const Header = () => {
                                 {name.toLowerCase().includes("agent") && (
                                   <Link
                                     to="/agent-info"
-                                    onClick={() => setActiveBusinessDropdown(null)}
+                                    onClick={() =>
+                                      setActiveBusinessDropdown(null)
+                                    }
                                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
                                   >
                                     Agent Info
                                   </Link>
                                 )}
-                                {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
+                                {(name.toLowerCase().includes("builder") ||
+                                  name.toLowerCase().includes("promoter")) && (
                                   <>
                                     <Link
                                       to="/builder-info"
-                                      onClick={() => setActiveBusinessDropdown(null)}
+                                      onClick={() =>
+                                        setActiveBusinessDropdown(null)
+                                      }
                                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-[#166aa8] rounded-lg transition-colors"
                                     >
                                       Builder Info
@@ -382,13 +416,15 @@ const Header = () => {
               <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
               {/* Actions */}
-              <div className="flex items-center space-x-4 lg:space-x-5">
+              <div className="flex items-center lg:space-x-3 xl:space-x-5">
                 {/* Post Property Button */}
                 <button
                   onClick={handlePostProperty}
-                  className="flex items-center cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
+                  className="flex items-center cursor-pointer bg-white text-gray-900 lg:px-2 xl:px-4 py-2 rounded-md hover:bg-gray-100 transition-all font-semibold shadow-sm"
                 >
-                  <span className="text-[14px]">Post property</span>
+                  <span className="lg:text-[12px] xl:text-[14px]">
+                    Post property
+                  </span>
                   <span className="relative overflow-hidden ml-2 bg-[#1aa554] text-white text-[10px] tracking-wider font-bold px-1.5 py-0.5 rounded before:absolute before:inset-0 before:-translate-x-full before:animate-[shine_3s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent">
                     FREE
                   </span>
@@ -426,9 +462,12 @@ const Header = () => {
                             <p className="text-[#A0AEC0] text-[13px] font-medium tracking-wide">
                               (Mon-Sun)
                             </p>
-                            <p className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide">
+                            <a
+                              href="tel:+919403892971"
+                              className="text-[#2D3748] font-semibold text-lg mt-0.5 tracking-wide hover:text-[#166aa8] transition-colors"
+                            >
                               +91 94038 92971
-                            </p>
+                            </a>
                           </div>
                         </div>
 
@@ -500,7 +539,7 @@ const Header = () => {
                                 <img
                                   src={
                                     user.profile_image.startsWith("http") ||
-                                      user.profile_image.startsWith("//")
+                                    user.profile_image.startsWith("//")
                                       ? user.profile_image
                                       : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
                                   }
@@ -525,7 +564,7 @@ const Header = () => {
                           <div className="px-2 space-y-1">
                             {user?.role_id?.role_name?.toUpperCase() ===
                               "ADMIN" ||
-                              user?.role?.name?.toUpperCase() === "ADMIN" ? (
+                            user?.role?.name?.toUpperCase() === "ADMIN" ? (
                               <Link
                                 to="/admin/dashboard"
                                 onClick={() => setIsUserMenuOpen(false)}
@@ -537,7 +576,7 @@ const Header = () => {
                                 </span>
                               </Link>
                             ) : user?.role_id?.role_name?.toUpperCase() ===
-                              "SELLER" ||
+                                "SELLER" ||
                               user?.role?.name?.toUpperCase() === "SELLER" ? (
                               <Link
                                 to="/seller/dashboard"
@@ -633,7 +672,8 @@ const Header = () => {
                               Welcome to NammaPondy
                             </p>
                             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                              Login to manage your properties, leads and saved listings.
+                              Login to manage your properties, leads and saved
+                              listings.
                             </p>
                           </div>
 
@@ -659,7 +699,9 @@ const Header = () => {
             </div>
 
             {/* Mobile Menu Toggle - Visible below lg */}
-            <div className={`lg:hidden flex items-center ${isMobileSearchOpen ? "flex-1 ml-2" : "space-x-3"}`}>
+            <div
+              className={`lg:hidden flex items-center ${isMobileSearchOpen ? "flex-1 ml-2" : "space-x-3"}`}
+            >
               {isMobileSearchOpen ? (
                 <div className="flex items-center w-full gap-2 transition-all duration-300">
                   <div className="flex-1">
@@ -667,10 +709,11 @@ const Header = () => {
                   </div>
                   <button
                     onClick={() => setIsMobileSearchOpen(false)}
-                    className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${isHomePage && !isScrolled
-                      ? "text-slate-800 hover:bg-slate-100"
-                      : "text-white hover:text-yellow-300"
-                      }`}
+                    className={`p-2 transition-colors focus:outline-none shrink-0 rounded-lg ${
+                      isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
+                        : "text-white hover:text-yellow-300"
+                    }`}
                   >
                     <X className="h-7 w-7" />
                   </button>
@@ -681,12 +724,15 @@ const Header = () => {
                   <button
                     onClick={detectLocation}
                     disabled={locationLoading}
-                    className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
-                      ? "text-slate-800 hover:bg-slate-100"
-                      : "text-white hover:text-yellow-300"
-                      }`}
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${
+                      isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
+                        : "text-white hover:text-yellow-300"
+                    }`}
                   >
-                    <MapPin className={`h-6 w-6 ${locationLoading ? "animate-pulse" : ""}`} />
+                    <MapPin
+                      className={`h-6 w-6 ${locationLoading ? "animate-pulse" : ""}`}
+                    />
                   </button>
                   {/* Mobile Contact/Search Button */}
                   <button
@@ -697,10 +743,11 @@ const Header = () => {
                         setIsCallbackModalOpen(true);
                       }
                     }}
-                    className={`p-2 transition-colors focus:outline-none rounded-lg ${isHomePage && !isScrolled
-                      ? "text-slate-800 hover:bg-slate-100"
-                      : "text-white hover:text-yellow-300"
-                      }`}
+                    className={`p-2 transition-colors focus:outline-none rounded-lg ${
+                      isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
+                        : "text-white hover:text-yellow-300"
+                    }`}
                   >
                     {isScrolled ? (
                       <Search className="h-6 w-6" />
@@ -710,10 +757,11 @@ const Header = () => {
                   </button>
                   <button
                     onClick={() => setIsMenuOpen(true)}
-                    className={`p-2 rounded-lg focus:outline-none transition-colors ${isHomePage && !isScrolled
-                      ? "text-slate-800 hover:bg-slate-100"
-                      : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
-                      }`}
+                    className={`p-2 rounded-lg focus:outline-none transition-colors ${
+                      isHomePage && !isScrolled
+                        ? "text-slate-800 hover:bg-slate-100"
+                        : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
+                    }`}
                   >
                     <Menu className="h-7 w-7" />
                   </button>
@@ -787,7 +835,7 @@ const Header = () => {
                   </div>
                   <div
                     className="absolute bottom-0 right-0 w-[50%] h-full bg-contain bg-no-repeat bg-bottom"
-                    style={{ backgroundImage: "url(/properties/adsman.png)" }}
+                    style={{ backgroundImage: "url(/properties/adsman.webp)" }}
                   ></div>
                 </div>
 
@@ -795,13 +843,14 @@ const Header = () => {
                 {isAuthenticated && (
                   <div className="space-y-1">
                     {user?.role_id?.role_name?.toUpperCase() === "ADMIN" ||
-                      user?.role?.name?.toUpperCase() === "ADMIN" ? (
+                    user?.role?.name?.toUpperCase() === "ADMIN" ? (
                       <Link
                         to="/admin/dashboard"
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                       >
-                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" />{" "}
+                        Dashboard
                       </Link>
                     ) : user?.role_id?.role_name?.toUpperCase() === "SELLER" ||
                       user?.role?.name?.toUpperCase() === "SELLER" ? (
@@ -810,7 +859,8 @@ const Header = () => {
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                       >
-                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Dashboard
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" />{" "}
+                        Dashboard
                       </Link>
                     ) : (
                       <>
@@ -819,14 +869,16 @@ const Header = () => {
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                         >
-                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Profile
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" />{" "}
+                          Profile
                         </Link>
                         <Link
                           to="/user/reviews"
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                         >
-                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Reviews
+                          <ChevronRight className="w-4 h-4 mr-2 text-slate-400" />{" "}
+                          Reviews
                         </Link>
                       </>
                     )}
@@ -834,7 +886,8 @@ const Header = () => {
                       onClick={handleLogout}
                       className="flex items-center w-full px-2 py-3 text-red-500 hover:bg-red-50 transition-colors rounded-lg text-[15px]"
                     >
-                      <ChevronRight className="w-4 h-4 mr-2 text-red-400" /> Logout
+                      <ChevronRight className="w-4 h-4 mr-2 text-red-400" />{" "}
+                      Logout
                     </button>
                   </div>
                 )}
@@ -854,12 +907,11 @@ const Header = () => {
                         onClick={() => setIsMenuOpen(false)}
                         className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                       >
-                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name.charAt(0).toUpperCase() + name.slice(1)}
+                        <ChevronRight className="w-4 h-4 mr-2 text-slate-400" />{" "}
+                        {name.charAt(0).toUpperCase() + name.slice(1)}
                       </Link>
                     );
                   })}
-
-
 
                   {sortedBusinessTypes.map((type) => {
                     const id = type._id?.toString() || type.name;
@@ -872,13 +924,18 @@ const Header = () => {
                     return (
                       <div key={id} className="space-y-1">
                         <button
-                          onClick={() => setExpandedMobileBusiness(isExpanded ? null : id)}
+                          onClick={() =>
+                            setExpandedMobileBusiness(isExpanded ? null : id)
+                          }
                           className="flex items-center justify-between w-full px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px] capitalize"
                         >
                           <div className="flex items-center">
-                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> {name}
+                            <ChevronRight className="w-4 h-4 mr-2 text-slate-400" />{" "}
+                            {name}
                           </div>
-                          <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}
+                          />
                         </button>
 
                         <AnimatePresence>
@@ -905,7 +962,8 @@ const Header = () => {
                                   Agent Info
                                 </Link>
                               )}
-                              {(name.toLowerCase().includes("builder") || name.toLowerCase().includes("promoter")) && (
+                              {(name.toLowerCase().includes("builder") ||
+                                name.toLowerCase().includes("promoter")) && (
                                 <>
                                   <Link
                                     to="/builder-info"

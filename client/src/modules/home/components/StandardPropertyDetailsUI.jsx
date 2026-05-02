@@ -57,7 +57,7 @@ import PropertyCard from "../components/PropertyCard";
 import PostRequirementCard from "./PostRequirementCard";
 
 // Custom marker icon
-import customMarkerIcon from "@/assets/marker-custom.png";
+const customMarkerIcon = "/assets/marker-custom-optimized.webp";
 
 const CustomIcon = L.icon({
   iconUrl: customMarkerIcon,
@@ -89,7 +89,11 @@ const StandardPropertyDetailsUI = ({
     };
 
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare(shareData)
+      ) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(window.location.href);
@@ -175,7 +179,8 @@ const StandardPropertyDetailsUI = ({
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                       </span>
                       <span className="text-xs font-bold uppercase tracking-widest">
-                        High Demand: {formatNumber(property.view_count || 0)} views
+                        High Demand: {formatNumber(property.view_count || 0)}{" "}
+                        views
                       </span>
                     </div>
                   ) : property.view_count > 0 ? (
@@ -250,7 +255,10 @@ const StandardPropertyDetailsUI = ({
                     className="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg hover:bg-white transition-all active:scale-95 group/share"
                     title="Share Property"
                   >
-                    <Share2 size={20} className="text-gray-600 group-hover/share:text-blue-600" />
+                    <Share2
+                      size={20}
+                      className="text-gray-600 group-hover/share:text-blue-600"
+                    />
                   </button>
                 </div>
               </div>
@@ -258,7 +266,7 @@ const StandardPropertyDetailsUI = ({
               {/* Thumbnails */}
               {(() => {
                 const thumbnails = [...(property.media?.images || [])];
-                
+
                 if (thumbnails.length > 1) {
                   return (
                     <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
@@ -587,7 +595,6 @@ const StandardPropertyDetailsUI = ({
                   </p>
                 </div>
               </div>
-
             </div>
 
             {/* Detailed Specifications Section */}
@@ -1085,10 +1092,13 @@ const StandardPropertyDetailsUI = ({
 
             {/* 6. Floor Plan Section */}
             {(() => {
-              const floorPlans = property.media?.floorPlans?.length > 0 
-                ? property.media.floorPlans 
-                : (property.floorPlan || property.media?.floorPlan ? [property.floorPlan || property.media.floorPlan] : []);
-              
+              const floorPlans =
+                property.media?.floorPlans?.length > 0
+                  ? property.media.floorPlans
+                  : property.floorPlan || property.media?.floorPlan
+                    ? [property.floorPlan || property.media.floorPlan]
+                    : [];
+
               if (floorPlans.length === 0) return null;
 
               return (
@@ -1102,16 +1112,27 @@ const StandardPropertyDetailsUI = ({
                       <>
                         <Swiper
                           modules={[Navigation, Pagination, Autoplay]}
-                          navigation={{ nextEl: ".fp-next", prevEl: ".fp-prev" }}
+                          navigation={{
+                            nextEl: ".fp-next",
+                            prevEl: ".fp-prev",
+                          }}
                           pagination={{ clickable: true, dynamicBullets: true }}
-                          autoplay={{ delay: 4000, disableOnInteraction: false }}
+                          autoplay={{
+                            delay: 4000,
+                            disableOnInteraction: false,
+                          }}
                           className="rounded-2xl"
                         >
                           {floorPlans.map((fp, i) => (
-                            <SwiperSlide key={i} className="flex justify-center items-center">
-                              <div 
+                            <SwiperSlide
+                              key={i}
+                              className="flex justify-center items-center"
+                            >
+                              <div
                                 className="cursor-pointer relative group/img"
-                                onClick={() => window.open(getImageUrl(fp), "_blank")}
+                                onClick={() =>
+                                  window.open(getImageUrl(fp), "_blank")
+                                }
                               >
                                 <img
                                   src={getImageUrl(fp)}
@@ -1137,7 +1158,9 @@ const StandardPropertyDetailsUI = ({
                     ) : (
                       <div
                         className="cursor-pointer group/img relative"
-                        onClick={() => window.open(getImageUrl(floorPlans[0]), "_blank")}
+                        onClick={() =>
+                          window.open(getImageUrl(floorPlans[0]), "_blank")
+                        }
                       >
                         <img
                           src={getImageUrl(floorPlans[0])}
@@ -1178,10 +1201,14 @@ const StandardPropertyDetailsUI = ({
                   </div>
                   <div>
                     <div className="text-[10px] text-[#174685] uppercase font-bold tracking-widest mb-1 bg-blue-50 inline-block px-2 py-0.5 rounded-md">
-                      {property.seller?.role_id?.role_name === "admin" ? (property.seller?.name || "Admin") : (property.businessType?.name || "LISTED BY")}
+                      {property.seller?.role_id?.role_name === "admin"
+                        ? property.seller?.name || "Admin"
+                        : property.businessType?.name || "LISTED BY"}
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">
-                      {property.seller?.role_id?.role_name === "admin" ? (property.seller?.name || "Admin") : (property.seller?.name || "Seller")}
+                      {property.seller?.role_id?.role_name === "admin"
+                        ? property.seller?.name || "Admin"
+                        : property.seller?.name || "Seller"}
                     </h3>
                     <div className="text-sm font-semibold text-gray-500">
                       {maskPhoneNumber(property.seller?.phone)}

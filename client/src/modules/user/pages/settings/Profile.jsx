@@ -36,7 +36,6 @@ const Profile = () => {
     }
   }, [user]);
 
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -110,10 +109,11 @@ const Profile = () => {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 px-6 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 backdrop-blur-md border ${message.type === "success"
+              className={`fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:right-8 md:translate-x-0 px-6 py-3 rounded-xl shadow-2xl z-[9999] flex items-center gap-3 backdrop-blur-md border ${
+                message.type === "success"
                   ? "bg-green-500/90 text-white border-green-400"
                   : "bg-red-500/90 text-white border-red-400"
-                }`}
+              }`}
             >
               {message.type === "success" ? (
                 <CheckCircle size={18} />
@@ -148,7 +148,7 @@ const Profile = () => {
               {/* --- IMAGE COVER AREA --- */}
               <div className="h-32 relative">
                 <img
-                  src="/banner1.png"
+                  src="/Logo/userprofile.webp"
                   alt="Profile Cover"
                   className="w-full h-full object-cover"
                 />
@@ -305,7 +305,6 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
-
               </div>
             </div>
           </motion.div>

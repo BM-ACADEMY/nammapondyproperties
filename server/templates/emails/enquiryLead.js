@@ -43,7 +43,7 @@ const enquiryLeadTemplate = (enquiry, seller, property, updater = null, isUpdate
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://nammapondyproperties.com/Logo/logo1.png" alt="Namma Pondy Properties">
+          <img src="https://nammapondyproperties.com/Logo/logo.webp" alt="Namma Pondy Properties">
           <p>${title}</p>
         </div>
         <div class="content">

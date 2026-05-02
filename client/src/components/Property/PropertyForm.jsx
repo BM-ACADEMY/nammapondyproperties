@@ -31,7 +31,7 @@ import BusinessTypeModal from "./BusinessTypeModal";
 const { BaseLayer } = LayersControl;
 
 // Custom marker icon for properties
-import customIconUrl from "@/assets/marker-custom.png";
+const customIconUrl = "/assets/marker-custom-optimized.webp";
 
 const CustomIcon = L.icon({
   iconUrl: customIconUrl,
@@ -40,13 +40,22 @@ const CustomIcon = L.icon({
   popupAnchor: [0, -45],
 });
 
-
-
 // commonAmenities will be fetched from backend starting from this update
 const FALLBACK_AMENITIES = [
-  "Lift", "Car Parking", "Bike Parking", "Visitor Parking", "Power Backup",
-  "24x7 Water Supply", "CCTV Surveillance", "24x7 Security", "Intercom",
-  "Fire Safety System", "Gated Community", "Gym", "Swimming Pool", "Club House"
+  "Lift",
+  "Car Parking",
+  "Bike Parking",
+  "Visitor Parking",
+  "Power Backup",
+  "24x7 Water Supply",
+  "CCTV Surveillance",
+  "24x7 Security",
+  "Intercom",
+  "Fire Safety System",
+  "Gated Community",
+  "Gym",
+  "Swimming Pool",
+  "Club House",
 ];
 
 function LocationMarker({ position, setPosition, setValue }) {
@@ -108,13 +117,18 @@ const PropertyForm = ({
           bachelor: data?.pricing?.rent?.tenantPreference?.bachelor || false,
           family: data?.pricing?.rent?.tenantPreference?.family || false,
           pets: data?.pricing?.rent?.tenantPreference?.pets || false,
-        }
-      }
+        },
+      },
     },
-    businessType: data?.businessType?._id || data?.businessType || data?.specifications?.commercial?.businessType || "",
+    businessType:
+      data?.businessType?._id ||
+      data?.businessType ||
+      data?.specifications?.commercial?.businessType ||
+      "",
     specifications: {
       area: {
-        totalArea: data?.specifications?.area?.totalArea || data?.area_size || "",
+        totalArea:
+          data?.specifications?.area?.totalArea || data?.area_size || "",
         minArea: data?.specifications?.area?.minArea || "",
         maxArea: data?.specifications?.area?.maxArea || "",
         superBuiltupArea: data?.specifications?.area?.superBuiltupArea || "",
@@ -133,7 +147,10 @@ const PropertyForm = ({
         kitchens: data?.specifications?.residential?.kitchens || "",
         furnishing: data?.specifications?.residential?.furnishing || "",
       },
-      facing: data?.specifications?.facing || data?.specifications?.residential?.facing || "",
+      facing:
+        data?.specifications?.facing ||
+        data?.specifications?.residential?.facing ||
+        "",
       plot: {
         plotLength: data?.specifications?.plot?.plotLength || "",
         plotWidth: data?.specifications?.plot?.plotWidth || "",
@@ -153,7 +170,7 @@ const PropertyForm = ({
       utilities: {
         waterSupply: data?.specifications?.utilities?.waterSupply || "",
         powerBackup: data?.specifications?.utilities?.powerBackup || false,
-      }
+      },
     },
     legal: {
       propertyStatus: data?.legal?.propertyStatus || "Ready to Move",
@@ -161,8 +178,10 @@ const PropertyForm = ({
       expectedCompletionYear: data?.legal?.expectedCompletionYear || "",
     },
     location: {
-      addressLine1: data?.location?.addressLine1 || data?.location?.address_line_1 || "",
-      addressLine2: data?.location?.addressLine2 || data?.location?.address_line_2 || "",
+      addressLine1:
+        data?.location?.addressLine1 || data?.location?.address_line_1 || "",
+      addressLine2:
+        data?.location?.addressLine2 || data?.location?.address_line_2 || "",
       country: data?.location?.country || "IN",
       state: data?.location?.state || "PY",
       city: data?.location?.city || "Puducherry",
@@ -171,13 +190,14 @@ const PropertyForm = ({
       pincode: data?.location?.pincode || "",
       coordinates: {
         lat: data?.location?.coordinates?.lat || data?.location?.latitude || "",
-        lng: data?.location?.coordinates?.lng || data?.location?.longitude || ""
-      }
+        lng:
+          data?.location?.coordinates?.lng || data?.location?.longitude || "",
+      },
     },
     media: {
       floorPlan: data?.floorPlan || data?.media?.floorPlan || "",
     },
-    amenities: data?.amenities || []
+    amenities: data?.amenities || [],
   });
 
   const {
@@ -190,16 +210,21 @@ const PropertyForm = ({
     formState: { errors },
     trigger,
   } = useForm({
-    defaultValues: getFormValues(initialData)
+    defaultValues: getFormValues(initialData),
   });
 
   const [currentStep, setCurrentStep] = useState(1);
   const [images, setImages] = useState([]);
-  const [existingImages, setExistingImages] = useState(initialData?.media?.images || initialData?.images || []);
+  const [existingImages, setExistingImages] = useState(
+    initialData?.media?.images || initialData?.images || [],
+  );
   const [imagePreviews, setImagePreviews] = useState([]);
   const [imagesToDelete, setImagesToDelete] = useState([]);
   const [floorPlans, setFloorPlans] = useState([]);
-  const [existingFloorPlans, setExistingFloorPlans] = useState(initialData?.media?.floorPlans || (initialData?.media?.floorPlan ? [initialData.media.floorPlan] : []));
+  const [existingFloorPlans, setExistingFloorPlans] = useState(
+    initialData?.media?.floorPlans ||
+      (initialData?.media?.floorPlan ? [initialData.media.floorPlan] : []),
+  );
   const [floorPlanPreviews, setFloorPlanPreviews] = useState([]);
   const [floorPlansToDelete, setFloorPlansToDelete] = useState([]);
   const [approvalTypes, setApprovalTypes] = useState([]);
@@ -210,8 +235,7 @@ const PropertyForm = ({
 
   const isAdmin = user?.role_id?.role_name?.toLowerCase() === "admin";
   const isBuilderPromoter =
-    user?.businessType?.name?.match(/Builder|Promoter/i) ||
-    isAdmin; // Admin always sees it for management
+    user?.businessType?.name?.match(/Builder|Promoter/i) || isAdmin; // Admin always sees it for management
 
   useEffect(() => {
     // Show Business Type modal if non-admin user doesn't have it set
@@ -223,7 +247,10 @@ const PropertyForm = ({
   useEffect(() => {
     // Set form businessType from user profile if not admin
     if (!isAdmin && user?.businessType) {
-      const btId = typeof user.businessType === 'string' ? user.businessType : user.businessType._id;
+      const btId =
+        typeof user.businessType === "string"
+          ? user.businessType
+          : user.businessType._id;
       setValue("businessType", btId);
     }
   }, [user, isAdmin, setValue]);
@@ -231,7 +258,9 @@ const PropertyForm = ({
   useEffect(() => {
     const fetchAmenities = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/properties/amenities`);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/properties/amenities`,
+        );
         if (response.data) setAmenitiesList(response.data);
       } catch (err) {
         console.error("Failed to fetch amenities:", err);
@@ -255,10 +284,17 @@ const PropertyForm = ({
     if (data.location.addressLine1) score += 10;
     if (data.location.city) score += 10;
     if (data.location.locality) score += 10;
-    if (data.pricing.sell.minPrice || data.pricing.sell.maxPrice || data.pricing.rent.minRent || data.pricing.rent.maxRent) score += 10;
+    if (
+      data.pricing.sell.minPrice ||
+      data.pricing.sell.maxPrice ||
+      data.pricing.rent.minRent ||
+      data.pricing.rent.maxRent
+    )
+      score += 10;
     if (data.amenities?.length > 0) score += 10;
     if (images.length > 0) score += 15;
-    if (data.specifications.area.minArea || data.specifications.area.totalArea) score += 15;
+    if (data.specifications.area.minArea || data.specifications.area.totalArea)
+      score += 15;
     return score;
   };
 
@@ -278,7 +314,9 @@ const PropertyForm = ({
 
   useEffect(() => {
     if (isEdit && initialData && Object.keys(initialData).length > 0) {
-      setExistingImages(initialData?.media?.images || initialData?.images || []);
+      setExistingImages(
+        initialData?.media?.images || initialData?.images || [],
+      );
       if (initialData?.media?.floorPlans) {
         setExistingFloorPlans(initialData.media.floorPlans);
       } else if (initialData?.media?.floorPlan) {
@@ -318,10 +356,20 @@ const PropertyForm = ({
     };
     const timer = setTimeout(updateMapCenter, 1000);
     return () => clearTimeout(timer);
-  }, [selectedCity, selectedLocality, selectedSubArea, selectedState, selectedCountry, setValue]);
+  }, [
+    selectedCity,
+    selectedLocality,
+    selectedSubArea,
+    selectedState,
+    selectedCountry,
+    setValue,
+  ]);
 
   useEffect(() => {
-    if (initialData?.location?.coordinates?.lat && initialData?.location?.coordinates?.lng) {
+    if (
+      initialData?.location?.coordinates?.lat &&
+      initialData?.location?.coordinates?.lng
+    ) {
       setMapPosition({
         lat: initialData.location.coordinates.lat,
         lng: initialData.location.coordinates.lng,
@@ -337,8 +385,12 @@ const PropertyForm = ({
         const queryParam = isSeller ? "?role=seller" : "";
         const [aTypes, bTypes] = await Promise.all([
           // axios.get(`${import.meta.env.VITE_API_URL}/properties/property-types${queryParam}`), // Removed
-          axios.get(`${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`),
-          axios.get(`${import.meta.env.VITE_API_URL}/business-types?status=active`),
+          axios.get(
+            `${import.meta.env.VITE_API_URL}/properties/approval-types${queryParam}`,
+          ),
+          axios.get(
+            `${import.meta.env.VITE_API_URL}/business-types?status=active`,
+          ),
         ]);
         // setPropertyTypes(pTypes.data); // Removed
         setApprovalTypes(aTypes.data);
@@ -379,7 +431,9 @@ const PropertyForm = ({
     });
 
     if (oversizedCount > 0) {
-      toast.error(`${oversizedCount} image(s) oversize or too big (max 5MB each).`);
+      toast.error(
+        `${oversizedCount} image(s) oversize or too big (max 5MB each).`,
+      );
     }
 
     setImages(validFiles);
@@ -415,7 +469,9 @@ const PropertyForm = ({
     });
 
     if (oversizedCount > 0) {
-      toast.error(`${oversizedCount} floor plan(s) oversize or too big (max 5MB each).`);
+      toast.error(
+        `${oversizedCount} floor plan(s) oversize or too big (max 5MB each).`,
+      );
     }
 
     setFloorPlans(validFiles);
@@ -439,7 +495,10 @@ const PropertyForm = ({
 
   const removeExistingImage = (index) => {
     const imageToRemove = existingImages[index];
-    const imageId = typeof imageToRemove === 'string' ? imageToRemove : imageToRemove.image_url;
+    const imageId =
+      typeof imageToRemove === "string"
+        ? imageToRemove
+        : imageToRemove.image_url;
     setImagesToDelete([...imagesToDelete, imageId]);
     const newExisting = [...existingImages];
     newExisting.splice(index, 1);
@@ -463,7 +522,11 @@ const PropertyForm = ({
       Object.keys(obj).forEach((key) => {
         if (obj[key] === "") {
           delete obj[key];
-        } else if (typeof obj[key] === "object" && obj[key] !== null && !Array.isArray(obj[key])) {
+        } else if (
+          typeof obj[key] === "object" &&
+          obj[key] !== null &&
+          !Array.isArray(obj[key])
+        ) {
           removeEmptyStrings(obj[key]);
         }
       });
@@ -482,7 +545,7 @@ const PropertyForm = ({
     formData.append("legal", JSON.stringify(sanitizedLegal));
     formData.append("location", JSON.stringify(sanitizedLocation));
     formData.append("amenities", JSON.stringify(data.amenities || []));
-    
+
     if (data.media) {
       const sanitizedMedia = removeEmptyStrings({ ...data.media });
       formData.append("media", JSON.stringify(sanitizedMedia));
@@ -494,7 +557,10 @@ const PropertyForm = ({
     if (data.businessType) {
       formData.append("businessType", data.businessType);
     } else if (!isAdmin && user?.businessType) {
-      const btId = typeof user.businessType === 'string' ? user.businessType : user.businessType._id;
+      const btId =
+        typeof user.businessType === "string"
+          ? user.businessType
+          : user.businessType._id;
       formData.append("businessType", btId);
     }
 
@@ -511,25 +577,50 @@ const PropertyForm = ({
     });
 
     if (isEdit && floorPlansToDelete.length > 0) {
-      formData.append("floor_plans_to_delete", JSON.stringify(floorPlansToDelete));
+      formData.append(
+        "floor_plans_to_delete",
+        JSON.stringify(floorPlansToDelete),
+      );
     }
 
     onSubmit(formData);
   };
 
-  const selectedType = propertyTypes.find(t => t.name === propertyTypeWatch);
+  const selectedType = propertyTypes.find((t) => t.name === propertyTypeWatch);
   const activeConfig = selectedType || {};
 
   const nextStep = async () => {
     const fieldsToValidate = {
-      1: isAdmin 
-        ? ["basicInfo.title", "basicInfo.description", "businessType", "basicInfo.category", "basicInfo.usageType", "basicInfo.propertyType"] 
-        : ["basicInfo.title", "basicInfo.description", "basicInfo.category", "basicInfo.usageType", "basicInfo.propertyType"],
+      1: isAdmin
+        ? [
+            "basicInfo.title",
+            "basicInfo.description",
+            "businessType",
+            "basicInfo.category",
+            "basicInfo.usageType",
+            "basicInfo.propertyType",
+          ]
+        : [
+            "basicInfo.title",
+            "basicInfo.description",
+            "basicInfo.category",
+            "basicInfo.usageType",
+            "basicInfo.propertyType",
+          ],
       2: ["location.addressLine1", "location.locality", "location.pincode"],
-      3: categoryWatch === "Sell/Buy" 
-        ? ["pricing.sell.minPrice", "pricing.sell.maxPrice", "specifications.area.minArea"] 
-        : ["pricing.rent.minRent", "pricing.rent.maxRent", "specifications.area.minArea"],
-      4: []
+      3:
+        categoryWatch === "Sell/Buy"
+          ? [
+              "pricing.sell.minPrice",
+              "pricing.sell.maxPrice",
+              "specifications.area.minArea",
+            ]
+          : [
+              "pricing.rent.minRent",
+              "pricing.rent.maxRent",
+              "specifications.area.minArea",
+            ],
+      4: [],
     };
 
     const currentFields = fieldsToValidate[currentStep];
@@ -540,15 +631,16 @@ const PropertyForm = ({
         return;
       }
     }
-    setCurrentStep(prev => Math.min(prev + 1, 5));
+    setCurrentStep((prev) => Math.min(prev + 1, 5));
   };
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleFormError = (errors) => {
     console.log("Form Errors:", errors);
     const firstError = Object.values(errors).flat()[0];
     if (firstError) {
-      const errorMessage = firstError.message || "Please check the form for errors.";
+      const errorMessage =
+        firstError.message || "Please check the form for errors.";
       toast.error(errorMessage);
     } else {
       toast.error("Please fill all required fields correctly.");
@@ -557,8 +649,31 @@ const PropertyForm = ({
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
+      {/* Mobile Header */}
+      <div className="lg:hidden mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          {isEdit ? "Edit Property" : "Add New Property"}
+        </h1>
+        <p className="text-gray-500">
+          {isEdit
+            ? "Update your property details and information."
+            : "Fill in the details below to list a new property."}
+        </p>
+      </div>
+
       {/* Sidebar - Desktop Only */}
       <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-24 h-fit self-start">
+        <div className="mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {isEdit ? "Edit Property" : "Add New Property"}
+          </h1>
+          <p className="text-gray-500">
+            {isEdit
+              ? "Update your property details and information."
+              : "Fill in the details below to list a new property."}
+          </p>
+        </div>
+
         {/* Stepper Card */}
         <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
           <div className="space-y-10 relative">
@@ -567,10 +682,13 @@ const PropertyForm = ({
 
             {steps.map((s) => (
               <div key={s.number} className="flex gap-6 relative group">
-                <div className={`w-6 h-6 rounded-full border-2 z-10 flex items-center justify-center transition-all ${currentStep >= s.number
-                  ? "bg-blue-600 border-blue-600 ring-4 ring-blue-50"
-                  : "bg-white border-gray-300"
-                  }`}>
+                <div
+                  className={`w-6 h-6 rounded-full border-2 z-10 flex items-center justify-center transition-all ${
+                    currentStep >= s.number
+                      ? "bg-blue-600 border-blue-600 ring-4 ring-blue-50"
+                      : "bg-white border-gray-300"
+                  }`}
+                >
                   {currentStep > s.number ? (
                     <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
                   ) : currentStep === s.number ? (
@@ -578,12 +696,22 @@ const PropertyForm = ({
                   ) : null}
                 </div>
                 <div className="flex flex-col">
-                  <span className={`text-sm font-bold transition-all ${currentStep >= s.number ? "text-gray-800" : "text-gray-400"
-                    }`}>
+                  <span
+                    className={`text-sm font-bold transition-all ${
+                      currentStep >= s.number
+                        ? "text-gray-800"
+                        : "text-gray-400"
+                    }`}
+                  >
                     {s.title}
                   </span>
-                  <span className={`text-xs transition-all ${currentStep >= s.number ? "text-blue-600" : "text-gray-400"
-                    }`}>
+                  <span
+                    className={`text-xs transition-all ${
+                      currentStep >= s.number
+                        ? "text-blue-600"
+                        : "text-gray-400"
+                    }`}
+                  >
                     {s.sub}
                   </span>
                 </div>
@@ -617,12 +745,16 @@ const PropertyForm = ({
                   className="transition-all duration-1000"
                 />
               </svg>
-              <span className="absolute text-lg font-bold text-gray-800">{propertyScore}%</span>
+              <span className="absolute text-lg font-bold text-gray-800">
+                {propertyScore}%
+              </span>
             </div>
             <div>
               <h4 className="font-bold text-gray-800">Property Score</h4>
               <p className="text-xs text-gray-500 leading-tight mt-1">
-                Better your property score,<br />greater your visibility
+                Better your property score,
+                <br />
+                greater your visibility
               </p>
             </div>
           </div>
@@ -630,16 +762,19 @@ const PropertyForm = ({
       </div>
 
       {/* Main Content Area */}
-      <form onSubmit={handleSubmit(handleFormSubmit, handleFormError)} className="flex-1 space-y-8">
+      <form
+        onSubmit={handleSubmit(handleFormSubmit, handleFormError)}
+        className="flex-1 space-y-8"
+      >
         <div className="mb-8 p-1">
           <h2 className="text-2xl font-bold text-gray-800 mb-1">
             Welcome back {user?.name || "User"},
           </h2>
           <p className="text-gray-500 font-medium">
-            {steps.find(s => s.number === currentStep)?.title === "Basic Details"
+            {steps.find((s) => s.number === currentStep)?.title ===
+            "Basic Details"
               ? "Fill out basic details"
-              : steps.find(s => s.number === currentStep)?.title
-            }
+              : steps.find((s) => s.number === currentStep)?.title}
           </p>
         </div>
 
@@ -647,17 +782,20 @@ const PropertyForm = ({
           <div className="space-y-8">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-10">
               <div>
-                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">I'm looking to <span className="text-red-500">*</span></p>
+                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">
+                  I'm looking to <span className="text-red-500">*</span>
+                </p>
                 <div className="flex flex-wrap gap-4">
                   {["Sell/Buy", "Rent"].map((cat) => (
                     <button
                       key={cat}
                       type="button"
                       onClick={() => setValue("basicInfo.category", cat)}
-                      className={`px-8 py-2.5 rounded-full border-2 transition-all font-bold text-sm ${watch("basicInfo.category") === cat
-                        ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100"
-                        : "bg-white text-gray-500 border-gray-100 hover:border-blue-200"
-                        }`}
+                      className={`px-8 py-2.5 rounded-full border-2 transition-all font-bold text-sm ${
+                        watch("basicInfo.category") === cat
+                          ? "bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-100"
+                          : "bg-white text-gray-500 border-gray-100 hover:border-blue-200"
+                      }`}
                     >
                       {cat}
                     </button>
@@ -666,38 +804,61 @@ const PropertyForm = ({
               </div>
 
               <div>
-                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">What kind of property do you have? <span className="text-red-500">*</span></p>
+                <p className="text-gray-700 font-bold mb-4 uppercase text-xs tracking-wider">
+                  What kind of property do you have?{" "}
+                  <span className="text-red-500">*</span>
+                </p>
                 <div className="flex gap-8 mb-6">
                   {["Residential", "Commercial"].map((type) => (
-                    <label key={type} className="flex items-center gap-3 cursor-pointer group">
+                    <label
+                      key={type}
+                      className="flex items-center gap-3 cursor-pointer group"
+                    >
                       <div className="relative flex items-center justify-center">
                         <input
                           type="radio"
-                          {...register("basicInfo.usageType", { required: "Usage type is required" })}
+                          {...register("basicInfo.usageType", {
+                            required: "Usage type is required",
+                          })}
                           value={type}
                           className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-full checked:border-blue-600 transition-all"
                         />
                         <div className="w-2.5 h-2.5 bg-blue-600 rounded-full opacity-0 peer-checked:opacity-100 transition-all absolute"></div>
                       </div>
-                      <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{type}</span>
+                      <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors">
+                        {type}
+                      </span>
                     </label>
                   ))}
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <input type="hidden" {...register("basicInfo.category", { required: "Category is required" })} />
-                  <input type="hidden" {...register("basicInfo.propertyType", { required: "Property type is required" })} />
+                  <input
+                    type="hidden"
+                    {...register("basicInfo.category", {
+                      required: "Category is required",
+                    })}
+                  />
+                  <input
+                    type="hidden"
+                    {...register("basicInfo.propertyType", {
+                      required: "Property type is required",
+                    })}
+                  />
                   {propertyTypes
-                    .filter(t => t.usageType === watch("basicInfo.usageType"))
+                    .filter((t) => t.usageType === watch("basicInfo.usageType"))
                     .map((type) => (
                       <button
                         key={type._id}
                         type="button"
-                        onClick={() => setValue("basicInfo.propertyType", type.name)}
-                        className={`px-5 py-2 rounded-full border-2 transition-all text-sm font-semibold ${watch("basicInfo.propertyType") === type.name
-                          ? "bg-blue-50 text-blue-600 border-blue-600"
-                          : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
-                          }`}
+                        onClick={() =>
+                          setValue("basicInfo.propertyType", type.name)
+                        }
+                        className={`px-5 py-2 rounded-full border-2 transition-all text-sm font-semibold ${
+                          watch("basicInfo.propertyType") === type.name
+                            ? "bg-blue-50 text-blue-600 border-blue-600"
+                            : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
+                        }`}
                       >
                         {type.name}
                       </button>
@@ -709,49 +870,97 @@ const PropertyForm = ({
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold mb-2">Property Title <span className="text-red-500">*</span></label>
-                  <input {...register("basicInfo.title", { required: "Title is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.title ? "border-red-500" : "border-gray-100"}`} placeholder="e.g., Luxury 3BHK Villa in White Town" />
-                  {errors.basicInfo?.title && <p className="text-red-500 text-xs mt-1">{errors.basicInfo.title.message}</p>}
+                  <label className="block text-sm font-bold mb-2">
+                    Property Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    {...register("basicInfo.title", {
+                      required: "Title is required",
+                    })}
+                    className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.title ? "border-red-500" : "border-gray-100"}`}
+                    placeholder="e.g., Luxury 3BHK Villa in White Town"
+                  />
+                  {errors.basicInfo?.title && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.basicInfo.title.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-bold mb-2">Description <span className="text-red-500">*</span></label>
-                  <textarea {...register("basicInfo.description", { required: "Description is required" })} rows="4" className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.description ? "border-red-500" : "border-gray-100"}`} placeholder="Describe the property's unique features, neighborhood, and amenities..."></textarea>
-                  {errors.basicInfo?.description && <p className="text-red-500 text-xs mt-1">{errors.basicInfo.description.message}</p>}
+                  <label className="block text-sm font-bold mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    {...register("basicInfo.description", {
+                      required: "Description is required",
+                    })}
+                    rows="4"
+                    className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.description ? "border-red-500" : "border-gray-100"}`}
+                    placeholder="Describe the property's unique features, neighborhood, and amenities..."
+                  ></textarea>
+                  {errors.basicInfo?.description && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.basicInfo.description.message}
+                    </p>
+                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Approval Type</label>
-                  <select {...register("basicInfo.approvalType")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">
+                    Approval Type
+                  </label>
+                  <select
+                    {...register("basicInfo.approvalType")}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
+                  >
                     <option value="">Select Approval</option>
                     {approvalTypes.map((type) => (
-                      <option key={type.name || type} value={type.name || type}>{type.name || type}</option>
+                      <option key={type.name || type} value={type.name || type}>
+                        {type.name || type}
+                      </option>
                     ))}
                   </select>
                 </div>
                 {isAdmin && (
                   <div>
-                    <label className="block text-sm font-bold mb-2">Business Type <span className="text-red-500">*</span></label>
-                    <select {...register("businessType", { required: "Business type is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}>
+                    <label className="block text-sm font-bold mb-2">
+                      Business Type <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      {...register("businessType", {
+                        required: "Business type is required",
+                      })}
+                      className={`w-full px-4 py-3 border-2 rounded-2xl bg-white ${errors.businessType ? "border-red-500" : "border-gray-100"}`}
+                    >
                       <option value="">Select Business Type</option>
-                      {businessTypes.map(type => (
-                        <option key={type._id} value={type._id}>{type.name}</option>
+                      {businessTypes.map((type) => (
+                        <option key={type._id} value={type._id}>
+                          {type.name}
+                        </option>
                       ))}
                     </select>
-                    {errors.businessType && <p className="text-red-500 text-xs mt-1">{errors.businessType.message}</p>}
+                    {errors.businessType && (
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.businessType.message}
+                      </p>
+                    )}
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Property Status</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">
+                    Property Status
+                  </label>
                   <div className="flex gap-4">
-                    {["Ready to Move", "Under Construction"].map(status => (
+                    {["Ready to Move", "Under Construction"].map((status) => (
                       <button
                         key={status}
                         type="button"
                         onClick={() => setValue("legal.propertyStatus", status)}
-                        className={`px-4 py-2 rounded-xl border-2 transition-all text-sm font-semibold ${watch("legal.propertyStatus") === status
-                          ? "bg-blue-50 text-blue-600 border-blue-600"
-                          : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
-                          }`}
+                        className={`px-4 py-2 rounded-xl border-2 transition-all text-sm font-semibold ${
+                          watch("legal.propertyStatus") === status
+                            ? "bg-blue-50 text-blue-600 border-blue-600"
+                            : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
+                        }`}
                       >
                         {status}
                       </button>
@@ -762,17 +971,25 @@ const PropertyForm = ({
                 {/* Conditional Fields based on Property Status */}
                 {watch("legal.propertyStatus") === "Ready to Move" && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Age of Property</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">
+                      Age of Property
+                    </label>
                     <div className="flex flex-wrap gap-2">
-                      {["0-1 years", "1-5 years", "5-10 years", "10+ years"].map(age => (
+                      {[
+                        "0-1 years",
+                        "1-5 years",
+                        "5-10 years",
+                        "10+ years",
+                      ].map((age) => (
                         <button
                           key={age}
                           type="button"
                           onClick={() => setValue("legal.ageOfProperty", age)}
-                          className={`px-4 py-2 rounded-xl border-2 transition-all text-sm font-semibold ${watch("legal.ageOfProperty") === age
-                            ? "bg-blue-50 text-blue-600 border-blue-600"
-                            : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
-                            }`}
+                          className={`px-4 py-2 rounded-xl border-2 transition-all text-sm font-semibold ${
+                            watch("legal.ageOfProperty") === age
+                              ? "bg-blue-50 text-blue-600 border-blue-600"
+                              : "bg-white text-gray-500 border-gray-100 hover:border-gray-200"
+                          }`}
                         >
                           {age}
                         </button>
@@ -783,14 +1000,21 @@ const PropertyForm = ({
 
                 {watch("legal.propertyStatus") === "Under Construction" && (
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">Expected Completion Year</label>
+                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">
+                      Expected Completion Year
+                    </label>
                     <select
                       {...register("legal.expectedCompletionYear")}
                       className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
                     >
                       <option value="">Select Year</option>
-                      {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() + i).map(year => (
-                        <option key={year} value={year}>{year}</option>
+                      {Array.from(
+                        { length: 11 },
+                        (_, i) => new Date().getFullYear() + i,
+                      ).map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -804,53 +1028,171 @@ const PropertyForm = ({
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold mb-2">Full Address <span className="text-red-500">*</span></label>
-                <textarea {...register("location.addressLine1", { required: "Address is required" })} rows="2" className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.addressLine1 ? "border-red-500" : "border-gray-100"}`} placeholder="House No, Street Name, Area..."></textarea>
-                {errors.location?.addressLine1 && <p className="text-red-500 text-xs mt-1">{errors.location.addressLine1.message}</p>}
+                <label className="block text-sm font-bold mb-2">
+                  Full Address <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  {...register("location.addressLine1", {
+                    required: "Address is required",
+                  })}
+                  rows="2"
+                  className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.addressLine1 ? "border-red-500" : "border-gray-100"}`}
+                  placeholder="House No, Street Name, Area..."
+                ></textarea>
+                {errors.location?.addressLine1 && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.location.addressLine1.message}
+                  </p>
+                )}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Address Line 2</label>
-                <input {...register("location.addressLine2")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="Apartment, suite, unit, building, floor, etc." />
-              </div>
-              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Country</label>
-                <Controller control={control} name="location.country" render={({ field }) => (
-                  <select {...field} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" onChange={(e) => { field.onChange(e); setValue("location.state", ""); setValue("location.city", ""); }}>
-                    <option value="IN">India</option>
-                    {Country.getAllCountries().map(c => <option key={c.isoCode} value={c.isoCode}>{c.name}</option>)}
-                  </select>
-                )} />
-              </div>
-              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">State</label>
-                <Controller control={control} name="location.state" render={({ field }) => (
-                  <select {...field} disabled={!selectedCountry} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" onChange={(e) => { field.onChange(e); setValue("location.city", ""); }}>
-                    <option value="">Select State</option>
-                    {selectedCountry && State.getStatesOfCountry(selectedCountry).map(s => <option key={s.isoCode} value={s.isoCode}>{s.name}</option>)}
-                  </select>
-                )} />
-              </div>
-              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">City</label>
-                <Controller control={control} name="location.city" render={({ field }) => (
-                  <select {...field} disabled={!selectedState} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl">
-                    <option value="">Select City</option>
-                    {selectedState && City.getCitiesOfState(selectedCountry, selectedState).map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                  </select>
-                )} />
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">
+                  Address Line 2
+                </label>
+                <input
+                  {...register("location.addressLine2")}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                  placeholder="Apartment, suite, unit, building, floor, etc."
+                />
               </div>
               <div>
-                <label className="block text-sm font-bold mb-2">Locality / Landmark <span className="text-red-500">*</span></label>
-                <input {...register("location.locality", { required: "Locality is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.locality ? "border-red-500" : "border-gray-100"}`} placeholder="e.g., Near Rock Beach" />
-                {errors.location?.locality && <p className="text-red-500 text-xs mt-1">{errors.location.locality.message}</p>}
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">
+                  Country
+                </label>
+                <Controller
+                  control={control}
+                  name="location.country"
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setValue("location.state", "");
+                        setValue("location.city", "");
+                      }}
+                    >
+                      <option value="IN">India</option>
+                      {Country.getAllCountries().map((c) => (
+                        <option key={c.isoCode} value={c.isoCode}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
               </div>
-              <div><label className="block text-sm font-bold mb-2 uppercase tracking-tight">Sub Area</label><input {...register("location.subArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" /></div>
               <div>
-                <label className="block text-sm font-bold mb-2">Pincode <span className="text-red-500">*</span></label>
-                <input {...register("location.pincode", { required: "Pincode is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.pincode ? "border-red-500" : "border-gray-100"}`} placeholder="e.g., 605001" />
-                {errors.location?.pincode && <p className="text-red-500 text-xs mt-1">{errors.location.pincode.message}</p>}
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">
+                  State
+                </label>
+                <Controller
+                  control={control}
+                  name="location.state"
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      disabled={!selectedCountry}
+                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setValue("location.city", "");
+                      }}
+                    >
+                      <option value="">Select State</option>
+                      {selectedCountry &&
+                        State.getStatesOfCountry(selectedCountry).map((s) => (
+                          <option key={s.isoCode} value={s.isoCode}>
+                            {s.name}
+                          </option>
+                        ))}
+                    </select>
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">
+                  City
+                </label>
+                <Controller
+                  control={control}
+                  name="location.city"
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      disabled={!selectedState}
+                      className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                    >
+                      <option value="">Select City</option>
+                      {selectedState &&
+                        City.getCitiesOfState(
+                          selectedCountry,
+                          selectedState,
+                        ).map((c) => (
+                          <option key={c.name} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
+                    </select>
+                  )}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">
+                  Locality / Landmark <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register("location.locality", {
+                    required: "Locality is required",
+                  })}
+                  className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.locality ? "border-red-500" : "border-gray-100"}`}
+                  placeholder="e.g., Near Rock Beach"
+                />
+                {errors.location?.locality && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.location.locality.message}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2 uppercase tracking-tight">
+                  Sub Area
+                </label>
+                <input
+                  {...register("location.subArea")}
+                  className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">
+                  Pincode <span className="text-red-500">*</span>
+                </label>
+                <input
+                  {...register("location.pincode", {
+                    required: "Pincode is required",
+                  })}
+                  className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.pincode ? "border-red-500" : "border-gray-100"}`}
+                  placeholder="e.g., 605001"
+                />
+                {errors.location?.pincode && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.location.pincode.message}
+                  </p>
+                )}
               </div>
             </div>
             <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200 h-[400px]">
               {mapPosition && (
-                <MapContainer center={mapPosition} zoom={13} scrollWheelZoom={false} style={{ height: "100%", width: "100%", borderRadius: "1rem" }}>
+                <MapContainer
+                  center={mapPosition}
+                  zoom={13}
+                  scrollWheelZoom={false}
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    borderRadius: "1rem",
+                  }}
+                >
                   <LayersControl position="topright">
                     <BaseLayer name="Street Map">
                       <TileLayer
@@ -871,7 +1213,11 @@ const PropertyForm = ({
                       </LayerGroup>
                     </BaseLayer>
                   </LayersControl>
-                  <LocationMarker position={mapPosition} setPosition={setMapPosition} setValue={setValue} />
+                  <LocationMarker
+                    position={mapPosition}
+                    setPosition={setMapPosition}
+                    setValue={setValue}
+                  />
                   <RecenterMap lat={mapPosition.lat} lng={mapPosition.lng} />
                 </MapContainer>
               )}
@@ -882,44 +1228,117 @@ const PropertyForm = ({
         {currentStep === 3 && (
           <div className="space-y-8">
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-              <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Pricing Details</p>
+              <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">
+                Pricing Details
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {categoryWatch === "Sell/Buy" ? (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Price From (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.sell.minPrice", { required: "Min price is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.minPrice ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 1500000" />
-                      {errors.pricing?.sell?.minPrice && <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.minPrice.message}</p>}
+                      <label className="block text-sm font-bold mb-2">
+                        Price From (₹) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.sell.minPrice", {
+                          required: "Min price is required",
+                        })}
+                        className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.minPrice ? "border-red-500" : "border-gray-100"}`}
+                        placeholder="e.g. 1500000"
+                      />
+                      {errors.pricing?.sell?.minPrice && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pricing.sell.minPrice.message}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Price To (₹) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.sell.maxPrice", { required: "Max price is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.maxPrice ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 1600000" />
-                      {errors.pricing?.sell?.maxPrice && <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.maxPrice.message}</p>}
+                      <label className="block text-sm font-bold mb-2">
+                        Price To (₹) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.sell.maxPrice", {
+                          required: "Max price is required",
+                        })}
+                        className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.maxPrice ? "border-red-500" : "border-gray-100"}`}
+                        placeholder="e.g. 1600000"
+                      />
+                      {errors.pricing?.sell?.maxPrice && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pricing.sell.maxPrice.message}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Price Per Sqft (₹)</label>
-                      <input type="number" {...register("pricing.sell.pricePerSqft")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Price Per Sqft (₹)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.sell.pricePerSqft")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                   </>
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Rent From (₹/mo) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.rent.minRent", { required: "Min rent is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.minRent ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 15000" />
-                      {errors.pricing?.rent?.minRent && <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.minRent.message}</p>}
+                      <label className="block text-sm font-bold mb-2">
+                        Rent From (₹/mo) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.rent.minRent", {
+                          required: "Min rent is required",
+                        })}
+                        className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.minRent ? "border-red-500" : "border-gray-100"}`}
+                        placeholder="e.g. 15000"
+                      />
+                      {errors.pricing?.rent?.minRent && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pricing.rent.minRent.message}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Rent To (₹/mo) <span className="text-red-500">*</span></label>
-                      <input type="number" {...register("pricing.rent.maxRent", { required: "Max rent is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.maxRent ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 20000" />
-                      {errors.pricing?.rent?.maxRent && <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.maxRent.message}</p>}
+                      <label className="block text-sm font-bold mb-2">
+                        Rent To (₹/mo) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.rent.maxRent", {
+                          required: "Max rent is required",
+                        })}
+                        className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.maxRent ? "border-red-500" : "border-gray-100"}`}
+                        placeholder="e.g. 20000"
+                      />
+                      {errors.pricing?.rent?.maxRent && (
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors.pricing.rent.maxRent.message}
+                        </p>
+                      )}
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Security Deposit (₹)</label>
-                      <input type="number" {...register("pricing.rent.securityDeposit")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Security Deposit (₹)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.rent.securityDeposit")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Maintenance (₹/mo)</label>
-                      <input type="number" {...register("pricing.rent.maintenance")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="e.g. 2000" />
+                      <label className="block text-sm font-bold mb-2">
+                        Maintenance (₹/mo)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("pricing.rent.maintenance")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 2000"
+                      />
                     </div>
                   </>
                 )}
@@ -927,52 +1346,109 @@ const PropertyForm = ({
             </div>
 
             <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-              <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Specifications</p>
+              <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">
+                Specifications
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-bold mb-2">
                     Area From (sqft) <span className="text-red-500">*</span>
-                    <span className="text-gray-400 font-normal text-xs ml-1">(enter single value or min of range)</span>
+                    <span className="text-gray-400 font-normal text-xs ml-1">
+                      (enter single value or min of range)
+                    </span>
                   </label>
-                  <input type="number" {...register("specifications.area.minArea", { required: "Area is required" })} className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.specifications?.area?.minArea ? "border-red-500" : "border-gray-100"}`} placeholder="e.g. 1200" />
-                  {errors.specifications?.area?.minArea && <p className="text-red-500 text-xs mt-1">{errors.specifications.area.minArea.message}</p>}
+                  <input
+                    type="number"
+                    {...register("specifications.area.minArea", {
+                      required: "Area is required",
+                    })}
+                    className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.specifications?.area?.minArea ? "border-red-500" : "border-gray-100"}`}
+                    placeholder="e.g. 1200"
+                  />
+                  {errors.specifications?.area?.minArea && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.specifications.area.minArea.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-bold mb-2">
                     Area To (sqft)
-                    <span className="text-gray-400 font-normal text-xs ml-1">(optional — fill for range)</span>
+                    <span className="text-gray-400 font-normal text-xs ml-1">
+                      (optional — fill for range)
+                    </span>
                   </label>
-                  <input type="number" {...register("specifications.area.maxArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" placeholder="e.g. 1500" />
+                  <input
+                    type="number"
+                    {...register("specifications.area.maxArea")}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                    placeholder="e.g. 1500"
+                  />
                 </div>
                 {!activeConfig.hasPlot && (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Super Built-up Area (sqft)</label>
-                      <input type="number" {...register("specifications.area.superBuiltupArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Super Built-up Area (sqft)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.area.superBuiltupArea")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Built-up Area (sqft)</label>
-                      <input type="number" {...register("specifications.area.builtupArea")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Built-up Area (sqft)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.area.builtupArea")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                   </>
                 )}
                 {activeConfig.hasRooms && (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Bedrooms</label>
-                      <input type="number" {...register("specifications.residential.bedrooms")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Bedrooms
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.residential.bedrooms")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Bathrooms</label>
-                      <input type="number" {...register("specifications.residential.bathrooms")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Bathrooms
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.residential.bathrooms")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Balconies</label>
-                      <input type="number" {...register("specifications.residential.balconies")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Balconies
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.residential.balconies")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Furnishing</label>
-                      <select {...register("specifications.residential.furnishing")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                      <label className="block text-sm font-bold mb-2">
+                        Furnishing
+                      </label>
+                      <select
+                        {...register("specifications.residential.furnishing")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
+                      >
                         <option value="">Select Furnishing</option>
                         <option value="Fully Furnished">Fully Furnished</option>
                         <option value="Semi Furnished">Semi Furnished</option>
@@ -985,16 +1461,38 @@ const PropertyForm = ({
                 {activeConfig.hasPlot && (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Plot Length (ft)</label>
-                      <input type="number" {...register("specifications.plot.plotLength")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Plot Length (ft)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.plot.plotLength")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Plot Width (ft)</label>
-                      <input type="number" {...register("specifications.plot.plotWidth")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Plot Width (ft)
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.plot.plotWidth")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div className="flex items-center gap-2 mt-4">
-                      <input type="checkbox" {...register("specifications.plot.cornerPlot")} id="cornerPlot" className="w-4 h-4 text-blue-600 border-gray-300 rounded" />
-                      <label htmlFor="cornerPlot" className="text-sm font-semibold text-gray-700">Corner Plot</label>
+                      <input
+                        type="checkbox"
+                        {...register("specifications.plot.cornerPlot")}
+                        id="cornerPlot"
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <label
+                        htmlFor="cornerPlot"
+                        className="text-sm font-semibold text-gray-700"
+                      >
+                        Corner Plot
+                      </label>
                     </div>
                   </>
                 )}
@@ -1002,32 +1500,65 @@ const PropertyForm = ({
                 {activeConfig.hasCommercial && (
                   <>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Cabins</label>
-                      <input type="number" {...register("specifications.commercial.cabins")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Cabins
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.commercial.cabins")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Workstations</label>
-                      <input type="number" {...register("specifications.commercial.workstations")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl" />
+                      <label className="block text-sm font-bold mb-2">
+                        Workstations
+                      </label>
+                      <input
+                        type="number"
+                        {...register("specifications.commercial.workstations")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                      />
                     </div>
                   </>
                 )}
 
                 <div>
                   <label className="block text-sm font-bold mb-2">Facing</label>
-                  <select {...register("specifications.facing")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                  <select
+                    {...register("specifications.facing")}
+                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
+                  >
                     <option value="">Select Facing</option>
-                    {["North", "East", "West", "South", "North-East", "North-West", "South-East", "South-West"].map(f => (
-                      <option key={f} value={f}>{f}</option>
+                    {[
+                      "North",
+                      "East",
+                      "West",
+                      "South",
+                      "North-East",
+                      "North-West",
+                      "South-East",
+                      "South-West",
+                    ].map((f) => (
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="md:col-span-2 lg:col-span-3 border-t border-gray-100 pt-6 mt-2">
-                  <p className="text-gray-700 font-bold mb-4 uppercase text-[10px] tracking-wider">Utilities & Services</p>
+                  <p className="text-gray-700 font-bold mb-4 uppercase text-[10px] tracking-wider">
+                    Utilities & Services
+                  </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-bold mb-2 uppercase tracking-tight">Water Supply</label>
-                      <select {...register("specifications.utilities.waterSupply")} className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white">
+                      <label className="block text-sm font-bold mb-2 uppercase tracking-tight">
+                        Water Supply
+                      </label>
+                      <select
+                        {...register("specifications.utilities.waterSupply")}
+                        className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
+                      >
                         <option value="">Select Water Supply</option>
                         <option value="Corporation">Corporation</option>
                         <option value="Borewell">Borewell</option>
@@ -1036,13 +1567,22 @@ const PropertyForm = ({
                     </div>
                     <div className="flex items-center gap-3 h-full pt-6">
                       <div className="flex items-center gap-3 px-4 py-3 border-2 border-gray-100 rounded-2xl bg-gray-50/50 w-full">
-                        <input type="checkbox" {...register("specifications.utilities.powerBackup")} id="powerBackup" className="w-5 h-5 text-blue-600 border-gray-300 rounded-lg focus:ring-blue-500 transition-all cursor-pointer" />
-                        <label htmlFor="powerBackup" className="text-sm font-bold text-gray-700 cursor-pointer select-none">Power Backup Available</label>
+                        <input
+                          type="checkbox"
+                          {...register("specifications.utilities.powerBackup")}
+                          id="powerBackup"
+                          className="w-5 h-5 text-blue-600 border-gray-300 rounded-lg focus:ring-blue-500 transition-all cursor-pointer"
+                        />
+                        <label
+                          htmlFor="powerBackup"
+                          className="text-sm font-bold text-gray-700 cursor-pointer select-none"
+                        >
+                          Power Backup Available
+                        </label>
                       </div>
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
@@ -1050,17 +1590,28 @@ const PropertyForm = ({
 
         {currentStep === 4 && (
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Property Media</p>
+            <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">
+              Property Media
+            </p>
             <div className="space-y-8">
               <div className="space-y-4">
-                <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Property Photos</p>
+                <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">
+                  Property Photos
+                </p>
                 <ImgCrop rotationSlider aspect={4 / 3}>
                   <Upload
                     listType="picture-card"
-                    fileList={images.map((f, i) => ({ uid: i, name: f.name, status: "done", url: imagePreviews[i], originFileObj: f }))}
+                    fileList={images.map((f, i) => ({
+                      uid: i,
+                      name: f.name,
+                      status: "done",
+                      url: imagePreviews[i],
+                      originFileObj: f,
+                    }))}
                     onChange={handleImageChange}
                     onPreview={onPreview}
-                    multiple accept="image/*"
+                    multiple
+                    accept="image/*"
                     beforeUpload={() => false}
                     className="custom-upload"
                   >
@@ -1075,9 +1626,20 @@ const PropertyForm = ({
                 {existingImages.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
                     {existingImages.map((img, i) => (
-                      <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
-                        <img src={getImageUrl(img)} alt={`Property ${i}`} className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => removeExistingImage(i)} className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                      <div
+                        key={i}
+                        className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100"
+                      >
+                        <img
+                          src={getImageUrl(img)}
+                          alt={`Property ${i}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(i)}
+                          className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                        >
                           <Trash2 size={16} />
                         </button>
                       </div>
@@ -1089,17 +1651,26 @@ const PropertyForm = ({
               {(isBuilderPromoter || isAdmin) && (
                 <div className="pt-6 border-t border-gray-100">
                   <div className="mb-4">
-                    <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">Floor Plans (Max 10)</p>
+                    <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">
+                      Floor Plans (Max 10)
+                    </p>
                   </div>
 
                   <div className="space-y-4">
                     <ImgCrop rotationSlider aspect={4 / 3}>
                       <Upload
                         listType="picture-card"
-                        fileList={floorPlans.map((f, i) => ({ uid: i, name: f.name, status: "done", url: floorPlanPreviews[i], originFileObj: f }))}
+                        fileList={floorPlans.map((f, i) => ({
+                          uid: i,
+                          name: f.name,
+                          status: "done",
+                          url: floorPlanPreviews[i],
+                          originFileObj: f,
+                        }))}
                         onChange={handleFloorPlanChange}
                         onPreview={onPreview}
-                        multiple accept="image/*"
+                        multiple
+                        accept="image/*"
                         beforeUpload={() => false}
                         className="floor-plan-upload"
                       >
@@ -1111,13 +1682,24 @@ const PropertyForm = ({
                         )}
                       </Upload>
                     </ImgCrop>
-                    
+
                     {existingFloorPlans.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
                         {existingFloorPlans.map((fp, i) => (
-                          <div key={i} className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100">
-                            <img src={getImageUrl(fp)} alt={`Floor Plan ${i}`} className="w-full h-full object-cover" />
-                            <button type="button" onClick={() => removeExistingFloorPlan(i)} className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm">
+                          <div
+                            key={i}
+                            className="relative group rounded-xl overflow-hidden aspect-[4/3] border border-gray-100"
+                          >
+                            <img
+                              src={getImageUrl(fp)}
+                              alt={`Floor Plan ${i}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeExistingFloorPlan(i)}
+                              className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur rounded-lg text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-sm"
+                            >
                               <Trash2 size={16} />
                             </button>
                           </div>
@@ -1133,12 +1715,26 @@ const PropertyForm = ({
 
         {currentStep === 5 && (
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">Amenities</p>
+            <p className="text-gray-700 font-bold mb-6 uppercase text-xs tracking-wider">
+              Amenities
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {[...new Set([...amenitiesList, ...(watch("amenities") || [])])].map((amenity) => (
-                <label key={amenity} className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-100 hover:bg-blue-50/10 cursor-pointer transition-all">
-                  <input type="checkbox" value={amenity} {...register("amenities")} className="w-5 h-5 rounded-lg border-2 border-gray-300 text-blue-600 focus:ring-blue-500 transition-all" />
-                  <span className="text-sm font-semibold text-gray-700">{amenity}</span>
+              {[
+                ...new Set([...amenitiesList, ...(watch("amenities") || [])]),
+              ].map((amenity) => (
+                <label
+                  key={amenity}
+                  className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-100 hover:bg-blue-50/10 cursor-pointer transition-all"
+                >
+                  <input
+                    type="checkbox"
+                    value={amenity}
+                    {...register("amenities")}
+                    className="w-5 h-5 rounded-lg border-2 border-gray-300 text-blue-600 focus:ring-blue-500 transition-all"
+                  />
+                  <span className="text-sm font-semibold text-gray-700">
+                    {amenity}
+                  </span>
                 </label>
               ))}
             </div>
@@ -1151,13 +1747,13 @@ const PropertyForm = ({
                 placeholder="Add custom amenity..."
                 className="flex-1 px-5 py-3 border-2 border-gray-100 rounded-2xl focus:border-blue-600 outline-none transition-all"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     const val = e.target.value.trim();
                     if (val) {
                       const currentAmenities = watch("amenities") || [];
                       if (!Array.isArray(currentAmenities)) {
-                         setValue("amenities", [val]);
+                        setValue("amenities", [val]);
                       } else if (!currentAmenities.includes(val)) {
                         setValue("amenities", [...currentAmenities, val]);
                       }
@@ -1169,7 +1765,7 @@ const PropertyForm = ({
               <button
                 type="button"
                 onClick={() => {
-                  const input = document.getElementById('customAmenity');
+                  const input = document.getElementById("customAmenity");
                   const val = input.value.trim();
                   if (val) {
                     const currentAmenities = watch("amenities") || [];
@@ -1196,10 +1792,11 @@ const PropertyForm = ({
             type="button"
             onClick={prevStep}
             disabled={currentStep === 1}
-            className={`px-8 py-3 rounded-2xl font-bold text-sm transition-all ${currentStep === 1
-              ? "text-gray-300 cursor-not-allowed"
-              : "text-gray-700 hover:bg-gray-100"
-              }`}
+            className={`px-8 py-3 rounded-2xl font-bold text-sm transition-all ${
+              currentStep === 1
+                ? "text-gray-300 cursor-not-allowed"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
           >
             Back
           </button>
@@ -1230,15 +1827,15 @@ const PropertyForm = ({
         </div>
       </form>
 
-      <BusinessTypeModal 
-        isOpen={showBTModal} 
-        user={user} 
+      <BusinessTypeModal
+        isOpen={showBTModal}
+        user={user}
         onSelected={(id) => {
           setShowBTModal(false);
           setValue("businessType", id);
-        }} 
+        }}
       />
-    </div >
+    </div>
   );
 };
 export default PropertyForm;

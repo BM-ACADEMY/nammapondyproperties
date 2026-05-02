@@ -94,7 +94,7 @@ const AdminProfile = () => {
             setLogoFileList([
               {
                 uid: "-2",
-                name: "logo.png",
+                name: "logo.webp",
                 status: "done",
                 url: getImageUrl(userData.builderProfile.companyLogo),
               },
@@ -217,7 +217,7 @@ const AdminProfile = () => {
     }
 
     if (user.builderProfile?.companyLogo) {
-      setLogoFileList([{ uid: "-2", name: "logo.png", status: "done", url: getImageUrl(user.builderProfile.companyLogo) }]);
+      setLogoFileList([{ uid: "-2", name: "logo.webp", status: "done", url: getImageUrl(user.builderProfile.companyLogo) }]);
       setHasInitialLogo(true);
     } else {
       setLogoFileList([]);

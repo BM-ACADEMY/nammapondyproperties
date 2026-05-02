@@ -505,7 +505,7 @@ const BusinessUserList = () => {
                       </div>
                       <div className="flex-1 relative w-full h-[200px] sm:h-[240px] md:h-[300px]">
                         <img 
-                          src="/builder/agent.png" 
+                          src="/builder/agent.webp" 
                           alt="Trusted Builders" 
                           className="w-full h-full object-contain object-right-bottom scale-100 sm:scale-110 md:scale-125 md:translate-x-4 translate-y-2 opacity-95 transition-all duration-700 hover:scale-[1.3] pointer-events-none"
                         />

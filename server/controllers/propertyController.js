@@ -1373,6 +1373,15 @@ exports.getSellerStats = async (req, res) => {
       chartData,
       recentEnquiries,
       topProperties,
+      allPropertyStats: properties.map(p => ({
+        _id: p._id,
+        title: p.basicInfo?.title,
+        status: p.status,
+        isVerified: p.isVerified,
+        isSold: p.isSold,
+        viewCount: p.view_count || 0,
+        createdAt: p.start_date
+      }))
     });
   } catch (error) {
     console.error("Error fetching seller stats:", error);

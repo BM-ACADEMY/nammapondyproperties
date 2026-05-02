@@ -135,18 +135,7 @@ const AddProperty = () => {
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-full">
       <div className="max-w-8xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {editId ? "Edit Property" : "Add New Property"}
-          </h1>
-          <p className="text-gray-500">
-            {editId
-              ? "Update your property details and information."
-              : "Fill in the details below to list a new property."}
-          </p>
-        </div>
-
-        <PropertyForm
+        <div className="mb-2"></div>        <PropertyForm
           onSubmit={onSubmit}
           loading={loading}
           isSeller={true}

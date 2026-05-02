@@ -9,6 +9,9 @@ import {
   Phone,
   ArrowRight,
   TrendingUp,
+  Headphones,
+  Clock,
+  ClipboardList,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import api from "@/services/api";
@@ -65,15 +68,20 @@ const Dashboard = () => {
     recentEnquiries: [],
     topProperties: [],
   });
+  const [supportTickets, setSupportTickets] = useState([]);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await api.get(`/properties/seller-stats?range=${range}`);
-        setData(res.data);
+        const [statsRes, supportRes] = await Promise.all([
+          api.get(`/properties/seller-stats?range=${range}`),
+          api.get("/support-tickets/my-tickets"),
+        ]);
+        setData(statsRes.data);
+        setSupportTickets(supportRes.data.tickets || []);
       } catch (err) {
-        console.error("Failed to fetch dashboard stats", err);
+        console.error("Failed to fetch dashboard data", err);
         setError("Failed to load dashboard data.");
         message.error("Failed to load dashboard data.");
       } finally {
@@ -81,7 +89,7 @@ const Dashboard = () => {
       }
     };
 
-    fetchStats();
+    fetchData();
   }, [range]);
 
   if (loading && !data.summary.totalProperties) {
@@ -116,8 +124,8 @@ const Dashboard = () => {
       value: data.summary.totalProperties,
       icon: <Building size={24} className="text-blue-500" />,
       color: "#e6f7ff",
-      desc: "Manage your listings",
-      path: "/seller/my-properties",
+      desc: "Detailed property analytics",
+      path: "/seller/property-analytics",
     },
     {
       title: "Total Views",
@@ -125,31 +133,51 @@ const Dashboard = () => {
       icon: <Eye size={24} className="text-purple-500" />,
       color: "#f9f0ff",
       desc: "All time analytics",
-      path: "/seller/dashboard",
+      path: "/seller/property-analytics",
     },
     {
-      title: "Total Enquiries",
+      title: "Leads Overview",
       value: data.summary.totalLeads,
-      icon: <MessageSquare size={24} className="text-orange-500" />,
+      icon: <ClipboardList size={24} className="text-orange-500" />,
       color: "#fff7e6",
-      desc: "Manage your leads",
-      path: "/seller/enquiries",
+      desc: "Manage shared leads",
+      path: "/seller/leads-overview",
     },
     {
-      title: "Sold Properties",
-      value: data.summary.soldProperties,
-      icon: <CheckCircle size={24} className="text-emerald-500" />,
-      color: "#f6ffed",
-      desc: "Closed deals",
-    },
-    {
-      title: "Sold Amount",
-      value: `₹${(data.summary.totalSoldAmount || 0).toLocaleString('en-IN')}`,
-      icon: <TrendingUp size={24} className="text-amber-500" />,
-      color: "#fffbe6",
-      desc: "Verified revenue",
+      title: "Support Tickets",
+      value: supportTickets.filter(t => t.status !== 'closed' && t.status !== 'resolved').length,
+      icon: <Headphones size={24} className="text-pink-500" />,
+      color: "#fff1f0",
+      desc: "Active support requests",
+      path: "/seller/support",
     },
   ];
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#0f172a] border border-slate-800 p-4 rounded-2xl shadow-2xl min-w-[180px]">
+          <div className="mb-4">
+            <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">
+              {new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {payload.map((entry, index) => (
+              <div key={index} className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ backgroundColor: entry.color }} />
+                  <span className="text-slate-300 text-[13px] font-semibold">{entry.name}</span>
+                </div>
+                <span className="text-white text-base font-black ml-6">{entry.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // --- PIE CHART DATA ---
   const statusData = [
@@ -157,7 +185,11 @@ const Dashboard = () => {
     { name: "Sold", value: data.summary.soldProperties, color: "#ef4444" },
   ].filter((d) => d.value > 0);
 
-  const paginatedEnquiries = data.recentEnquiries.slice(
+  const unlockedEnquiries = data.recentEnquiries.filter(
+    (e) => !e.enquirer_phone?.includes("X")
+  );
+
+  const paginatedEnquiries = unlockedEnquiries.slice(
     (enquiryPage - 1) * ENQUIRIES_PER_PAGE,
     enquiryPage * ENQUIRIES_PER_PAGE
   );
@@ -195,7 +227,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
         {statCardsData.map((stat, index) => (
           <Link
             to={stat.path}
@@ -228,32 +260,37 @@ const Dashboard = () => {
                   />
                 </div>
 
-                <div className="grow">
-                  <Text
-                    type="secondary"
-                    className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400"
-                  >
-                    {stat.title}
-                  </Text>
-                  <Title
-                    level={2}
-                    className="text-2xl! font-black m-0! mt-1 tracking-tight text-gray-800"
-                  >
-                    {stat.value}
-                  </Title>
-                </div>
+                <div className="grow flex flex-col justify-between">
+                  <div>
+                    <Text
+                      type="secondary"
+                      className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400"
+                    >
+                      {stat.title}
+                    </Text>
+                    <Title
+                      level={2}
+                      className="text-2xl! font-black m-0! mt-1 tracking-tight text-gray-800"
+                    >
+                      {stat.value}
+                    </Title>
+                    <Text
+                      type="secondary"
+                      className="text-[10px] leading-tight text-gray-400 font-medium line-clamp-1 mt-1 block"
+                    >
+                      {stat.desc}
+                    </Text>
+                  </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
-                  <Text
-                    type="secondary"
-                    className="text-[10px] leading-tight text-gray-400 font-medium line-clamp-1"
-                  >
-                    {stat.desc}
-                  </Text>
-                  <ArrowRight
-                    size={12}
-                    className="text-gray-300 group-hover:text-blue-500 transform translate-x-0 group-hover:translate-x-1 transition-all"
-                  />
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between group-hover:border-blue-100 transition-colors">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider group-hover:text-blue-500 transition-colors">
+                      {stat.path ? "View Detailed Analytics" : "Overview Statistics"}
+                    </span>
+                    <ArrowRight 
+                      size={14} 
+                      className={`${stat.path ? 'text-blue-400 opacity-0 group-hover:opacity-100 group-hover:translate-x-1' : 'text-gray-300'} transition-all`} 
+                    />
+                  </div>
                 </div>
               </div>
             </Card>
@@ -277,60 +314,61 @@ const Dashboard = () => {
           >
             <div style={{ width: "100%", height: 350, minHeight: 350 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={data.chartData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
+                <AreaChart data={data?.chartData}>
                   <defs>
                     <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0.2} />
                     </linearGradient>
-                    <linearGradient
-                      id="colorEnquiries"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0.2} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="1 5" vertical={true} horizontal={true} stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#f1f5f9" />
                   <XAxis 
                     dataKey="date" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 11 }} 
-                    dy={10}
+                    tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
                     tickFormatter={(str) => {
-                      const date = new Date(str);
-                      return date.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+                        const date = new Date(str);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     }}
                   />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }} 
                   />
-                  <Legend verticalAlign="top" align="right" iconType="circle" height={36} />
+                  <Tooltip 
+                    content={<CustomTooltip />} 
+                    cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }}
+                  />
+                  <Legend verticalAlign="top" align="right" height={40} iconType="circle" />
                   <Area
+                    name="Page Views"
                     type="monotone"
                     dataKey="views"
-                    stroke="#06b6d4"
+                    stroke="#6366f1"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#colorViews)"
-                    name="Property Views"
+                    animationDuration={1500}
+                    dot={{ r: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: '#6366f1' }}
                   />
                   <Area
+                    name="Enquiries"
                     type="monotone"
                     dataKey="enquiries"
                     stroke="#10b981"
                     strokeWidth={2}
                     fillOpacity={1}
-                    fill="url(#colorEnquiries)"
-                    name="Enquiries"
+                    fill="url(#colorLeads)"
+                    animationDuration={1500}
+                    dot={{ r: 0 }}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: '#10b981' }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -422,15 +460,21 @@ const Dashboard = () => {
 
       <Row gutter={[24, 24]}>
         {/* Recent Enquiries */}
-        <Col xs={24} lg={24}>
+        <Col xs={24} lg={16}>
           <Card
-            title="Recent Enquiries"
-            className="shadow-sm border border-gray-200 rounded-xl"
+            title={
+              <div className="flex justify-between items-center w-full">
+                <span>Recent Enquiries</span>
+                <Link to="/seller/enquiries" className="text-blue-600 text-xs font-medium hover:underline flex items-center gap-1">
+                  View All <ArrowRight size={14} />
+                </Link>
+              </div>
+            }
+            className="shadow-sm border border-gray-200 rounded-xl h-full"
             bordered={false}
-
           >
             <div className="space-y-4">
-              {data.recentEnquiries.length > 0 ? (
+              {unlockedEnquiries.length > 0 ? (
                 <>
                   {paginatedEnquiries.map((item, idx) => (
                   <Link 
@@ -467,16 +511,14 @@ const Dashboard = () => {
                         </div>
                       </div>
                     </div>
-                    
-
                   </Link>
                   ))}
-                  {data.recentEnquiries.length > ENQUIRIES_PER_PAGE && (
+                  {unlockedEnquiries.length > ENQUIRIES_PER_PAGE && (
                     <div className="flex justify-end mt-4">
                       <Pagination
                         current={enquiryPage}
                         pageSize={ENQUIRIES_PER_PAGE}
-                        total={data.recentEnquiries.length}
+                        total={unlockedEnquiries.length}
                         onChange={setEnquiryPage}
                         size="small"
                       />
@@ -484,15 +526,72 @@ const Dashboard = () => {
                   )}
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-400">
-                  <MessageSquare size={32} className="mx-auto mb-2 opacity-20" />
-                  <p className="text-sm">No recent enquiries</p>
+                <div className="text-center py-12">
+                   <div className="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                    <MessageSquare size={32} className="text-gray-300" />
+                  </div>
+                  <Text type="secondary" className="font-medium">No unlocked enquiries yet</Text>
                 </div>
               )}
             </div>
           </Card>
         </Col>
 
+        {/* Support Tickets */}
+        <Col xs={24} lg={8}>
+          <Card
+            title={
+              <div className="flex justify-between items-center w-full">
+                <span>Support Tickets</span>
+                <Link to="/seller/support" className="text-blue-600 text-xs font-medium hover:underline flex items-center gap-1">
+                   Chat Support <ArrowRight size={14} />
+                </Link>
+              </div>
+            }
+            className="shadow-sm border border-gray-200 rounded-xl h-full"
+            bordered={false}
+          >
+            <div className="space-y-4">
+              {supportTickets.length > 0 ? (
+                supportTickets.slice(0, 5).map((ticket, idx) => (
+                  <Link 
+                    to="/seller/support" 
+                    key={idx}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100 hover:border-gray-200 cursor-pointer group"
+                  >
+                    <div className={`p-2 rounded-lg ${ticket.status === 'open' ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                      <Headphones size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <Text strong className="text-sm truncate pr-2">{ticket.subject}</Text>
+                        <Tag 
+                          color={ticket.status === 'open' ? 'orange' : ticket.status === 'resolved' ? 'success' : 'default'}
+                          className="text-[10px] m-0 px-1 leading-4 h-4 uppercase font-bold"
+                        >
+                          {ticket.status}
+                        </Tag>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Clock size={10} className="text-gray-400" />
+                        <span className="text-[10px] text-gray-500">
+                           {new Date(ticket.lastMessageAt || ticket.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-12">
+                  <div className="bg-gray-50 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                    <Headphones size={32} className="text-gray-300" />
+                  </div>
+                  <Text type="secondary" className="font-medium">No active support tickets</Text>
+                </div>
+              )}
+            </div>
+          </Card>
+        </Col>
       </Row>
     </div>
   );

@@ -74,51 +74,6 @@ exports.createRequirement = async (req, res) => {
       console.error("Failed to send requirement notification email:", emailErr);
     }
 
-    // NEW: Check global lead sharing timer settings
-    try {
-      const settings = await WebsiteSetting.findOne();
-      if (settings && settings.leadSharingTimerEnabled) {
-        console.log(`🤖 Auto-triggering lead sharing timer for requirement ${savedRequirement._id}`);
-        
-        const plans = settings.leadSharingPlans || ["Pro", "Premium", "Standard"];
-        const timer = settings.leadSharingInterval || 10;
-        
-        savedRequirement.sharingStatus = "in-progress";
-        savedRequirement.sharingConfig = {
-          plans: plans,
-          timer: timer,
-          currentPlanIndex: 0,
-          startTime: new Date()
-        };
-        await savedRequirement.save();
-
-        // Execute first step (or skip to next if no sellers)
-        let currentPlanIndex = 0;
-        let success = false;
-
-        while (currentPlanIndex < plans.length && !success) {
-          const currentPlan = plans[currentPlanIndex];
-          const result = await exports.internalShareLeadWithPlanName(savedRequirement._id, currentPlan, io, 3);
-          
-          if (result.status === "success") {
-            success = true;
-            savedRequirement.sharingConfig.currentPlanIndex = currentPlanIndex;
-            savedRequirement.sharingConfig.startTime = new Date();
-            await savedRequirement.save();
-          } else {
-            currentPlanIndex++;
-          }
-        }
-
-        if (!success) {
-          savedRequirement.sharingStatus = "unclaimed";
-          await savedRequirement.save();
-        }
-      }
-    } catch (settingErr) {
-      console.error("Failed to auto-trigger lead sharing timer:", settingErr);
-    }
-
     res.status(201).json({
       success: true,
       data: savedRequirement,
@@ -274,11 +229,12 @@ const getPropertyMatchQuery = (sellerId, requirement, matchType = "exact") => {
   const maxPriceField = isRent ? "pricing.rent.maxRent" : "pricing.sell.maxPrice";
 
   // Base query filters
+  // NOTE: We allow Pending and Edit Pending Approval for admin matching so they can see potential matches
   const matchQuery = {
-    status: "Active",
+    status: { $in: ["Active", "Pending", "Edit Pending Approval"] },
     "basicInfo.category": requirement.category,
     "basicInfo.usageType": requirement.usageType,
-    "basicInfo.propertyType": requirement.propertyType,
+    "basicInfo.propertyType": { $regex: requirement.propertyType.split(' / ')[0], $options: "i" },
     $and: [
       {
         $or: [
@@ -302,25 +258,36 @@ const getPropertyMatchQuery = (sellerId, requirement, matchType = "exact") => {
     const radiusInRadians = 5 / 6378.1;
     
     if (matchType === "exact") {
-      // Step 1: Strict Locality Match
+      // Step 1: Locality Match (Search in locality, subArea, and city)
       let targetLocality = requirement.locality;
       
-      // Fallback: If locality is missing (old data), try to get it from the start of locationText
+      // Fallback: If locality is missing, try to get it from the start of locationText
       if (!targetLocality && requirement.locationText) {
         targetLocality = requirement.locationText.split(',')[0].trim();
       }
 
       if (targetLocality && targetLocality.trim() !== "") {
-        const localityRegex = new RegExp(`^${targetLocality.trim()}$`, "i");
-        matchQuery.$and.push({ "location.locality": localityRegex });
-        
-        console.log(`[DEBUG] Querying Exact Locality: "${targetLocality}"`);
-        console.log(`[DEBUG] Budget Range: ${minBudget} - ${maxBudget}`);
+        const locRegex = new RegExp(targetLocality.trim(), "i");
+        matchQuery.$and.push({
+          $or: [
+            { "location.locality": locRegex },
+            { "location.subArea": locRegex },
+            { "location.city": locRegex }
+          ]
+        });
       } else {
-        matchQuery.$and.push({ _id: null }); 
+        // If no text locality, fall back to small radius (1km) as "exact"
+        const smallRadius = 1 / 6378.1;
+        matchQuery.$and.push({
+          "location.locationPoint": {
+            $geoWithin: {
+              $centerSphere: [[requirement.lng, requirement.lat], smallRadius],
+            },
+          },
+        });
       }
     } else if (matchType === "radius") {
-      // Step 2: 5 km Radius Match ONLY
+      // Step 2: 5 km Radius Match
       matchQuery.$and.push({
         "location.locationPoint": {
           $geoWithin: {
@@ -330,7 +297,7 @@ const getPropertyMatchQuery = (sellerId, requirement, matchType = "exact") => {
       });
     }
   } else if (requirement.preferredLocation && requirement.preferredLocation.trim() !== "") {
-    // Step 3: Text-based Regex Fallback (for old data)
+    // Step 3: Text-based Regex Fallback (for old data or missing coordinates)
     const locTerm = requirement.preferredLocation.trim();
     const locRegex = new RegExp(locTerm, "i");
     matchQuery.$and.push({
@@ -439,11 +406,23 @@ exports.getSubscriptionStats = async (req, res) => {
             };
           }));
 
+        // Check if this requirement has already been shared with this plan group
+        let isAlreadyShared = false;
+        if (requirementId) {
+          const SharedLead = mongoose.model("SharedLead");
+          const existingShare = await SharedLead.findOne({
+            requirement: requirementId,
+            plan: { $in: planIds }
+          });
+          if (existingShare) isAlreadyShared = true;
+        }
+
         return {
           planId: plansInGroup[0]._id, // Representative ID for frontend reference
           planName: planName,
           sellerCount: sellers.length,
           sellers: sellers,
+          isAlreadyShared,
           // Plan level matches
           hasBuilderMatch: sellers.some(s => s.isBuilder && s.isMatch),
           hasAgentMatch: sellers.some(s => s.isAgent && s.isMatch),
@@ -571,7 +550,7 @@ exports.internalShareLeadWithPlanName = async (requirementId, planName, io, matc
       plan: representativePlanId,
       sharedWith: sellerIds,
       status: "pending",
-      matchType: "not-exact", // Default for automated sharing
+      matchType: (matchPriority === 1 || matchPriority === 2) ? "exact" : "not-exact",
       matchPriority: matchPriority
     });
 
@@ -632,12 +611,21 @@ exports.shareRequirement = async (req, res) => {
       const selectedPlan = await SubscriptionPlan.findById(pId);
       if (!selectedPlan) continue;
       
-      const result = await internalShareLeadWithPlanName(id, selectedPlan.name, io, matchPriority);
+      const result = await exports.internalShareLeadWithPlanName(id, selectedPlan.name, io, matchPriority);
       results.push(result);
     }
 
     const successCount = results.filter(r => r.status === "success").length;
+    const alreadySharedCount = results.filter(r => r.status === "already_shared").length;
+
     if (successCount === 0) {
+      if (alreadySharedCount > 0) {
+        return res.status(200).json({ 
+          success: true, 
+          message: alreadySharedCount === 1 ? "Already shared with this plan." : "Already shared with these plans.", 
+          details: results 
+        });
+      }
       return res.status(400).json({ success: false, message: "Failed to share lead.", details: results });
     }
 
@@ -652,15 +640,51 @@ exports.shareRequirement = async (req, res) => {
 exports.triggerLeadSharingTimer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { plans, timer } = req.body; // plans: ["Pro", "Premium", "Standard"], timer: minutes
-
-    if (!plans || !Array.isArray(plans) || plans.length === 0) {
-      return res.status(400).json({ success: false, message: "Please select at least one plan." });
+    let { timer, timerUnit } = req.body;
+    
+    const plans = ["Pro", "Premium", "Standard"];
+    let finalTimer = Number(timer) || 10;
+    if (timerUnit === "hours") {
+      finalTimer = finalTimer * 60;
     }
 
     const requirement = await Requirement.findById(id);
     if (!requirement) {
       return res.status(404).json({ success: false, message: "Requirement not found." });
+    }
+
+    // CHECK: Only allow automation for requirements with NO matches
+    let finalMatchType = "exact";
+    if (requirement.lat && requirement.lng) {
+      const globalExactQuery = getPropertyMatchQuery(null, requirement, "exact");
+      const exactExists = await Property.exists(globalExactQuery);
+      if (!exactExists) {
+        finalMatchType = "radius";
+      }
+    }
+
+    const globalMatchQuery = getPropertyMatchQuery(null, requirement, finalMatchType);
+    
+    // Find all properties that match
+    const matchingProperties = await Property.find(globalMatchQuery).select("seller");
+    const matchingSellerIds = [...new Set(matchingProperties.map(p => p.seller.toString()))];
+
+    let hasActiveMatches = false;
+    if (matchingSellerIds.length > 0) {
+      const Subscription = mongoose.model("Subscription");
+      const activeSubs = await Subscription.exists({
+        user: { $in: matchingSellerIds },
+        status: "active",
+        endDate: { $gt: new Date() }
+      });
+      if (activeSubs) hasActiveMatches = true;
+    }
+
+    if (hasActiveMatches) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Automated sharing is disabled for requirements with existing matches. Please use the manual 'Share' button instead." 
+      });
     }
 
     // NEW: Clean up all previous shared leads for this requirement to start fresh
@@ -671,7 +695,7 @@ exports.triggerLeadSharingTimer = async (req, res) => {
     requirement.acceptedBy = null; // Clear previous acceptance if resharing
     requirement.sharingConfig = {
       plans: plans,
-      timer: Number(timer) || 10,
+      timer: finalTimer,
       currentPlanIndex: 0,
       startTime: new Date()
     };
@@ -687,10 +711,11 @@ exports.triggerLeadSharingTimer = async (req, res) => {
       const currentPlan = plans[currentPlanIndex];
       const result = await exports.internalShareLeadWithPlanName(id, currentPlan, io, 3);
       
-      if (result.status === "success") {
+      if (result.status === "success" || result.status === "already_shared") {
         success = true;
         requirement.sharingConfig.currentPlanIndex = currentPlanIndex;
         requirement.sharingConfig.startTime = new Date();
+        requirement.markModified('sharingConfig');
         await requirement.save();
       } else {
         currentPlanIndex++;
@@ -698,11 +723,12 @@ exports.triggerLeadSharingTimer = async (req, res) => {
     }
 
     if (!success) {
-      requirement.sharingStatus = "unclaimed";
+      requirement.sharingStatus = "expired";
+      requirement.status = "Closed";
       await requirement.save();
       return res.status(200).json({
         success: true,
-        message: "Timer mode started, but no eligible sellers found in any selected plans. Marked as unclaimed.",
+        message: "Timer mode started, but no eligible sellers found. Marked as expired.",
         data: requirement
       });
     }
@@ -732,6 +758,29 @@ exports.stopLeadSharingTimer = async (req, res) => {
     res.status(200).json({ success: true, message: "Lead sharing timer stopped." });
   } catch (error) {
     console.error("Error stopping lead sharing timer:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+
+// Check and process expiry for a specific requirement (Immediate response for UI)
+exports.checkRequirementExpiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const requirement = await Requirement.findById(id);
+    if (!requirement) return res.status(404).json({ success: false, message: "Requirement not found." });
+
+    if (requirement.sharingStatus !== "in-progress") {
+      return res.status(200).json({ success: true, message: "Requirement is not in timer mode." });
+    }
+
+    const { processLeadSharingExpiry } = require("../utils/leadSharingUtils");
+    const io = req.app.get("socketio");
+
+    await processLeadSharingExpiry(requirement, io);
+
+    res.status(200).json({ success: true, message: "Expiry check processed." });
+  } catch (error) {
+    console.error("Error checking requirement expiry:", error);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };

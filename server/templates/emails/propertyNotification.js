@@ -62,7 +62,7 @@ const propertyNotificationTemplate = (property, seller, type) => {
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://nammapondyproperties.com/Logo/logo1.png" alt="Namma Pondy Properties" style="height: 60px; width: auto; margin-bottom: 10px;">
+          <img src="https://nammapondyproperties.com/Logo/logo.webp" alt="Namma Pondy Properties" style="height: 60px; width: auto; margin-bottom: 10px;">
           <p style="margin: 0; font-size: 14px; opacity: 0.9;">${title}</p>
         </div>
         <div class="content">

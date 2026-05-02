@@ -28,7 +28,7 @@ const callRequestNotificationTemplate = (callRequest) => {
     <body>
       <div class="container">
         <div class="header">
-          <img src="https://nammapondyproperties.com/Logo/logo1.png" alt="Namma Pondy Properties" style="height: 50px; width: auto; margin-bottom: 10px;">
+          <img src="https://nammapondyproperties.com/Logo/logo.webp" alt="Namma Pondy Properties" style="height: 50px; width: auto; margin-bottom: 10px;">
           <h1>New Callback Request</h1>
         </div>
         <div class="content">
