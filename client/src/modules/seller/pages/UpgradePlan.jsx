@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card, Button, message, Spin, Row, Col } from "antd";
+import { Card, Button, message, Row, Col } from "antd";
 import { Check, X, Zap, Award, Star, IndianRupee, ShieldCheck } from "lucide-react";
 import api from "@/services/api";
+import Loader from "@/components/Common/Loader";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
@@ -173,7 +174,7 @@ const UpgradePlan = () => {
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center h-64"><Spin size="large" /></div>;
+  if (loading) return <div className="flex justify-center items-center h-64"><Loader variant="inline" /></div>;
 
   return (
     <div className="bg-[#F1F5F9] py-8 px-4">

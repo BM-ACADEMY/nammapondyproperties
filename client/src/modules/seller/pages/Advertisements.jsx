@@ -11,6 +11,7 @@ import {
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 
@@ -216,7 +217,10 @@ const SellerAdvertisements = () => {
         <Table
           columns={columns}
           dataSource={properties}
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="inline" />
+          }}
           rowKey="_id"
           pagination={{
             pageSize: 5,

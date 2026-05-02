@@ -530,10 +530,10 @@ const Header = () => {
                           initial="hidden"
                           animate="visible"
                           exit="exit"
-                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-2 z-50 overflow-hidden"
+                          className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 pt-0 pb-2 z-50 overflow-hidden"
                         >
                           {/* Profile Card Header inside Dropdown */}
-                          <div className="px-5 py-4 border-b border-gray-100 mb-2 flex items-center space-x-3 bg-slate-50">
+                          <div className="px-5 py-3 border-b border-gray-100 mb-2 flex items-center space-x-3 bg-slate-50">
                             <div className="h-11 w-11 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 bg-blue-100 flex items-center justify-center text-blue-600">
                               {user?.profile_image ? (
                                 <img
@@ -667,7 +667,7 @@ const Header = () => {
                           className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 z-50 overflow-hidden"
                         >
                           {/* Welcome Header */}
-                          <div className="px-5 py-4 border-b border-gray-100 bg-slate-50">
+                          <div className="px-5 py-3 border-b border-gray-100 bg-slate-50">
                             <p className="text-sm font-bold text-gray-900 tracking-wide">
                               Welcome to NammaPondy
                             </p>

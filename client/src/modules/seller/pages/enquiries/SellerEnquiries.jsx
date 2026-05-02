@@ -43,6 +43,7 @@ import { getImageUrl } from "@/utils/imageUrl";
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import Loader from "@/components/Common/Loader";
 
 const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -596,7 +597,10 @@ const SellerEnquiries = () => {
             columns={columns}
             dataSource={filteredEnquiries}
             rowKey="_id"
-            loading={loading}
+            loading={{
+              spinning: loading,
+              indicator: <Loader variant="inline" />
+            }}
             pagination={{
               pageSize: 8,
               placement: "bottomRight",

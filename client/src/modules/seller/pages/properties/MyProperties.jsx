@@ -60,6 +60,7 @@ import {
 import api from "@/services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 import { checkPropertyListingLimit } from "@/utils/propertyLimits";
@@ -479,23 +480,8 @@ const MyProperties = () => {
       </div> */}
 
       {loading ? (
-        <div 
-          className="grid gap-6"
-          style={{ 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))' 
-          }}
-        >
-          {[1, 2, 3, 4].map((n) => (
-            <div
-              key={n}
-              className="bg-white rounded-2xl p-4 h-80 animate-pulse shadow-sm"
-            >
-              <div className="w-full h-40 bg-gray-200 rounded-xl mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded w-full mt-auto"></div>
-            </div>
-          ))}
+        <div className="flex justify-center items-center py-40 bg-white rounded-2xl shadow-sm border border-gray-100 w-full">
+          <Loader variant="inline" />
         </div>
       ) : filteredProperties.length > 0 ? (
         <div 
@@ -735,6 +721,7 @@ const MyProperties = () => {
         onCancel={() => setIsMarketingModalOpen(false)}
         footer={null}
         width={850} // Reduced modal width
+        centered
         className="marketing-modal pb-0"
         styles={{
           body: {

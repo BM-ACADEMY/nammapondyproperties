@@ -268,7 +268,7 @@ const PropertySearchBar = ({
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 10 }}
-                                    className={`absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[2000] ${isHeader ? "w-80" : "w-full"}`}
+                                    className={`absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden z-[2000] ${isHeader ? "w-[480px]" : "w-full"}`}
                                 >
                                     <div className="max-h-80 overflow-y-auto py-2">
                                         {isSuggestionsLoading ? (
@@ -307,17 +307,17 @@ const PropertySearchBar = ({
                                                             handleSearch({ search: sug.value });
                                                         }
                                                     }}
-                                                    className="w-full text-left px-5 py-3 hover:bg-gray-50 flex items-center justify-between transition-colors border-b border-gray-50 last:border-0"
+                                                    className="w-full text-left px-6 py-4 hover:bg-blue-50/50 flex items-center justify-between transition-colors border-b border-gray-50 last:border-0 group"
                                                 >
-                                                    <div className="flex flex-col">
-                                                        <span className="font-semibold text-gray-800 text-sm md:text-base">
+                                                    <div className="flex flex-col gap-1 pr-4">
+                                                        <span className="font-semibold text-gray-900 text-base md:text-lg leading-snug group-hover:text-blue-700 transition-colors">
                                                             {sug.mainText}
                                                         </span>
-                                                        <span className="text-xs text-gray-500">
+                                                        <span className="text-sm text-gray-500">
                                                             {sug.subText}
                                                         </span>
                                                     </div>
-                                                    <span className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded-md">
+                                                    <span className="text-[11px] md:text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-2.5 py-1 rounded-md shrink-0">
                                                         {sug.type}
                                                     </span>
                                                 </button>
