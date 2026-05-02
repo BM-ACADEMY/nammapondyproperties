@@ -17,7 +17,7 @@ import {
 const { BaseLayer, Overlay } = LayersControl;
 
 // Custom marker icon for properties
-import customIconUrl from "@/assets/marker-custom.png";
+const customIconUrl = "/assets/marker-custom-optimized.webp";
 
 const CustomIcon = L.icon({
   iconUrl: customIconUrl,
@@ -69,7 +69,10 @@ const MapComponent = ({ properties }) => {
 
   const renderMarkers = (propsList) =>
     propsList.map((property) => {
-      if (!property.location?.coordinates?.lat || !property.location?.coordinates?.lng)
+      if (
+        !property.location?.coordinates?.lat ||
+        !property.location?.coordinates?.lng
+      )
         return null;
 
       return (
@@ -91,12 +94,17 @@ const MapComponent = ({ properties }) => {
               >
                 <div className="relative h-32 w-full mb-2 rounded-md overflow-hidden">
                   <img
-                    src={getImageUrl(property.media?.featuredImage || property.media?.images?.[0])}
+                    src={getImageUrl(
+                      property.media?.featuredImage ||
+                        property.media?.images?.[0],
+                    )}
                     alt={property.basicInfo?.title || "Property"}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-2 right-2 flex flex-col gap-1">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider ${property.basicInfo?.category === "Rent" ? "bg-orange-500 text-white" : "bg-blue-600 text-white"}`}>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider ${property.basicInfo?.category === "Rent" ? "bg-orange-500 text-white" : "bg-blue-600 text-white"}`}
+                    >
                       {property.basicInfo?.category}
                     </span>
                   </div>
@@ -108,7 +116,11 @@ const MapComponent = ({ properties }) => {
                   {property.location?.city || "Unknown City"}
                 </p>
                 <p className="text-sm font-semibold text-blue-600">
-                  {formatIndianPrice(property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0)}
+                  {formatIndianPrice(
+                    property.pricing?.sell?.price ||
+                      property.pricing?.rent?.monthlyRent ||
+                      0,
+                  )}
                 </p>
               </Link>
             </div>

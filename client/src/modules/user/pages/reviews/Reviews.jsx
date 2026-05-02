@@ -16,77 +16,87 @@ import {
 
 const { TextArea } = Input;
 import axios from "axios";
-import noReviewsImg from "@/assets/Customer Survey-pana.png";
+const noReviewsImg = "/assets/Customer Survey-pana-optimized.webp";
 
-const ReviewCard = memo(({ testimonial, getStatusBadgeStyles, handleEdit, handleDelete }) => (
-  <motion.div
-    layout
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, scale: 0.95 }}
-    transition={{ duration: 0.3 }}
-    className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col gap-6 relative hover:shadow-md transition-shadow"
-  >
-    {/* Header section */}
-    <div className="flex items-center gap-4">
-      {/* Avatar */}
-      <div className="w-[52px] h-[52px] rounded-full bg-[#E2EAF4] flex items-center justify-center shrink-0 overflow-hidden">
-        <User className="w-[42px] h-[42px] text-[#547CB4]" fill="currentColor" />
-      </div>
+const ReviewCard = memo(
+  ({ testimonial, getStatusBadgeStyles, handleEdit, handleDelete }) => (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
+      className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col gap-6 relative hover:shadow-md transition-shadow"
+    >
+      {/* Header section */}
+      <div className="flex items-center gap-4">
+        {/* Avatar */}
+        <div className="w-[52px] h-[52px] rounded-full bg-[#E2EAF4] flex items-center justify-center shrink-0 overflow-hidden">
+          <User
+            className="w-[42px] h-[42px] text-[#547CB4]"
+            fill="currentColor"
+          />
+        </div>
 
-      {/* Info */}
-      <div className="flex flex-col">
-        <h3 className="text-[20px] font-bold text-slate-800 leading-tight">
-          {testimonial.name}
-        </h3>
-        {testimonial.role && (
-          <p className="text-[14px] text-slate-500 font-medium mt-0.5">{testimonial.role}</p>
-        )}
-        
-        <div className="flex items-center gap-3 mt-1.5">
-          <div className="flex gap-[1px]">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-[15px] h-[15px] ${
-                  i < testimonial.rating
-                    ? "fill-[#FBBB3B] text-[#FBBB3B]"
-                    : "fill-slate-200 text-slate-200"
-                }`}
-              />
-            ))}
-          </div>
-          {testimonial.status !== "pending" && (
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase ${getStatusBadgeStyles(testimonial.status)}`}>
-              {testimonial.status}
-            </span>
+        {/* Info */}
+        <div className="flex flex-col">
+          <h3 className="text-[20px] font-bold text-slate-800 leading-tight">
+            {testimonial.name}
+          </h3>
+          {testimonial.role && (
+            <p className="text-[14px] text-slate-500 font-medium mt-0.5">
+              {testimonial.role}
+            </p>
           )}
+
+          <div className="flex items-center gap-3 mt-1.5">
+            <div className="flex gap-[1px]">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-[15px] h-[15px] ${
+                    i < testimonial.rating
+                      ? "fill-[#FBBB3B] text-[#FBBB3B]"
+                      : "fill-slate-200 text-slate-200"
+                  }`}
+                />
+              ))}
+            </div>
+            {testimonial.status !== "pending" && (
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase ${getStatusBadgeStyles(testimonial.status)}`}
+              >
+                {testimonial.status}
+              </span>
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* Content */}
-    <div className="bg-[#f8f9fc] rounded-[14px] p-5 relative min-h-[85px] flex items-start">
-      <span className="absolute top-2 left-4 text-[54px] text-[#e2e8ea] font-serif leading-none tracking-tighter mix-blend-multiply">
-      </span>
-      <p className="text-slate-600 text-[15px] leading-[1.6] pl-10 relative z-10 pt-2">
-        {testimonial.content}
-      </p>
-    </div>
-
-    {/* Footer */}
-    <div className="flex items-center justify-between pt-1 -mt-1 border-t border-slate-100/80 dashed opacity-90 border-dashed">
-      <div className="flex items-center text-[13.5px] text-slate-400 font-medium">
-        <Calendar className="w-[17px] h-[17px] mr-2.5 text-slate-400/80" strokeWidth={2} />
-        {new Date(testimonial.createdAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric"
-        })}
+      {/* Content */}
+      <div className="bg-[#f8f9fc] rounded-[14px] p-5 relative min-h-[85px] flex items-start">
+        <span className="absolute top-2 left-4 text-[54px] text-[#e2e8ea] font-serif leading-none tracking-tighter mix-blend-multiply"></span>
+        <p className="text-slate-600 text-[15px] leading-[1.6] pl-10 relative z-10 pt-2">
+          {testimonial.content}
+        </p>
       </div>
 
-      <div className="flex items-center gap-4 pr-1">
-        {/* <button
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-1 -mt-1 border-t border-slate-100/80 dashed opacity-90 border-dashed">
+        <div className="flex items-center text-[13.5px] text-slate-400 font-medium">
+          <Calendar
+            className="w-[17px] h-[17px] mr-2.5 text-slate-400/80"
+            strokeWidth={2}
+          />
+          {new Date(testimonial.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </div>
+
+        <div className="flex items-center gap-4 pr-1">
+          {/* <button
           onClick={() => handleEdit(testimonial)}
           className="text-slate-300 hover:text-[#4678E6] transition-colors"
           title="Edit Review"
@@ -94,26 +104,27 @@ const ReviewCard = memo(({ testimonial, getStatusBadgeStyles, handleEdit, handle
           <Edit2 className="w-[19px] h-[19px]" strokeWidth={2} />
         </button> */}
 
-        <Popconfirm
-          title="Delete Review"
-          description="Are you sure you want to remove this review?"
-          onConfirm={() => handleDelete(testimonial._id)}
-          okText="Delete"
-          cancelText="Cancel"
-          okButtonProps={{ danger: true, size: "small" }}
-          cancelButtonProps={{ size: "small" }}
-        >
-          <button
-            className="text-slate-300 hover:text-rose-500 transition-colors"
+          <Popconfirm
             title="Delete Review"
+            description="Are you sure you want to remove this review?"
+            onConfirm={() => handleDelete(testimonial._id)}
+            okText="Delete"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true, size: "small" }}
+            cancelButtonProps={{ size: "small" }}
           >
-            <Trash2 className="w-[19px] h-[19px]" strokeWidth={2} />
-          </button>
-        </Popconfirm>
+            <button
+              className="text-slate-300 hover:text-rose-500 transition-colors"
+              title="Delete Review"
+            >
+              <Trash2 className="w-[19px] h-[19px]" strokeWidth={2} />
+            </button>
+          </Popconfirm>
+        </div>
       </div>
-    </div>
-  </motion.div>
-));
+    </motion.div>
+  ),
+);
 
 const Reviews = () => {
   const { user, isAuthenticated } = useAuth();
@@ -220,7 +231,7 @@ const Reviews = () => {
   const handleWriteNewReview = () => {
     form.resetFields();
     form.setFieldsValue({
-      role: user?.user?.businessType?.name || user?.businessType?.name || ""
+      role: user?.user?.businessType?.name || user?.businessType?.name || "",
     });
     setEditingTestimonial(null);
     setIsModalOpen(true);
@@ -259,14 +270,13 @@ const Reviews = () => {
 
   return (
     <div className="w-full min-h-screen flex-1 bg-[#eff7f3] py-4 md:py-6 flex flex-col relative overflow-hidden">
-      {/* Subtle background element */} 
+      {/* Subtle background element */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-tr from-teal-50/50 to-transparent"></div>
       </div>
-      
+
       <div className="container mx-auto px-4 max-w-7xl w-full flex-1 flex flex-col relative z-10">
         <div className="p-6 lg:p-8 relative">
-
           {/* Modern Header */}
           <div className="flex flex-row justify-between items-center mb-8 gap-4 relative z-10 w-full">
             <div>
@@ -304,16 +314,17 @@ const Reviews = () => {
               </div>
             ) : testimonials.length === 0 ? (
               <div className="bg-white rounded-[24px] shadow-sm p-6 lg:p-10 flex flex-col items-center justify-center text-center">
-                <img 
-                  src={noReviewsImg} 
-                  alt="No reviews illustration" 
+                <img
+                  src={noReviewsImg}
+                  alt="No reviews illustration"
                   className="w-full max-w-[200px] md:max-w-[280px] mb-4 object-contain"
                 />
                 <h3 className="text-xl md:text-[22px] font-bold text-slate-800 mb-1.5">
                   No Reviews Yet
                 </h3>
                 <p className="text-slate-500 max-w-md text-sm md:text-[14px] leading-relaxed mx-auto">
-                  You haven't shared any experiences. Your reviews help others make better choices.
+                  You haven't shared any experiences. Your reviews help others
+                  make better choices.
                 </p>
               </div>
             ) : (
@@ -368,13 +379,13 @@ const Reviews = () => {
         >
           {/* Display User Name */}
           {/* <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200"> */}
-            {/* <div className="flex items-center gap-3"> */}
-              {/* <div className="w-12 h-12 bg-gradient-to-br from-slate-700 to-slate-900 rounded-full flex items-center justify-center text-white font-bold text-lg">
+          {/* <div className="flex items-center gap-3"> */}
+          {/* <div className="w-12 h-12 bg-gradient-to-br from-slate-700 to-slate-900 rounded-full flex items-center justify-center text-white font-bold text-lg">
                 {(user?.user?.name || user?.name || "U")
                   .charAt(0)
                   .toUpperCase()}
               </div> */}
-              {/* <div>
+          {/* <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wide font-medium">
                   Reviewing as
                 </p>
@@ -382,7 +393,7 @@ const Reviews = () => {
                   {user?.user?.name || user?.name || "User"}
                 </p>
               </div> */}
-            {/* </div> */}
+          {/* </div> */}
           {/* </div> */}
 
           <Form.Item
@@ -392,10 +403,12 @@ const Reviews = () => {
             }
             rules={[{ required: true, message: "Please specify your role" }]}
           >
-            <Input 
+            <Input
               placeholder="e.g., Property Seller, Home Buyer, Agent"
               className="rounded-lg border-slate-300 focus:border-slate-500 hover:border-slate-400 py-2"
-              disabled={!!(user?.user?.businessType?.name || user?.businessType?.name)}
+              disabled={
+                !!(user?.user?.businessType?.name || user?.businessType?.name)
+              }
             />
           </Form.Item>
 
