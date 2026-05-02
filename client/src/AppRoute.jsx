@@ -19,7 +19,6 @@ import AddProperty from "./modules/seller/pages/properties/AddProperty";
 import PostRequirementPage from "./modules/home/pages/PostRequirementPage";
 
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
-const LoginPage = lazy(() => import("./modules/home/pages/LoginPage"));
 const PageLoader = () => <Loader />;
 
 const AppRoutes = () => {

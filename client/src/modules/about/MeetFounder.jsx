@@ -49,9 +49,9 @@ export default function MeetFounder() {
             {/* Main Image Container */}
             <div className="relative z-10 rounded-xl overflow-hidden shadow-2xl border border-gray-200 group bg-white p-2">
               <img 
-                src="/kamar.jpeg" 
+                src="/about/kamar.webp" 
                 alt="Kamar - Founder" 
-                className="w-full h-auto object-cover transform transition-transform duration-700 group-hover:scale-105 rounded-lg"
+                className="w-full h-auto object-cover transform transition-transform duration-700 rounded-lg"
               />
               {/* Subtle bottom gradient to help photo blend with light section */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/10 via-transparent to-transparent opacity-40"></div>

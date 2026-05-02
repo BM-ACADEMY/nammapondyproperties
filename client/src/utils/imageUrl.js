@@ -5,7 +5,7 @@ import { getBaseUrl } from "./baseUrl";
  * Ensures consistent behavior across the application and handles both relative and absolute URLs.
  */
 export const getImageUrl = (path) => {
-  if (!path) return "/properties/noimage.png";
+  if (!path) return "/properties/noimage.webp";
 
   // If it's already an absolute URL, return it
   if (
