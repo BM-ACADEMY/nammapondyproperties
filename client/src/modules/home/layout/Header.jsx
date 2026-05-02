@@ -251,7 +251,7 @@ const Header = () => {
                 }}
               >
                 <img
-                  src="/Logo/logo1.png"
+                  src="/Logo/logo.webp"
                   alt="NammaPondy Logo"
                   className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 />

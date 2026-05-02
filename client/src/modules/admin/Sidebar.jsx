@@ -594,7 +594,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const SidebarContent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "linear-gradient(180deg, #12101a 0%, #1a1625 60%, #12101a 100%)" }}>
       <Link to="/" style={S.logoBlock} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-        <img src="/Logo/logo1.png" alt="Logo" style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0, borderRadius: 8 }} />
+        <img src="/Logo/logo.webp" alt="Logo" style={{ width: 38, height: 38, objectFit: "contain", flexShrink: 0, borderRadius: 8 }} />
         {!collapsed && (
           <div style={S.logoText}>
             <span style={S.logoTitle}>{user?.isSuperAdmin ? "Admin Panel" : "Sub Admin"}</span>

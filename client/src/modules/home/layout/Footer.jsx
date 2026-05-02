@@ -103,7 +103,7 @@ const Footer = () => {
           {/* Column 1: Brand Info */}
           <div>
             <div className="mb-6">
-              <img src="/Logo/logo1.png" alt="Namma Pondy Logo" className="h-16 w-auto object-contain" />
+              <img src="/Logo/logo.webp" alt="Namma Pondy Logo" className="h-16 w-auto object-contain" />
             </div>
             <h4 className="text-white text-lg font-bold mb-6 tracking-wide underline-offset-8">
               Namma Pondy Properties

@@ -101,7 +101,7 @@ const Profile = () => {
             setLogoFileList([
               {
                 uid: "-2",
-                name: "logo.png",
+                name: "logo.webp",
                 status: "done",
                 url: getImageUrl(response.data.user.builderProfile.companyLogo),
               },
@@ -252,7 +252,7 @@ const Profile = () => {
       setLogoFileList([
         {
           uid: "-2",
-          name: "logo.png",
+          name: "logo.webp",
           status: "done",
           url: getImageUrl(user.builderProfile.companyLogo),
         },

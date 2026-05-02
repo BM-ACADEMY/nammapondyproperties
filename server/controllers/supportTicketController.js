@@ -56,7 +56,7 @@ exports.createTicket = async (req, res) => {
       await sendPushNotificationToMultiple(adminIds, {
         title: "New Support Ticket",
         body: `${req.user.name} created a new ticket: ${subject}`,
-        icon: "/logo.png",
+        icon: "/Logo/logo.webp",
         data: {
           url: `/admin/support/${newTicket._id}`
         }
@@ -240,7 +240,7 @@ exports.addMessage = async (req, res) => {
           await sendPushNotification(ticket.seller, {
             title: "New Message from Support",
             body: content.length > 50 ? content.substring(0, 50) + "..." : content,
-            icon: "/logo.png",
+            icon: "/Logo/logo.webp",
             data: {
               url: `/seller/support/${ticketId}`
             }
@@ -259,7 +259,7 @@ exports.addMessage = async (req, res) => {
           await sendPushNotificationToMultiple(adminIds, {
             title: "New Support Message",
             body: `${req.user.name}: ${content.length > 50 ? content.substring(0, 50) + "..." : content}`,
-            icon: "/logo.png",
+            icon: "/Logo/logo.webp",
             data: {
               url: `/admin/support/${ticketId}`
             }
@@ -317,7 +317,7 @@ exports.updateStatus = async (req, res) => {
       await sendPushNotification(ticket.seller._id, {
         title: "Ticket Status Updated",
         body: `Your support ticket status has been updated to: ${status}`,
-        icon: "/logo.png",
+        icon: "/Logo/logo.webp",
         data: {
           url: `/seller/support/${ticketId}`
         }
