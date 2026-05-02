@@ -233,6 +233,7 @@ const MarketingPlanManager = () => {
         onCancel={() => setIsModalOpen(false)}
         footer={null}
         width={500}
+        centered
       >
 
         <Form layout="vertical" form={form} onFinish={onFinish}>

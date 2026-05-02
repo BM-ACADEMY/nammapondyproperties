@@ -34,6 +34,7 @@ import { useSocket } from "../../../context/SocketContext";
 import { useAuth } from "../../../context/AuthContext";
 import api from "../../../services/api";
 import moment from "moment";
+import Loader from "@/components/Common/Loader";
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -340,7 +341,10 @@ const Support = () => {
 
             <div className="overflow-y-auto flex-1 bg-white">
               <List
-                loading={loading}
+                loading={{
+                  spinning: loading,
+                  indicator: <Loader variant="inline" />
+                }}
                 dataSource={filteredTickets}
                 renderItem={(item) => (
                   <div

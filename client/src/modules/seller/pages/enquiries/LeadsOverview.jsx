@@ -32,6 +32,7 @@ import {
 import { Link, Navigate } from "react-router-dom";
 import api, { getMySharedLeads, acceptSharedLead } from "@/services/api";
 import { useSocket } from "@/context/SocketContext";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -428,7 +429,7 @@ const LeadsOverview = () => {
               <div className="mt-4">
                 {loading && leads.length === 0 ? (
                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm">
-                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                   <Loader variant="inline" />
                    <p className="mt-4 text-slate-500 font-medium">Checking for new leads...</p>
                  </div>
                 ) : availableLeads.length === 0 ? (
