@@ -339,7 +339,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-6">
 
 
-            <Badge count={supportCount + (isNotificationsCleared ? 0 : expiringCount)} size="small" offset={[-2, 2]}>
+            <Badge count={supportCount + (isNotificationsCleared ? 0 : expiringCount)} size="small" offset={[-2, 2]} color="#7c3aed">
               <Dropdown
                 menu={{ items: notificationItems }}
                 trigger={["click"]}
@@ -406,7 +406,7 @@ const AdminLayout = () => {
           <div
             className="admin-content-wrapper"
             style={{
-              padding: pathname.includes("/support") ? 0 : (pathname === "/admin/dashboard" || pathname === "/admin/seller-listings" ? 0 : 24),
+              padding: pathname.includes("/support") ? 0 : 24,
               borderRadius: 0,
             }}
           >
