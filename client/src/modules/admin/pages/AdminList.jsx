@@ -518,6 +518,7 @@ const AdminList = () => {
         footer={null}
         destroyOnClose
         width={600}
+        centered
       >
         <Form
           form={form}
@@ -634,6 +635,7 @@ const AdminList = () => {
         footer={null}
         destroyOnClose
         width={600}
+        centered
       >
         <Form
           form={editForm}

@@ -1,10 +1,27 @@
 import React from "react";
-import { Spin } from "antd";
 
-const Loader = () => {
+const Loader = ({ variant = "full" }) => {
+  if (variant === "inline") {
+    return (
+      <div className="flex justify-center items-center p-4">
+        <img 
+          src="/Loader/Loader.gif" 
+          alt="Loading..." 
+          className="w-16 h-16 object-contain"
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex justify-center items-center h-screen w-full bg-white bg-opacity-80 z-50">
-      <Spin size="large" />
+    <div className="fixed inset-0 flex justify-center items-center h-screen w-full bg-white z-[9999]">
+      <div className="relative">
+        <img 
+          src="/Loader/Loader.gif" 
+          alt="Loading..." 
+          className="w-32 h-32 md:w-48 md:h-48 object-contain"
+        />
+      </div>
     </div>
   );
 };

@@ -779,6 +779,7 @@ const RequirementList = () => {
         ]}
         width={650}
         destroyOnClose
+        centered
       >
         {selectedRequirement && (
           <div className="py-2">
@@ -910,6 +911,7 @@ const RequirementList = () => {
         ]}
         width={600}
         destroyOnClose
+        centered
       >
         <div className="py-2 max-h-[65vh] overflow-y-auto pr-2 custom-scrollbar">
           {fetchingStats ? (
@@ -1200,6 +1202,7 @@ const RequirementList = () => {
         footer={null}
         width={700}
         destroyOnClose
+        centered
       >
         <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
           <Form
@@ -1438,6 +1441,7 @@ const RequirementList = () => {
         footer={null}
         width={500}
         destroyOnClose
+        centered
       >
         <Form
           form={globalForm}

@@ -16,6 +16,7 @@ import api from "@/services/api";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 
@@ -320,7 +321,10 @@ const SellerPaymentHistory = () => {
           <Table
             dataSource={history}
             columns={columns}
-            loading={loading}
+            loading={{
+              spinning: loading,
+              indicator: <Loader variant="inline" />
+            }}
             rowKey="_id"
             pagination={{
               pageSize: 10,

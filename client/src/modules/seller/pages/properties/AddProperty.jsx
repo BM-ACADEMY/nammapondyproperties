@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import PropertyForm from "../../../../components/Property/PropertyForm";
 import axios from "axios";
-import { message, Button, Spin } from "antd";
+import { message, Button } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import { checkPropertyListingLimit } from "@/utils/propertyLimits";
 import PhoneUpdateModal from "../../../../components/Common/PhoneUpdateModal";
+import Loader from "../../../../components/Common/Loader";
 
 const AddProperty = () => {
   const [loading, setLoading] = useState(false);
@@ -126,9 +127,7 @@ const AddProperty = () => {
 
   if (verifyingLimit && !editId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <Spin size="large" tip="Verifying your plan limits..." />
-      </div>
+      <Loader />
     );
   }
 
