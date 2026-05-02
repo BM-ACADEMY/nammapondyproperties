@@ -1,6 +1,6 @@
 import api from "../services/api";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:6060/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 function urlBase64ToUint8Array(base64String) {

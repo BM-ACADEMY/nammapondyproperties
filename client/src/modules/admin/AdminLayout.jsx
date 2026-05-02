@@ -408,6 +408,7 @@ const AdminLayout = () => {
             style={{
               padding: pathname.includes("/support") ? 0 : (pathname === "/admin/dashboard" || pathname === "/admin/seller-listings" ? 0 : 24),
               borderRadius: 0,
+              height: pathname.includes("/support") ? "100%" : "auto",
             }}
           >
             <Outlet />
