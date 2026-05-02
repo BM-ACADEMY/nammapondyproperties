@@ -1,5 +1,5 @@
 import "./App.css";
-import AppRoutes from "./AppRoute";
+import { lazy, Suspense } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NavProvider } from "./context/NavContext";
@@ -9,6 +9,10 @@ import { Toaster } from "react-hot-toast";
 
 import ScrollToTop from "./components/Common/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
+import Loader from "./components/Common/Loader";
+
+const AppRoutes = lazy(() => import("./AppRoute"));
+
 function App() {
   return (
     <HelmetProvider>
@@ -26,7 +30,9 @@ function App() {
                 <NavProvider>
                   <BrowserRouter>
                     <ScrollToTop />
-                    <AppRoutes />
+                    <Suspense fallback={<Loader />}>
+                      <AppRoutes />
+                    </Suspense>
                   </BrowserRouter>
                 </NavProvider>
               </SocketProvider>

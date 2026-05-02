@@ -2,23 +2,25 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import PrivateRoute from "./guard/PrivateRoute";
 import PublicRoute from "./guard/PublicRoute";
-import Unauthorized from "./modules/common-pages/Unauthorized";
-import NotFound from "./modules/common-pages/NotFound";
-import UserRoutes from "./modules/user/routes/UserRoutes";
-import SellerRoute from "./modules/seller/Routes/SellerRoute";
-import AdminRoute from "./modules/admin/AdminRoute";
-import HomePageRoute from "./modules/home/routes/HomePageRoute";
-import HomeLayout from "./modules/home/layout/HomeLayout";
-import BecomeSeller from "./modules/user/BecomeSeller";
-import About from "./modules/about/About";
-import Contact from "./modules/contact/Contact";
-import TermsAndConditions from "./modules/home/pages/TermsAndConditions";
-import PrivacyPolicy from "./modules/home/pages/PrivacyPolicy";
+const HomeLayout = lazy(() => import("./modules/home/layout/HomeLayout"));
 import Loader from "./components/Common/Loader";
-import AddProperty from "./modules/seller/pages/properties/AddProperty";
-import PostRequirementPage from "./modules/home/pages/PostRequirementPage";
 
+// Lazy loaded modules
+const Unauthorized = lazy(() => import("./modules/common-pages/Unauthorized"));
+const NotFound = lazy(() => import("./modules/common-pages/NotFound"));
+const UserRoutes = lazy(() => import("./modules/user/routes/UserRoutes"));
+const SellerRoute = lazy(() => import("./modules/seller/Routes/SellerRoute"));
+const AdminRoute = lazy(() => import("./modules/admin/AdminRoute"));
+const HomePageRoute = lazy(() => import("./modules/home/routes/HomePageRoute"));
+const BecomeSeller = lazy(() => import("./modules/user/BecomeSeller"));
+const About = lazy(() => import("./modules/about/About"));
+const Contact = lazy(() => import("./modules/contact/Contact"));
+const TermsAndConditions = lazy(() => import("./modules/home/pages/TermsAndConditions"));
+const PrivacyPolicy = lazy(() => import("./modules/home/pages/PrivacyPolicy"));
+const AddProperty = lazy(() => import("./modules/seller/pages/properties/AddProperty"));
+const PostRequirementPage = lazy(() => import("./modules/home/pages/PostRequirementPage"));
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
+
 const PageLoader = () => <Loader />;
 
 const AppRoutes = () => {
@@ -26,12 +28,54 @@ const AppRoutes = () => {
     <Routes>
       <Route element={<HomeLayout />}>
         {/* Public pages accessible to everyone */}
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/terms-and-condition" element={<TermsAndConditions />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/favorites" element={<FavoritesPage />} />
-        <Route path="/post-requirement" element={<PostRequirementPage />} />
+        <Route
+          path="/about"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <About />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <Contact />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/terms-and-condition"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <TermsAndConditions />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/privacy-policy"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PrivacyPolicy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <FavoritesPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/post-requirement"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PostRequirementPage />
+            </Suspense>
+          }
+        />
       </Route>
 
       {/* User Routes */}
@@ -100,10 +144,24 @@ const AppRoutes = () => {
       />
 
       {/* Home Page Route (Catch-all for public/home) */}
-      <Route path="/*" element={<HomePageRoute />} />
+      <Route
+        path="/*"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <HomePageRoute />
+          </Suspense>
+        }
+      />
 
       {/* Global Fallback for strict unmatched routes */}
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path="*"
+        element={
+          <Suspense fallback={<PageLoader />}>
+            <NotFound />
+          </Suspense>
+        }
+      />
     </Routes>
   );
 };

@@ -1,41 +1,46 @@
 import { Routes, Route } from "react-router-dom";
-import SellerLayout from "../layout/SellerLayout";
-import Dashboard from "../pages/dashboard/Dashboard";
-import AddProperty from "../pages/properties/AddProperty";
-import MyProperties from "../pages/properties/MyProperties";
-import Profile from "../pages/profile/Profile";
-import SellerEnquiries from "../pages/enquiries/SellerEnquiries";
-import RequestLimit from "../pages/properties/RequestLimit";
-import AddAttributes from "../pages/properties/AddAttributes";
-import UpgradePlan from "../pages/UpgradePlan";
-import SellerPaymentHistory from "../pages/payments/SellerPaymentHistory";
-import LeadsOverview from "../pages/enquiries/LeadsOverview";
-import Support from "../pages/Support";
-import Reviews from "../../user/pages/reviews/Reviews";
-import PropertyAnalytics from "../pages/properties/PropertyAnalytics";
+import { lazy, Suspense } from "react";
+import Loader from "../../../components/Common/Loader";
 
+const SellerLayout = lazy(() => import("../layout/SellerLayout"));
+const Dashboard = lazy(() => import("../pages/dashboard/Dashboard"));
+const AddProperty = lazy(() => import("../pages/properties/AddProperty"));
+const MyProperties = lazy(() => import("../pages/properties/MyProperties"));
+const Profile = lazy(() => import("../pages/profile/Profile"));
+const SellerEnquiries = lazy(() => import("../pages/enquiries/SellerEnquiries"));
+const RequestLimit = lazy(() => import("../pages/properties/RequestLimit"));
+const AddAttributes = lazy(() => import("../pages/properties/AddAttributes"));
+const UpgradePlan = lazy(() => import("../pages/UpgradePlan"));
+const SellerPaymentHistory = lazy(() => import("../pages/payments/SellerPaymentHistory"));
+const LeadsOverview = lazy(() => import("../pages/enquiries/LeadsOverview"));
+const Support = lazy(() => import("../pages/Support"));
+const Reviews = lazy(() => import("../../user/pages/reviews/Reviews"));
+const PropertyAnalytics = lazy(() => import("../pages/properties/PropertyAnalytics"));
+
+const PageLoader = () => <Loader />;
 
 const SellerRoute = () => {
   return (
-    <Routes>
-      <Route element={<SellerLayout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="my-properties" element={<MyProperties />} />
-        <Route path="add-property" element={<AddProperty />} />
-        <Route path="add-attributes" element={<AddAttributes />} />
-        <Route path="request-limit" element={<RequestLimit />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="enquiries" element={<SellerEnquiries />} />
-        <Route path="upgrade-plan" element={<UpgradePlan />} />
-        <Route path="payment-history" element={<SellerPaymentHistory />} />
-        <Route path="leads-overview" element={<LeadsOverview />} />
-        <Route path="support" element={<Support />} />
-        <Route path="reviews" element={<Reviews />} />
-        <Route path="property-analytics" element={<PropertyAnalytics />} />
-
-      </Route>
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route element={<Suspense fallback={<PageLoader />}><SellerLayout /></Suspense>}>
+          <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="my-properties" element={<MyProperties />} />
+          <Route path="add-property" element={<AddProperty />} />
+          <Route path="add-attributes" element={<AddAttributes />} />
+          <Route path="request-limit" element={<RequestLimit />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="enquiries" element={<SellerEnquiries />} />
+          <Route path="upgrade-plan" element={<UpgradePlan />} />
+          <Route path="payment-history" element={<SellerPaymentHistory />} />
+          <Route path="leads-overview" element={<LeadsOverview />} />
+          <Route path="support" element={<Support />} />
+          <Route path="reviews" element={<Reviews />} />
+          <Route path="property-analytics" element={<PropertyAnalytics />} />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 };
 
