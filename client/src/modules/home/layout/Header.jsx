@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { message } from "antd";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +15,6 @@ import {
   LayoutDashboard,
   Heart,
   ChevronDown,
-  Headphones,
   Star,
   PhoneCall,
   Search,
@@ -46,31 +45,35 @@ const Header = () => {
   } = useNav();
 
   // Sort business types: Agent -> Builder/Promoter -> Owner
-  const sortedBusinessTypes = [...businessTypes].sort((a, b) => {
-    const nameA = (
-      typeof a.name === "string" ? a.name : a.name?.name || ""
-    ).toLowerCase();
-    const nameB = (
-      typeof b.name === "string" ? b.name : b.name?.name || ""
-    ).toLowerCase();
+  const sortedBusinessTypes = useMemo(() => {
+    return [...businessTypes].sort((a, b) => {
+      const nameA = (
+        typeof a.name === "string" ? a.name : a.name?.name || ""
+      ).toLowerCase();
+      const nameB = (
+        typeof b.name === "string" ? b.name : b.name?.name || ""
+      ).toLowerCase();
 
-    const getIndex = (name) => {
-      if (name.includes("agent")) return 0;
-      if (name.includes("builder") || name.includes("promoter")) return 1;
-      if (name.includes("owner") || name.includes("individual")) return 2;
-      return 3;
-    };
+      const getIndex = (name) => {
+        if (name.includes("agent")) return 0;
+        if (name.includes("builder") || name.includes("promoter")) return 1;
+        if (name.includes("owner") || name.includes("individual")) return 2;
+        return 3;
+      };
 
-    return getIndex(nameA) - getIndex(nameB);
-  });
+      return getIndex(nameA) - getIndex(nameB);
+    });
+  }, [businessTypes]);
 
-  const builderType = businessTypes.find((t) => {
-    const n = typeof t.name === "string" ? t.name : t.name?.name || "";
-    return (
-      n.toLowerCase().includes("builder") ||
-      n.toLowerCase().includes("promoter")
-    );
-  });
+  const builderType = useMemo(() => {
+    return businessTypes.find((t) => {
+      const n = typeof t.name === "string" ? t.name : t.name?.name || "";
+      return (
+        n.toLowerCase().includes("builder") ||
+        n.toLowerCase().includes("promoter")
+      );
+    });
+  }, [businessTypes]);
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
@@ -148,18 +151,19 @@ const Header = () => {
     };
   }, [isHomePage]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     setIsMenuOpen(false);
-  };
+  }, [logout]);
 
-  const handlePostProperty = () => {
+  const handlePostProperty = useCallback(() => {
     setIsMenuOpen(false);
     if (isAuthenticated && user) {
       const {
         canPost,
         reason,
         message: limitMessage,
+        redirectPath,
       } = checkPropertyListingLimit(user);
 
       if (!canPost) {
@@ -196,7 +200,7 @@ const Header = () => {
     } else {
       navigate("/post-property");
     }
-  };
+  }, [isAuthenticated, user, navigate]);
 
   // --- Animation Variants ---
   const dropdownVariants = {
@@ -443,7 +447,7 @@ const Header = () => {
                     aria-haspopup="true"
                     aria-expanded={isContactMenuOpen}
                   >
-                    <Headphones className="h-5 w-5" />
+                    <PhoneCall className="h-5 w-5" />
                   </button>
 
                   <AnimatePresence>
@@ -523,8 +527,6 @@ const Header = () => {
                             <User className="h-5 w-5" />
                           )}
                         </div>
-                        {/* Red Notification Dot */}
-                        <div className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-[#166aa8] rounded-full"></div>
                       </div>
                       <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors ml-1" />
                     </button>
@@ -759,7 +761,7 @@ const Header = () => {
                     {isScrolled ? (
                       <Search className="h-6 w-6" />
                     ) : (
-                      <Headphones className="h-6 w-6" />
+                      <PhoneCall className="h-6 w-6" />
                     )}
                   </button>
                   <button

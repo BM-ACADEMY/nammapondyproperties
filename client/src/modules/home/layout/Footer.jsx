@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNav } from "@/context/NavContext";
 import { useAuth } from "@/context/AuthContext";
@@ -23,7 +23,7 @@ const Footer = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handlePostProperty = () => {
+  const handlePostProperty = useCallback(() => {
     if (isAuthenticated && user) {
       const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
 
@@ -59,7 +59,7 @@ const Footer = () => {
     } else {
       navigate("/post-property");
     }
-  };
+  }, [isAuthenticated, user, navigate]);
 
   const getIcon = (platform) => {
     switch (platform.toLowerCase()) {
