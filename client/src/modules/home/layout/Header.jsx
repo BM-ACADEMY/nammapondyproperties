@@ -275,7 +275,7 @@ const Header = () => {
               >
                 <img
                   src="/Logo/logo.webp"
-                  alt="NammaPondy Logo"
+                  alt="NammaPondy Logo - Pondicherry's leading real estate platform"
                   className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               </Link>
@@ -286,6 +286,7 @@ const Header = () => {
                   onClick={detectLocation}
                   disabled={locationLoading}
                   className={`flex items-center space-x-1.5 xl:space-x-2 lg:px-2 xl:px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  aria-label={`Current location: ${city}. Click to detect location.`}
                 >
                   <MapPin
                     className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`}
@@ -436,7 +437,12 @@ const Header = () => {
                   onMouseEnter={() => setIsContactMenuOpen(true)}
                   onMouseLeave={() => setIsContactMenuOpen(false)}
                 >
-                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none cursor-pointer">
+                  <button 
+                    className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none cursor-pointer"
+                    aria-label="Contact Support"
+                    aria-haspopup="true"
+                    aria-expanded={isContactMenuOpen}
+                  >
                     <Headphones className="h-5 w-5" />
                   </button>
 
@@ -714,6 +720,7 @@ const Header = () => {
                         ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300"
                     }`}
+                    aria-label="Close search"
                   >
                     <X className="h-7 w-7" />
                   </button>
@@ -762,6 +769,8 @@ const Header = () => {
                         ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
                     }`}
+                    aria-label="Open menu"
+                    aria-expanded={isMenuOpen}
                   >
                     <Menu className="h-7 w-7" />
                   </button>

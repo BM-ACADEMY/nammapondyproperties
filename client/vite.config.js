@@ -13,6 +13,19 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          antd: ["antd", "@ant-design/icons"],
+          ui: ["framer-motion", "lucide-react"],
+          utils: ["axios", "moment", "date-fns"],
+          charts: ["recharts"],
+          leaflet: ["leaflet", "react-leaflet"]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
   },
   base: "/",
 })

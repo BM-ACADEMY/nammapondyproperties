@@ -248,6 +248,7 @@ const PropertySearchBar = ({
                                 autoComplete="off"
                                 className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
                                 value={searchQuery}
+                                aria-label="Search properties by keyword, location, or project name"
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
                                     if (e.target.value.length > 0) setIsSuggestionsOpen(true);
@@ -563,6 +564,7 @@ const PropertySearchBar = ({
                     onClick={() => handleSearch()}
                     className={`bg-red-500 cursor-pointer hover:bg-red-600 text-white font-medium h-full rounded-full lg:rounded-xl transition-colors duration-300 shadow-md flex items-center justify-center whitespace-nowrap flex-shrink-0 z-10 ${isHeader ? "px-4 md:px-6 text-xs" : "px-5 md:px-10 text-sm md:text-base"
                         }`}
+                    aria-label="Submit property search"
                 >
                     Search
                 </button>
