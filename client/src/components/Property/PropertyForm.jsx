@@ -269,6 +269,27 @@ const PropertyForm = ({
     fetchAmenities();
   }, []);
 
+  const countWords = (str) => {
+    return str ? str.trim().split(/\s+/).filter((word) => word.length > 0).length : 0;
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    const segments = value.split(/(\s+)/).filter(x => x.length > 0);
+    let wordCount = 0;
+    let truncatedValue = "";
+
+    for (let segment of segments) {
+      if (!/\s+/.test(segment)) {
+        wordCount++;
+      }
+      if (wordCount > 200) break;
+      truncatedValue += segment;
+    }
+
+    setValue("basicInfo.description", truncatedValue, { shouldValidate: true });
+  };
+
   const steps = [
     { number: 1, title: "Basic Details", sub: "Step 1" },
     { number: 2, title: "Location Details", sub: "Step 2" },
@@ -894,16 +915,35 @@ const PropertyForm = ({
                   <textarea
                     {...register("basicInfo.description", {
                       required: "Description is required",
+                      onChange: handleDescriptionChange,
+                      validate: (value) => {
+                        const wordCount = countWords(value);
+                        return (
+                          wordCount <= 200 ||
+                          `Description must be 200 words or less (current: ${wordCount} words)`
+                        );
+                      },
                     })}
                     rows="4"
                     className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.description ? "border-red-500" : "border-gray-100"}`}
                     placeholder="Describe the property's unique features, neighborhood, and amenities..."
                   ></textarea>
-                  {errors.basicInfo?.description && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.basicInfo.description.message}
-                    </p>
-                  )}
+                  <div className="flex justify-between items-center mt-1">
+                    {errors.basicInfo?.description && (
+                      <p className="text-red-500 text-xs">
+                        {errors.basicInfo.description.message}
+                      </p>
+                    )}
+                    <span
+                      className={`text-xs ml-auto ${
+                        countWords(watch("basicInfo.description")) > 200
+                          ? "text-red-500 font-bold"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {countWords(watch("basicInfo.description"))} / 200 words
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">

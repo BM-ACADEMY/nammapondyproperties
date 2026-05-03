@@ -846,9 +846,55 @@ const AdminProperties = ({ mode }) => {
                           <h3 className="text-lg font-bold text-gray-800 mb-3 border-l-4 border-blue-600 pl-3">
                             Description
                           </h3>
-                          <p className="text-gray-600 leading-relaxed text-base whitespace-pre-line bg-gray-50 p-6 rounded-xl border border-gray-100">
-                            {selectedProperty.basicInfo?.description || "No Description"}
-                          </p>
+                          <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <p className="text-gray-600 leading-relaxed text-base whitespace-pre-line">
+                              {isDescriptionExpanded
+                                ? selectedProperty.basicInfo?.description || "No Description"
+                                : (() => {
+                                    const desc =
+                                      selectedProperty.basicInfo?.description ||
+                                      "No Description";
+                                    if (desc === "No Description") return desc;
+                                    const words = desc.trim().split(/\s+/);
+                                    if (words.length <= 200) return desc;
+                                    return (
+                                      words.slice(0, 200).join(" ") + "..."
+                                    );
+                                  })()}
+                            </p>
+                            {selectedProperty.basicInfo?.description
+                              ?.trim()
+                              .split(/\s+/)
+                              .filter((w) => w.length > 0).length > 200 && (
+                              <Button
+                                type="link"
+                                onClick={() =>
+                                  setIsDescriptionExpanded(
+                                    !isDescriptionExpanded,
+                                  )
+                                }
+                                className="p-0 h-auto mt-2 text-blue-600 font-semibold flex items-center gap-1"
+                              >
+                                {isDescriptionExpanded ? (
+                                  <>
+                                    Show Less{" "}
+                                    <ChevronLeft
+                                      size={14}
+                                      className="rotate-90"
+                                    />
+                                  </>
+                                ) : (
+                                  <>
+                                    Show More{" "}
+                                    <ChevronRight
+                                      size={14}
+                                      className="rotate-90"
+                                    />
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ),

@@ -43,6 +43,7 @@ const PropertyCard = ({ property }) => {
           src={imgUrl}
           alt={property.basicInfo?.title || "Property"}
           className={`w-full h-full object-cover ${property.isSold ? "grayscale-[0.8]" : ""}`}
+          loading="lazy"
         />
 
         {/* Wishlist Button - Top Right */}

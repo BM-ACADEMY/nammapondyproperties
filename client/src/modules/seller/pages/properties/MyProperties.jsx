@@ -153,7 +153,7 @@ const MyProperties = () => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [mainImage, setMainImage] = useState("");
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const [subscription, setSubscription] = useState(null);
   const [loadingSubscription, setLoadingSubscription] = useState(false);
   const [settings, setSettings] = useState(null);
@@ -328,6 +328,7 @@ const MyProperties = () => {
       await api.delete(`/properties/delete-property-by-id/${id}`);
       message.success("Property deleted successfully");
       fetchProperties();
+      refetchUser(); // Refresh user state to update global property count
     } catch {
       message.error("Failed to delete property");
     }
@@ -343,7 +344,11 @@ const MyProperties = () => {
     );
   });
 
-  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user);
+  const activePropertyCount = properties.filter(p => 
+    ["Active", "Pending", "Edit Pending Approval"].includes(p.status)
+  ).length;
+
+  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, activePropertyCount);
   const isLimitReached = !canPost && reason === "limit_reached";
   const planName = user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE";
 
@@ -379,7 +384,7 @@ const MyProperties = () => {
         <h2 className="text-xl md:text-2xl font-bold text-gray-800">
           {isLimitReached
             ? "Property Limit Reached"
-            : `${properties.length} / ${
+            : `${activePropertyCount} / ${
                 propertyLimit === -1 ? "Unlimited" : propertyLimit
               } Properties Used`}
         </h2>
@@ -438,7 +443,7 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user);
+            const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user, activePropertyCount);
             if (!canPost) {
               message.warning(limitMessage);
               if (reason === "unverified") {
@@ -1089,10 +1094,32 @@ const MyProperties = () => {
                           <h3 className="text-lg font-bold text-gray-800 mb-3 border-l-4 border-blue-600 pl-3">
                             Description
                           </h3>
-                          <p className="text-gray-600 leading-relaxed text-base whitespace-pre-line bg-gray-50 p-6 rounded-xl border border-gray-100">
-                            {selectedProperty.basicInfo?.description ||
-                              "No Description"}
-                          </p>
+                          <div className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                            <p className="text-gray-600 leading-relaxed text-base whitespace-pre-line">
+                              {isDescriptionExpanded
+                                ? selectedProperty.basicInfo?.description || "No Description"
+                                : (() => {
+                                    const desc = selectedProperty.basicInfo?.description || "No Description";
+                                    if (desc === "No Description") return desc;
+                                    const words = desc.trim().split(/\s+/);
+                                    if (words.length <= 200) return desc;
+                                    return words.slice(0, 200).join(" ") + "...";
+                                  })()}
+                            </p>
+                            {selectedProperty.basicInfo?.description?.trim().split(/\s+/).filter(w => w.length > 0).length > 200 && (
+                              <Button
+                                type="link"
+                                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                className="p-0 h-auto mt-2 text-blue-600 font-semibold flex items-center gap-1"
+                              >
+                                {isDescriptionExpanded ? (
+                                  <>Show Less <ChevronLeft size={14} className="rotate-90" /></>
+                                ) : (
+                                  <>Show More <ChevronRight size={14} className="rotate-90" /></>
+                                )}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ),

@@ -102,6 +102,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                                 src={getImageUrl(img)}
                                 alt={`${property.basicInfo?.title || "Property"} - ${idx + 1}`}
                                 className="w-full h-full object-cover scale-[1.03]"
+                                loading="lazy"
                             />
                         </div>
                     ))}

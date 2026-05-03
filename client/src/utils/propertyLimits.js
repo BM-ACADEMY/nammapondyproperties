@@ -2,13 +2,13 @@
  * Centralized utility to check property listing limits based on user role, 
  * business type, verification status, and subscription plans.
  */
-export const checkPropertyListingLimit = (user) => {
+export const checkPropertyListingLimit = (user, overrideCount) => {
   if (!user) return { canPost: false, reason: "login_required" };
 
   const role = (user.role_id?.role_name || user.role?.name || "").toUpperCase();
   if (role === "ADMIN") return { canPost: true };
 
-  const currentCount = user.propertyCount || 0;
+  const currentCount = overrideCount !== undefined ? overrideCount : (user.propertyCount || 0);
   
   // 1. Unverified Restriction
   // All unverified users are restricted to exactly ONE listing.

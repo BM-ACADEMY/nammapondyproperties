@@ -94,6 +94,7 @@ const AdContent = ({ ad }) => (
     src={getImageUrl(ad.imageUrl)}
     alt={ad.title}
     className="w-full h-auto block transition-transform duration-700"
+    loading="lazy"
   />
 );
 
