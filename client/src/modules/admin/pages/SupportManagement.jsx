@@ -231,6 +231,12 @@ const SupportManagement = () => {
   };
 
   const fetchTicketDetails = async (id) => {
+    // Immediate feedback: switch to the ticket instantly using data we already have
+    const existingTicket = tickets.find((t) => t._id === id);
+    if (existingTicket) {
+      setActiveTicket(existingTicket);
+    }
+
     // Clear indicator immediately for better UX
     setTickets((prev) =>
       prev.map((t) => (t._id === id ? { ...t, isAdminRead: true } : t)),
@@ -249,28 +255,57 @@ const SupportManagement = () => {
 
   const handleSendMessage = async () => {
     if (!messageText.trim() || !activeTicket || sending) return;
-    setSending(true);
+    
+    const content = messageText;
+    setMessageText(""); // Clear input immediately for "fast" feel
+    
+    // Optimistically update the UI
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      _id: tempId,
+      sender: {
+        _id: user?._id,
+        name: user?.name,
+        profile_image: user?.profile_image
+      },
+      content,
+      isAdmin: true,
+      createdAt: new Date(),
+      read: false,
+      isOptimistic: true
+    };
+
+    // Update active ticket messages
+    setActiveTicket(prev => ({
+      ...prev,
+      messages: [...prev.messages, optimisticMessage]
+    }));
+
+    // Update tickets list last message
+    setTickets(prev => prev.map(t => 
+      t._id === activeTicket._id 
+        ? { ...t, lastMessageAt: new Date(), isAdminRead: true } 
+        : t
+    ));
 
     try {
       const response = await api.post(
         `/support-tickets/message/${activeTicket._id}`,
-        { content: messageText, isAdmin: true },
+        { content, isAdmin: true },
       );
       if (response.data.success) {
+        // Replace optimistic message with real one from server
         setActiveTicket(response.data.ticket);
-        setMessageText("");
-        setTickets((prev) =>
-          prev.map((t) =>
-            t._id === activeTicket._id
-              ? { ...t, lastMessageAt: new Date(), isAdminRead: true }
-              : t,
-          ),
-        );
       }
     } catch (error) {
       message.error("Failed to send message");
-    } finally {
-      setSending(false);
+      // Revert optimistic message on error
+      setActiveTicket(prev => ({
+        ...prev,
+        messages: prev.messages.filter(m => m._id !== tempId)
+      }));
+      // Restore input text if failed
+      setMessageText(content);
     }
   };
 
