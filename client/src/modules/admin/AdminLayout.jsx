@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Bell, Search, User, LogOut } from "lucide-react";
 import { RiSidebarFoldFill, RiSidebarUnfoldFill } from "react-icons/ri";
@@ -19,6 +19,7 @@ import Sidebar from "./Sidebar";
 import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
 import { useSocket } from "@/context/SocketContext";
+import Loader from "@/components/Common/Loader";
 
 const { Header, Content } = Layout;
 
@@ -404,14 +405,16 @@ const AdminLayout = () => {
           }}
         >
           <div
-            className="admin-content-wrapper"
+            className="admin-content-wrapper relative"
             style={{
               padding: pathname.includes("/support") ? 0 : 24,
               borderRadius: 0,
               height: pathname.includes("/support") ? "100%" : "auto",
             }}
           >
-            <Outlet />
+            <Suspense fallback={<Loader variant="panel" />}>
+              <Outlet />
+            </Suspense>
           </div>
         </Content>
 

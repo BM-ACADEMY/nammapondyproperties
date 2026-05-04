@@ -71,7 +71,7 @@ const SellerOverview = () => {
     fetchSellerStats();
   }, []);
 
-  if (loading) return <Loader />;
+  if (loading) return <Loader variant="panel" />;
 
   const filteredSellers = data.sellerStats.filter(
     (s) =>

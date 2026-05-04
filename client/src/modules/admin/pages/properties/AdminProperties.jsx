@@ -61,6 +61,7 @@ import { formatNumber } from "@/utils/formatNumber";
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
 import { useSocket } from "@/context/SocketContext";
+import Loader from "@/components/Common/Loader";
 
 const AdminProperties = ({ mode }) => {
   const [properties, setProperties] = useState([]);
@@ -595,7 +596,7 @@ const AdminProperties = ({ mode }) => {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative min-h-[400px]">
         <div className="p-5 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
           <Input
             prefix={<Search size={18} className="text-gray-400" />}
@@ -613,7 +614,10 @@ const AdminProperties = ({ mode }) => {
           columns={columns.filter(col => !col.hidden)}
           dataSource={properties}
           rowKey="_id"
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           pagination={{ 
             pageSize: 10,
             showSizeChanger: false, // Cleaner pagination

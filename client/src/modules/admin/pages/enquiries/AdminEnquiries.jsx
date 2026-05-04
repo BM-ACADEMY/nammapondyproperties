@@ -5,6 +5,7 @@ import api from "@/services/api";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/utils/imageUrl";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -380,7 +381,7 @@ const AdminEnquiries = () => {
         </Col>
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden">
+      <Card className="shadow-sm border-none overflow-hidden relative min-h-[400px]">
         <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col lg:flex-row  lg:items-center lg:justify-between gap-4">
           
           {/* Title and results tag: Top on mobile, Left on desktop */}
@@ -410,7 +411,10 @@ const AdminEnquiries = () => {
             columns={columns}
             dataSource={filteredEnquiries}
             rowKey="_id"
-            loading={loading}
+            loading={{
+              spinning: loading,
+              indicator: <Loader variant="panel" />
+            }}
             pagination={{
               pageSize: 8,
               placement: "bottomRight",

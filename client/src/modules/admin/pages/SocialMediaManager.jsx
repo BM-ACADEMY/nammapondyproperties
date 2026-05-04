@@ -35,6 +35,7 @@ import {
   XCircle,
   AlertCircle
 } from "lucide-react";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -310,12 +311,15 @@ const SocialMediaManager = () => {
         ))}
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+      <Card className="shadow-sm border-none overflow-hidden rounded-xl relative min-h-[400px]">
         <Table
           columns={columns}
           dataSource={socialMedias}
           rowKey="_id"
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           pagination={{ 
             pageSize: 10,
             showSizeChanger: false,

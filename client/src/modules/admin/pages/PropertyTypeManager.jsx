@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getImageUrl } from "@/utils/imageUrl";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 
@@ -300,7 +301,7 @@ const PropertyTypeManager = () => {
         ))}
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+      <Card className="shadow-sm border-none overflow-hidden rounded-xl relative min-h-[400px]">
         <div className="p-4 border-b border-gray-300">
            <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 size-4" />
@@ -316,7 +317,10 @@ const PropertyTypeManager = () => {
           columns={columns}
           dataSource={filteredTypes}
           rowKey="_id"
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           pagination={{ 
             pageSize: 10,
             showSizeChanger: false,

@@ -26,6 +26,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import axios from "axios";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 const API = import.meta.env.VITE_API_URL;
@@ -243,12 +244,15 @@ const ApprovalTypeManager = () => {
         ))}
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+      <Card className="shadow-sm border-none overflow-hidden rounded-xl relative min-h-[400px]">
         <Table
           columns={columns}
           dataSource={approvalTypes}
           rowKey="_id"
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           pagination={{ 
             pageSize: 10,
             showSizeChanger: false,

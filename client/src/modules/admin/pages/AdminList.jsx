@@ -38,6 +38,7 @@ import {
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import moment from "moment";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 
@@ -453,7 +454,7 @@ const AdminList = () => {
         </Col>
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden">
+      <Card className="shadow-sm border-none overflow-hidden relative min-h-[400px]">
         <Tabs
           defaultActiveKey="1"
           className="admin-tabs"
@@ -472,7 +473,10 @@ const AdminList = () => {
                   columns={columns}
                   dataSource={superAdmins}
                   rowKey="_id"
-                  loading={loading}
+                  loading={{
+                    spinning: loading,
+                    indicator: <Loader variant="panel" />
+                  }}
                   pagination={{ 
                     pageSize: 10,
                     showSizeChanger: false,
@@ -496,7 +500,10 @@ const AdminList = () => {
                   columns={columns}
                   dataSource={subAdmins}
                   rowKey="_id"
-                  loading={loading}
+                  loading={{
+                    spinning: loading,
+                    indicator: <Loader variant="panel" />
+                  }}
                   pagination={{ 
                     pageSize: 10,
                     showSizeChanger: false,
