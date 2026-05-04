@@ -592,14 +592,14 @@ const SellerEnquiries = () => {
             </div>
           </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative min-h-[400px]">
           <Table
             columns={columns}
             dataSource={filteredEnquiries}
             rowKey="_id"
             loading={{
               spinning: loading,
-              indicator: <Loader variant="inline" />
+              indicator: <Loader variant="panel" />
             }}
             pagination={{
               pageSize: 8,

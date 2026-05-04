@@ -485,8 +485,8 @@ const MyProperties = () => {
       </div> */}
 
       {loading ? (
-        <div className="flex justify-center items-center py-40 bg-white rounded-2xl shadow-sm border border-gray-100 w-full">
-          <Loader variant="inline" />
+        <div className="relative flex justify-center items-center py-60 bg-white/20 rounded-3xl border border-gray-100 w-full min-h-[500px] overflow-hidden">
+          <Loader variant="panel" />
         </div>
       ) : filteredProperties.length > 0 ? (
         <div 
