@@ -342,7 +342,7 @@ const HoverItem = ({ children, tooltip, collapsed, style, onClick }) => {
 const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, user, refetchUser } = useAuth();
   const [hasActivePlan, setHasActivePlan] = useState(false);
   const [hasHistory, setHasHistory] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(true);
@@ -365,6 +365,13 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
     };
     checkSubscription();
   }, [pathname]);
+
+  // Quick fix: ensure businessType name is fetched if missing (e.g. after fresh login)
+  useEffect(() => {
+    if (user && user.businessType && !user.businessType.name) {
+      refetchUser();
+    }
+  }, [user, refetchUser]);
 
   const handleMenuClick = (path, isLocked = false) => {
     if (isLocked) return;

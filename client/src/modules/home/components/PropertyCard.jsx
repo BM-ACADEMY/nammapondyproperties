@@ -56,13 +56,13 @@ const PropertyCard = ({ property }) => {
           {/* Verified Badge */}
           {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
             <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200 pointer-events-auto">
-              <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
+              <img src="/Logo/badge.webp" alt="Verified" className="w-4 h-4 object-contain" />
               <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
             </div>
           )}
 
           {/* Hot Deal Badge */}
-          {property.view_count >= 1000 && (
+          {property.view_count >= 2000 && (
             <div className="bg-red-50 text-red-600 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-red-200 pointer-events-auto">
               <Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" />
               <span className="text-[10px] font-extrabold uppercase tracking-wider">Hot Deal</span>

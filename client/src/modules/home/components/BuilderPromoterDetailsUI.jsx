@@ -214,7 +214,7 @@ const BuilderPromoterDetailsUI = ({
                       : "For Sale"}
                   </span>
 
-                  {property.view_count >= 1000 && (
+                  {property.view_count >= 2000 && (
                     <div className="bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1.5 shadow-sm border border-red-200 w-fit whitespace-nowrap">
                       <Flame className="w-3.5 h-3.5 fill-red-500" />
                       <span className="text-[10px] font-bold uppercase tracking-widest">
@@ -254,7 +254,7 @@ const BuilderPromoterDetailsUI = ({
                       0,
                   )}
                 </div>
-                {property.view_count >= 1000 ? (
+                {property.view_count >= 2000 ? (
                   <div className="mt-2 inline-flex items-center gap-1.5 bg-red-500/20 text-red-100 backdrop-blur-md px-3 py-1.5 rounded-lg border border-red-500/30 shadow-sm ml-auto">
                     <span className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

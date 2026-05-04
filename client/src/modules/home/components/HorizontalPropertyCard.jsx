@@ -8,11 +8,11 @@ import moment from "moment";
 import WishlistButton from "../../../components/Common/WishlistButton";
 
 const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) => {
-    const images = property.media?.images && property.media.images.length > 0 
-        ? property.media.images 
+    const images = property.media?.images && property.media.images.length > 0
+        ? property.media.images
         : (property.media?.featuredImage ? [property.media.featuredImage] : []);
-        
-    const displayImages = images.length > 0 
+
+    const displayImages = images.length > 0
         ? (images.length > 1 ? [...images, images[0]] : images)
         : [null]; // Show fallback image if no images available
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -40,13 +40,13 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
             const jumpTimer = setTimeout(() => {
                 setUseTransition(false); // Disable animation for the jump
                 setCurrentImageIndex(0); // Teleport back to start
-                
+
                 // Re-enable animation for next cycle
                 setTimeout(() => {
                     setUseTransition(true);
                 }, 50);
             }, 700);
-            
+
             return () => clearTimeout(jumpTimer);
         }
     }, [currentImageIndex, images.length]);
@@ -66,15 +66,15 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
     const areaDisplay = (minArea && maxArea && !isNaN(minArea) && !isNaN(maxArea))
         ? `${Number(minArea).toLocaleString()} - ${Number(maxArea).toLocaleString()} ${areaUnit}`
         : (minArea && !isNaN(minArea))
-        ? `${Number(minArea).toLocaleString()}+ ${areaUnit}`
-        : (totalArea && !isNaN(totalArea) && String(totalArea).toLowerCase() !== "nan")
-        ? `${Number(totalArea).toLocaleString()} ${areaUnit}`
-        : "N/A";
+            ? `${Number(minArea).toLocaleString()}+ ${areaUnit}`
+            : (totalArea && !isNaN(totalArea) && String(totalArea).toLowerCase() !== "nan")
+                ? `${Number(totalArea).toLocaleString()} ${areaUnit}`
+                : "N/A";
 
     const areaLabel = (minArea || maxArea) ? "Area Range" : (property.specifications?.area?.totalArea ? "Total Area" : "Built Area");
 
     return (
-        <div 
+        <div
             className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 flex flex-col xl:flex-row group relative xl:h-64 top-6"
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
@@ -87,11 +87,11 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                     rel="noopener noreferrer"
                     className="absolute inset-0 z-30"
                 />
-                
+
                 {/* Sliding Image Strip */}
-                <div 
+                <div
                     className={`flex flex-nowrap h-full w-full ${useTransition ? 'transition-transform duration-700 ease-in-out' : ''}`}
-                    style={{ 
+                    style={{
                         transform: `translateX(-${currentImageIndex * 100}%)`,
                         willChange: 'transform'
                     }}
@@ -117,13 +117,13 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                     {/* Verified Badge */}
                     {(property.seller?.badgeVerified || property.seller?.role_id?.role_name === 'admin') && (
                         <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-green-200 pointer-events-auto">
-                            <img src="/Logo/badge.png" alt="Verified" className="w-4 h-4 object-contain" />
+                            <img src="/Logo/badge.webp" alt="Verified" className="w-5 h-5 object-contain" />
                             <span className="text-[10px] font-extrabold uppercase tracking-wider">Verified</span>
                         </div>
                     )}
-                    
+
                     {/* Hot Deal Badge */}
-                    {property.view_count >= 1000 && (
+                    {property.view_count >= 2000 && (
                         <div className="bg-red-50 text-red-600 px-2 py-1 rounded-md flex items-center gap-1.5 shadow-sm border border-red-200 pointer-events-auto">
                             <Flame className="w-3.5 h-3.5 text-red-500 fill-red-500" />
                             <span className="text-[10px] font-extrabold uppercase tracking-wider">Hot Deal</span>
