@@ -27,6 +27,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import PhoneUpdateModal from "@/components/Common/PhoneUpdateModal";
 import { slugify } from "@/utils/slugify";
+import Loader from "@/components/Common/Loader";
 
 const BusinessUserList = () => {
   const { businessTypeSlug, sellerSlug } = useParams();
@@ -259,11 +260,7 @@ const BusinessUserList = () => {
 
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#174685]"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   // Shared sellers list content
@@ -454,7 +451,7 @@ const BusinessUserList = () => {
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
             <div className="mx-auto w-48 h-48 md:w-64 md:h-64 flex items-center justify-center mb-6">
               <img
-                src="/notfound/notfound.webp"
+                src="/notfound/nousers.webp"
                 alt="No sellers found"
                 className="w-full h-full object-contain"
               />
@@ -815,14 +812,12 @@ const BusinessUserList = () => {
                   )}
 
                   {propertiesLoading ? (
-                    <div className="py-20 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]" />
-                    </div>
+                    <Loader variant="inline" />
                   ) : sellerProperties.length === 0 ? (
                     <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200">
                       <div className="mx-auto w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mb-6">
                         <img
-                          src="/notfound/notfound.webp"
+                          src="/notfound/nousers.webp"
                           alt="No listings found"
                           className="w-full h-full object-contain"
                         />

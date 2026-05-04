@@ -14,7 +14,6 @@ import {
   Briefcase,
 } from "lucide-react";
 import { Upload, Modal as AntModal } from "antd";
-import ImgCrop from "antd-img-crop";
 import {
   MapContainer,
   TileLayer,
@@ -1638,7 +1637,6 @@ const PropertyForm = ({
                 <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">
                   Property Photos
                 </p>
-                <ImgCrop rotationSlider aspect={4 / 3}>
                   <Upload
                     listType="picture-card"
                     fileList={images.map((f, i) => ({
@@ -1662,7 +1660,6 @@ const PropertyForm = ({
                       </div>
                     )}
                   </Upload>
-                </ImgCrop>
                 {existingImages.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
                     {existingImages.map((img, i) => (
@@ -1697,7 +1694,6 @@ const PropertyForm = ({
                   </div>
 
                   <div className="space-y-4">
-                    <ImgCrop rotationSlider aspect={4 / 3}>
                       <Upload
                         listType="picture-card"
                         fileList={floorPlans.map((f, i) => ({
@@ -1721,7 +1717,6 @@ const PropertyForm = ({
                           </div>
                         )}
                       </Upload>
-                    </ImgCrop>
 
                     {existingFloorPlans.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
