@@ -93,7 +93,7 @@ const Dashboard = () => {
   }, [range]);
 
   if (loading && !data.summary.totalProperties) {
-    return <Loader />;
+    return <Loader variant="panel" />;
   }
 
   if (error) {

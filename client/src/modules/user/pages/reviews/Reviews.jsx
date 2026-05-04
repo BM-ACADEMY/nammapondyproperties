@@ -16,6 +16,7 @@ import {
 
 const { TextArea } = Input;
 import axios from "axios";
+import Loader from "@/components/Common/Loader";
 const noReviewsImg = "/assets/Customer Survey-pana-optimized.webp";
 
 const ReviewCard = memo(
@@ -250,6 +251,10 @@ const Reviews = () => {
     }
   };
 
+  if (loading) {
+    return <Loader variant="panel" />;
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -298,21 +303,7 @@ const Reviews = () => {
 
           <div className="relative z-10">
             {/* Reviews Grid */}
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 animate-pulse h-80"
-                  >
-                    <div className="h-4 bg-slate-200 rounded w-1/2 mb-4"></div>
-                    <div className="h-3 bg-slate-200 rounded w-3/4 mb-3"></div>
-                    <div className="h-20 bg-slate-200 rounded mb-4"></div>
-                    <div className="h-3 bg-slate-200 rounded w-1/3"></div>
-                  </div>
-                ))}
-              </div>
-            ) : testimonials.length === 0 ? (
+            {testimonials.length === 0 ? (
               <div className="bg-white rounded-[24px] shadow-sm p-6 lg:p-10 flex flex-col items-center justify-center text-center">
                 <img
                   src={noReviewsImg}

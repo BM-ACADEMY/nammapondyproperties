@@ -313,7 +313,7 @@ const Profile = () => {
   };
 
   if (loading) {
-    return <Loader />;
+    return <Loader variant="panel" />;
   }
 
   return (
