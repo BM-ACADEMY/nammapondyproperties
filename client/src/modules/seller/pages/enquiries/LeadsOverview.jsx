@@ -428,9 +428,9 @@ const LeadsOverview = () => {
             children: (
               <div className="mt-4">
                 {loading && leads.length === 0 ? (
-                   <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm">
-                   <Loader variant="inline" />
-                   <p className="mt-4 text-slate-500 font-medium">Checking for new leads...</p>
+                   <div className="relative flex flex-col items-center justify-center py-40 bg-white rounded-3xl shadow-sm border border-slate-100 min-h-[400px] overflow-hidden w-full">
+                   <Loader variant="panel" />
+                   <p className="mt-40 text-slate-500 font-medium relative z-10">Checking for new leads...</p>
                  </div>
                 ) : availableLeads.length === 0 ? (
                   <div className="bg-white rounded-3xl border border-slate-100 p-12 text-center shadow-sm">

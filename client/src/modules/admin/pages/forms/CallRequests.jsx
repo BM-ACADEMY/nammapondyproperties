@@ -4,6 +4,7 @@ import { Download, Search, RefreshCw, Trash2, Phone, Mail, Clock, Calendar, Layo
 import api from "@/services/api";
 import * as XLSX from "xlsx";
 import moment from "moment";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -313,7 +314,7 @@ const CallRequests = () => {
         ))}
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden">
+      <Card className="shadow-sm border-none overflow-hidden relative min-h-[400px]">
         <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-3">
             <Title level={4} className="m-0! text-gray-800! whitespace-nowrap">
@@ -340,7 +341,10 @@ const CallRequests = () => {
             columns={columns}
             dataSource={filteredData}
             rowKey="_id"
-            loading={loading}
+            loading={{
+              spinning: loading,
+              indicator: <Loader variant="panel" />
+            }}
             pagination={{
               pageSize: 8,
               placement: "bottomRight",

@@ -18,6 +18,7 @@ import {
 } from "antd";
 import { Plus, Edit, Trash2, CreditCard, CheckCircle, MoreVertical, IndianRupee, ShieldCheck, XCircle, Star, Check, X, Filter } from "lucide-react";
 import axios from "axios";
+import Loader from "@/components/Common/Loader";
 
 const { TabPane } = Tabs;
 
@@ -281,48 +282,50 @@ const SubscriptionPlanManager = () => {
           </Button>
         </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-96 bg-gray-200 rounded-2xl shadow-sm" />
-          ))}
-        </div>
-      ) : plans.length > 0 ? (
-        <Tabs 
-          defaultActiveKey="0" 
-          className="premium-tabs"
-          type="card"
-          tabBarGutter={12}
-        >
-          {Object.keys(groupedPlans).map((typeName, index) => (
-            <TabPane 
-              tab={
-                <span className="flex items-center gap-2 px-2">
-                  <Filter size={14} />
-                  {typeName}
-                  <Tag className="ml-1 border-none bg-gray-100 text-gray-600 rounded-full text-[10px]">{groupedPlans[typeName].length}</Tag>
-                </span>
-              } 
-              key={index}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-4">
-                {groupedPlans[typeName].map((plan) => (
-                  <PlanCard key={plan._id} plan={plan} />
-                ))}
-              </div>
-            </TabPane>
-          ))}
-        </Tabs>
-      ) : (
-        <div className="bg-white p-16 rounded-3xl shadow-sm border-2 border-dashed border-gray-200 text-center">
-          <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CreditCard size={32} className="text-gray-300" />
+      <div className="relative min-h-[400px]">
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-2xl">
+            <Loader variant="panel" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">No Plans Found</h3>
-          <p className="text-gray-400 font-medium max-w-sm mx-auto mb-8">You haven't created any subscription plans yet. Start by adding your first plan!</p>
-          <Button onClick={handleAdd} type="primary" size="large" className="rounded-xl px-8 font-bold">Add First Plan</Button>
-        </div>
-      )}
+        )}
+
+        {plans.length > 0 ? (
+          <Tabs 
+            defaultActiveKey="0" 
+            className="premium-tabs"
+            type="card"
+            tabBarGutter={12}
+          >
+            {Object.keys(groupedPlans).map((typeName, index) => (
+              <TabPane 
+                tab={
+                  <span className="flex items-center gap-2 px-2">
+                    <Filter size={14} />
+                    {typeName}
+                    <Tag className="ml-1 border-none bg-gray-100 text-gray-600 rounded-full text-[10px]">{groupedPlans[typeName].length}</Tag>
+                  </span>
+                } 
+                key={index}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 py-4">
+                  {groupedPlans[typeName].map((plan) => (
+                    <PlanCard key={plan._id} plan={plan} />
+                  ))}
+                </div>
+              </TabPane>
+            ))}
+          </Tabs>
+        ) : !loading && (
+          <div className="bg-white p-16 rounded-3xl shadow-sm border-2 border-dashed border-gray-200 text-center">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CreditCard size={32} className="text-gray-300" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No Plans Found</h3>
+            <p className="text-gray-400 font-medium max-w-sm mx-auto mb-8">You haven't created any subscription plans yet. Start by adding your first plan!</p>
+            <Button onClick={handleAdd} type="primary" size="large" className="rounded-xl px-8 font-bold">Add First Plan</Button>
+          </div>
+        )}
+      </div>
 
       <Modal
         title={editingPlan ? "Edit Subscription Plan" : "Create Subscription Plan"}

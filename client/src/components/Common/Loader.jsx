@@ -13,6 +13,18 @@ const Loader = ({ variant = "full" }) => {
     );
   }
 
+  if (variant === "panel") {
+    return (
+      <div className="absolute inset-0 flex justify-center items-center bg-white/80 backdrop-blur-sm z-50 min-h-[400px]">
+        <img 
+          src="/Loader/Loader.gif" 
+          alt="Loading..." 
+          className="w-40 h-40 md:w-56 md:h-56 object-contain"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 flex justify-center items-center h-screen w-full bg-white z-[9999]">
       <div className="relative">

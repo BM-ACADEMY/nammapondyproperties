@@ -4,6 +4,7 @@ import { Table, Tag, message, Card, Input, Row, Col } from "antd";
 import { CreditCard, IndianRupee, User, Calendar, CheckCircle, XCircle, Clock, Search } from "lucide-react";
 import axios from "axios";
 import moment from "moment";
+import Loader from "@/components/Common/Loader";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -252,11 +253,14 @@ const PaymentHistory = () => {
       </Row>
 
 
-      <Card className="rounded-2xl border-none shadow-sm overflow-hidden" styles={{ body: { padding: 0 } }}>
+      <Card className="rounded-2xl border-none shadow-sm overflow-hidden relative min-h-[400px]" styles={{ body: { padding: 0 } }}>
         <Table
           columns={columns}
           dataSource={filteredHistory}
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           rowKey="_id"
           pagination={{ pageSize: 10, position: ["bottomCenter"] }}
           className="admin-table border-t border-gray-100"

@@ -27,6 +27,7 @@ import {
   RefreshCcw,
   Users
 } from "lucide-react";
+import Loader from "@/components/Common/Loader";
 import axios from "axios";
 
 const API = import.meta.env.VITE_API_URL;
@@ -279,11 +280,14 @@ const MarketingRequests = () => {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative min-h-[400px]">
         <Table
           columns={columns}
           dataSource={requests}
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           rowKey="_id"
           pagination={{ pageSize: 10 }}
           scroll={{ x: 800 }}

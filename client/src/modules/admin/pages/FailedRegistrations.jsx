@@ -24,6 +24,7 @@ import {
   Phone
 } from "lucide-react";
 import api from "@/services/api";
+import Loader from "@/components/Common/Loader";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -218,12 +219,15 @@ const FailedRegistrations = () => {
         </Col>
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden">
+      <Card className="shadow-sm border-none overflow-hidden relative min-h-[400px]">
         <Table
           columns={columns}
           dataSource={users}
           rowKey="_id"
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           pagination={{ 
             pageSize: 10,
             showSizeChanger: false,

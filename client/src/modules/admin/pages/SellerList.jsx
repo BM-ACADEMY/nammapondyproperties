@@ -40,6 +40,7 @@ import {
 import api from "@/services/api";
 import { useSocket } from "@/context/SocketContext";
 import { useAuth } from "@/context/AuthContext";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 
@@ -545,14 +546,17 @@ const SellerList = () => {
         </Col>
       </Row>
 
-      <Card className="shadow-sm border-none overflow-hidden">
+      <Card className="shadow-sm border-none overflow-hidden relative min-h-[400px]">
         <div className="overflow-x-auto">
           <Table
             rowSelection={rowSelection}
             columns={columns}
             dataSource={filteredSellers}
             rowKey="_id"
-            loading={loading}
+            loading={{
+              spinning: loading,
+              indicator: <Loader variant="panel" />
+            }}
             pagination={{
               pageSize: 10,
               size: "small",

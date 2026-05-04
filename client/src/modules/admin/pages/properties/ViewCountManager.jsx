@@ -14,6 +14,7 @@ import {
     Dropdown,
 } from "antd";
 import { Search, Eye, Edit2, TrendingUp, Building, MoreHorizontal } from "lucide-react";
+import Loader from "@/components/Common/Loader";
 import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
 import { formatNumber } from "@/utils/formatNumber";
@@ -168,12 +169,15 @@ const ViewCountManager = () => {
                 <Button onClick={fetchProperties} loading={loading}>Refresh Data</Button>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden relative min-h-[400px]">
                 <Table
                     columns={columns}
                     dataSource={properties}
                     rowKey="_id"
-                    loading={loading}
+                    loading={{
+                        spinning: loading,
+                        indicator: <Loader variant="panel" />
+                    }}
                     pagination={{ 
                         pageSize: 10,
                         showSizeChanger: false,

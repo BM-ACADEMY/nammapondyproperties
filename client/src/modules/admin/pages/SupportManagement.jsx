@@ -40,6 +40,7 @@ import { useSocket } from "../../../context/SocketContext";
 import { useAuth } from "../../../context/AuthContext";
 import api from "../../../services/api";
 import moment from "moment";
+import Loader from "@/components/Common/Loader";
 
 const { Content, Sider } = Layout;
 const { Title, Text } = Typography;
@@ -342,13 +343,18 @@ const SupportManagement = () => {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white">
+    <div className="flex flex-col h-full overflow-hidden bg-white relative min-h-[400px]">
+      {loading && tickets.length === 0 && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
+          <Loader variant="panel" />
+        </div>
+      )}
       <Layout className="flex-1 bg-white">
         {/* Sidebar */}
         {(!isMobile || !activeTicket) && (
           <Sider
             width={isMobile ? "100%" : 400}
-            className="bg-white border-r border-gray-200 flex flex-col h-full z-20"
+            className="bg-white border-r border-gray-200 flex flex-col h-full z-20 relative min-h-[400px]"
             theme="light"
           >
             <div className=" pt-3 border-t border-gray-100 p-2 bg-white">
@@ -380,7 +386,10 @@ const SupportManagement = () => {
 
             <div className="overflow-y-auto flex-1 bg-white">
               <List
-                loading={loading}
+                loading={{
+                  spinning: loading,
+                  indicator: <Loader variant="panel" />
+                }}
                 dataSource={filteredTickets}
                 renderItem={(item) => (
                   <div
