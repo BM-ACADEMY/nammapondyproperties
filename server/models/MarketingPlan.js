@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const marketingPlanSchema = new mongoose.Schema(
     {
-        serviceName: { type: String, required: true, unique: true },
+        serviceName: { type: String, required: true },
         priceRange: { type: String, required: true },
         description: { type: String, required: true },
         isPopular: { type: Boolean, default: false },

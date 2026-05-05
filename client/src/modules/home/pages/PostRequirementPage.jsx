@@ -23,6 +23,27 @@ import axios from "axios";
 const { Option } = Select;
 const { TextArea } = Input;
 
+// Converts a raw number to an Indian-scale label
+const formatBudgetLabel = (value) => {
+  if (!value && value !== 0) return null;
+  const num = Number(value);
+  if (isNaN(num) || num === 0) return null;
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(num % 10000000 === 0 ? 0 : 1)} Crore${num >= 20000000 ? "s" : ""}`;
+  if (num >= 100000)  return `₹${(num / 100000).toFixed(num % 100000 === 0 ? 0 : 1)} Lakh${num >= 200000 ? "s" : ""}`;
+  if (num >= 1000)    return `₹${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1)}K`;
+  return `₹${num.toLocaleString("en-IN")}`;
+};
+
+const BUDGET_PRESETS = [
+  { label: "10 L",  value: 1000000 },
+  { label: "25 L",  value: 2500000 },
+  { label: "50 L",  value: 5000000 },
+  { label: "75 L",  value: 7500000 },
+  { label: "1 Cr",  value: 10000000 },
+  { label: "2 Cr",  value: 20000000 },
+  { label: "5 Cr",  value: 50000000 },
+];
+
 // No map helpers needed if map is removed
 
 
@@ -31,6 +52,8 @@ const PostRequirementPage = () => {
   const [loading, setLoading] = useState(false);
   const [showOtherType, setShowOtherType] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [minBudgetVal, setMinBudgetVal] = useState(null);
+  const [maxBudgetVal, setMaxBudgetVal] = useState(null);
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { propertyTypes } = useNav();
@@ -287,42 +310,84 @@ const PostRequirementPage = () => {
                 </div>
 
                 <Form.Item
-                  label={<span className="font-semibold">Approx. Budget Range</span>}
+                  label={
+                    <span className="font-semibold">
+                      Approx. Budget Range
+                      <span className="ml-2 text-[11px] font-normal text-slate-400 normal-case">
+                        (e.g. 2500000 = ₹25 Lakhs)
+                      </span>
+                    </span>
+                  }
                   className="lg:col-span-2"
                 >
+                  {/* Quick-pick preset chips */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {BUDGET_PRESETS.map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => {
+                          form.setFieldsValue({ maxBudget: p.value });
+                          setMaxBudgetVal(p.value);
+                        }}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                          maxBudgetVal === p.value
+                            ? "bg-blue-700 text-white border-blue-700"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                    <span className="text-[10px] text-slate-400 self-center ml-1">← Quick-set Max Budget</span>
+                  </div>
+
                   <div className="flex gap-4">
-                    <Form.Item 
-                      name="minBudget" 
-                      style={{ flex: 1, margin: 0 }}
-                      rules={[{ required: true, message: "Required" }]}
-                    >
-                      <InputNumber
-                        style={{ width: "100%" }}
-                        placeholder="Min Budget"
-                        controls={false}
-                        onKeyPress={(event) => {
-                          if (!/[0-9]/.test(event.key)) {
-                            event.preventDefault();
-                          }
-                        }}
-                      />
-                    </Form.Item>
-                    <Form.Item 
-                      name="maxBudget" 
-                      style={{ flex: 1, margin: 0 }}
-                      rules={[{ required: true, message: "Required" }]}
-                    >
-                      <InputNumber
-                        style={{ width: "100%" }}
-                        placeholder="Max Budget"
-                        controls={false}
-                        onKeyPress={(event) => {
-                          if (!/[0-9]/.test(event.key)) {
-                            event.preventDefault();
-                          }
-                        }}
-                      />
-                    </Form.Item>
+                    {/* Min Budget */}
+                    <div style={{ flex: 1 }}>
+                      <Form.Item
+                        name="minBudget"
+                        style={{ margin: 0 }}
+                        rules={[{ required: true, message: "Required" }]}
+                      >
+                        <InputNumber
+                          style={{ width: "100%" }}
+                          placeholder="Min (e.g. 1000000)"
+                          controls={false}
+                          formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
+                          parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                          onChange={(val) => setMinBudgetVal(val)}
+                        />
+                      </Form.Item>
+                      {formatBudgetLabel(minBudgetVal) && (
+                        <div className="mt-1 text-xs font-bold text-blue-600 pl-1">
+                          = {formatBudgetLabel(minBudgetVal)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Max Budget */}
+                    <div style={{ flex: 1 }}>
+                      <Form.Item
+                        name="maxBudget"
+                        style={{ margin: 0 }}
+                        rules={[{ required: true, message: "Required" }]}
+                      >
+                        <InputNumber
+                          style={{ width: "100%" }}
+                          placeholder="Max (e.g. 5000000)"
+                          controls={false}
+                          formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
+                          parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                          onChange={(val) => setMaxBudgetVal(val)}
+                        />
+                      </Form.Item>
+                      {formatBudgetLabel(maxBudgetVal) && (
+                        <div className="mt-1 text-xs font-bold text-blue-600 pl-1">
+                          = {formatBudgetLabel(maxBudgetVal)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Form.Item>
 

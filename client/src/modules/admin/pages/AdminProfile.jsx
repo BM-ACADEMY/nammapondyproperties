@@ -474,7 +474,21 @@ const AdminProfile = () => {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="gstNumber" label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>} className="!mb-4">
+                        <Form.Item
+                          name="gstNumber"
+                          label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>}
+                          className="!mb-4"
+                          rules={[
+                            {
+                              validator: (_, value) => {
+                                if (!value || value.trim() === "") return Promise.resolve();
+                                const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                                if (gstRegex.test(value.trim().toUpperCase())) return Promise.resolve();
+                                return Promise.reject(new Error("Invalid GSTIN format. Expected: 22AAAAA0000A1Z5 (15 characters)"));
+                              },
+                            },
+                          ]}
+                        >
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="22AAAAA0000A1Z5" />
                         </Form.Item>
                       </Col>
