@@ -33,7 +33,7 @@ const SubscriptionPlanManager = lazy(() => import("./pages/SubscriptionPlanManag
 const PaymentHistory = lazy(() => import("./pages/PaymentHistory"));
 const SupportManagement = lazy(() => import("./pages/SupportManagement"));
 
-const PageLoader = () => <Loader />;
+const PageLoader = () => <Loader variant="panel" />;
 
 const AdminRoute = () => {
   return (

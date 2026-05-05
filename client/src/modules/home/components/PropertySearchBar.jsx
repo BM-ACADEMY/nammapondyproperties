@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Search, ChevronDown, Check, ChevronRight, AlertTriangle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,8 +59,13 @@ const PropertySearchBar = ({
     const [placeholderIdx, setPlaceholderIdx] = useState(0);
 
     // Derived: available usage tabs from propertyTypes
-    const usageTabs = [...new Set((propertyTypes || []).map(t => t.usageType).filter(Boolean))];
-    const filteredSubtypes = (propertyTypes || []).filter(t => t.usageType === activeUsageTab);
+    const usageTabs = useMemo(() => {
+        return [...new Set((propertyTypes || []).map(t => t.usageType).filter(Boolean))];
+    }, [propertyTypes]);
+
+    const filteredSubtypes = useMemo(() => {
+        return (propertyTypes || []).filter(t => t.usageType === activeUsageTab);
+    }, [propertyTypes, activeUsageTab]);
 
     // --- EFFECTS ---
     useEffect(() => {
@@ -157,7 +162,7 @@ const PropertySearchBar = ({
     }, [error]);
 
     // --- HANDLERS ---
-    const handleSearch = (overrideParams = {}) => {
+    const handleSearch = useCallback((overrideParams = {}) => {
         const finalSearch = overrideParams.search !== undefined ? overrideParams.search : searchQuery;
         const finalLocation = overrideParams.location !== undefined ? overrideParams.location : location;
         const finalTypes = overrideParams.type !== undefined ? overrideParams.type : selectedTypes;
@@ -177,36 +182,36 @@ const PropertySearchBar = ({
         if (finalTypes.length > 0) params.append("type", Array.isArray(finalTypes) ? finalTypes.join(",") : finalTypes);
 
         navigate(`/properties?${params.toString()}`);
-    };
+    }, [searchQuery, location, selectedTypes, approval, minPrice, maxPrice, navigate]);
 
-    const selectBudget = (range) => {
+    const selectBudget = useCallback((range) => {
         setMinPrice(range.min || "");
         setMaxPrice(range.max || "");
         setIsBudgetDropdownOpen(false);
-    };
+    }, []);
 
-    const getBudgetLabel = () => {
+    const getBudgetLabel = useMemo(() => {
         if (!minPrice && !maxPrice) return "Budget";
         const selected = priceRanges.find(r => String(r.min) === String(minPrice) && String(r.max) === String(maxPrice));
         return selected ? selected.label : `${minPrice} - ${maxPrice}`;
-    };
+    }, [minPrice, maxPrice, priceRanges]);
 
-    const toggleTypeSelection = (typeName) => {
+    const toggleTypeSelection = useCallback((typeName) => {
         setSelectedTypes(prev =>
             prev.includes(typeName)
                 ? prev.filter(t => t !== typeName)
                 : [...prev, typeName]
         );
-    };
+    }, []);
 
-    const getTypeSelectorLabel = () => {
+    const getTypeSelectorLabel = useMemo(() => {
         if (selectedTypes.length === 0) return "All Properties";
         // Determine usage tab of selected types
         const firstType = (propertyTypes || []).find(t => t.name === selectedTypes[0]);
         const usageLabel = firstType?.usageType || "Properties";
         if (selectedTypes.length === 1) return selectedTypes[0];
         return `${usageLabel} (${selectedTypes.length})`;
-    };
+    }, [selectedTypes, propertyTypes]);
 
     const isHeader = variant === "header";
 
@@ -248,6 +253,7 @@ const PropertySearchBar = ({
                                 autoComplete="off"
                                 className={`w-full bg-transparent text-gray-800 ${isHeader ? "text-xs" : "text-sm md:text-base"} focus:outline-none min-w-0 relative z-10`}
                                 value={searchQuery}
+                                aria-label="Search properties by keyword, location, or project name"
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
                                     if (e.target.value.length > 0) setIsSuggestionsOpen(true);
@@ -349,7 +355,7 @@ const PropertySearchBar = ({
                                 onClick={() => setIsTypeDropdownOpen(!isTypeDropdownOpen)}
                                 className={`flex items-center gap-1.5 rounded-l-2xl hover:bg-gray-50 font-semibold text-gray-700 transition border-r border-gray-200 h-full px-4 py-2 text-sm cursor-pointer`}
                             >
-                                <span className="max-w-[100px] truncate whitespace-nowrap">{getTypeSelectorLabel()}</span>
+                                <span className="max-w-[100px] truncate whitespace-nowrap">{getTypeSelectorLabel}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isTypeDropdownOpen ? "rotate-180" : ""}`} />
                             </button>
 
@@ -528,7 +534,7 @@ const PropertySearchBar = ({
                                 onClick={() => setIsBudgetDropdownOpen(!isBudgetDropdownOpen)}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-gray-50 font-semibold text-gray-700 transition cursor-pointer ${isHeader ? "text-[10px]" : "text-sm"}`}
                             >
-                                <span className="max-w-[100px] truncate">{getBudgetLabel()}</span>
+                                <span className="max-w-[100px] truncate">{getBudgetLabel}</span>
                                 <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform ${isBudgetDropdownOpen ? "rotate-180" : ""}`} />
                             </button>
                             <AnimatePresence>
@@ -563,6 +569,7 @@ const PropertySearchBar = ({
                     onClick={() => handleSearch()}
                     className={`bg-red-500 cursor-pointer hover:bg-red-600 text-white font-medium h-full rounded-full lg:rounded-xl transition-colors duration-300 shadow-md flex items-center justify-center whitespace-nowrap flex-shrink-0 z-10 ${isHeader ? "px-4 md:px-6 text-xs" : "px-5 md:px-10 text-sm md:text-base"
                         }`}
+                    aria-label="Submit property search"
                 >
                     Search
                 </button>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { User, LogOut, Bell, MessageSquare } from "lucide-react";
 import { RiSidebarFoldFill, RiSidebarUnfoldFill } from "react-icons/ri";
@@ -11,6 +11,7 @@ import { useSocket } from "../../../context/SocketContext";
 
 import SellerSidebar from "./SellerSidebar";
 import { getImageUrl } from "../../../utils/imageUrl";
+import Loader from "../../../components/Common/Loader";
 
 const { Header, Content } = Layout;
 
@@ -294,7 +295,7 @@ const SellerLayout = () => {
           </div>
 
           <div
-            className={`seller-content-wrapper flex flex-col ${pathname === "/seller/support" ? "" : "p-4 md:p-6"}`}
+            className={`seller-content-wrapper relative flex flex-col ${pathname === "/seller/support" ? "" : "p-4 md:p-6"}`}
             style={{
               borderRadius: 0,
               height: pathname === "/seller/support" ? "100%" : "auto",
@@ -303,7 +304,9 @@ const SellerLayout = () => {
               background: pathname === "/seller/support" ? "#fff" : "transparent",
             }}
           >
-            <Outlet />
+            <Suspense fallback={<Loader variant="panel" />}>
+              <Outlet />
+            </Suspense>
           </div>
         </Content>
       </Layout>

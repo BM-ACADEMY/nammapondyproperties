@@ -14,6 +14,7 @@ import {
 import { Plus, Edit, Trash2, Megaphone, CheckCircle, MoreVertical, IndianRupee } from "lucide-react";
 import axios from "axios";
 import { Dropdown } from "antd";
+import Loader from "@/components/Common/Loader";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -178,7 +179,7 @@ const MarketingPlanManager = () => {
   );
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 relative min-h-[400px]">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -209,11 +210,7 @@ const MarketingPlanManager = () => {
 
       {/* Grid Layout */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-96 bg-gray-100 rounded-2xl" />
-          ))}
-        </div>
+        <Loader variant="panel" />
       ) : plans.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {plans.map((plan) => (

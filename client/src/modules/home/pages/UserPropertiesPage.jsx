@@ -233,8 +233,12 @@ const UserPropertiesPage = () => {
 
           {properties.length === 0 ? (
             <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-300">
-              <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <Store className="w-8 h-8 text-gray-400" />
+              <div className="mx-auto w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mb-6">
+                <img
+                  src="/notfound/nousers.webp"
+                  alt="No properties listed"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <h3 className="text-lg font-medium text-gray-900">
                 No properties listed yet

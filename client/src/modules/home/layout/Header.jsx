@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { message } from "antd";
 import { useAuth } from "@/context/AuthContext";
@@ -15,7 +15,6 @@ import {
   LayoutDashboard,
   Heart,
   ChevronDown,
-  Headphones,
   Star,
   PhoneCall,
   Search,
@@ -46,31 +45,35 @@ const Header = () => {
   } = useNav();
 
   // Sort business types: Agent -> Builder/Promoter -> Owner
-  const sortedBusinessTypes = [...businessTypes].sort((a, b) => {
-    const nameA = (
-      typeof a.name === "string" ? a.name : a.name?.name || ""
-    ).toLowerCase();
-    const nameB = (
-      typeof b.name === "string" ? b.name : b.name?.name || ""
-    ).toLowerCase();
+  const sortedBusinessTypes = useMemo(() => {
+    return [...businessTypes].sort((a, b) => {
+      const nameA = (
+        typeof a.name === "string" ? a.name : a.name?.name || ""
+      ).toLowerCase();
+      const nameB = (
+        typeof b.name === "string" ? b.name : b.name?.name || ""
+      ).toLowerCase();
 
-    const getIndex = (name) => {
-      if (name.includes("agent")) return 0;
-      if (name.includes("builder") || name.includes("promoter")) return 1;
-      if (name.includes("owner") || name.includes("individual")) return 2;
-      return 3;
-    };
+      const getIndex = (name) => {
+        if (name.includes("agent")) return 0;
+        if (name.includes("builder") || name.includes("promoter")) return 1;
+        if (name.includes("owner") || name.includes("individual")) return 2;
+        return 3;
+      };
 
-    return getIndex(nameA) - getIndex(nameB);
-  });
+      return getIndex(nameA) - getIndex(nameB);
+    });
+  }, [businessTypes]);
 
-  const builderType = businessTypes.find((t) => {
-    const n = typeof t.name === "string" ? t.name : t.name?.name || "";
-    return (
-      n.toLowerCase().includes("builder") ||
-      n.toLowerCase().includes("promoter")
-    );
-  });
+  const builderType = useMemo(() => {
+    return businessTypes.find((t) => {
+      const n = typeof t.name === "string" ? t.name : t.name?.name || "";
+      return (
+        n.toLowerCase().includes("builder") ||
+        n.toLowerCase().includes("promoter")
+      );
+    });
+  }, [businessTypes]);
 
   const userMenuRef = useRef(null);
   const { user, logout, isAuthenticated, setLoginModalOpen } = useAuth();
@@ -148,18 +151,19 @@ const Header = () => {
     };
   }, [isHomePage]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     setIsMenuOpen(false);
-  };
+  }, [logout]);
 
-  const handlePostProperty = () => {
+  const handlePostProperty = useCallback(() => {
     setIsMenuOpen(false);
     if (isAuthenticated && user) {
       const {
         canPost,
         reason,
         message: limitMessage,
+        redirectPath,
       } = checkPropertyListingLimit(user);
 
       if (!canPost) {
@@ -196,7 +200,7 @@ const Header = () => {
     } else {
       navigate("/post-property");
     }
-  };
+  }, [isAuthenticated, user, navigate]);
 
   // --- Animation Variants ---
   const dropdownVariants = {
@@ -275,7 +279,7 @@ const Header = () => {
               >
                 <img
                   src="/Logo/logo.webp"
-                  alt="NammaPondy Logo"
+                  alt="NammaPondy Logo - Pondicherry's leading real estate platform"
                   className="h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               </Link>
@@ -286,6 +290,7 @@ const Header = () => {
                   onClick={detectLocation}
                   disabled={locationLoading}
                   className={`flex items-center space-x-1.5 xl:space-x-2 lg:px-2 xl:px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer ${isHomePage && !isScrolled ? "text-white hover:bg-white/20" : "bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"}`}
+                  aria-label={`Current location: ${city}. Click to detect location.`}
                 >
                   <MapPin
                     className={`h-4 w-4 ${locationLoading ? "animate-pulse" : ""}`}
@@ -436,8 +441,13 @@ const Header = () => {
                   onMouseEnter={() => setIsContactMenuOpen(true)}
                   onMouseLeave={() => setIsContactMenuOpen(false)}
                 >
-                  <button className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none cursor-pointer">
-                    <Headphones className="h-5 w-5" />
+                  <button 
+                    className="p-2 bg-white rounded-full text-gray-900 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none cursor-pointer"
+                    aria-label="Contact Support"
+                    aria-haspopup="true"
+                    aria-expanded={isContactMenuOpen}
+                  >
+                    <PhoneCall className="h-5 w-5" />
                   </button>
 
                   <AnimatePresence>
@@ -517,8 +527,6 @@ const Header = () => {
                             <User className="h-5 w-5" />
                           )}
                         </div>
-                        {/* Red Notification Dot */}
-                        <div className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 border-2 border-[#166aa8] rounded-full"></div>
                       </div>
                       <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors ml-1" />
                     </button>
@@ -714,6 +722,7 @@ const Header = () => {
                         ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300"
                     }`}
+                    aria-label="Close search"
                   >
                     <X className="h-7 w-7" />
                   </button>
@@ -752,7 +761,7 @@ const Header = () => {
                     {isScrolled ? (
                       <Search className="h-6 w-6" />
                     ) : (
-                      <Headphones className="h-6 w-6" />
+                      <PhoneCall className="h-6 w-6" />
                     )}
                   </button>
                   <button
@@ -762,6 +771,8 @@ const Header = () => {
                         ? "text-slate-800 hover:bg-slate-100"
                         : "text-white hover:text-yellow-300 hover:bg-[#115b94]"
                     }`}
+                    aria-label="Open menu"
+                    aria-expanded={isMenuOpen}
                   >
                     <Menu className="h-7 w-7" />
                   </button>

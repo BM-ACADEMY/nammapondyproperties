@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import api from "@/services/api";
 import { getImageUrl } from "@/utils/imageUrl";
+import Loader from "@/components/Common/Loader";
 import dayjs from "dayjs";
 
 
@@ -341,12 +342,15 @@ const AdminBannerAds = () => {
                 ))}
             </Row>
 
-            <Card className="shadow-sm border-none overflow-hidden rounded-xl">
+            <Card className="shadow-sm border-none overflow-hidden rounded-xl relative min-h-[400px]">
                 <Table
                     columns={columns}
                     dataSource={ads}
                     rowKey="_id"
-                    loading={loading}
+                    loading={{
+                        spinning: loading,
+                        indicator: <Loader variant="panel" />
+                    }}
                     pagination={{ 
                         pageSize: 10,
                         showSizeChanger: false,

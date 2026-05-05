@@ -54,6 +54,7 @@ import {
 import axios from "axios";
 import { useNav } from "@/context/NavContext";
 import { useSocket } from "@/context/SocketContext";
+import Loader from "@/components/Common/Loader";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -728,7 +729,7 @@ const RequirementList = () => {
         </div>
       </div>
 
-      <Card className="shadow-sm border-none overflow-hidden">
+      <Card className="shadow-sm border-none overflow-hidden relative min-h-[400px]">
         <Table
           rowSelection={{
             selectedRowKeys,
@@ -740,7 +741,10 @@ const RequirementList = () => {
           columns={columns}
           dataSource={filteredData}
           rowKey="_id"
-          loading={loading}
+          loading={{
+            spinning: loading,
+            indicator: <Loader variant="panel" />
+          }}
           pagination={{ pageSize: 10 }}
           scroll={{ x: "max-content" }}
         />

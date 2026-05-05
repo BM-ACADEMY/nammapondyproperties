@@ -73,4 +73,3 @@ const TopAnnouncementBar = () => {
 };
 
 export default TopAnnouncementBar;
-

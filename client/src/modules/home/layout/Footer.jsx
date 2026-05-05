@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useNav } from "@/context/NavContext";
 import { useAuth } from "@/context/AuthContext";
@@ -23,7 +23,7 @@ const Footer = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handlePostProperty = () => {
+  const handlePostProperty = useCallback(() => {
     if (isAuthenticated && user) {
       const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user);
 
@@ -59,7 +59,7 @@ const Footer = () => {
     } else {
       navigate("/post-property");
     }
-  };
+  }, [isAuthenticated, user, navigate]);
 
   const getIcon = (platform) => {
     switch (platform.toLowerCase()) {
@@ -281,6 +281,7 @@ const Footer = () => {
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 hover:bg-[#166aa8] hover:text-white transition-all duration-300 shadow-lg group"
                   title={link.platform}
+                  aria-label={`Follow us on ${link.platform}`}
                 >
                   <div className="group-hover:scale-110 transition-transform duration-300">
                     {getIcon(link.platform)}
@@ -301,11 +302,11 @@ const Footer = () => {
           {/* Payment Methods */}
           <div className="flex items-center gap-3 text-[11px] text-gray-400 tracking-wider">
             <div className="flex items-center gap-4">
-              <img src="/icons/upi.svg" alt="UPI" className="h-5 w-auto object-contain opacity-90" />
-              <img src="/icons/gpay.svg" alt="GPay" className="h-5 w-auto object-contain opacity-90" />
-              <img src="/icons/payment.svg" alt="RuPay" className="h-5 w-auto object-contain opacity-90" />
-              <img src="/icons/visa.svg" alt="Visa" className="h-5 w-auto object-contain opacity-90" />
-              <img src="/icons/mastercard.svg" alt="Mastercard" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/upi.svg" alt="Accepted Payment Method: UPI" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/gpay.svg" alt="Accepted Payment Method: GPay" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/payment.svg" alt="Accepted Payment Method: RuPay" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/visa.svg" alt="Accepted Payment Method: Visa" className="h-5 w-auto object-contain opacity-90" />
+              <img src="/icons/mastercard.svg" alt="Accepted Payment Method: Mastercard" className="h-5 w-auto object-contain opacity-90" />
             </div>
           </div>
         </div>

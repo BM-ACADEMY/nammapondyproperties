@@ -17,7 +17,7 @@ const Support = lazy(() => import("../pages/Support"));
 const Reviews = lazy(() => import("../../user/pages/reviews/Reviews"));
 const PropertyAnalytics = lazy(() => import("../pages/properties/PropertyAnalytics"));
 
-const PageLoader = () => <Loader />;
+const PageLoader = () => <Loader variant="panel" />;
 
 const SellerRoute = () => {
   return (

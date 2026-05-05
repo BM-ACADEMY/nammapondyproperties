@@ -14,7 +14,6 @@ import {
   Briefcase,
 } from "lucide-react";
 import { Upload, Modal as AntModal } from "antd";
-import ImgCrop from "antd-img-crop";
 import {
   MapContainer,
   TileLayer,
@@ -268,6 +267,27 @@ const PropertyForm = ({
     };
     fetchAmenities();
   }, []);
+
+  const countWords = (str) => {
+    return str ? str.trim().split(/\s+/).filter((word) => word.length > 0).length : 0;
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    const segments = value.split(/(\s+)/).filter(x => x.length > 0);
+    let wordCount = 0;
+    let truncatedValue = "";
+
+    for (let segment of segments) {
+      if (!/\s+/.test(segment)) {
+        wordCount++;
+      }
+      if (wordCount > 200) break;
+      truncatedValue += segment;
+    }
+
+    setValue("basicInfo.description", truncatedValue, { shouldValidate: true });
+  };
 
   const steps = [
     { number: 1, title: "Basic Details", sub: "Step 1" },
@@ -894,16 +914,35 @@ const PropertyForm = ({
                   <textarea
                     {...register("basicInfo.description", {
                       required: "Description is required",
+                      onChange: handleDescriptionChange,
+                      validate: (value) => {
+                        const wordCount = countWords(value);
+                        return (
+                          wordCount <= 200 ||
+                          `Description must be 200 words or less (current: ${wordCount} words)`
+                        );
+                      },
                     })}
                     rows="4"
                     className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.basicInfo?.description ? "border-red-500" : "border-gray-100"}`}
                     placeholder="Describe the property's unique features, neighborhood, and amenities..."
                   ></textarea>
-                  {errors.basicInfo?.description && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.basicInfo.description.message}
-                    </p>
-                  )}
+                  <div className="flex justify-between items-center mt-1">
+                    {errors.basicInfo?.description && (
+                      <p className="text-red-500 text-xs">
+                        {errors.basicInfo.description.message}
+                      </p>
+                    )}
+                    <span
+                      className={`text-xs ml-auto ${
+                        countWords(watch("basicInfo.description")) > 200
+                          ? "text-red-500 font-bold"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {countWords(watch("basicInfo.description"))} / 200 words
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">
@@ -1598,7 +1637,6 @@ const PropertyForm = ({
                 <p className="text-gray-700 font-bold uppercase text-xs tracking-wider">
                   Property Photos
                 </p>
-                <ImgCrop rotationSlider aspect={4 / 3}>
                   <Upload
                     listType="picture-card"
                     fileList={images.map((f, i) => ({
@@ -1622,7 +1660,6 @@ const PropertyForm = ({
                       </div>
                     )}
                   </Upload>
-                </ImgCrop>
                 {existingImages.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">
                     {existingImages.map((img, i) => (
@@ -1657,7 +1694,6 @@ const PropertyForm = ({
                   </div>
 
                   <div className="space-y-4">
-                    <ImgCrop rotationSlider aspect={4 / 3}>
                       <Upload
                         listType="picture-card"
                         fileList={floorPlans.map((f, i) => ({
@@ -1681,7 +1717,6 @@ const PropertyForm = ({
                           </div>
                         )}
                       </Upload>
-                    </ImgCrop>
 
                     {existingFloorPlans.length > 0 && (
                       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-4">

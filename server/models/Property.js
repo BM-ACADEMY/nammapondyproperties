@@ -249,6 +249,14 @@ const propertySchema = new mongoose.Schema(
 // Index for geo-spatial queries
 propertySchema.index({ "location.locationPoint": "2dsphere" });
 
+// Additional indexes for performance
+propertySchema.index({ status: 1 });
+propertySchema.index({ "basicInfo.category": 1 });
+propertySchema.index({ "basicInfo.usageType": 1 });
+propertySchema.index({ "basicInfo.propertyType": 1 });
+propertySchema.index({ seller: 1 });
+propertySchema.index({ createdAt: -1 }); // Index for latest properties
+
 // Helper to generate slug
 function generateSlug(title) {
   return title

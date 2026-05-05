@@ -26,12 +26,10 @@ exports.createTicket = async (req, res) => {
 
     await newTicket.save();
 
-    // Send email notification to admin
-    try {
-      await sendSupportTicketNotificationToAdmin(newTicket, req.user, message);
-    } catch (emailErr) {
+    // Send email notification to admin in background
+    sendSupportTicketNotificationToAdmin(newTicket, req.user, message).catch(emailErr => {
       console.error("Failed to send support ticket email:", emailErr);
-    }
+    });
 
     // Notify admins via socket
     const io = req.app.get("socketio");
@@ -43,28 +41,27 @@ exports.createTicket = async (req, res) => {
       });
     }
 
-    // Send push notification to admins
-    try {
-      const admins = await User.find({ 
-        $or: [
-          { isSuperAdmin: true },
-          { role_id: { $exists: true } } // This might need more specific role filtering based on your role model
-        ]
-      }).select("_id");
-      
-      const adminIds = admins.map(admin => admin._id);
-      await sendPushNotificationToMultiple(adminIds, {
-        title: "New Support Ticket",
-        body: `${req.user.name} created a new ticket: ${subject}`,
-        icon: "/Logo/logo.webp",
-        data: {
-          url: `/admin/support/${newTicket._id}`
-        }
+    // Send push notification to admins in background
+    User.find({ 
+      $or: [
+        { isSuperAdmin: true },
+        { role_id: { $exists: true } }
+      ]
+    }).select("_id")
+      .then(admins => {
+        const adminIds = admins.map(admin => admin._id);
+        return sendPushNotificationToMultiple(adminIds, {
+          title: "New Support Ticket",
+          body: `${req.user.name} created a new ticket: ${subject}`,
+          icon: "/Logo/logo.webp",
+          data: {
+            url: `/admin/support/${newTicket._id}`
+          }
+        });
+      })
+      .catch(pushErr => {
+        console.error("Failed to send push notification to admins:", pushErr);
       });
-
-    } catch (pushErr) {
-      console.error("Failed to send push notification to admins:", pushErr);
-    }
 
 
     res.status(201).json({
@@ -201,39 +198,42 @@ exports.addMessage = async (req, res) => {
 
     ticket.messages.push(newMessage);
     ticket.lastMessageAt = new Date();
+
+    // Mark recipient as unread
+    if (finalIsAdmin) {
+      ticket.isSellerRead = false;
+    } else {
+      ticket.isAdminRead = false;
+    }
+
     await ticket.save();
 
-    // Populate sender for frontend
+    // Populate sender for frontend and socket
     const populatedTicket = await SupportTicket.findById(ticketId)
       .populate("seller", "name email profile_image")
       .populate("messages.sender", "name email profile_image");
     
     const latestPopulatedMessage = populatedTicket.messages[populatedTicket.messages.length - 1];
 
-    // Real-time notification
+    // Real-time notification via Socket (Non-blocking)
     const io = req.app.get("socketio");
     if (io) {
       if (finalIsAdmin) {
-        // Admin sent message, mark seller as unread
-        ticket.isSellerRead = false;
-        // Notify seller
         io.to(`seller-${ticket.seller}`).emit("new-support-message", {
           ticketId,
           message: latestPopulatedMessage,
         });
       } else {
-        // Seller sent message, mark admin as unread
-        ticket.isAdminRead = false;
-        // Notify admins
         io.to("admin-room").emit("new-support-message", {
           ticketId,
           message: latestPopulatedMessage,
           isAdminRead: false
         });
       }
-      await ticket.save();
+    }
 
-      // Send push notification
+    // Send push notification in background
+    (async () => {
       try {
         if (finalIsAdmin) {
           // Notify seller
@@ -241,18 +241,12 @@ exports.addMessage = async (req, res) => {
             title: "New Message from Support",
             body: content.length > 50 ? content.substring(0, 50) + "..." : content,
             icon: "/Logo/logo.webp",
-            data: {
-              url: `/seller/support/${ticketId}`
-            }
+            data: { url: `/seller/support/${ticketId}` }
           });
-
         } else {
           // Notify admins
           const admins = await User.find({ 
-            $or: [
-              { isSuperAdmin: true },
-              { role_id: { $exists: true } }
-            ]
+            $or: [ { isSuperAdmin: true }, { role_id: { $exists: true } } ]
           }).select("_id");
           const adminIds = admins.map(admin => admin._id);
           
@@ -260,16 +254,13 @@ exports.addMessage = async (req, res) => {
             title: "New Support Message",
             body: `${req.user.name}: ${content.length > 50 ? content.substring(0, 50) + "..." : content}`,
             icon: "/Logo/logo.webp",
-            data: {
-              url: `/admin/support/${ticketId}`
-            }
+            data: { url: `/admin/support/${ticketId}` }
           });
-
         }
       } catch (pushErr) {
         console.error("Failed to send push notification for message:", pushErr);
       }
-    }
+    })();
 
 
     res.status(200).json({
@@ -312,20 +303,17 @@ exports.updateStatus = async (req, res) => {
       io.to("admin-room").emit("ticket-status-updated", { ticket });
     }
 
-    // Send push notification to seller
-    try {
-      await sendPushNotification(ticket.seller._id, {
-        title: "Ticket Status Updated",
-        body: `Your support ticket status has been updated to: ${status}`,
-        icon: "/Logo/logo.webp",
-        data: {
-          url: `/seller/support/${ticketId}`
-        }
-      });
-
-    } catch (pushErr) {
+    // Send push notification to seller in background
+    sendPushNotification(ticket.seller._id, {
+      title: "Ticket Status Updated",
+      body: `Your support ticket status has been updated to: ${status}`,
+      icon: "/Logo/logo.webp",
+      data: {
+        url: `/seller/support/${ticketId}`
+      }
+    }).catch(pushErr => {
       console.error("Failed to send push notification for status update:", pushErr);
-    }
+    });
 
 
     res.status(200).json({ success: true, ticket });

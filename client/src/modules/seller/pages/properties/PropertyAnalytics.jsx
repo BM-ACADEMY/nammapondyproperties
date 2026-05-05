@@ -64,7 +64,7 @@ const PropertyAnalytics = () => {
     }
   };
 
-  if (loading && !data) return <Loader />;
+  if (loading && !data) return <Loader variant="panel" />;
 
   const columns = [
     {

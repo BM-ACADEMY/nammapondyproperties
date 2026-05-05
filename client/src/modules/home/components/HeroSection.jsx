@@ -34,12 +34,20 @@ const HeroSection = () => {
           src="/banner/banner1.webp"
           alt="Hero Background Desktop"
           className="hidden md:block w-full h-full object-cover object-center"
+          fetchpriority="high"
+          loading="eager"
+          width="1920"
+          height="320"
         />
         {/* Mobile/Tablet Image */}
         <img
           src="/banner/Banner.webp"
           alt="Hero Background Mobile"
           className="block md:hidden w-full h-full object-cover object-center"
+          fetchpriority="high"
+          loading="eager"
+          width="768"
+          height="260"
         />
         <div className="absolute inset-0 bg-black/50"></div>
       </div>

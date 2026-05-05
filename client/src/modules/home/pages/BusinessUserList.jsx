@@ -27,6 +27,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/services/api";
 import PhoneUpdateModal from "@/components/Common/PhoneUpdateModal";
 import { slugify } from "@/utils/slugify";
+import Loader from "@/components/Common/Loader";
 
 const BusinessUserList = () => {
   const { businessTypeSlug, sellerSlug } = useParams();
@@ -47,10 +48,10 @@ const BusinessUserList = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [enquiryLoading, setEnquiryLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  
+
   const isBuilderType = useMemo(() => {
     return businessType?.name?.toLowerCase().includes("builder") ||
-           businessType?.name?.toLowerCase().includes("promoter");
+      businessType?.name?.toLowerCase().includes("promoter");
   }, [businessType]);
 
   const API = import.meta.env.VITE_API_URL;
@@ -153,7 +154,7 @@ const BusinessUserList = () => {
       try {
         let url = `${API}/properties/fetch-all-property?seller_id=${selectedSeller._id}`;
         if (businessTypeId !== "administration") {
-           url += `&businessType=${businessTypeId}`;
+          url += `&businessType=${businessTypeId}`;
         }
         const res = await axios.get(url);
         setSellerProperties(res.data.properties || []);
@@ -259,11 +260,7 @@ const BusinessUserList = () => {
 
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#174685]"></div>
-      </div>
-    );
+    return <Loader />;
   }
 
   // Shared sellers list content
@@ -288,10 +285,9 @@ const BusinessUserList = () => {
             }}
             className={`group flex items-center cursor-pointer transition-all duration-200 border-b border-gray-50 last:border-0
               ${compact ? "gap-3 px-4 py-3" : "gap-4 px-5 py-4"}
-              ${
-                isActive
-                  ? "bg-[#174685]/8"
-                  : "bg-white hover:bg-slate-50 border-l-[3px] border-l-transparent"
+              ${isActive
+                ? "bg-[#174685]/8"
+                : "bg-white hover:bg-slate-50 border-l-[3px] border-l-transparent"
               }`}
           >
             {/* Avatar */}
@@ -453,8 +449,12 @@ const BusinessUserList = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {sellers.length === 0 ? (
           <div className="bg-white rounded-3xl shadow-sm p-12 text-center border border-gray-100">
-            <div className="mx-auto w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-              <User className="w-8 h-8 text-[#174685]" />
+            <div className="mx-auto w-48 h-48 md:w-64 md:h-64 flex items-center justify-center mb-6">
+              <img
+                src="/notfound/nousers.webp"
+                alt="No sellers found"
+                className="w-full h-full object-contain"
+              />
             </div>
             <h3 className="text-xl font-bold text-slate-800 mb-2">
               No sellers found
@@ -493,10 +493,10 @@ const BusinessUserList = () => {
                           Trusted Builders & Promoters
                         </h2>
                         <p className="text-[#5E6D8E] text-sm sm:text-base lg:text-lg mb-6 lg:mb-8 max-w-lg leading-relaxed font-medium">
-                          Partner with verified professionals who deliver quality and transparency. 
+                          Partner with verified professionals who deliver quality and transparency.
                           The most responsive experts for your next big project.
                         </p>
-                        <button 
+                        <button
                           onClick={() => navigate("/builder-info")}
                           className="w-full sm:w-auto px-10 py-3 bg-[#174685] text-white rounded-xl text-base font-bold hover:bg-[#123a6d] transition-all shadow-lg hover:shadow-[#174685]/20 active:scale-95 cursor-pointer"
                         >
@@ -504,9 +504,9 @@ const BusinessUserList = () => {
                         </button>
                       </div>
                       <div className="flex-1 relative w-full h-[200px] sm:h-[240px] md:h-[300px]">
-                        <img 
-                          src="/builder/agent.webp" 
-                          alt="Trusted Builders" 
+                        <img
+                          src="/builder/agent.webp"
+                          alt="Trusted Builders"
                           className="w-full h-full object-contain object-right-bottom scale-100 sm:scale-110 md:scale-125 md:translate-x-4 translate-y-2 opacity-95 transition-all duration-700 hover:scale-[1.3] pointer-events-none"
                         />
                       </div>
@@ -534,11 +534,11 @@ const BusinessUserList = () => {
                       >
                         {/* Company Logo Top Right (Corner Flushed) */}
                         {user.builderProfile?.companyLogo && (
-                          <div className="absolute top-0 right-0 w-20 h-20 lg:w-24 lg:h-24 flex justify-center items-center z-10 rounded-tr-xl overflow-hidden">
-                            <img 
-                              src={getImageUrl(user.builderProfile.companyLogo)} 
-                              className="w-full h-full object-contain" 
-                              alt="company logo" 
+                          <div className="absolute top-0 right-0 w-24 h-24 lg:w-28 lg:h-28 flex justify-center items-center z-10 rounded-tr-xl overflow-hidden bg-white shadow-sm border-l border-b border-slate-100">
+                            <img
+                              src={getImageUrl(user.builderProfile.companyLogo)}
+                              className="w-full h-full object-contain"
+                              alt="company logo"
                             />
                           </div>
                         )}
@@ -564,7 +564,7 @@ const BusinessUserList = () => {
                             <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-0.5 mt-2">
                               {user.name}
                             </h3>
-                            <p className="text-[15px] text-slate-500 font-medium">
+                            <p className="text-[17px] text-slate-600 font-semibold">
                               {businessType?.name || "Professional"}
                             </p>
                           </div>
@@ -573,26 +573,26 @@ const BusinessUserList = () => {
                             {/* Verified Badge */}
                             {(user.badgeVerified ||
                               user.role_id?.role_name === "admin") && (
-                              <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#E8F5E9] text-[#2E7D32] rounded text-[10px] font-bold uppercase tracking-wider w-fit">
-                                <img
-                                  src="/Logo/badge.png"
-                                  alt="Verified"
-                                  className="w-3 h-3 object-contain"
-                                />
-                                <span>Verified</span>
-                              </div>
-                            )}
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-md text-[12px] font-bold uppercase tracking-wider w-fit shadow-sm">
+                                  <img
+                                    src="/Logo/badge.webp"
+                                    alt="Verified"
+                                    className="w-5 h-5 object-contain"
+                                  />
+                                  <span>Verified</span>
+                                </div>
+                              )}
 
                             {/* Details Table-style layout */}
                             <div className="space-y-1 mt-1">
                               {user.builderProfile?.experienceYears && (
-                                <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-2 text-[15px]">
                                   <span className="text-slate-500">Experience:</span>
                                   <span className="text-slate-800 font-semibold">{user.builderProfile.experienceYears} Years</span>
                                 </div>
                               )}
                               {user.builderProfile?.companyName && (
-                                <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-2 text-[15px]">
                                   <span className="text-slate-500">Company:</span>
                                   <span className="text-slate-800 font-semibold truncate max-w-[150px] sm:max-w-full">
                                     {user.builderProfile.companyName}
@@ -635,9 +635,9 @@ const BusinessUserList = () => {
                           {/* Main Profile Info */}
                           <div className="flex-1 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 lg:gap-10">
                             {/* Share Profile Button (Refined Top Right) */}
-                            <button 
+                            <button
                               onClick={handleShareProfile}
-                              className="absolute top-4 sm:top-6 right-6 sm:right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer" 
+                              className="absolute top-4 sm:top-6 right-6 sm:right-10 p-2 lg:p-2.5 flex items-center gap-2 text-white hover:text-white transition-all bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 group z-20 cursor-pointer"
                               title="Share profile"
                             >
                               <Share2 size={16} className="group-hover:scale-110 transition-transform" />
@@ -649,11 +649,11 @@ const BusinessUserList = () => {
                               <div className="relative group/avatar">
                                 {/* Radiant Glow for Gold Ring */}
                                 <div className="absolute -inset-4 bg-[#D4AF37]/15 rounded-full blur-2xl opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-700" />
-                                
+
                                 <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-full p-[5px] sm:p-[4px] bg-[conic-gradient(from_0deg,#8A6628,#E6BE08,#F9F295,#E6BE08,#8A6628,#E6BE08,#F9F295,#E6BE08,#8A6628)] shadow-[0_12px_30px_rgba(0,0,0,0.4),inset_0_1px_1.5px_rgba(255,255,255,0.7)]">
                                   {/* Beveled Edge Highlight */}
                                   <div className="absolute inset-[0.5px] rounded-full border border-white/15 pointer-events-none" />
-                                  
+
                                   {/* Inner Groove for Depth */}
                                   <div className="w-full h-full rounded-full p-[2px] bg-[#5D4037] shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
                                     <div className="w-full h-full rounded-full border-[2.5px] border-[#0f3468] overflow-hidden bg-[#0f3468]">
@@ -674,13 +674,13 @@ const BusinessUserList = () => {
                               </div>
                               {/* Verified Badge (Fully Separated) */}
                               {(selectedSeller?.badgeVerified || selectedSeller?.role_id?.role_name === "admin") && (
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#E8F5E9] text-[#2E7D32] rounded-md shadow-lg border border-white/10">
+                                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#E8F5E9] text-[#2E7D32] rounded-md shadow-lg border border-white/10">
                                   <img
-                                    src="/Logo/badge.png"
+                                    src="/Logo/badge.webp"
                                     alt="Verified"
-                                    className="w-3.5 h-3.5 object-contain"
+                                    className="w-5 h-5 object-contain"
                                   />
-                                  <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+                                  <span className="text-[12px] font-black uppercase tracking-widest leading-none">
                                     Verified
                                   </span>
                                 </div>
@@ -694,8 +694,8 @@ const BusinessUserList = () => {
                               </h2>
 
                               {/* Experience & Type Row */}
-                              <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 sm:gap-4 text-white/70 text-[13px] sm:text-sm font-medium leading-relaxed">
-                                <span className="px-2 py-0.5 bg-black/20 rounded text-[11px] sm:text-[12px] uppercase tracking-wider">{businessType?.name || "Professional"}</span>
+                              <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 sm:gap-4 text-white/80 text-sm sm:text-base font-medium leading-relaxed">
+                                <span className="px-2.5 py-1 bg-black/20 rounded text-[12px] sm:text-[14px] uppercase tracking-wider font-bold">{businessType?.name || "Professional"}</span>
                                 {selectedSeller?.builderProfile?.experienceYears && (
                                   <span>{selectedSeller.builderProfile.experienceYears} Years of experience</span>
                                 )}
@@ -709,13 +709,13 @@ const BusinessUserList = () => {
                                     {selectedSeller.builderProfile.aboutCompany}
                                   </p>
                                   {selectedSeller.builderProfile.aboutCompany.length > 100 && (
-                                  <button
-                                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                                    className="mt-3 text-[11px] sm:text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
-                                  >
-                                    {isDescriptionExpanded ? "Read Less" : "Read More"}
-                                    <ChevronRight size={12} className={`transition-transform duration-300 ${isDescriptionExpanded ? "-rotate-90" : "rotate-90"}`} />
-                                  </button>
+                                    <button
+                                      onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                                      className="mt-3 text-[11px] sm:text-xs font-bold text-white/50 hover:text-white uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      {isDescriptionExpanded ? "Read Less" : "Read More"}
+                                      <ChevronRight size={12} className={`transition-transform duration-300 ${isDescriptionExpanded ? "-rotate-90" : "rotate-90"}`} />
+                                    </button>
                                   )}
                                 </div>
                               )}
@@ -753,13 +753,13 @@ const BusinessUserList = () => {
                                   />
                                 </div>
                               )}
-                              
+
                               {selectedSeller?.builderProfile?.companyName && (
                                 <h4 className="text-white font-bold text-sm sm:text-base lg:text-lg text-left md:text-right leading-tight mb-2 uppercase tracking-wide">
                                   {selectedSeller.builderProfile.companyName}
                                 </h4>
                               )}
-                              
+
                               {/* Social Media Links in Sidebar */}
                               {selectedSeller?.builderProfile?.socialLinks && Object.values(selectedSeller.builderProfile.socialLinks).some(link => link) && (
                                 <div className="flex flex-wrap justify-start md:justify-end gap-2.5 sm:gap-3 mt-4 sm:mt-6">
@@ -812,13 +812,15 @@ const BusinessUserList = () => {
                   )}
 
                   {propertiesLoading ? (
-                    <div className="py-20 flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#174685]" />
-                    </div>
+                    <Loader variant="inline" />
                   ) : sellerProperties.length === 0 ? (
-                    <div className="bg-white rounded-3xl p-16 text-center border border-dashed border-gray-200">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <Building2 className="w-10 h-10 text-slate-300" />
+                    <div className="bg-white rounded-3xl p-12 text-center border border-dashed border-gray-200">
+                      <div className="mx-auto w-48 h-48 md:w-56 md:h-56 flex items-center justify-center mb-6">
+                        <img
+                          src="/notfound/nousers.webp"
+                          alt="No listings found"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 mb-2">
                         No active listings

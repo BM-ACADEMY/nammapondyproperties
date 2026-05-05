@@ -127,7 +127,7 @@ const AddProperty = () => {
 
   if (verifyingLimit && !editId) {
     return (
-      <Loader />
+      <Loader variant="panel" />
     );
   }
 

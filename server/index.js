@@ -8,6 +8,7 @@ const connectDB = require("./config/db");
 const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
+const compression = require("compression");
 
 // Import all routes
 const roleRoutes = require("./routes/roleRoute");
@@ -52,8 +53,14 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve Static Files (ensure this is before routes or handled correctly)
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Compression (must be before static files and routes)
+app.use(compression());
+
+// Serve Static Files with caching (1 day)
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  maxAge: '1d',
+  immutable: true
+}));
 
 // Cookies
 app.use(cookieParser());

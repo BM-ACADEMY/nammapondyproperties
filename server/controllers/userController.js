@@ -80,7 +80,7 @@ exports.verifyOtp = async (req, res) => {
       phone,
       otp,
       otpExpires: { $gt: Date.now() },
-    }).populate("role_id");
+    }).populate(["role_id", "businessType", "builderProfile"]);
 
     if (!user) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
