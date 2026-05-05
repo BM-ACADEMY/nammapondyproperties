@@ -692,7 +692,7 @@ const Header = () => {
                                 setIsLoginMenuOpen(false);
                                 setLoginModalOpen(true);
                               }}
-                              className="w-full flex items-center justify-center px-4 py-3 bg-[#166aa8] text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md active:scale-[0.98] group"
+                              className="w-full flex items-center justify-center px-4 py-3 bg-[#166aa8] text-white text-sm font-bold rounded-xl hover:bg-[#125a8e] transition-all shadow-md active:scale-[0.98] group cursor-pointer"
                             >
                               <User className="h-4 w-4 mr-2 text-white/80 group-hover:text-white transition-colors" />
                               <span>Login / Register</span>
@@ -811,7 +811,7 @@ const Header = () => {
                       setIsMenuOpen(false);
                       setLoginModalOpen(true);
                     }}
-                    className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase"
+                    className="flex items-center text-[#166aa8] font-bold text-[15px] tracking-wide uppercase cursor-pointer"
                   >
                     <User className="h-6 w-6 mr-2 text-slate-700" />
                     LOGIN / REGISTER
