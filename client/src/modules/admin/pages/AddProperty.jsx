@@ -86,7 +86,8 @@ const AddProperty = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen p-4 md:p-8 bg-gray-50 pt-10 md:pt-12">
+      <div className="mb-6"></div>
       <PropertyForm
         onSubmit={onSubmit}
         loading={loading}

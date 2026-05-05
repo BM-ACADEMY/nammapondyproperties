@@ -22,6 +22,8 @@ import { useAuth } from "@/context/AuthContext";
 import Loader from "../../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
 import { useSocket } from "@/context/SocketContext";
+import PhoneVerificationModal from "@/components/Auth/PhoneVerificationModal";
+import { toast } from "react-hot-toast";
 
 const { Title, Text } = Typography;
 
@@ -41,6 +43,8 @@ const Profile = () => {
   const [hasInitialLogo, setHasInitialLogo] = useState(false);
   const [imageSize, setImageSize] = useState(null);
   const [logoSize, setLogoSize] = useState(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
   const socket = useSocket();
 
   useEffect(() => {
@@ -143,18 +147,36 @@ const Profile = () => {
     fetchSettings();
   }, [form]);
 
-  const handleUpdateProfile = async (values) => {
+  const handleUpdateProfile = async (values, isPhoneVerified = false) => {
+    // Check if phone has changed
+    if (values.phone !== user.phone && !isPhoneVerified) {
+      setSaving(true);
+      try {
+        const res = await api.post("/users/request-phone-update", { newPhone: values.phone });
+        if (res.data.success) {
+          setPendingPhone(values.phone);
+          setShowVerifyModal(true);
+          setSaving(false);
+          return;
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.error || "Failed to request phone update");
+        setSaving(false);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       if (!user || !user._id) return message.error("User ID missing");
 
       const formData = new FormData();
       formData.append("name", values.name);
-      formData.append("phone", values.phone);
+      formData.append("phone", values.phone); // Use values.phone now
 
       const isBuilder =
         user?.businessType?.name?.match(/Builder|Promoter/i);
-
+// ... existing logic for builderDetail and files ...
       if (isBuilder) {
         const builderDetailResource = {
           phonePrimary: values.phonePrimary || values.phone,
@@ -218,6 +240,13 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleVerifySuccess = () => {
+    if (refetchUser) refetchUser();
+    // Trigger update for other fields and finalize UI
+    const currentValues = form.getFieldsValue();
+    handleUpdateProfile(currentValues, true);
   };
 
   const handleCancelEdit = () => {
@@ -753,6 +782,12 @@ const Profile = () => {
           </div>
         </Card> */}
       </div>
+      <PhoneVerificationModal 
+        open={showVerifyModal} 
+        onCancel={() => setShowVerifyModal(false)} 
+        newPhone={pendingPhone}
+        onSuccess={handleVerifySuccess}
+      />
 
       <style>{`
         /* Target the specific upload box inside the profile-uploader wrapper */

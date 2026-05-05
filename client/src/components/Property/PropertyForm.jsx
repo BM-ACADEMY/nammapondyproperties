@@ -668,9 +668,9 @@ const PropertyForm = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
+    <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-4 md:p-6 mt-32 md:mt-16 min-h-[800px]">
       {/* Mobile Header */}
-      <div className="lg:hidden mb-2">
+      <div className="lg:hidden mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {isEdit ? "Edit Property" : "Add New Property"}
         </h1>
@@ -683,7 +683,7 @@ const PropertyForm = ({
 
       {/* Sidebar - Desktop Only */}
       <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-24 h-fit self-start">
-        <div className="mb-2">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {isEdit ? "Edit Property" : "Add New Property"}
           </h1>
@@ -1209,7 +1209,14 @@ const PropertyForm = ({
                 <input
                   {...register("location.pincode", {
                     required: "Pincode is required",
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: "Pincode must be exactly 6 digits",
+                    },
                   })}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+                  }}
                   className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.pincode ? "border-red-500" : "border-gray-100"}`}
                   placeholder="e.g., 605001"
                 />

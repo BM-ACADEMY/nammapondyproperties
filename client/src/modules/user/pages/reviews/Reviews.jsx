@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Rate, Button, message, Popconfirm } from "antd";
+import { Modal, Form, Input, Rate, Button, message, Popconfirm, Pagination } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState, memo } from "react";
@@ -44,11 +44,12 @@ const ReviewCard = memo(
           <h3 className="text-[20px] font-bold text-slate-800 leading-tight">
             {testimonial.name}
           </h3>
-          {testimonial.role && (
+          {/* Role hidden as per request */}
+          {/* {testimonial.role && (
             <p className="text-[14px] text-slate-500 font-medium mt-0.5">
               {testimonial.role}
             </p>
-          )}
+          )} */}
 
           <div className="flex items-center gap-3 mt-1.5">
             <div className="flex gap-[1px]">
@@ -134,6 +135,8 @@ const Reviews = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -203,7 +206,6 @@ const Reviews = () => {
   const handleEdit = (testimonial) => {
     setEditingTestimonial(testimonial);
     form.setFieldsValue({
-      role: testimonial.role,
       rating: testimonial.rating,
       content: testimonial.content,
     });
@@ -232,7 +234,7 @@ const Reviews = () => {
   const handleWriteNewReview = () => {
     form.resetFields();
     form.setFieldsValue({
-      role: user?.user?.businessType?.name || user?.businessType?.name || "",
+      // role hidden
     });
     setEditingTestimonial(null);
     setIsModalOpen(true);
@@ -321,16 +323,32 @@ const Reviews = () => {
             ) : (
               <AnimatePresence mode="popLayout">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {testimonials.map((testimonial) => (
-                    <ReviewCard
-                      key={testimonial._id}
-                      testimonial={testimonial}
-                      getStatusBadgeStyles={getStatusBadgeStyles}
-                      handleEdit={handleEdit}
-                      handleDelete={handleDelete}
-                    />
-                  ))}
+                  {testimonials
+                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                    .map((testimonial) => (
+                      <ReviewCard
+                        key={testimonial._id}
+                        testimonial={testimonial}
+                        getStatusBadgeStyles={getStatusBadgeStyles}
+                        handleEdit={handleEdit}
+                        handleDelete={handleDelete}
+                      />
+                    ))}
                 </div>
+
+                {/* Pagination */}
+                {testimonials.length > pageSize && (
+                  <div className="mt-12 flex justify-center">
+                    <Pagination
+                      current={currentPage}
+                      pageSize={pageSize}
+                      total={testimonials.length}
+                      onChange={(page) => setCurrentPage(page)}
+                      showSizeChanger={false}
+                      className="custom-pagination"
+                    />
+                  </div>
+                )}
               </AnimatePresence>
             )}
           </div>
@@ -387,7 +405,8 @@ const Reviews = () => {
           {/* </div> */}
           {/* </div> */}
 
-          <Form.Item
+          {/* Role field hidden as per request */}
+          {/* <Form.Item
             name="role"
             label={
               <span className="font-medium text-slate-700">Your Role</span>
@@ -401,7 +420,7 @@ const Reviews = () => {
                 !!(user?.user?.businessType?.name || user?.businessType?.name)
               }
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name="rating"

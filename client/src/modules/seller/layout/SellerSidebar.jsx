@@ -13,7 +13,9 @@ import {
   Headphones,
   ChevronDown,
   ChevronRight,
-  Star
+  Star,
+  MoreVertical,
+  Home
 } from "lucide-react";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -709,36 +711,60 @@ const SellerSidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
             <div style={S.profileInfo}>
               <div style={S.profileName}>{displayName}</div>
-              <div style={S.profileRole}>Verified Account</div>
+              {user?.badgeVerified && (
+                <div style={{ ...S.profileRole, color: "gray", fontWeight: 700 }}>
+                  VERIFIED ACCOUNT
+                </div>
+              )}
             </div>
 
-            <button
-              onClick={logout}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                color: "rgba(255,255,255,0.45)",
-                padding: "8px",
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.2s",
-                flexShrink: 0,
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: "home",
+                    label: "Back Home",
+                    icon: <Home size={14} />,
+                    onClick: () => navigate("/"),
+                  },
+                  {
+                    key: "logout",
+                    label: "Logout",
+                    icon: <LogOut size={14} />,
+                    danger: true,
+                    onClick: logout,
+                  },
+                ],
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(239,68,68,0.15)";
-                e.currentTarget.style.color = "#f87171";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "none";
-                e.currentTarget.style.color = "rgba(255,255,255,0.45)";
-              }}
-              title="Logout"
+              trigger={["click"]}
+              placement="topRight"
             >
-              <LogOut size={18} />
-            </button>
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "rgba(255,255,255,0.45)",
+                  padding: "8px",
+                  borderRadius: "8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                  e.currentTarget.style.color = "#fff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "none";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                }}
+              >
+                <MoreVertical size={18} />
+              </button>
+            </Dropdown>
           </div>
         )}
       </div>

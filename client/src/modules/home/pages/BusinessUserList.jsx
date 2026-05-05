@@ -41,7 +41,8 @@ const BusinessUserList = () => {
   const [loading, setLoading] = useState(true);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
 
-  const { user } = useAuth();
+  const { user, setLoginModalOpen } = useAuth();
+  const [pendingWhatsApp, setPendingWhatsApp] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -188,6 +189,12 @@ const BusinessUserList = () => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (!targetUser) return;
 
+    if (!user) {
+      setPendingWhatsApp({ targetUser, property });
+      setLoginModalOpen(true);
+      return;
+    }
+
     // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
     const rawPhone = (targetUser.phone || "").toString().replace(/\D/g, "");
     const sellerPhone =
@@ -218,6 +225,13 @@ const BusinessUserList = () => {
       }).catch(err => console.error("Enquiry Error:", err));
     }
   };
+
+  useEffect(() => {
+    if (user && pendingWhatsApp) {
+      handleWhatsAppClick(null, pendingWhatsApp.targetUser, pendingWhatsApp.property);
+      setPendingWhatsApp(null);
+    }
+  }, [user, pendingWhatsApp]);
 
   const submitEnquiry = async (targetUser, property, name, email, phone) => {
     // Normalise phone: strip leading +, 0, or 91 country code then prepend 91

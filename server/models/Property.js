@@ -58,7 +58,15 @@ const propertySchema = new mongoose.Schema(
       city: String,
       locality: String,
       subArea: String,
-      pincode: String,
+      pincode: {
+        type: String,
+        validate: {
+          validator: function (v) {
+            return /^\d{6}$/.test(v);
+          },
+          message: (props) => `${props.value} is not a valid 6-digit pincode!`,
+        },
+      },
       locationText: String,
 
       coordinates: {
