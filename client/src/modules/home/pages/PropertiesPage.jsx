@@ -266,8 +266,12 @@ const PropertiesPage = () => {
                   ))
                 ) : (
                   <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
-                    <div className="text-gray-400 mb-4 inline-block p-4 bg-gray-50 rounded-full">
-                      <SearchIcon className="w-8 h-8" />
+                    <div className="mx-auto w-48 h-48 md:w-64 md:h-64 flex items-center justify-center mb-6">
+                      <img
+                        src="/notfound/nousers.webp"
+                        alt="No properties found"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <p className="text-gray-500 font-medium">No properties found matching your criteria.</p>
                     <button onClick={clearFilters} className="text-blue-600 font-semibold mt-2 hover:underline">Clear all filters</button>
