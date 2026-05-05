@@ -7,7 +7,7 @@ const { Title, Paragraph, Text } = Typography;
 
 const TermsAndConditions = () => {
   return (
-    <div className="mt-20 max-w-4xl mx-auto p-4">
+    <div className="mt-28 max-w-4xl mx-auto p-4">
       <Helmet>
         <title>Terms & Conditions | Namma Pondy Properties</title>
         <meta
