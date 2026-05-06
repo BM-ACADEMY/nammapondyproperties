@@ -19,6 +19,8 @@ import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
+import PhoneVerificationModal from "@/components/Auth/PhoneVerificationModal";
+import { toast } from "react-hot-toast";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -27,7 +29,7 @@ const AdminProfile = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, refetchUser } = useAuth();
   const [fileList, setFileList] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -39,6 +41,8 @@ const AdminProfile = () => {
   const [logoSize, setLogoSize] = useState(null);
   const [businessTypes, setBusinessTypes] = useState([]);
   const [selectedBusinessType, setSelectedBusinessType] = useState(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
 
   useEffect(() => {
     const fetchBusinessTypes = async () => {
@@ -114,14 +118,32 @@ const AdminProfile = () => {
     fetchProfile();
   }, [form]);
 
-  const handleUpdateProfile = async (values) => {
+  const handleUpdateProfile = async (values, isPhoneVerified = false) => {
+    // Check if phone has changed
+    if (values.phone !== user.phone && !isPhoneVerified) {
+      setSaving(true);
+      try {
+        const res = await api.post("/users/request-phone-update", { newPhone: values.phone });
+        if (res.data.success) {
+          setPendingPhone(values.phone);
+          setShowVerifyModal(true);
+          setSaving(false);
+          return;
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.error || "Failed to request phone update");
+        setSaving(false);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       if (!user || !user._id) return message.error("User ID missing");
 
       const formData = new FormData();
       formData.append("name", values.name);
-      formData.append("phone", values.phone);
+      formData.append("phone", values.phone); // Use values.phone now
       formData.append("businessType", values.businessType);
 
       const selectedBT = businessTypes.find(bt => bt._id === values.businessType);
@@ -190,6 +212,13 @@ const AdminProfile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleVerifySuccess = () => {
+    if (refetchUser) refetchUser();
+    // Finalize update for all fields
+    const currentValues = form.getFieldsValue();
+    handleUpdateProfile(currentValues, true);
   };
 
   const handleCancelEdit = () => {
@@ -628,6 +657,13 @@ const AdminProfile = () => {
           </Form>
         </Card>
       </div>
+
+      <PhoneVerificationModal 
+        open={showVerifyModal} 
+        onCancel={() => setShowVerifyModal(false)} 
+        newPhone={pendingPhone}
+        onSuccess={handleVerifySuccess}
+      />
 
       <style>{`
         .profile-uploader.ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select {

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import L from "leaflet";
 import { Link } from "react-router-dom";
-import { formatIndianPrice } from "@/utils/formatPrice";
+import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { getImageUrl } from "@/utils/imageUrl";
 import "leaflet/dist/leaflet.css";
 import {
@@ -84,8 +84,8 @@ const MapComponent = ({ properties }) => {
           ]}
           icon={CustomIcon}
         >
-          <Popup>
-            <div className="min-w-[200px]">
+          <Popup minWidth={180} maxWidth={220}>
+            <div className="w-[180px] sm:w-[200px]">
               <Link
                 to={`/properties/${property.slug || property._id}`}
                 target="_blank"
@@ -116,10 +116,10 @@ const MapComponent = ({ properties }) => {
                   {property.location?.city || "Unknown City"}
                 </p>
                 <p className="text-sm font-semibold text-blue-600">
-                  {formatIndianPrice(
-                    property.pricing?.sell?.price ||
-                      property.pricing?.rent?.monthlyRent ||
-                      0,
+                  {formatPriceRange(
+                    property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
+                    property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
+                    property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
                   )}
                 </p>
               </Link>

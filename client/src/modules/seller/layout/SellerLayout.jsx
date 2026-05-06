@@ -1,6 +1,6 @@
 import { useState, useEffect, Suspense } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { User, LogOut, Bell, MessageSquare } from "lucide-react";
+import { User, LogOut, Bell, MessageSquare, Home } from "lucide-react";
 import { RiSidebarFoldFill, RiSidebarUnfoldFill } from "react-icons/ri";
 
 import { Layout, Button, Avatar, Dropdown, Breadcrumb, theme, Alert, Modal, Tag, Badge } from "antd";
@@ -20,12 +20,16 @@ const SellerLayout = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout, user, refetchUser } = useAuth();
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [supportCount, setSupportCount] = useState(0);
   const socket = useSocket();
 
+
+  useEffect(() => {
+    refetchUser();
+  }, []);
 
   useEffect(() => {
     if (user?.activeSubscription) {
@@ -106,10 +110,15 @@ const SellerLayout = () => {
     },
     { type: "divider" },
     {
-      key: "2",
       label: "My Profile",
       icon: <User size={16} />,
       onClick: () => navigate("/seller/profile"),
+    },
+    {
+      key: "home",
+      label: "Back Home",
+      icon: <Home size={16} />,
+      onClick: () => navigate("/"),
     },
     {
       key: "3",
@@ -233,9 +242,11 @@ const SellerLayout = () => {
                   <div className="text-sm font-bold text-gray-700">
                     {user?.name || "Seller"}
                   </div>
-                  <div className="text-[10px] text-gray-400 uppercase font-semibold">
-                    Verified Account
-                  </div>
+                  {user?.badgeVerified && (
+                    <div className="text-[10px] text-blue-600 uppercase font-bold flex items-center gap-1">
+                      <Tag color="gray" bordered={false} className="m-0 text-[9px] px-1.5 py-0 leading-none h-auto">Verified Account</Tag>
+                    </div>
+                  )}
                 </div>
                 <Avatar
                   size="large"

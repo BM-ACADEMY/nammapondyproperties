@@ -545,12 +545,7 @@ const Header = () => {
                             <div className="h-11 w-11 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0 bg-blue-100 flex items-center justify-center text-blue-600">
                               {user?.profile_image ? (
                                 <img
-                                  src={
-                                    user.profile_image.startsWith("http") ||
-                                    user.profile_image.startsWith("//")
-                                      ? user.profile_image
-                                      : `${import.meta.env.VITE_API_URL.replace("/api", "")}${user.profile_image}`
-                                  }
+                                  src={getImageUrl(user.profile_image)}
                                   alt={user.name}
                                   className="h-full w-full object-cover"
                                 />
