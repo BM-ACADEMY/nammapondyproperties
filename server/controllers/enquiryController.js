@@ -17,9 +17,14 @@ exports.createEnquiry = async (req, res) => {
         .json({ error: "Property ID and Seller ID are required" });
     }
 
+    // Fetch property title for snapshot
+    const property = await Property.findById(property_id);
+    const propertyTitle = property?.basicInfo?.title || property?.title || "Untitled Property";
+
     const enquiryData = {
       property_id,
       seller_id,
+      property_title: propertyTitle,
       message: message || "I'm interested in this property",
       enquirer_name: name,
       enquirer_phone: phone,

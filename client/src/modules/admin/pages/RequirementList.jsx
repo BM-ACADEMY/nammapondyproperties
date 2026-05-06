@@ -59,6 +59,27 @@ import Loader from "@/components/Common/Loader";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
+// Converts a raw number to Indian-scale label: ₹25 Lakhs, ₹1.5 Crores
+const formatBudgetLabel = (value) => {
+  if (!value && value !== 0) return null;
+  const num = Number(value);
+  if (isNaN(num) || num === 0) return null;
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(num % 10000000 === 0 ? 0 : 1)} Crore${num >= 20000000 ? "s" : ""}`;
+  if (num >= 100000)  return `₹${(num / 100000).toFixed(num % 100000 === 0 ? 0 : 1)} Lakh${num >= 200000 ? "s" : ""}`;
+  if (num >= 1000)    return `₹${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1)}K`;
+  return `₹${num.toLocaleString("en-IN")}`;
+};
+
+const BUDGET_PRESETS = [
+  { label: "10 L",  value: 1000000 },
+  { label: "25 L",  value: 2500000 },
+  { label: "50 L",  value: 5000000 },
+  { label: "75 L",  value: 7500000 },
+  { label: "1 Cr",  value: 10000000 },
+  { label: "2 Cr",  value: 20000000 },
+  { label: "5 Cr",  value: 50000000 },
+];
+
 const CountdownTimer = ({ startTime, timerInMinutes, onExpire }) => {
   const [timeLeft, setTimeLeft] = useState("");
 
@@ -110,6 +131,8 @@ const RequirementList = () => {
   const [globalSettings, setGlobalSettings] = useState(null);
   const [isGlobalModalOpen, setIsGlobalModalOpen] = useState(false);
   const [globalForm] = Form.useForm();
+  const [minBudgetVal, setMinBudgetVal] = useState(null);
+  const [maxBudgetVal, setMaxBudgetVal] = useState(null);
 
   const selectedUsageType = Form.useWatch("usageType", addForm);
 
@@ -1228,17 +1251,25 @@ const RequirementList = () => {
               <Form.Item
                 name="phoneNumber"
                 label={<span className="font-semibold text-slate-700">Mobile Number</span>}
-                rules={[{ required: true, message: "Phone number is required" }]}
+                rules={[
+                  {
+                    validator: (_, value) => {
+                      if (!value || String(value).trim() === "") return Promise.reject(new Error("Enter a valid 10-digit phone number"));
+                      const digits = String(value).replace(/\D/g, "");
+                      if (digits.length !== 10) return Promise.reject(new Error("Enter a valid 10-digit phone number"));
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
-                <InputNumber 
-                  style={{ width: "100%" }}
-                  placeholder="10-digit mobile number" 
-                  controls={false}
-                  className="rounded-lg h-10 flex items-center"
-                  onKeyPress={(event) => {
-                    if (!/[0-9]/.test(event.key)) {
-                      event.preventDefault();
-                    }
+                <Input
+                  placeholder="10-digit mobile number"
+                  maxLength={10}
+                  className="rounded-lg h-10"
+                  onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData.getData("text");
+                    if (!/^\d+$/.test(pasted)) e.preventDefault();
                   }}
                 />
               </Form.Item>
@@ -1330,34 +1361,97 @@ const RequirementList = () => {
                 <Form.Item name="locality" hidden><Input /></Form.Item>
               </div>
 
-              <Col span={24} className="p-0">
-                 <div className="flex gap-4 w-full">
-                    <Form.Item
-                      name="minBudget"
-                      label={<span className="font-semibold text-slate-700">Min Budget</span>}
-                      className="flex-1"
+              <div className="md:col-span-2">
+                {/* Budget label */}
+                <span className="font-semibold text-slate-700 text-sm">
+                  Budget Range
+                  <span className="ml-2 text-[11px] font-normal text-slate-400">(e.g. 2500000 = ₹25 Lakhs)</span>
+                </span>
+
+                {/* Quick-pick preset chips */}
+                <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                  {BUDGET_PRESETS.map((p) => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => {
+                        addForm.setFieldsValue({ maxBudget: p.value });
+                        setMaxBudgetVal(p.value);
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                        maxBudgetVal === p.value
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : "bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600"
+                      }`}
                     >
-                      <InputNumber 
+                      {p.label}
+                    </button>
+                  ))}
+                  <span className="text-[10px] text-slate-400 self-center ml-1">← Quick-set Max Budget</span>
+                </div>
+
+                <div className="flex gap-4">
+                  {/* Min Budget */}
+                  <div className="flex-1">
+                    <Form.Item name="minBudget" className="!mb-0"
+                      rules={[{
+                        validator: (_, value) => {
+                          if (value !== undefined && value !== null && value < 0)
+                            return Promise.reject(new Error("Amount cannot be negative"));
+                          return Promise.resolve();
+                        }
+                      }]}
+                    >
+                      <InputNumber
                         style={{ width: "100%" }}
-                        placeholder="Min" 
+                        placeholder="Min (e.g. 1000000)"
                         controls={false}
+                        min={0}
                         className="rounded-lg h-10 flex items-center"
+                        formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
+                        parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                        onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onChange={(val) => setMinBudgetVal(val)}
                       />
                     </Form.Item>
-                    <Form.Item
-                      name="maxBudget"
-                      label={<span className="font-semibold text-slate-700">Max Budget</span>}
-                      className="flex-1"
+                    {formatBudgetLabel(minBudgetVal) && (
+                      <div className="mt-1 text-xs font-bold text-indigo-600 pl-1">
+                        = {formatBudgetLabel(minBudgetVal)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Max Budget */}
+                  <div className="flex-1">
+                    <Form.Item name="maxBudget" className="!mb-0"
+                      rules={[{
+                        validator: (_, value) => {
+                          if (value !== undefined && value !== null && value < 0)
+                            return Promise.reject(new Error("Amount cannot be negative"));
+                          return Promise.resolve();
+                        }
+                      }]}
                     >
-                      <InputNumber 
+                      <InputNumber
                         style={{ width: "100%" }}
-                        placeholder="Max" 
+                        placeholder="Max (e.g. 5000000)"
                         controls={false}
+                        min={0}
                         className="rounded-lg h-10 flex items-center"
+                        formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
+                        parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                        onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
+                        onChange={(val) => setMaxBudgetVal(val)}
                       />
                     </Form.Item>
-                 </div>
-              </Col>
+                    {formatBudgetLabel(maxBudgetVal) && (
+                      <div className="mt-1 text-xs font-bold text-indigo-600 pl-1">
+                        = {formatBudgetLabel(maxBudgetVal)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
               <Form.Item
                 name="propertyPreferences"

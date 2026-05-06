@@ -61,7 +61,7 @@ export default function OurVision() {
               {/* Action Button */}
               <button
                 onClick={() => navigate('/contact')}
-                className="flex items-center gap-3 bg-[#D4AF37] text-[#050B14] font-bold py-4 px-8 rounded-lg hover:bg-[#050B14] hover:text-white transition-all duration-300 shadow-lg group"
+                className="flex items-center gap-3 bg-[#D4AF37] text-[#050B14] font-bold py-4 px-8 rounded-lg hover:bg-[#050B14] hover:text-white transition-all duration-300 shadow-lg group cursor-pointer"
               >
                 <span>Contact Us</span>
                 <ArrowRightOutlined className="group-hover:translate-x-1 transition-transform" />

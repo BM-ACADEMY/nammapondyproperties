@@ -410,7 +410,7 @@ const Profile = () => {
             body: { padding: '32px' } 
           }}
         >
-          <Form form={form} layout="vertical" onFinish={handleUpdateProfile} className="space-y-6">
+          <Form id="seller-profile-form" form={form} layout="vertical" onFinish={handleUpdateProfile} className="space-y-6">
             {/* Upload Section Centered */}
             <div className="flex flex-col items-center justify-center mb-8">
               <div className="flex flex-col items-center gap-3">

@@ -23,6 +23,7 @@ const whatsappLeadSchema = new mongoose.Schema(
     enquirer_email: { type: String },
     message: { type: String },
     status: { type: String, default: "new" }, // new, contacted, closed
+    property_title: { type: String }, // Snapshot of title
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

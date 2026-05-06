@@ -103,12 +103,7 @@ export const Hero = () => {
                 Get Demo
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button
-                onClick={() => setIsCallbackModalOpen(true)}
-                className="flex items-center justify-center gap-2 px-8 py-3.5 bg-white border border-gray-100 cursor-pointer text-[#38526e] text-base font-bold rounded-xl hover:bg-gray-50 transition-all transform hover:-translate-y-1 active:scale-95 leading-none shadow-sm"
-              >
-                Contact Now
-              </button>
+
             </div>
 
             {/* Trust Markers */}

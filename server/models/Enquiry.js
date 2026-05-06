@@ -34,6 +34,7 @@ const enquirySchema = new mongoose.Schema(
       enum: ["new", "contacted", "closed"],
       default: "new",
     },
+    property_title: { type: String }, // Snapshot of title at the time of enquiry
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

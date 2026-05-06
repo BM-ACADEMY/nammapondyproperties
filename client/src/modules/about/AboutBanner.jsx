@@ -1,6 +1,6 @@
 import React from 'react';
 import { Row, Col, ConfigProvider } from 'antd';
-import { ArrowRightOutlined } from '@ant-design/icons';
+
 
 export default function AboutHero() {
 
@@ -55,11 +55,7 @@ export default function AboutHero() {
                   Namma Pondy Properties is a trusted real estate service dedicated to helping individuals and families buy, sell, and invest in properties across Pondicherry.
                 </p>
 
-                {/* Decorative Button */}
-                <div className="flex items-center gap-4 text-[#D4AF37] group cursor-pointer hover:text-white transition-colors">
-                  <span className="uppercase tracking-widest text-sm font-medium">Read Our Story</span>
-                  <ArrowRightOutlined className="group-hover:translate-x-2 transition-transform" />
-                </div>
+
 
               </div>
             </Col>
