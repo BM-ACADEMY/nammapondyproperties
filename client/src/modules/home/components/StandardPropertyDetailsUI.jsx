@@ -1005,91 +1005,115 @@ const StandardPropertyDetailsUI = ({
                 </div>
               )}
 
-            {/* 5. Map & Highlights Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 my-8">
-              {/* Left Column: Amenities & Highlights */}
-              {property.amenities && property.amenities.length > 0 && (
-                <div className="bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col h-full">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6 font-sans flex items-center gap-2">
-                    Amenities & Highlights
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {property.amenities.map((amenity, idx) => (
-                      <div
-                        key={idx}
-                        className="px-4 py-2 bg-gray-50 rounded-lg text-gray-700 text-sm font-medium border border-gray-100 hover:border-black transition-colors"
+            {/* 5. Amenities & Highlights */}
+            {property.amenities && property.amenities.length > 0 && (
+              <div className="bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm my-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 font-sans flex items-center gap-2">
+                  Amenities & Highlights
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  {property.amenities.map((amenity, idx) => (
+                    <div
+                      key={idx}
+                      className="px-4 py-2 bg-gray-50 rounded-lg text-gray-700 text-sm font-medium border border-gray-100 hover:border-black transition-colors"
+                    >
+                      {amenity}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. Location Map Section */}
+            {property?.location?.coordinates?.lat &&
+              property?.location?.coordinates?.lng && (
+                <div className="bg-white md:bg-blue-50 md:p-2 rounded-[32px] border border-gray-100 md:border-blue-100 shadow-sm my-8">
+                  <div className="h-[400px] md:h-[500px] w-full rounded-[24px] overflow-hidden relative shadow-inner">
+                    <MapContainer
+                      center={[
+                        property.location.coordinates.lat,
+                        property.location.coordinates.lng,
+                      ]}
+                      zoom={14}
+                      scrollWheelZoom={false}
+                      style={{ height: "100%", width: "100%" }}
+                    >
+                      <LayersControl position="topright">
+                        <BaseLayer name="Street Map">
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                        </BaseLayer>
+                        <BaseLayer checked name="Satellite View">
+                          <LayerGroup>
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                            />
+                            <TileLayer
+                              attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                              url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
+                            />
+                          </LayerGroup>
+                        </BaseLayer>
+
+                        <Marker
+                          position={[
+                            property.location.coordinates.lat,
+                            property.location.coordinates.lng,
+                          ]}
+                          icon={CustomIcon}
+                        >
+                          <Popup minWidth={180} maxWidth={220}>
+                            <div className="w-[180px] sm:w-[200px] p-0.5">
+                              <div className="relative h-24 w-full mb-2 rounded-md overflow-hidden">
+                                <img
+                                  src={getImageUrl(
+                                    property.media?.featuredImage ||
+                                      property.media?.images?.[0]
+                                  )}
+                                  alt={property.basicInfo?.title || "Property"}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <h3 className="font-bold text-gray-900 text-sm mb-0.5 leading-tight">
+                                {property.basicInfo?.title || "Untitled Property"}
+                              </h3>
+                              <p className="text-[11px] text-gray-500 mb-1">
+                                {property.location?.city || "Unknown City"}
+                              </p>
+                              <p className="text-sm font-bold text-[#166aa8]">
+                                {formatPriceRange(
+                                  property.pricing?.sell?.minPrice ||
+                                    property.pricing?.rent?.minRent,
+                                  property.pricing?.sell?.maxPrice ||
+                                    property.pricing?.rent?.maxRent,
+                                  property.pricing?.sell?.price ||
+                                    property.pricing?.rent?.monthlyRent ||
+                                    0
+                                )}
+                              </p>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      </LayersControl>
+                    </MapContainer>
+
+                    <div className="absolute bottom-4 left-4 z-[400]">
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${property.location.coordinates.lat},${property.location.coordinates.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-gray-900 flex items-center hover:bg-gray-50 transition"
                       >
-                        {amenity}
-                      </div>
-                    ))}
+                        Open in Google Maps{" "}
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
-
-              {/* Right Column: Location Map */}
-              {property?.location?.coordinates?.lat &&
-                property?.location?.coordinates?.lng && (
-                  <div className="bg-white md:bg-blue-50 md:p-2 rounded-[32px] border border-gray-100 md:border-blue-100 shadow-sm h-full min-h-[350px]">
-                    <div className="h-full w-full rounded-[24px] overflow-hidden relative min-h-[350px]">
-                      <MapContainer
-                        center={[
-                          property.location.coordinates.lat,
-                          property.location.coordinates.lng,
-                        ]}
-                        zoom={14}
-                        scrollWheelZoom={false}
-                        style={{ height: "100%", width: "100%" }}
-                      >
-                        <LayersControl position="topright">
-                          <BaseLayer name="Street Map">
-                            <TileLayer
-                              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            />
-                          </BaseLayer>
-                          <BaseLayer checked name="Satellite View">
-                            <LayerGroup>
-                              <TileLayer
-                                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                              />
-                              <TileLayer
-                                attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                                url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-                              />
-                            </LayerGroup>
-                          </BaseLayer>
-
-                          <Marker
-                            position={[
-                              property.location.coordinates.lat,
-                              property.location.coordinates.lng,
-                            ]}
-                            icon={CustomIcon}
-                          >
-                            <Popup>
-                              {property.basicInfo?.title || "Untitled"} <br />{" "}
-                              {property.location.city}
-                            </Popup>
-                          </Marker>
-                        </LayersControl>
-                      </MapContainer>
-
-                      <div className="absolute bottom-4 left-4 z-[400]">
-                        <a
-                          href={`https://www.google.com/maps/search/?api=1&query=${property.location.coordinates.lat},${property.location.coordinates.lng}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-bold text-gray-900 flex items-center hover:bg-gray-50 transition"
-                        >
-                          Open in Google Maps{" "}
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )}
-            </div>
 
             {/* 6. Floor Plan Section */}
             {(() => {

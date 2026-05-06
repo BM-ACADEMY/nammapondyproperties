@@ -170,7 +170,11 @@ const AdminProperties = ({ mode }) => {
       fetchProperties();
     } catch (error) {
       console.error("Verification error:", error);
-      message.error("Failed to update verification status");
+      if (error.response && error.response.status === 400) {
+        message.error(error.response.data.error || "Failed to update verification status");
+      } else {
+        message.error("Failed to update verification status");
+      }
     }
   };
 
@@ -192,7 +196,11 @@ const AdminProperties = ({ mode }) => {
       fetchProperties();
     } catch (error) {
       console.error("Approve error:", error);
-      message.error("Failed to approve property edit");
+      if (error.response && error.response.status === 400) {
+        message.error(error.response.data.error || "Failed to approve property edit");
+      } else {
+        message.error("Failed to approve property edit");
+      }
     }
   };
 
@@ -288,7 +296,6 @@ const AdminProperties = ({ mode }) => {
           record.pricing?.sell?.maxPrice || record.pricing?.rent?.maxRent,
           record.pricing?.sell?.price || record.pricing?.rent?.monthlyRent || 0
         );
-        return <span className="font-semibold text-blue-600">{priceDisplay}</span>;
         return <span className="font-semibold text-blue-600">{priceDisplay}</span>;
       },
       sorter: (a, b) => {
@@ -727,7 +734,7 @@ const AdminProperties = ({ mode }) => {
                       >
                         {selectedProperty.status?.toUpperCase()}
                       </Tag>
-                      {selectedProperty.is_verified && (
+                      {selectedProperty.isVerified && (
                         <Tag
                           color="blue"
                           className="border-none px-3 py-1 text-sm font-semibold shadow-sm backdrop-blur-md bg-blue-500/80 text-white"

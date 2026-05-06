@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 import {
+  Badge,
   Table,
   Button,
   Card,
@@ -35,7 +36,8 @@ import {
   Globe,
   Facebook,
   Instagram,
-  Linkedin
+  Linkedin,
+  Home
 } from "lucide-react";
 import api from "@/services/api";
 import { useSocket } from "@/context/SocketContext";
@@ -54,13 +56,19 @@ const SellerList = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assigningLoading, setAssigningLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const typeFilter = searchParams.get("type");
   const [businessTypes, setBusinessTypes] = useState([]);
   const socket = useSocket();
 
-  const filteredSellers = typeFilter
+  const filteredSellers = (typeFilter
     ? sellers.filter((s) => s.businessType?._id === typeFilter)
-    : sellers;
+    : sellers
+  ).sort((a, b) => {
+    const aPending = (a.pendingPropertyCount || 0) + (a.editPendingCount || 0);
+    const bPending = (b.pendingPropertyCount || 0) + (b.editPendingCount || 0);
+    return bPending - aPending;
+  });
 
 
   const fetchSellers = async () => {
@@ -258,6 +266,32 @@ const SellerList = () => {
       ),
     },
     {
+      title: "Properties",
+      key: "pendingProperties",
+      render: (_, record) => {
+        const pending = record.pendingPropertyCount || 0;
+        const editPending = record.editPendingCount || 0;
+        const totalPending = pending + editPending;
+
+        if (totalPending === 0) return <span className="text-gray-400 text-xs">None</span>;
+
+        return (
+          <Space direction="vertical" size={2}>
+            {pending > 0 && (
+              <Badge count={pending} overflowCount={99}>
+                <Tag color="orange" className="mr-0">New Pending</Tag>
+              </Badge>
+            )}
+            {editPending > 0 && (
+              <Badge count={editPending} overflowCount={99}>
+                <Tag color="cyan" className="mr-0">Edit Pending</Tag>
+              </Badge>
+            )}
+          </Space>
+        );
+      },
+    },
+    {
       title: "Badge Verification",
       key: "badgeVerification",
       render: (_, record) => {
@@ -389,6 +423,15 @@ const SellerList = () => {
           },
           {
             type: "divider",
+          },
+          {
+            key: "viewProperties",
+            label: (
+              <div className="flex items-center gap-2" onClick={() => navigate(`/admin/properties?seller=${record._id}`)}>
+                <Home size={14} className="text-blue-600" />
+                <span>View Properties</span>
+              </div>
+            ),
           },
           (currentUser?.isSuperAdmin || currentUser?.permissions?.includes("delete_seller")) && {
             key: "delete",

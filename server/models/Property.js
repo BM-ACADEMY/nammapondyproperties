@@ -62,6 +62,8 @@ const propertySchema = new mongoose.Schema(
         type: String,
         validate: {
           validator: function (v) {
+            // Allow empty or null if not required
+            if (!v || v.trim() === "") return true;
             return /^\d{6}$/.test(v);
           },
           message: (props) => `${props.value} is not a valid 6-digit pincode!`,

@@ -273,7 +273,25 @@ exports.getUsers = async (req, res) => {
       .populate(["role_id", "businessType", "builderProfile"])
       .populate("createdBy", "name")
       .populate("assignedAdmin", "name phone");
-    res.json(users);
+
+    // Fetch pending property count for each user
+    const usersWithCounts = await Promise.all(users.map(async (user) => {
+      const pendingPropertyCount = await Property.countDocuments({
+        seller: user._id,
+        status: "Pending"
+      });
+      const editPendingCount = await Property.countDocuments({
+        seller: user._id,
+        status: "Edit Pending Approval"
+      });
+      
+      const userData = user.toObject();
+      userData.pendingPropertyCount = pendingPropertyCount;
+      userData.editPendingCount = editPendingCount;
+      return userData;
+    }));
+
+    res.json(usersWithCounts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

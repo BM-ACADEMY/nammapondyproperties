@@ -689,13 +689,34 @@ const BuilderPromoterDetailsUI = ({
                         ]}
                         icon={CustomIcon}
                       >
-                        <Popup className="rounded-xl overflow-hidden">
-                          <div className="p-1">
-                            <p className="font-bold text-gray-900 mb-1">
-                              {property.basicInfo?.title}
+                        <Popup minWidth={180} maxWidth={220}>
+                          <div className="w-[180px] sm:w-[200px] p-0.5">
+                            <div className="relative h-24 w-full mb-2 rounded-md overflow-hidden">
+                              <img
+                                src={getImageUrl(
+                                  property.media?.featuredImage ||
+                                    property.media?.images?.[0]
+                                )}
+                                alt={property.basicInfo?.title || "Property"}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <h3 className="font-bold text-gray-900 text-sm mb-0.5 leading-tight">
+                              {property.basicInfo?.title || "Untitled Project"}
+                            </h3>
+                            <p className="text-[11px] text-gray-500 mb-1">
+                              {property.location?.locality}, {property.location?.city}
                             </p>
-                            <p className="text-xs text-gray-600">
-                              {property.location?.locality}
+                            <p className="text-sm font-bold text-[#166aa8]">
+                              {formatPriceRange(
+                                property.pricing?.sell?.minPrice ||
+                                  property.pricing?.rent?.minRent,
+                                property.pricing?.sell?.maxPrice ||
+                                  property.pricing?.rent?.maxRent,
+                                property.pricing?.sell?.price ||
+                                  property.pricing?.rent?.monthlyRent ||
+                                  0
+                              )}
                             </p>
                           </div>
                         </Popup>
