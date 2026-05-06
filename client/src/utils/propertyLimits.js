@@ -13,10 +13,13 @@ export const checkPropertyListingLimit = (user, overrideCount) => {
   // 1. Unverified Restriction
   // All unverified users are restricted to exactly ONE listing.
   if (!user.badgeVerified && currentCount >= 1) {
+    const isPending = user.badgeRequestStatus === "pending";
     return {
       canPost: false,
       reason: "unverified",
-      message: "First complete your profile, once verified your profile then only you listing other properties",
+      message: isPending 
+        ? "Your verification is under process wait 24hrs" 
+        : "First complete your profile, once verified your profile then only you listing other properties",
       currentCount,
       limit: 1
     };

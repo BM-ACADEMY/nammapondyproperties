@@ -22,6 +22,8 @@ import { useAuth } from "@/context/AuthContext";
 import Loader from "../../../../components/Common/Loader";
 import { getImageUrl } from "@/utils/imageUrl";
 import { useSocket } from "@/context/SocketContext";
+import PhoneVerificationModal from "@/components/Auth/PhoneVerificationModal";
+import { toast } from "react-hot-toast";
 
 const { Title, Text } = Typography;
 
@@ -41,6 +43,8 @@ const Profile = () => {
   const [hasInitialLogo, setHasInitialLogo] = useState(false);
   const [imageSize, setImageSize] = useState(null);
   const [logoSize, setLogoSize] = useState(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
   const socket = useSocket();
 
   useEffect(() => {
@@ -143,18 +147,36 @@ const Profile = () => {
     fetchSettings();
   }, [form]);
 
-  const handleUpdateProfile = async (values) => {
+  const handleUpdateProfile = async (values, isPhoneVerified = false) => {
+    // Check if phone has changed
+    if (values.phone !== user.phone && !isPhoneVerified) {
+      setSaving(true);
+      try {
+        const res = await api.post("/users/request-phone-update", { newPhone: values.phone });
+        if (res.data.success) {
+          setPendingPhone(values.phone);
+          setShowVerifyModal(true);
+          setSaving(false);
+          return;
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.error || "Failed to request phone update");
+        setSaving(false);
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       if (!user || !user._id) return message.error("User ID missing");
 
       const formData = new FormData();
       formData.append("name", values.name);
-      formData.append("phone", values.phone);
+      formData.append("phone", values.phone); // Use values.phone now
 
       const isBuilder =
         user?.businessType?.name?.match(/Builder|Promoter/i);
-
+// ... existing logic for builderDetail and files ...
       if (isBuilder) {
         const builderDetailResource = {
           phonePrimary: values.phonePrimary || values.phone,
@@ -218,6 +240,13 @@ const Profile = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleVerifySuccess = () => {
+    if (refetchUser) refetchUser();
+    // Trigger update for other fields and finalize UI
+    const currentValues = form.getFieldsValue();
+    handleUpdateProfile(currentValues, true);
   };
 
   const handleCancelEdit = () => {
@@ -337,98 +366,47 @@ const Profile = () => {
       <div className="space-y-8">
         {/* Profile Information Section */}
         <Card 
-          title={
-            <div className="flex items-center justify-between flex-wrap gap-3 py-1">
-              <span className="text-lg font-semibold text-slate-800">Profile Information</span>
-              <div className="flex items-center gap-3">
-                {/* Badge button */}
-                {user?.badgeVerified ? (
-                  <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-xl border border-green-100 font-semibold shadow-sm text-sm">
-                    <CheckCircle size={16} />
-                    <span>Verified Badge Active</span>
-                  </div>
-                ) : user?.badgeRequestStatus === "pending" ? (
-                  <div className="inline-flex items-center gap-2 text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 font-semibold shadow-sm text-sm">
-                    <Clock size={16} />
-                    <span>Verification Pending</span>
-                  </div>
-                ) : user?.badgeRequestStatus === "rejected" ? (
-                  <div className="inline-flex items-center gap-2 text-red-700 bg-red-50 px-4 py-2 rounded-xl border border-red-100 font-semibold shadow-sm text-sm">
-                    <XCircle size={16} />
-                    <span>Verification Rejected</span>
-                  </div>
-                ) : (
-                  <Button
-                    icon={<ShieldCheck size={18} className="mr-1" />}
-                    className="h-10 px-5 rounded-xl bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold shadow-sm flex items-center transition-all text-sm"
-                    onClick={async () => {
-                      const isBuilder = user?.businessType?.name?.match(/Builder|Promoter/i);
-                      if (isBuilder) {
-                        const bp = user.builderProfile;
-                        const missing = [];
-                        if (!bp?.companyName) missing.push("Company Name");
-                        if (!bp?.officeAddress) missing.push("Office Address");
-                        if (!bp?.experienceYears) missing.push("Experience Years");
-                        if (!bp?.companyLogo) missing.push("Company Logo");
-                        if (missing.length > 0) {
-                          message.error({
-                            content: `Please complete your profile first. Missing fields: ${missing.join(", ")}`,
-                            duration: 4,
-                            style: { marginTop: '10vh' }
-                          });
-                          return;
-                        }
-                      }
-                      try {
-                        const res = await api.post("/users/request-badge");
-                        message.success(res.data.message);
-                        refetchUser();
-                      } catch (err) {
-                        message.error(err.response?.data?.error || "Failed to send request");
-                      }
-                    }}
-                  >
-                    Request Verification Badge
-                  </Button>
-                )}
-                {/* Edit / Save / Cancel */}
-                {!isEditing ? (
+          title={<span className="text-lg font-semibold text-slate-800 pt-2 block">Profile Information</span>}
+          extra={
+            <div className="flex gap-3 pt-2">
+              {!isEditing ? (
+                <Button
+                  type="default"
+                  icon={<Edit3 size={18} className="mr-2" />}
+                  className="h-10 px-6 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold text-sm bg-white transition-all shadow-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsEditing(true);
+                  }}
+                >
+                  Edit Profile
+                </Button>
+              ) : (
+                <>
                   <Button
                     type="default"
-                    icon={<Edit3 size={18} className="mr-1" />}
-                    className="h-10 px-6 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold bg-white transition-all shadow-sm flex items-center text-sm"
-                    onClick={(e) => { e.preventDefault(); setIsEditing(true); }}
+                    icon={<X size={18} className="mr-2" />}
+                    className="h-10 px-5 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold text-sm transition-all"
+                    onClick={handleCancelEdit}
                   >
-                    Edit Profile
+                    Cancel
                   </Button>
-                ) : (
-                  <>
-                    <Button
-                      type="default"
-                      icon={<X size={18} className="mr-1" />}
-                      className="h-10 px-5 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold transition-all flex items-center text-sm"
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      form="seller-profile-form"
-                      icon={<Save size={18} className="mr-1" />}
-                      loading={saving}
-                      className="h-10 px-6 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold shadow-lg shadow-blue-200/50 flex items-center transition-all text-sm"
-                    >
-                      Save Profile
-                    </Button>
-                  </>
-                )}
-              </div>
+                  <Button
+                    type="primary"
+                    icon={<Save size={18} className="mr-2" />}
+                    loading={saving}
+                    className="h-10 px-6 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold text-sm shadow-lg shadow-blue-200/50 flex items-center transition-all"
+                    onClick={() => form.submit()}
+                  >
+                    Save Profile
+                  </Button>
+                </>
+              )}
             </div>
           }
           className="shadow-sm border-slate-200 rounded-2xl overflow-hidden"
           styles={{ 
-            header: { borderBottom: 'none', padding: '20px 32px' },
+            header: { borderBottom: 'none', padding: '24px 32px 0', display: 'flex', alignItems: 'center' },
             body: { padding: '32px' } 
           }}
         >
@@ -482,28 +460,109 @@ const Profile = () => {
                     Remove Photo
                   </Button>
                 )}
+
+                {/* Verification Badge Status */}
+                <div className="mt-4">
+                  {user?.badgeVerified ? (
+                    <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-xl border border-green-100 font-semibold shadow-sm">
+                      <CheckCircle size={18} />
+                      <span>Verified Badge Active</span>
+                    </div>
+                  ) : user?.badgeRequestStatus === "pending" ? (
+                    <div className="inline-flex items-center gap-2 text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 font-semibold shadow-sm">
+                      <Clock size={18} />
+                      <span>Verification Pending</span>
+                    </div>
+                  ) : user?.badgeRequestStatus === "rejected" ? (
+                    <div className="inline-flex items-center gap-2 text-red-700 bg-red-50 px-4 py-2 rounded-xl border border-red-100 font-semibold shadow-sm">
+                      <XCircle size={18} />
+                      <span>Verification Rejected</span>
+                    </div>
+                  ) : (
+                    <Button
+                      icon={<ShieldCheck size={20} className="mr-2" />}
+                      className="h-10 px-6 rounded-xl bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold shadow-sm flex items-center transition-all"
+                      onClick={async () => {
+                        const isBuilder = user?.businessType?.name?.match(/Builder|Promoter/i);
+                        
+                        if (isBuilder) {
+                          const bp = user.builderProfile;
+                          const missing = [];
+                          if (!bp?.companyName) missing.push("Company Name");
+                          if (!bp?.officeAddress) missing.push("Office Address");
+                          if (!bp?.experienceYears) missing.push("Experience Years");
+                          if (!bp?.companyLogo) missing.push("Company Logo");
+                          
+                          if (missing.length > 0) {
+                            message.error({
+                              content: `Please complete your profile first. Missing fields: ${missing.join(", ")}`,
+                              duration: 4,
+                              style: { marginTop: '10vh' }
+                            });
+                            return;
+                          }
+                        }
+
+                        try {
+                          const res = await api.post("/users/request-badge");
+                          message.success(res.data.message);
+                          refetchUser();
+                        } catch (err) {
+                          message.error(err.response?.data?.error || "Failed to send request");
+                        }
+                      }}
+                    >
+                      Request Verification Badge
+                    </Button>
+                  )}
+                </div>
+                </div>
               </div>
-            </div>
 
             {/* Inputs Section */}
             <div className="space-y-5">
-              <Form.Item
-                name="name"
-                label={<span className="text-slate-600 font-medium">Full Name</span>}
-                rules={[{ required: true, message: "Please enter your name" }]}
-                required={false}
-                className="!mb-0"
-              >
-                <Input
-                  disabled={!isEditing}
-                  prefix={<User size={18} className="text-slate-400 mr-2" />}
-                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
-                />
-              </Form.Item>
+              <Row gutter={20}>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="name"
+                    label={<span className="text-slate-600 font-medium">Full Name</span>}
+                    rules={[{ required: true, message: "Please enter your name" }]}
+                    required={false}
+                    className="!mb-4"
+                  >
+                    <Input
+                      disabled={!isEditing}
+                      prefix={<User size={18} className="text-slate-400 mr-2" />}
+                      className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="phone"
+                    label={<span className="text-slate-600 font-medium">Contact Phone Number</span>}
+                    rules={[
+                      { required: true, message: "Please enter phone number" },
+                      { pattern: /^\d{10}$/, message: "Must be 10 digits" },
+                    ]}
+                    required={false}
+                    className="!mb-4"
+                  >
+                    <Input
+                      disabled={!isEditing}
+                      prefix={<Phone size={18} className="text-slate-400 mr-2" />}
+                      placeholder="8270652229"
+                      className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                      maxLength={10}
+                      onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
 
               <Form.Item
                 label={<span className="text-slate-600 font-medium">Business Type</span>}
-                className="!mb-0"
+                className="!mb-4"
               >
                 <Input
                   prefix={<Briefcase size={18} className="text-slate-400 mr-2" />}
@@ -514,7 +573,7 @@ const Profile = () => {
               </Form.Item>
 
               <Row gutter={20}>
-                <Col span={12}>
+                <Col xs={24} md={12}>
                   <Form.Item name="userId" label={<span className="text-slate-600 font-medium">User ID</span>} className="!mb-0">
                     <Input
                       prefix={<Hash size={18} className="text-slate-400 mr-2" />}
@@ -523,7 +582,7 @@ const Profile = () => {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} md={12}>
                   <Form.Item name="referralCode" label={<span className="text-slate-600 font-medium">Referral ID</span>} className="!mb-0">
                     <Input
                       prefix={<Share2 size={18} className="text-slate-400 mr-2" />}
@@ -533,26 +592,6 @@ const Profile = () => {
                   </Form.Item>
                 </Col>
               </Row>
-
-              <Form.Item
-                name="phone"
-                label={<span className="text-slate-600 font-medium">Contact Phone Number</span>}
-                rules={[
-                  { required: true, message: "Please enter phone number" },
-                  { pattern: /^\d{10}$/, message: "Must be 10 digits" },
-                ]}
-                required={false}
-                className="!mb-0"
-              >
-                <Input
-                  disabled={!isEditing}
-                  prefix={<Phone size={18} className="text-slate-400 mr-2" />}
-                  placeholder="8270652229"
-                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
-                  maxLength={10}
-                  onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
-                />
-              </Form.Item>
 
               {/* Builder Specific Fields */}
               {user?.businessType?.name?.match(/Builder|Promoter/i) && (
@@ -587,6 +626,18 @@ const Profile = () => {
                            disabled={!isEditing}
                            className="logo-uploader"
                            maxCount={1}
+                           beforeUpload={(file) => {
+                             const isJpgOrPngOrSvg =
+                               file.type === "image/jpeg" ||
+                               file.type === "image/png" ||
+                               file.type === "image/svg+xml" ||
+                               file.type === "image/webp";
+                             if (!isJpgOrPngOrSvg) {
+                               message.error("You can only upload JPG/PNG/SVG/WEBP file!");
+                               return Upload.LIST_IGNORE;
+                             }
+                             return false;
+                           }}
                          >
                            {logoFileList.length < 1 && (
                              <div className="flex flex-col items-center">
@@ -608,22 +659,15 @@ const Profile = () => {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item
-                          name="gstNumber"
-                          label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>}
+                        <Form.Item 
+                          name="gstNumber" 
+                          label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>} 
                           className="!mb-4"
                           rules={[
-                            {
-                              validator: (_, value) => {
-                                if (!value || value.trim() === "") return Promise.resolve();
-                                const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-                                if (gstRegex.test(value.trim().toUpperCase())) return Promise.resolve();
-                                return Promise.reject(new Error("Invalid GSTIN format. Expected: 22AAAAA0000A1Z5 (15 characters)"));
-                              },
-                            },
+                            { pattern: /^[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz]{1}[0-9a-zA-Z]{1}$/, message: "Please enter a valid GST number (e.g. 22AAAAA0000A1Z5)" }
                           ]}
                         >
-                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="22AAAAA0000A1Z5" />
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm uppercase" placeholder="22AAAAA0000A1Z5" onChange={(e) => e.target.value = e.target.value.toUpperCase()} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -639,8 +683,15 @@ const Profile = () => {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="reraNumber" label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} className="!mb-4">
-                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="TN/01/Building/0001" />
+                        <Form.Item 
+                          name="reraNumber" 
+                          label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} 
+                          className="!mb-4"
+                          rules={[
+                            { pattern: /^[a-zA-Z0-9\/\-]+$/, message: "Please enter a valid RERA number" }
+                          ]}
+                        >
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm uppercase" placeholder="TN/01/Building/0001" onChange={(e) => e.target.value = e.target.value.toUpperCase()} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -706,7 +757,10 @@ const Profile = () => {
               )}
             </div>
 
-
+            {/* Required Field Indicator */}
+            <div className="text-center mt-6">
+              <span className="text-slate-400 text-sm font-medium">* indicates required field</span>
+            </div>
           </Form>
         </Card>
 
@@ -757,6 +811,12 @@ const Profile = () => {
           </div>
         </Card> */}
       </div>
+      <PhoneVerificationModal 
+        open={showVerifyModal} 
+        onCancel={() => setShowVerifyModal(false)} 
+        newPhone={pendingPhone}
+        onSuccess={handleVerifySuccess}
+      />
 
       <style>{`
         /* Target the specific upload box inside the profile-uploader wrapper */

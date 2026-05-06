@@ -8,6 +8,8 @@ const upload = require("../middleware/uploadMiddleware");
 router.get("/me", protect, userController.getMe);
 router.post("/send-otp", userController.sendOtp);
 router.post("/verify-otp", userController.verifyOtp);
+router.post("/request-phone-update", protect, userController.requestPhoneUpdate);
+router.post("/verify-phone-update", protect, userController.verifyPhoneUpdate);
 router.get("/refresh-token", protect, userController.refreshToken);
 
 // Public Routes
