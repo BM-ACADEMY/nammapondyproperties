@@ -874,7 +874,7 @@ const BusinessUserList = () => {
                             ...property,
                             businessType: property.businessType || businessType,
                           }}
-                          linkQuery="?from=builder"
+                          linkQuery={`?from=${businessTypeSlug || 'professional'}`}
                           onWhatsAppClick={(e, prop) => {
                             handleWhatsAppClick(
                               e,

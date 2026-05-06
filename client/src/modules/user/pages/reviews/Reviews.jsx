@@ -136,7 +136,7 @@ const Reviews = () => {
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 6;
+  const pageSize = 3;
   const [form] = Form.useForm();
 
   useEffect(() => {

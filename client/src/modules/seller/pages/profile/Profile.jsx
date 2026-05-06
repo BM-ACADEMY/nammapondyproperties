@@ -367,9 +367,46 @@ const Profile = () => {
         {/* Profile Information Section */}
         <Card 
           title={<span className="text-lg font-semibold text-slate-800 pt-2 block">Profile Information</span>}
+          extra={
+            <div className="flex gap-3 pt-2">
+              {!isEditing ? (
+                <Button
+                  type="default"
+                  icon={<Edit3 size={18} className="mr-2" />}
+                  className="h-10 px-6 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold text-sm bg-white transition-all shadow-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsEditing(true);
+                  }}
+                >
+                  Edit Profile
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="default"
+                    icon={<X size={18} className="mr-2" />}
+                    className="h-10 px-5 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold text-sm transition-all"
+                    onClick={handleCancelEdit}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<Save size={18} className="mr-2" />}
+                    loading={saving}
+                    className="h-10 px-6 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold text-sm shadow-lg shadow-blue-200/50 flex items-center transition-all"
+                    onClick={() => form.submit()}
+                  >
+                    Save Profile
+                  </Button>
+                </>
+              )}
+            </div>
+          }
           className="shadow-sm border-slate-200 rounded-2xl overflow-hidden"
           styles={{ 
-            header: { borderBottom: 'none', padding: '24px 32px 0' },
+            header: { borderBottom: 'none', padding: '24px 32px 0', display: 'flex', alignItems: 'center' },
             body: { padding: '32px' } 
           }}
         >
@@ -423,28 +460,109 @@ const Profile = () => {
                     Remove Photo
                   </Button>
                 )}
+
+                {/* Verification Badge Status */}
+                <div className="mt-4">
+                  {user?.badgeVerified ? (
+                    <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-xl border border-green-100 font-semibold shadow-sm">
+                      <CheckCircle size={18} />
+                      <span>Verified Badge Active</span>
+                    </div>
+                  ) : user?.badgeRequestStatus === "pending" ? (
+                    <div className="inline-flex items-center gap-2 text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 font-semibold shadow-sm">
+                      <Clock size={18} />
+                      <span>Verification Pending</span>
+                    </div>
+                  ) : user?.badgeRequestStatus === "rejected" ? (
+                    <div className="inline-flex items-center gap-2 text-red-700 bg-red-50 px-4 py-2 rounded-xl border border-red-100 font-semibold shadow-sm">
+                      <XCircle size={18} />
+                      <span>Verification Rejected</span>
+                    </div>
+                  ) : (
+                    <Button
+                      icon={<ShieldCheck size={20} className="mr-2" />}
+                      className="h-10 px-6 rounded-xl bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold shadow-sm flex items-center transition-all"
+                      onClick={async () => {
+                        const isBuilder = user?.businessType?.name?.match(/Builder|Promoter/i);
+                        
+                        if (isBuilder) {
+                          const bp = user.builderProfile;
+                          const missing = [];
+                          if (!bp?.companyName) missing.push("Company Name");
+                          if (!bp?.officeAddress) missing.push("Office Address");
+                          if (!bp?.experienceYears) missing.push("Experience Years");
+                          if (!bp?.companyLogo) missing.push("Company Logo");
+                          
+                          if (missing.length > 0) {
+                            message.error({
+                              content: `Please complete your profile first. Missing fields: ${missing.join(", ")}`,
+                              duration: 4,
+                              style: { marginTop: '10vh' }
+                            });
+                            return;
+                          }
+                        }
+
+                        try {
+                          const res = await api.post("/users/request-badge");
+                          message.success(res.data.message);
+                          refetchUser();
+                        } catch (err) {
+                          message.error(err.response?.data?.error || "Failed to send request");
+                        }
+                      }}
+                    >
+                      Request Verification Badge
+                    </Button>
+                  )}
+                </div>
+                </div>
               </div>
-            </div>
 
             {/* Inputs Section */}
             <div className="space-y-5">
-              <Form.Item
-                name="name"
-                label={<span className="text-slate-600 font-medium">Full Name</span>}
-                rules={[{ required: true, message: "Please enter your name" }]}
-                required={false}
-                className="!mb-0"
-              >
-                <Input
-                  disabled={!isEditing}
-                  prefix={<User size={18} className="text-slate-400 mr-2" />}
-                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
-                />
-              </Form.Item>
+              <Row gutter={20}>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="name"
+                    label={<span className="text-slate-600 font-medium">Full Name</span>}
+                    rules={[{ required: true, message: "Please enter your name" }]}
+                    required={false}
+                    className="!mb-4"
+                  >
+                    <Input
+                      disabled={!isEditing}
+                      prefix={<User size={18} className="text-slate-400 mr-2" />}
+                      className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item
+                    name="phone"
+                    label={<span className="text-slate-600 font-medium">Contact Phone Number</span>}
+                    rules={[
+                      { required: true, message: "Please enter phone number" },
+                      { pattern: /^\d{10}$/, message: "Must be 10 digits" },
+                    ]}
+                    required={false}
+                    className="!mb-4"
+                  >
+                    <Input
+                      disabled={!isEditing}
+                      prefix={<Phone size={18} className="text-slate-400 mr-2" />}
+                      placeholder="8270652229"
+                      className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
+                      maxLength={10}
+                      onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
 
               <Form.Item
                 label={<span className="text-slate-600 font-medium">Business Type</span>}
-                className="!mb-0"
+                className="!mb-4"
               >
                 <Input
                   prefix={<Briefcase size={18} className="text-slate-400 mr-2" />}
@@ -455,7 +573,7 @@ const Profile = () => {
               </Form.Item>
 
               <Row gutter={20}>
-                <Col span={12}>
+                <Col xs={24} md={12}>
                   <Form.Item name="userId" label={<span className="text-slate-600 font-medium">User ID</span>} className="!mb-0">
                     <Input
                       prefix={<Hash size={18} className="text-slate-400 mr-2" />}
@@ -464,7 +582,7 @@ const Profile = () => {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} md={12}>
                   <Form.Item name="referralCode" label={<span className="text-slate-600 font-medium">Referral ID</span>} className="!mb-0">
                     <Input
                       prefix={<Share2 size={18} className="text-slate-400 mr-2" />}
@@ -474,26 +592,6 @@ const Profile = () => {
                   </Form.Item>
                 </Col>
               </Row>
-
-              <Form.Item
-                name="phone"
-                label={<span className="text-slate-600 font-medium">Contact Phone Number</span>}
-                rules={[
-                  { required: true, message: "Please enter phone number" },
-                  { pattern: /^\d{10}$/, message: "Must be 10 digits" },
-                ]}
-                required={false}
-                className="!mb-0"
-              >
-                <Input
-                  disabled={!isEditing}
-                  prefix={<Phone size={18} className="text-slate-400 mr-2" />}
-                  placeholder="8270652229"
-                  className={`h-12 rounded-xl border-slate-200 ${!isEditing ? "bg-slate-50 text-slate-500 cursor-not-allowed" : "hover:border-blue-400 focus:border-blue-500"} shadow-sm`}
-                  maxLength={10}
-                  onKeyPress={(e) => !/[0-9]/.test(e.key) && e.preventDefault()}
-                />
-              </Form.Item>
 
               {/* Builder Specific Fields */}
               {user?.businessType?.name?.match(/Builder|Promoter/i) && (
@@ -528,6 +626,18 @@ const Profile = () => {
                            disabled={!isEditing}
                            className="logo-uploader"
                            maxCount={1}
+                           beforeUpload={(file) => {
+                             const isJpgOrPngOrSvg =
+                               file.type === "image/jpeg" ||
+                               file.type === "image/png" ||
+                               file.type === "image/svg+xml" ||
+                               file.type === "image/webp";
+                             if (!isJpgOrPngOrSvg) {
+                               message.error("You can only upload JPG/PNG/SVG/WEBP file!");
+                               return Upload.LIST_IGNORE;
+                             }
+                             return false;
+                           }}
                          >
                            {logoFileList.length < 1 && (
                              <div className="flex flex-col items-center">
@@ -549,8 +659,15 @@ const Profile = () => {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="gstNumber" label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>} className="!mb-4">
-                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="22AAAAA0000A1Z5" />
+                        <Form.Item 
+                          name="gstNumber" 
+                          label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>} 
+                          className="!mb-4"
+                          rules={[
+                            { pattern: /^[0-9]{2}[a-zA-Z]{5}[0-9]{4}[a-zA-Z]{1}[1-9A-Za-z]{1}[Zz]{1}[0-9a-zA-Z]{1}$/, message: "Please enter a valid GST number (e.g. 22AAAAA0000A1Z5)" }
+                          ]}
+                        >
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm uppercase" placeholder="22AAAAA0000A1Z5" onChange={(e) => e.target.value = e.target.value.toUpperCase()} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -566,8 +683,15 @@ const Profile = () => {
                         </Form.Item>
                       </Col>
                       <Col span={12}>
-                        <Form.Item name="reraNumber" label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} className="!mb-4">
-                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="TN/01/Building/0001" />
+                        <Form.Item 
+                          name="reraNumber" 
+                          label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} 
+                          className="!mb-4"
+                          rules={[
+                            { pattern: /^[a-zA-Z0-9\/\-]+$/, message: "Please enter a valid RERA number" }
+                          ]}
+                        >
+                          <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm uppercase" placeholder="TN/01/Building/0001" onChange={(e) => e.target.value = e.target.value.toUpperCase()} />
                         </Form.Item>
                       </Col>
                     </Row>
@@ -633,104 +757,9 @@ const Profile = () => {
               )}
             </div>
 
-            {/* Verification & Save Row */}
-            <div className="pt-6">
-              <div className="flex justify-between items-center gap-4">
-                <div className="flex-1">
-                  {user?.badgeVerified ? (
-                    <div className="inline-flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-xl border border-green-100 font-semibold shadow-sm">
-                      <CheckCircle size={18} />
-                      <span>Verified Badge Active</span>
-                    </div>
-                  ) : user?.badgeRequestStatus === "pending" ? (
-                    <div className="inline-flex items-center gap-2 text-amber-700 bg-amber-50 px-4 py-2 rounded-xl border border-amber-100 font-semibold shadow-sm">
-                      <Clock size={18} />
-                      <span>Verification Pending</span>
-                    </div>
-                  ) : user?.badgeRequestStatus === "rejected" ? (
-                    <div className="inline-flex items-center gap-2 text-red-700 bg-red-50 px-4 py-2 rounded-xl border border-red-100 font-semibold shadow-sm">
-                      <XCircle size={18} />
-                      <span>Verification Rejected</span>
-                    </div>
-                  ) : (
-                    <Button
-                      icon={<ShieldCheck size={20} className="mr-2" />}
-                      className="h-12 px-6 rounded-xl bg-white text-slate-700 border-slate-200 hover:border-blue-500 hover:text-blue-600 font-semibold shadow-sm flex items-center transition-all"
-                      onClick={async () => {
-                        const isBuilder = user?.businessType?.name?.match(/Builder|Promoter/i);
-                        
-                        if (isBuilder) {
-                          const bp = user.builderProfile;
-                          const missing = [];
-                          if (!bp?.companyName) missing.push("Company Name");
-                          if (!bp?.officeAddress) missing.push("Office Address");
-                          if (!bp?.experienceYears) missing.push("Experience Years");
-                          if (!bp?.companyLogo) missing.push("Company Logo");
-                          
-                          if (missing.length > 0) {
-                            message.error({
-                              content: `Please complete your profile first. Missing fields: ${missing.join(", ")}`,
-                              duration: 4,
-                              style: { marginTop: '10vh' }
-                            });
-                            return;
-                          }
-                        }
-
-                        try {
-                          const res = await api.post("/users/request-badge");
-                          message.success(res.data.message);
-                          refetchUser();
-                        } catch (err) {
-                          message.error(err.response?.data?.error || "Failed to send request");
-                        }
-                      }}
-                    >
-                      Request Verification Badge
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex gap-3">
-                  {!isEditing ? (
-                    <Button
-                      type="default"
-                      icon={<Edit3 size={20} className="mr-2" />}
-                      className="h-12 px-8 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold text-base bg-white transition-all shadow-sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setIsEditing(true);
-                      }}
-                    >
-                      Edit Profile
-                    </Button>
-                  ) : (
-                    <>
-                      <Button
-                        type="default"
-                        icon={<X size={20} className="mr-2" />}
-                        className="h-12 px-6 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold text-base transition-all"
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        type="primary"
-                        htmlType="submit"
-                        icon={<Save size={20} className="mr-2" />}
-                        loading={saving}
-                        className="h-12 px-8 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold text-base shadow-lg shadow-blue-200/50 flex items-center transition-all"
-                      >
-                        Save Profile
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="text-center mt-6">
-                <span className="text-slate-400 text-sm font-medium">* indicates required field</span>
-              </div>
+            {/* Required Field Indicator */}
+            <div className="text-center mt-6">
+              <span className="text-slate-400 text-sm font-medium">* indicates required field</span>
             </div>
           </Form>
         </Card>
