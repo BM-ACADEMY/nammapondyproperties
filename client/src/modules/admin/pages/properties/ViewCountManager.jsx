@@ -220,6 +220,11 @@ const ViewCountManager = () => {
                             value={newViewCount}
                             onChange={setNewViewCount}
                             placeholder="Enter new view count"
+                            onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                    e.preventDefault();
+                                }
+                            }}
                         />
                         <Text type="secondary" className="text-xs mt-2 block">
                             Set the total number of views displayed for this property.

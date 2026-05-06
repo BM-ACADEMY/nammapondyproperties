@@ -501,7 +501,18 @@ const AdminProfile = () => {
                     <Row gutter={20}>
                       <Col span={12}>
                         <Form.Item name="experienceYears" label={<span className="text-slate-600 font-medium">Years of Experience</span>} className="!mb-4">
-                          <InputNumber disabled={!isEditing} className="w-full h-12 rounded-xl flex items-center shadow-sm" placeholder="10" min={0} />
+                          <InputNumber 
+                            disabled={!isEditing} 
+                            className="w-full h-12 rounded-xl flex items-center shadow-sm" 
+                            placeholder="10" 
+                            min={0} 
+                            precision={0}
+                            onKeyPress={(e) => {
+                              if (!/[0-9]/.test(e.key)) {
+                                e.preventDefault();
+                              }
+                            }}
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={12}>

@@ -423,7 +423,7 @@ const AdminBannerAds = () => {
                                 </div>
                             )}
                         </Upload>
-                        <Text type="secondary" className="text-[11px]">Recommended: High-resolution rectangular banner</Text>
+                        <Text type="secondary" className="text-[11px]">Recommended size: 1920 x 480 pixels (4:1 aspect ratio)</Text>
                     </Form.Item>
 
                     <div className="flex justify-end gap-3 mt-8">

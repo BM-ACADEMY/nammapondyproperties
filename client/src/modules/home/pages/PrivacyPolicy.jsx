@@ -102,7 +102,7 @@ const PrivacyPolicy = () => {
             <Paragraph className="mb-0 text-gray-700">
               For any queries:<br />
               Phone: <a href="tel:+919403892971" className="text-blue-600 hover:underline"><strong>+91 94038 92971</strong></a><br />
-              Email: <a href="mailto:info@nammapondy.com" className="text-blue-600 hover:underline"><strong>info@nammapondy.com</strong></a>
+              Email: <a href="mailto:help@nammapondyproperties.com" className="text-blue-600 hover:underline"><strong>help@nammapondyproperties.com</strong></a>
             </Paragraph>
           </div>
           <Paragraph className="mt-8 font-semibold text-center text-gray-900 border-t border-gray-100 pt-6">
@@ -145,7 +145,7 @@ const PrivacyPolicy = () => {
               <Paragraph className="mb-0 text-gray-700">
                 For refund-related queries:<br />
                 Phone: <a href="tel:+919403892971" className="text-blue-600 hover:underline"><strong>+91 94038 92971</strong></a><br />
-                Email: <a href="mailto:info@nammapondy.com" className="text-blue-600 hover:underline"><strong>info@nammapondy.com</strong></a>
+                Email: <a href="mailto:help@nammapondyproperties.com" className="text-blue-600 hover:underline"><strong>help@nammapondyproperties.com</strong></a>
               </Paragraph>
             </div>
           </div>
@@ -209,7 +209,7 @@ const PrivacyPolicy = () => {
               </Paragraph>
               <Paragraph className="mb-0 text-gray-700">
                 Phone: <a href="tel:+919403892971" className="text-blue-600 hover:underline"><strong>+91 94038 92971</strong></a><br />
-                Email: <a href="mailto:info@nammapondy.com" className="text-blue-600 hover:underline"><strong>info@nammapondy.com</strong></a>
+                Email: <a href="mailto:help@nammapondyproperties.com" className="text-blue-600 hover:underline"><strong>help@nammapondyproperties.com</strong></a>
               </Paragraph>
             </div>
           </div>

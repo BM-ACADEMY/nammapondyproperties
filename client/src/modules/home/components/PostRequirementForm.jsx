@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Select, InputNumber, Button, message, Checkbox } from "antd";
+import { Form, Input, Select, InputNumber, Button, message, Checkbox, AutoComplete } from "antd";
 import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import { useNav } from "@/context/NavContext";
-import { MapPin, Phone, User, MessageCircle, FileText } from "lucide-react";
+import { MapPin, Phone, User, MessageCircle, FileText, Search } from "lucide-react";
+import axios from "axios";
+
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -37,6 +39,10 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
   const [maxBudgetVal, setMaxBudgetVal] = useState(null);
   const { user, isAuthenticated } = useAuth();
   const { propertyTypes } = useNav();
+  const [locationOptions, setLocationOptions] = useState([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [searching, setSearching] = useState(false);
+
 
   const usageType = Form.useWatch("usageType", form);
 
@@ -85,6 +91,83 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
 
   const handlePropertyTypeChange = (value) => {
     setShowOtherType(value === "Others");
+  };
+
+  const fetchLocationSuggestions = async (query) => {
+    if (!query || query.length < 2) {
+      setLocationOptions([]);
+      return;
+    }
+    setSearching(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/properties/suggestions`, {
+        params: { query }
+      });
+      
+      const internalSuggestions = response.data
+        .filter(s => s.type === "City" || s.type === "Locality" || s.type === "Property")
+        .map(s => ({
+          value: s.mainText,
+          label: (
+            <div className="flex justify-between items-center py-1">
+              <div className="flex flex-col text-left">
+                <span className="font-semibold text-slate-800">{s.mainText}</span>
+                <span className="text-xs text-slate-400">{s.subText}</span>
+              </div>
+              <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                {s.type}
+              </span>
+            </div>
+          ),
+          data: s
+        }));
+
+      setLocationOptions(internalSuggestions);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleLocationSelect = async (value, option) => {
+    const { data } = option;
+    setSearching(true);
+    try {
+      const response = await axios.get(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          data.mainText + " " + (data.subText || "")
+        )}&limit=1&addressdetails=1`
+      );
+      
+      if (response.data && response.data.length > 0) {
+        const { lat, lon, display_name, address } = response.data[0];
+        const locality = address.suburb || address.town || address.village || address.hamlet || address.city_district || data.mainText;
+        
+        form.setFieldsValue({
+          lat: parseFloat(lat),
+          lng: parseFloat(lon),
+          locationText: display_name,
+          locality: locality,
+        });
+        setSearchValue(data.mainText);
+      } else {
+        form.setFieldsValue({
+          locationText: data.mainText + (data.subText ? `, ${data.subText}` : ""),
+          locality: data.mainText,
+        });
+        setSearchValue(data.mainText);
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+      form.setFieldsValue({
+        locationText: data.mainText + (data.subText ? `, ${data.subText}` : ""),
+        locality: data.mainText,
+      });
+      setSearchValue(data.mainText);
+    } finally {
+      setSearching(false);
+    }
   };
 
   return (
@@ -212,13 +295,53 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
         )}
 
         {/* Preferred Location */}
-        <Form.Item
-          name="preferredLocation"
-          label="Preferred Location"
-          className="md:col-span-2"
-        >
-          <Input prefix={<MapPin size={16} className="text-gray-400" />} placeholder="e.g. Whitefield, Bangalore" />
-        </Form.Item>
+        <div className="md:col-span-2">
+          <Form.Item
+            label={<span className="font-semibold text-slate-700">Preferred Location</span>}
+            required
+          >
+            <div className="flex flex-col md:flex-row gap-3">
+              <AutoComplete
+                options={locationOptions}
+                onSelect={handleLocationSelect}
+                onSearch={fetchLocationSuggestions}
+                value={searchValue}
+                onChange={(val) => {
+                  setSearchValue(val);
+                  if (form.getFieldValue("locationText")) {
+                    form.setFieldsValue({ locationText: undefined });
+                  }
+                }}
+                className="w-full"
+              >
+                <Input
+                  placeholder="Type to search location (e.g. Kottakuppam)"
+                  prefix={searching ? <div className="inline-block w-4 h-4 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mr-2" /> : <Search size={18} className="text-slate-400" />}
+                  className="h-10"
+                />
+              </AutoComplete>
+              <Form.Item
+                name="locationText"
+                noStyle
+                rules={[{ required: true, message: "Please search and select a location" }]}
+              >
+                <Input 
+                  placeholder="Verified location will appear here..." 
+                  prefix={<MapPin size={18} className="text-blue-500" />}
+                  readOnly
+                  className="bg-blue-50/50 border-blue-100 font-medium h-10"
+                />
+              </Form.Item>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2 italic">
+              Note: You must search and select a location from the suggestions to ensure accurate matching.
+            </p>
+          </Form.Item>
+
+          {/* Hidden inputs for coordinates */}
+          <Form.Item name="lat" hidden><Input /></Form.Item>
+          <Form.Item name="lng" hidden><Input /></Form.Item>
+        </div>
 
         {/* Budget Range */}
         <Form.Item
