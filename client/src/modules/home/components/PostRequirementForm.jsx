@@ -105,16 +105,32 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
           <Input prefix={<User size={16} className="text-gray-400" />} placeholder="John Doe" />
         </Form.Item>
 
-        {/* Phone Number */}
         <Form.Item
           name="phoneNumber"
           label="Phone Number"
           rules={[
-            { required: true, message: "Please enter your phone number" },
-            { pattern: /^[0-9]{10}$/, message: "Please enter a valid 10-digit phone number" }
+            {
+              validator: (_, value) => {
+                if (!value || String(value).trim() === "") return Promise.reject(new Error("Enter a valid 10-digit phone number"));
+                const digits = String(value).replace(/\D/g, "");
+                if (digits.length !== 10) return Promise.reject(new Error("Enter a valid 10-digit phone number"));
+                return Promise.resolve();
+              },
+            },
           ]}
         >
-          <Input prefix={<Phone size={16} className="text-gray-400" />} placeholder="9876543210" />
+          <Input
+            prefix={<Phone size={16} className="text-gray-400" />}
+            placeholder="9876543210"
+            maxLength={10}
+            onKeyPress={(e) => {
+              if (!/[0-9]/.test(e.key)) e.preventDefault();
+            }}
+            onPaste={(e) => {
+              const pasted = e.clipboardData.getData("text");
+              if (!/^\d+$/.test(pasted)) e.preventDefault();
+            }}
+          />
         </Form.Item>
 
         {/* How did you hear about us? */}
@@ -246,8 +262,10 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
                   style={{ width: "100%" }}
                   placeholder="Min Budget (e.g. 1000000)"
                   controls={false}
+                  min={0}
                   formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
-                  parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                  parser={(value) => value.replace(/[^0-9]/g, "")}
+                  onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
                   onChange={(val) => setMinBudgetVal(val)}
                 />
               </Form.Item>
@@ -265,8 +283,10 @@ const PostRequirementForm = ({ onSuccess, onCancel }) => {
                   style={{ width: "100%" }}
                   placeholder="Max Budget (e.g. 5000000)"
                   controls={false}
+                  min={0}
                   formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
-                  parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                  parser={(value) => value.replace(/[^0-9]/g, "")}
+                  onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
                   onChange={(val) => setMaxBudgetVal(val)}
                 />
               </Form.Item>

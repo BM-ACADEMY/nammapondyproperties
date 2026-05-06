@@ -27,6 +27,21 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import BusinessTypeModal from "./BusinessTypeModal";
 
+// Converts a raw number to Indian-scale label: ₹25 Lakhs, ₹1.5 Crores
+const formatBudgetLabel = (value) => {
+  if (!value && value !== 0) return null;
+  const num = Number(String(value).replace(/[^0-9]/g, ""));
+  if (isNaN(num) || num === 0) return null;
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(num % 10000000 === 0 ? 0 : 1)} Crore${num >= 20000000 ? "s" : ""}`;
+  if (num >= 100000)  return `₹${(num / 100000).toFixed(num % 100000 === 0 ? 0 : 1)} Lakh${num >= 200000 ? "s" : ""}`;
+  if (num >= 1000)    return `₹${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1)}K`;
+  return `₹${num.toLocaleString("en-IN")}`;
+};
+
+const numericOnly = (e) => {
+  if (!/[0-9]/.test(e.key)) e.preventDefault();
+};
+
 const { BaseLayer } = LayersControl;
 
 // Custom marker icon for properties
@@ -231,6 +246,14 @@ const PropertyForm = ({
   const [businessTypes, setBusinessTypes] = useState([]);
   const [mapPosition, setMapPosition] = useState(null);
   const [showBTModal, setShowBTModal] = useState(false);
+
+  // Price field live-label state
+  const [priceVals, setPriceVals] = useState({
+    minPrice: "", maxPrice: "",
+    minRent: "", maxRent: "",
+    securityDeposit: "", maintenance: "",
+  });
+  const setPV = (key, val) => setPriceVals((p) => ({ ...p, [key]: val }));
 
   const isAdmin = user?.role_id?.role_name?.toLowerCase() === "admin";
   const isBuilderPromoter =
@@ -1276,37 +1299,57 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Price From (₹) <span className="text-red-500">*</span>
+                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.sell.minPrice", {
                           required: "Min price is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("minPrice", e.target.value);
+                          register("pricing.sell.minPrice").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.minPrice ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 1500000"
                       />
+                      {formatBudgetLabel(priceVals.minPrice) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.minPrice)}</p>
+                      )}
                       {errors.pricing?.sell?.minPrice && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.sell.minPrice.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.minPrice.message}</p>
                       )}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Price To (₹) <span className="text-red-500">*</span>
+                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.sell.maxPrice", {
                           required: "Max price is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("maxPrice", e.target.value);
+                          register("pricing.sell.maxPrice").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.maxPrice ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 1600000"
                       />
+                      {formatBudgetLabel(priceVals.maxPrice) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.maxPrice)}</p>
+                      )}
                       {errors.pricing?.sell?.maxPrice && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.sell.maxPrice.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.maxPrice.message}</p>
                       )}
                     </div>
                     <div>
@@ -1314,8 +1357,14 @@ const PropertyForm = ({
                         Price Per Sqft (₹)
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.sell.pricePerSqft")}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          register("pricing.sell.pricePerSqft").onChange(e);
+                        }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
                       />
                     </div>
@@ -1325,37 +1374,57 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Rent From (₹/mo) <span className="text-red-500">*</span>
+                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.minRent", {
                           required: "Min rent is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("minRent", e.target.value);
+                          register("pricing.rent.minRent").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.minRent ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 15000"
                       />
+                      {formatBudgetLabel(priceVals.minRent) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.minRent)}</p>
+                      )}
                       {errors.pricing?.rent?.minRent && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.rent.minRent.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.minRent.message}</p>
                       )}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Rent To (₹/mo) <span className="text-red-500">*</span>
+                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.maxRent", {
                           required: "Max rent is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("maxRent", e.target.value);
+                          register("pricing.rent.maxRent").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.maxRent ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 20000"
                       />
+                      {formatBudgetLabel(priceVals.maxRent) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.maxRent)}</p>
+                      )}
                       {errors.pricing?.rent?.maxRent && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.rent.maxRent.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.maxRent.message}</p>
                       )}
                     </div>
                     <div>
@@ -1363,21 +1432,41 @@ const PropertyForm = ({
                         Security Deposit (₹)
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.securityDeposit")}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("securityDeposit", e.target.value);
+                          register("pricing.rent.securityDeposit").onChange(e);
+                        }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
                       />
+                      {formatBudgetLabel(priceVals.securityDeposit) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.securityDeposit)}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Maintenance (₹/mo)
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.maintenance")}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("maintenance", e.target.value);
+                          register("pricing.rent.maintenance").onChange(e);
+                        }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
                         placeholder="e.g. 2000"
                       />
+                      {formatBudgetLabel(priceVals.maintenance) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.maintenance)}</p>
+                      )}
                     </div>
                   </>
                 )}

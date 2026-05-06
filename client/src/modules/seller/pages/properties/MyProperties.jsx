@@ -475,7 +475,7 @@ const MyProperties = () => {
         >
           <Input
             prefix={<Search size={18} className="text-gray-400 ml-1" />}
-            placeholder="Search properties..."
+            placeholder="Search by Property Name or Location"
             onChange={(e) => setSearchText(e.target.value)}
             className="w-full border-none h-9 text-sm focus:ring-0"
             size="middle"

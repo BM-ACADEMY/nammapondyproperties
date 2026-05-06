@@ -12,7 +12,13 @@ exports.createWhatsappLead = async (req, res) => {
     ) {
       // Ideally validation
     }
-    const whatsappLead = new WhatsappLead(req.body);
+    const property = await require("../models/Property").findById(req.body.property_id);
+    const propertyTitle = property?.basicInfo?.title || property?.title || "Untitled Property";
+    
+    const whatsappLead = new WhatsappLead({
+        ...req.body,
+        property_title: propertyTitle
+    });
     await whatsappLead.save();
 
     // Increment lead usage for the seller if they have an active plan

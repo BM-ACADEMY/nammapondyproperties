@@ -188,16 +188,26 @@ const PostRequirementPage = () => {
                 <Form.Item
                   name="phoneNumber"
                   label={<span className="font-semibold">Mobile Number</span>}
-                  rules={[{ required: true, message: "Required" }]}
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        if (!value || String(value).trim() === "") return Promise.reject(new Error("Enter a valid 10-digit phone number"));
+                        const digits = String(value).replace(/\D/g, "");
+                        if (digits.length !== 10) return Promise.reject(new Error("Enter a valid 10-digit phone number"));
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
                 >
-                  <InputNumber 
-                    style={{ width: "100%" }}
-                    placeholder="Phone number" 
-                    controls={false}
-                    onKeyPress={(event) => {
-                      if (!/[0-9]/.test(event.key)) {
-                        event.preventDefault();
-                      }
+                  <Input
+                    placeholder="9876543210"
+                    maxLength={10}
+                    onKeyPress={(e) => {
+                      if (!/[0-9]/.test(e.key)) e.preventDefault();
+                    }}
+                    onPaste={(e) => {
+                      const pasted = e.clipboardData.getData("text");
+                      if (!/^\d+$/.test(pasted)) e.preventDefault();
                     }}
                   />
                 </Form.Item>
@@ -354,8 +364,10 @@ const PostRequirementPage = () => {
                           style={{ width: "100%" }}
                           placeholder="Min (e.g. 1000000)"
                           controls={false}
+                          min={0}
                           formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
-                          parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                          parser={(value) => value.replace(/[^0-9]/g, "")}
+                          onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
                           onChange={(val) => setMinBudgetVal(val)}
                         />
                       </Form.Item>
@@ -377,8 +389,10 @@ const PostRequirementPage = () => {
                           style={{ width: "100%" }}
                           placeholder="Max (e.g. 5000000)"
                           controls={false}
+                          min={0}
                           formatter={(value) => value ? `₹ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""}
-                          parser={(value) => value.replace(/₹\s?|(,*)/g, "")}
+                          parser={(value) => value.replace(/[^0-9]/g, "")}
+                          onKeyPress={(e) => { if (!/[0-9]/.test(e.key)) e.preventDefault(); }}
                           onChange={(val) => setMaxBudgetVal(val)}
                         />
                       </Form.Item>
