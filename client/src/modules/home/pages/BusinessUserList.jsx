@@ -278,13 +278,20 @@ const BusinessUserList = () => {
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Profile link copied to clipboard!");
+      } else {
+        throw new Error("Sharing not supported");
       }
     } catch (err) {
       if (err.name !== "AbortError") {
-        console.error("Error sharing:", err);
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Profile link copied to clipboard!");
+        } catch (clipError) {
+          toast.error("Could not share or copy profile link");
+        }
       }
     }
   };

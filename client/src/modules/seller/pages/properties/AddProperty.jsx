@@ -41,7 +41,7 @@ const AddProperty = () => {
       if (reason === "unverified") {
         const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
         navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
-      } else if (reason === "limit_reached") {
+      } else if (reason === "limit_reached" || reason === "expired") {
         navigate(redirectPath || "/seller/upgrade-plan");
       }
       return;

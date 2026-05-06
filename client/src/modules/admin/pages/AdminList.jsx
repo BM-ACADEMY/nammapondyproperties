@@ -391,7 +391,7 @@ const AdminList = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-2 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <Title level={3} className="mb-0!">

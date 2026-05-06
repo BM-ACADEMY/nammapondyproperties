@@ -89,20 +89,22 @@ const StandardPropertyDetailsUI = ({
     };
 
     try {
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare(shareData)
-      ) {
+      if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Link copied to clipboard!");
+      } else {
+        throw new Error("Sharing not supported");
       }
     } catch (error) {
       if (error.name !== "AbortError") {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success("Link copied to clipboard!");
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Link copied to clipboard!");
+        } catch (clipError) {
+          toast.error("Could not share or copy link");
+        }
       }
     }
   };

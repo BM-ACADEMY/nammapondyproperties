@@ -1223,6 +1223,7 @@ const PropertyForm = ({
                 <input
                   {...register("location.subArea")}
                   className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                  placeholder="e.g., Anna Salai"
                 />
               </div>
               <div>
@@ -1306,7 +1307,7 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Price From (₹) <span className="text-red-500">*</span>
-                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
                         type="text"
@@ -1334,7 +1335,7 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Price To (₹) <span className="text-red-500">*</span>
-                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
                         type="text"
@@ -1373,6 +1374,7 @@ const PropertyForm = ({
                           register("pricing.sell.pricePerSqft").onChange(e);
                         }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 5000"
                       />
                     </div>
                   </>
@@ -1381,7 +1383,7 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Rent From (₹/mo) <span className="text-red-500">*</span>
-                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
                         type="text"
@@ -1409,7 +1411,7 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Rent To (₹/mo) <span className="text-red-500">*</span>
-                        <span className="text-gray-400 font-normal text-xs ml-2">Amount will be shown in Lakhs/Crores</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
                         type="text"
@@ -1488,7 +1490,7 @@ const PropertyForm = ({
                 <div>
                   <label className="block text-sm font-bold mb-2">
                     Area From (sqft) <span className="text-red-500">*</span>
-                    <span className="text-gray-400 font-normal text-xs ml-1">
+                    <span className="block text-gray-400 font-normal text-[10px] mt-0.5">
                       (enter single value or min of range)
                     </span>
                   </label>
@@ -1509,7 +1511,7 @@ const PropertyForm = ({
                 <div>
                   <label className="block text-sm font-bold mb-2">
                     Area To (sqft)
-                    <span className="text-gray-400 font-normal text-xs ml-1">
+                    <span className="block text-gray-400 font-normal text-[10px] mt-0.5">
                       (optional — fill for range)
                     </span>
                   </label>
@@ -1525,21 +1527,25 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Super Built-up Area (sqft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.area.superBuiltupArea")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 1800"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Built-up Area (sqft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.area.builtupArea")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 1600"
                       />
                     </div>
                   </>
@@ -1549,36 +1555,43 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Bedrooms
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.residential.bedrooms")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 3"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Bathrooms
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.residential.bathrooms")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 2"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Balconies
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.residential.balconies")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 1"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Furnishing
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <select
                         {...register("specifications.residential.furnishing")}
@@ -1598,21 +1611,25 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Plot Length (ft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.plot.plotLength")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 50"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Plot Width (ft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.plot.plotWidth")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 30"
                       />
                     </div>
                     <div className="flex items-center gap-2 mt-4">
@@ -1637,28 +1654,35 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Cabins
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.commercial.cabins")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 2"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Workstations
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.commercial.workstations")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 10"
                       />
                     </div>
                   </>
                 )}
 
                 <div>
-                  <label className="block text-sm font-bold mb-2">Facing</label>
+                  <label className="block text-sm font-bold mb-2">
+                    Facing
+                    <span className="block text-transparent text-[10px] mt-0.5">.</span>
+                  </label>
                   <select
                     {...register("specifications.facing")}
                     className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"

@@ -244,7 +244,7 @@ const SellerLayout = () => {
                   </div>
                   {user?.badgeVerified && (
                     <div className="text-[10px] text-blue-600 uppercase font-bold flex items-center gap-1">
-                      <Tag color="gray" bordered={false} className="m-0 text-[9px] px-1.5 py-0 leading-none h-auto">Verified Account</Tag>
+                      <span className="m-0 text-[9px] text-gray-400 font-bold leading-none">VERIFIED ACCOUNT</span>
                     </div>
                   )}
                 </div>

@@ -81,20 +81,22 @@ const BuilderPromoterDetailsUI = ({
     };
 
     try {
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare(shareData)
-      ) {
+      if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Link copied to clipboard!");
+      } else {
+        throw new Error("Sharing not supported");
       }
     } catch (error) {
       if (error.name !== "AbortError") {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success("Link copied to clipboard!");
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Link copied to clipboard!");
+        } catch (clipError) {
+          toast.error("Could not share or copy link");
+        }
       }
     }
   };
@@ -736,7 +738,7 @@ const BuilderPromoterDetailsUI = ({
 
           {/* SIDEBAR: Seller Info */}
           <div className="lg:col-span-4 space-y-8">
-            <div className="sticky top-34">
+            <div className="sticky top-40">
               {/* Contact Card */}
               <div className="bg-white p-6 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100">
                 <div className="flex items-center gap-4 mb-6">

@@ -144,7 +144,9 @@ const AdminProfile = () => {
       const formData = new FormData();
       formData.append("name", values.name);
       formData.append("phone", values.phone); // Use values.phone now
-      formData.append("businessType", values.businessType);
+      if (values.businessType) {
+        formData.append("businessType", values.businessType);
+      }
 
       const selectedBT = businessTypes.find(bt => bt._id === values.businessType);
       const isBuilder = selectedBT?.name?.match(/Builder|Promoter/i);
@@ -313,6 +315,43 @@ const AdminProfile = () => {
         {/* Profile Information Section */}
         <Card 
           title={<span className="text-lg font-semibold text-slate-800 pt-2 block">Profile Information</span>}
+          extra={
+            <div className="flex justify-end gap-2 pt-2">
+              {!isEditing ? (
+                <Button
+                  type="default"
+                  icon={<Edit3 size={18} className="mr-1" />}
+                  className="h-10 px-4 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold text-sm bg-white transition-all shadow-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsEditing(true);
+                  }}
+                >
+                  Edit Profile
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    type="default"
+                    icon={<X size={18} className="mr-1" />}
+                    className="h-10 px-4 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold text-sm transition-all"
+                    onClick={handleCancelEdit}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="primary"
+                    onClick={() => form.submit()}
+                    icon={<Save size={18} className="mr-1" />}
+                    loading={saving}
+                    className="h-10 px-4 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold text-sm shadow-md shadow-blue-200/50 flex items-center transition-all"
+                  >
+                    Save Profile
+                  </Button>
+                </>
+              )}
+            </div>
+          }
           className="shadow-sm border-slate-200 rounded-2xl overflow-hidden"
           styles={{ 
             header: { borderBottom: 'none', padding: '24px 32px 0' },
@@ -338,6 +377,11 @@ const AdminProfile = () => {
                           file.type === "image/svg+xml";
                         if (!isJpgOrPngOrSvg) {
                           message.error("You can only upload JPG/PNG/SVG file!");
+                          return Upload.LIST_IGNORE;
+                        }
+                        const isLt5M = file.size / 1024 / 1024 < 5;
+                        if (!isLt5M) {
+                          message.error("Image must smaller than 5MB!");
                           return Upload.LIST_IGNORE;
                         }
                         return false;
@@ -409,7 +453,7 @@ const AdminProfile = () => {
               </Form.Item>
 
               <Row gutter={20}>
-                <Col span={12}>
+                <Col xs={24} md={12}>
                   <Form.Item name="userId" label={<span className="text-slate-600 font-medium">User ID</span>} className="!mb-0">
                     <Input
                       prefix={<Hash size={18} className="text-slate-400 mr-2" />}
@@ -418,7 +462,7 @@ const AdminProfile = () => {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} md={12}>
                   <Form.Item name="referralCode" label={<span className="text-slate-600 font-medium">Referral ID</span>} className="!mb-0">
                     <Input
                       prefix={<Share2 size={18} className="text-slate-400 mr-2" />}
@@ -482,6 +526,19 @@ const AdminProfile = () => {
                            disabled={!isEditing}
                            className="logo-uploader"
                            maxCount={1}
+                           beforeUpload={(file) => {
+                             const isJpgOrPngOrSvg = file.type === "image/jpeg" || file.type === "image/png" || file.type === "image/svg+xml" || file.type === "image/webp";
+                             if (!isJpgOrPngOrSvg) {
+                               message.error("You can only upload JPG/PNG/SVG/WEBP file!");
+                               return Upload.LIST_IGNORE;
+                             }
+                             const isLt5M = file.size / 1024 / 1024 < 5;
+                             if (!isLt5M) {
+                               message.error("Image must smaller than 5MB!");
+                               return Upload.LIST_IGNORE;
+                             }
+                             return false;
+                           }}
                          >
                            {logoFileList.length < 1 && (
                              <div className="flex flex-col items-center">
@@ -497,12 +554,12 @@ const AdminProfile = () => {
                     </div>
 
                     <Row gutter={20}>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="companyName" label={<span className="text-slate-600 font-medium">Company Name</span>} className="!mb-4">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="ABC Constructions" />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item
                           name="gstNumber"
                           label={<span className="text-slate-600 font-medium">GST Number (Optional)</span>}
@@ -528,12 +585,12 @@ const AdminProfile = () => {
                     </Form.Item>
 
                     <Row gutter={20}>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="experienceYears" label={<span className="text-slate-600 font-medium">Years of Experience</span>} className="!mb-4">
                           <InputNumber disabled={!isEditing} className="w-full h-12 rounded-xl flex items-center shadow-sm" placeholder="10" min={0} />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="reraNumber" label={<span className="text-slate-600 font-medium">RERA Registration No. (Optional)</span>} className="!mb-4">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="TN/01/Building/0001" />
                         </Form.Item>
@@ -559,12 +616,12 @@ const AdminProfile = () => {
                   <div className="pt-6">
                     <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Personal Details</Title>
                     <Row gutter={20}>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="nationality" label={<span className="text-slate-600 font-medium">Nationality</span>} className="!mb-0">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="Indian" />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="languagesKnown" label={<span className="text-slate-600 font-medium">Languages Known (comma separated)</span>} className="!mb-0">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="English, Tamil, Hindi" />
                         </Form.Item>
@@ -575,22 +632,22 @@ const AdminProfile = () => {
                   <div className="pt-10">
                     <Title level={5} className="!text-base !font-bold text-slate-800 mb-4 uppercase tracking-wider opacity-60">Social Links</Title>
                     <Row gutter={20}>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="website" label={<span className="text-slate-600 font-medium">Website</span>} className="!mb-4">
                           <Input disabled={!isEditing} prefix={<Share2 size={16} />} className="h-12 rounded-xl shadow-sm" placeholder="https://abc.com" />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="linkedin" label={<span className="text-slate-600 font-medium">LinkedIn</span>} className="!mb-4">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="linkedin.com/in/builder" />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="instagram" label={<span className="text-slate-600 font-medium">Instagram</span>} className="!mb-0">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="instagram.com/builder" />
                         </Form.Item>
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} md={12}>
                         <Form.Item name="facebook" label={<span className="text-slate-600 font-medium">Facebook</span>} className="!mb-0">
                           <Input disabled={!isEditing} className="h-12 rounded-xl shadow-sm" placeholder="facebook.com/builder" />
                         </Form.Item>
@@ -601,45 +658,8 @@ const AdminProfile = () => {
               )}
             </div>
 
-            {/* Actions Row */}
             <div className="pt-6">
-              <div className="flex justify-end gap-4">
-                {!isEditing ? (
-                  <Button
-                    type="default"
-                    icon={<Edit3 size={20} className="mr-2" />}
-                    className="h-12 px-8 rounded-xl border-blue-200 text-blue-600 hover:!border-blue-400 hover:!text-blue-700 font-bold text-base bg-white transition-all shadow-sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setIsEditing(true);
-                    }}
-                  >
-                    Edit Profile
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      type="default"
-                      icon={<X size={20} className="mr-2" />}
-                      className="h-12 px-6 rounded-xl border-slate-200 text-slate-600 hover:!border-slate-300 hover:!text-slate-700 font-semibold text-base transition-all"
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      icon={<Save size={20} className="mr-2" />}
-                      loading={saving}
-                      className="h-12 px-8 rounded-xl bg-blue-600 hover:!bg-blue-700 border-none font-bold text-base shadow-lg shadow-blue-200/50 flex items-center transition-all"
-                    >
-                      Save Profile
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              <div className="text-center mt-6">
+              <div className="text-center mt-2">
                 <span className="text-slate-400 text-sm font-medium">* indicates required field</span>
               </div>
             </div>

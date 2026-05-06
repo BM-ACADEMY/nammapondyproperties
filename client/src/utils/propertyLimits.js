@@ -28,9 +28,10 @@ export const checkPropertyListingLimit = (user, overrideCount) => {
   // 2. Role-Based Limits & Subscriptions
   let limit = 3; // Default fallback for Agents/Owners
   let planName = "Free";
+  const isExpired = user.activeSubscription?.status === "expired";
 
-  // If user has an active subscription, use its limit (populated via getMe/refreshToken)
-  if (user.activeSubscription && user.activeSubscription.plan) {
+  // If user has an active subscription that is NOT expired, use its limit
+  if (user.activeSubscription && user.activeSubscription.plan && !isExpired) {
     limit = user.activeSubscription.plan.propertyLimit;
     planName = user.activeSubscription.plan.name;
   } else {
@@ -41,13 +42,25 @@ export const checkPropertyListingLimit = (user, overrideCount) => {
     } else if (businessType.match(/Agent|Owner/i)) {
       limit = 3; // Agents/Owners get 3 free listings
     }
+    if (isExpired) planName = "Expired";
   }
 
   // Default redirect path for all upgrade/limit issues
   const redirectPath = "/seller/upgrade-plan";
 
+  // Check for expiration first
+  if (isExpired && currentCount >= limit) {
+    return {
+      canPost: false,
+      reason: "expired",
+      message: "Your subscription has expired. Please renew your plan to add more properties.",
+      currentCount,
+      limit,
+      redirectPath
+    };
+  }
+
   // Final check against the calculated limit
-  // Note: limit of -1 usually indicates unlimited in many backend systems
   if (limit !== -1 && currentCount >= limit) {
     return {
       canPost: false,
