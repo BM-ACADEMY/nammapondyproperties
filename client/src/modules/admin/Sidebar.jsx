@@ -517,7 +517,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           const filteredChildren = filterItems(item.children);
           if (filteredChildren.length > 0) return { ...item, children: filteredChildren };
         }
-        if (userPermissions.includes(item.key) || item.children) return item;
+        if (userPermissions.includes(item.key)) return item;
         return null;
       }).filter(Boolean);
     };
@@ -658,7 +658,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
 
             <div style={S.profileInfo}>
               <div style={S.profileName}>{displayName}</div>
-              <div style={S.profileRole}>{user?.isSuperAdmin ? "Super Admin" : "Admin"}</div>
+              <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
+                {user?.isSuperAdmin ? "Super Admin" : "Sub Admin"}
+              </span>
             </div>
 
             <button
