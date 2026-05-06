@@ -348,7 +348,7 @@ const SellerList = () => {
                 setIsAssignModalOpen(true);
               }}>
                 <UserCog size={14} className="text-indigo-600" />
-                <span>Assign Portfolio Manager</span>
+                <span>Assign to SubAdmin</span>
               </div>
             ),
           },
