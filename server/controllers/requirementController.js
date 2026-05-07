@@ -29,6 +29,7 @@ exports.createRequirement = async (req, res) => {
       lng,
       locationText,
       locality,
+      needTimeframe,
     } = req.body;
 
     const userId = req.user ? req.user.id : null;
@@ -51,6 +52,7 @@ exports.createRequirement = async (req, res) => {
       propertyPreferences,
       message,
       heardFrom,
+      needTimeframe,
       user: userId,
       createdBy: isAdmin ? req.user._id : null
     });
@@ -178,7 +180,7 @@ exports.getRequirements = async (req, res) => {
 exports.updateRequirementStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, closureDate, needTimeframe } = req.body;
 
     if (!["Pending", "Contacted", "Closed"].includes(status)) {
       return res.status(400).json({
@@ -191,6 +193,8 @@ exports.updateRequirementStatus = async (req, res) => {
       id,
       { 
         status,
+        closureDate,
+        needTimeframe,
         updatedBy: req.user._id
       },
       { new: true }

@@ -1397,6 +1397,14 @@ exports.getSellerStats = async (req, res) => {
         seller: sellerId,
       }));
 
+    // 7. Subscription & Balance Info
+    const userBalance = await User.findById(sellerId)
+      .select("carriedLeads activeSubscription")
+      .populate({
+        path: "activeSubscription",
+        populate: { path: "plan", select: "name leadsLimit" }
+      });
+
     res.json({
       summary: {
         totalProperties,
@@ -1406,6 +1414,8 @@ exports.getSellerStats = async (req, res) => {
         totalSoldAmount,
         totalViews: totalViewsAllTime,
         totalLeads: totalLeadsAllTime,
+        carriedLeads: userBalance?.carriedLeads || 0,
+        activeSubscription: userBalance?.activeSubscription || null,
       },
       chartData,
       recentEnquiries,

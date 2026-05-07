@@ -103,6 +103,13 @@ const requirementSchema = new mongoose.Schema(
       currentPlanIndex: { type: Number, default: 0 },
       startTime: Date,
     },
+    closureDate: {
+      type: Date,
+    },
+    needTimeframe: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

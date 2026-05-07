@@ -170,7 +170,7 @@ exports.acceptLead = async (req, res) => {
       });
     }
 
-    // 2. For regular leads, verify seller has an active subscription
+    // 2. For regular leads, verify seller has an active subscription OR carried leads
     const activeSubscription = await Subscription.findOne({
       user: userId,
       plan: lead.plan._id,
@@ -178,15 +178,20 @@ exports.acceptLead = async (req, res) => {
       endDate: { $gt: new Date() },
     });
 
+    const user = await User.findById(userId).populate("businessType");
+    let usingCarriedLeads = false;
+
     if (!activeSubscription) {
-      return res.status(403).json({
-        success: false,
-        message: "You do not have an active subscription for this plan.",
-      });
+      if (user.carriedLeads > 0) {
+        usingCarriedLeads = true;
+      } else {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have an active subscription for this plan.",
+        });
+      }
     }
 
-    // 1.5 Verify Business Type matches lead priority
-    const user = await User.findById(userId).populate("businessType");
     const businessType = user.businessType?.name || "";
     const isBuilder = /Builder|Promoter/i.test(businessType);
     const isAgent = /Agent/i.test(businessType);
@@ -200,11 +205,17 @@ exports.acceptLead = async (req, res) => {
 
     // 1.7 Lead Count Limit Check
     const leadsLimit = lead.plan.leadsLimit ?? 2;
-    if (leadsLimit !== -1 && activeSubscription.leadsUsed >= leadsLimit) {
-      return res.status(403).json({
-        success: false,
-        message: `Lead Limit Reached: Your current plan allows only ${leadsLimit} leads. Please upgrade your plan for more leads.`,
-      });
+    if (!usingCarriedLeads && activeSubscription) {
+      if (leadsLimit !== -1 && activeSubscription.leadsUsed >= leadsLimit) {
+        if (user.carriedLeads > 0) {
+          usingCarriedLeads = true;
+        } else {
+          return res.status(403).json({
+            success: false,
+            message: `Lead Limit Reached: Your current plan allows only ${leadsLimit} leads. Please upgrade your plan for more leads.`,
+          });
+        }
+      }
     }
 
     // 3. Atomically accept the regular (unmatched) lead
@@ -228,8 +239,12 @@ exports.acceptLead = async (req, res) => {
       });
     }
 
-    // 4. Increment usage for regular leads (Exact matches are charged when shared)
-    await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
+    // 4. Increment usage for regular leads
+    if (usingCarriedLeads) {
+      await User.findByIdAndUpdate(userId, { $inc: { carriedLeads: -1 } });
+    } else if (activeSubscription) {
+      await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
+    }
 
     // 5. Update the parent Requirement status to "Closed"
     if (updatedLead.requirement) {

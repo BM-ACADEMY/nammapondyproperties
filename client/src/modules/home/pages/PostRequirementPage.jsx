@@ -230,6 +230,21 @@ const PostRequirementPage = () => {
                   </Select>
                 </Form.Item>
 
+                <Form.Item
+                  name="needTimeframe"
+                  label={<span className="font-semibold">When do you need it?</span>}
+                  rules={[{ required: true, message: "Please select your timeframe" }]}
+                >
+                  <Select placeholder="e.g. Immediate, 30 days, etc.">
+                    <Option value="Immediate">Immediate</Option>
+                    <Option value="Within 15 days">Within 15 days</Option>
+                    <Option value="Within 30 days">Within 30 days</Option>
+                    <Option value="Within 2 months">Within 2 months</Option>
+                    <Option value="Needed, but no time enclosure">Needed, but no time enclosure</Option>
+                    <Option value="Just looking">Just looking</Option>
+                  </Select>
+                </Form.Item>
+
 
                 <Form.Item
                   name="category"

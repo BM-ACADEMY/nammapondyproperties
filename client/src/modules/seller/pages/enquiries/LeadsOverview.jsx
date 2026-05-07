@@ -171,6 +171,24 @@ const LeadCard = ({ lead, onAccept, onReject, onStatusChange, acceptingId, onExp
         </div>
       </div>
 
+      {/* 4.5 Timeframe & Closure Date */}
+      {(lead.requirement.needTimeframe || lead.requirement.closureDate) && (
+        <div className="mt-[14px] p-3 bg-slate-50 border border-slate-100 rounded-xl flex flex-col gap-3 shadow-sm">
+          {lead.requirement.needTimeframe && (
+            <div className="flex items-center justify-between">
+              <Text className="text-[10px] font-bold uppercase tracking-[0.5px] text-slate-400">Requirement Timeframe</Text>
+              <Text className="text-indigo-600 font-bold text-[13px]">{lead.requirement.needTimeframe}</Text>
+            </div>
+          )}
+          {lead.requirement.closureDate && (
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200/60">
+              <Text className="text-[10px] font-bold uppercase tracking-[0.5px] text-slate-400">Closure Date</Text>
+              <Text className="text-emerald-600 font-bold text-[13px]">{dayjs(lead.requirement.closureDate).format("DD/MM/YYYY")}</Text>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 5. Contact Card */}
        {lead.showFullDetails ? (
         <div className="mt-[14px] bg-[#f6fffb] border border-[#d9f7e8] p-3.5 rounded-xl relative overflow-hidden group transition-all hover:border-emerald-300">

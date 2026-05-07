@@ -144,6 +144,14 @@ const Dashboard = () => {
       path: "/seller/leads-overview",
     },
     {
+      title: "Lead Balance",
+      value: (data.summary.activeSubscription?.leadsUsed === undefined ? 0 : (data.summary.activeSubscription?.plan?.leadsLimit === -1 ? "∞" : Math.max(0, data.summary.activeSubscription?.plan?.leadsLimit - data.summary.activeSubscription?.leadsUsed))) + (data.summary.carriedLeads || 0),
+      icon: <CheckCircle size={24} className="text-emerald-500" />,
+      color: "#f0fdf4",
+      desc: data.summary.carriedLeads > 0 ? `Incl. ${data.summary.carriedLeads} carried forward` : "Available leads balance",
+      path: "/seller/upgrade-plan",
+    },
+    {
       title: "Support Tickets",
       value: supportTickets.filter(t => t.status !== 'closed' && t.status !== 'resolved').length,
       icon: <Headphones size={24} className="text-pink-500" />,
@@ -227,7 +235,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {statCardsData.map((stat, index) => (
           <Link
             to={stat.path}

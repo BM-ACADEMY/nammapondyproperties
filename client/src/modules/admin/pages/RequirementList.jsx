@@ -472,16 +472,26 @@ const RequirementList = () => {
       key: "requirement",
       render: (_, record) => (
         <div className="flex flex-col">
-          <Tag color="blue">{record.category}</Tag>
+          <Tag color="blue" className="w-fit">{record.category}</Tag>
           <Text className="text-xs mt-1">
             <span className="font-semibold">{record.usageType}:</span> {record.propertyType}
           </Text>
           {(record.preferredLocation || record.locationText) && (
-            <div className="flex items-center gap-1 text-[11px] text-slate-500 italic">
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 italic mt-0.5">
               <MapPin size={10} /> {record.locationText || record.preferredLocation}
             </div>
           )}
         </div>
+      ),
+    },
+    {
+      title: "When do you need it?",
+      dataIndex: "needTimeframe",
+      key: "needTimeframe",
+      render: (timeframe) => (
+        <Tag color="orange" className="m-0 font-bold text-[10px] uppercase border-none bg-orange-50 text-orange-600">
+          {timeframe || "Not specified"}
+        </Tag>
       ),
     },
 
@@ -885,7 +895,28 @@ const RequirementList = () => {
                   </p>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  {selectedRequirement.needTimeframe && (
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                      <Text type="secondary" className="text-xs uppercase font-semibold text-blue-600 block">Requirement Timeframe</Text>
+                      <p className="m-0 text-blue-800 font-bold text-base mt-1">
+                        {selectedRequirement.needTimeframe}
+                      </p>
+                    </div>
+                  )}
 
+                  {selectedRequirement.closureDate && (
+                    <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
+                      <div>
+                        <Text type="secondary" className="text-xs uppercase font-semibold text-emerald-600 block">Lead Closure Date</Text>
+                        <p className="m-0 text-emerald-800 font-bold text-base mt-1">
+                          {dayjs(selectedRequirement.closureDate).format("DD MMMM YYYY")}
+                        </p>
+                      </div>
+                      <CheckCircle2 className="text-emerald-500" size={24} />
+                    </div>
+                  )}
+                </div>
               </Col>
             </Row>
           </div>
