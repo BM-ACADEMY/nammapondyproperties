@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Select, InputNumber, Button, message, AutoComplete } from "antd";
+import { Form, Input, Select, InputNumber, Button, message } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -57,9 +57,6 @@ const PostRequirementPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { propertyTypes } = useNav();
-  const [locationOptions, setLocationOptions] = useState([]);
-  const [searchValue, setSearchValue] = useState("");
-
 
   const usageType = Form.useWatch("usageType", form);
 
@@ -119,57 +116,18 @@ const PostRequirementPage = () => {
     setShowOtherType(value === "Others");
   };
 
-  const fetchLocationSuggestions = async (query) => {
-    if (!query || query.length < 2) {
-      setLocationOptions([]);
-      return;
-    }
+  const handleLocationSearch = async (value) => {
+    if (!value || value.length < 3) return;
     setSearching(true);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/properties/suggestions`, {
-        params: { query }
-      });
-      
-      const internalSuggestions = response.data
-        .filter(s => s.type === "City" || s.type === "Locality" || s.type === "Property")
-        .map(s => ({
-          value: s.mainText,
-          label: (
-            <div className="flex justify-between items-center py-1">
-              <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">{s.mainText}</span>
-                <span className="text-xs text-slate-400">{s.subText}</span>
-              </div>
-              <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                {s.type}
-              </span>
-            </div>
-          ),
-          data: s
-        }));
-
-      setLocationOptions(internalSuggestions);
-    } catch (error) {
-      console.error("Error fetching suggestions:", error);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const handleLocationSelect = async (value, option) => {
-    const { data } = option;
-    setSearching(true);
-    try {
-      // Use OSM to get coordinates and full address for verification
       const response = await axios.get(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          data.mainText + " " + (data.subText || "")
+          value
         )}&limit=1&addressdetails=1`
       );
-      
       if (response.data && response.data.length > 0) {
         const { lat, lon, display_name, address } = response.data[0];
-        const locality = address.suburb || address.town || address.village || address.hamlet || address.city_district || data.mainText;
+        const locality = address.suburb || address.town || address.village || address.hamlet || address.city_district || "";
         
         form.setFieldsValue({
           lat: parseFloat(lat),
@@ -177,23 +135,12 @@ const PostRequirementPage = () => {
           locationText: display_name,
           locality: locality,
         });
-        setSearchValue(data.mainText);
       } else {
-        // Fallback if OSM fails but we have suggestion data
-        form.setFieldsValue({
-          locationText: data.mainText + (data.subText ? `, ${data.subText}` : ""),
-          locality: data.mainText,
-        });
-        setSearchValue(data.mainText);
+        message.warning("Location not found. Please try a different search term.");
       }
     } catch (error) {
       console.error("Geocoding error:", error);
-      // Fallback
-      form.setFieldsValue({
-        locationText: data.mainText + (data.subText ? `, ${data.subText}` : ""),
-        locality: data.mainText,
-      });
-      setSearchValue(data.mainText);
+      message.error("Error searching location.");
     } finally {
       setSearching(false);
     }
@@ -342,26 +289,13 @@ const PostRequirementPage = () => {
                     className="mb-0"
                   >
                     <div className="flex flex-col md:flex-row gap-3">
-                      <AutoComplete
-                        options={locationOptions}
-                        onSelect={handleLocationSelect}
-                        onSearch={fetchLocationSuggestions}
-                        value={searchValue}
-                        onChange={(val) => {
-                          setSearchValue(val);
-                          // Clear verified location if user starts typing a new one
-                          if (form.getFieldValue("locationText")) {
-                            form.setFieldsValue({ locationText: undefined });
-                          }
-                        }}
+                      <Input.Search
+                        placeholder="Type to search location (e.g. Kottakuppam)"
+                        onSearch={handleLocationSearch}
+                        loading={searching}
+                        enterButton={<Search size={18} />}
                         className="w-full"
-                      >
-                        <Input
-                          placeholder="Type to search location (e.g. Kottakuppam)"
-                          prefix={searching ? <div className="inline-block w-4 h-4 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mr-2" /> : <Search size={18} className="text-slate-400" />}
-                          className="h-12"
-                        />
-                      </AutoComplete>
+                      />
                       <Form.Item
                         name="locationText"
                         noStyle
