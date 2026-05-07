@@ -107,14 +107,42 @@ exports.getRequirements = async (req, res) => {
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(
       requirements.map(async (reqDoc) => {
-        // Find if any record was accepted
-        const acceptedLead = await SharedLead.findOne({ 
+        const acceptedLeads = await SharedLead.find({ 
           requirement: reqDoc._id, 
-          status: "accepted" 
+          $or: [
+            { status: "accepted" },
+            { acceptedByMatchedSellers: { $exists: true, $not: { $size: 0 } } }
+          ]
         }).populate({
           path: "acceptedBy",
           select: "name email phone businessType",
           populate: { path: "businessType", select: "name" }
+        }).populate({
+          path: "sellerStatuses.seller",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
+
+        // Flatten all sellers across all shared leads for this requirement
+        const allSellersWithStatus = [];
+        acceptedLeads.forEach(sl => {
+          // Add sellers from sellerStatuses (New System)
+          sl.sellerStatuses.forEach(ss => {
+            if (ss.seller) {
+              allSellersWithStatus.push({
+                ...ss.seller.toObject(),
+                leadStatus: ss.status
+              });
+            }
+          });
+
+          // Fallback for Legacy Data: If status is accepted but sellerStatuses is empty, add acceptedBy
+          if (sl.status === "accepted" && sl.acceptedBy && sl.sellerStatuses.length === 0) {
+            allSellersWithStatus.push({
+              ...sl.acceptedBy.toObject(),
+              leadStatus: "not yet connected"
+            });
+          }
         });
 
         // Get the highest priority match it was shared with (to show in table)
@@ -123,7 +151,8 @@ exports.getRequirements = async (req, res) => {
 
         return {
           ...reqDoc.toObject(),
-          acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
+          acceptedBy: allSellersWithStatus.length > 0 ? allSellersWithStatus[0] : null, // Fallback for backward compatibility
+          allSellers: allSellersWithStatus,
           isShared: !!anySharedLead,
           matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
           sharingStatus: reqDoc.sharingStatus,

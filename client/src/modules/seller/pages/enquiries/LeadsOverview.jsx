@@ -12,7 +12,8 @@ import {
   Tooltip,
   Divider,
   Badge,
-  Tabs
+  Tabs,
+  Select
 } from "antd";
 import { 
   ClipboardList, 
@@ -30,11 +31,12 @@ import {
   MessageSquare
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
-import api, { getMySharedLeads, acceptSharedLead } from "@/services/api";
+import api, { getMySharedLeads, acceptSharedLead, rejectSharedLead, updateLeadStatus } from "@/services/api";
 import { useSocket } from "@/context/SocketContext";
 import Loader from "@/components/Common/Loader";
 
 const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 
 const CountdownTimer = ({ startTime, timerInMinutes, onExpire }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -99,7 +101,7 @@ const getStatusTag = (lead) => {
 };
 
 // Extracted LeadCard for better performance and debugging
-const LeadCard = ({ lead, onAccept, acceptingId, onExpire }) => (
+const LeadCard = ({ lead, onAccept, onReject, onStatusChange, acceptingId, onExpire }) => (
   <Card 
     className="h-full rounded-[14px] shadow-[0_6px_18px_rgba(0,0,0,0.05)] border border-[#eee] overflow-hidden transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] bg-white flex flex-col"
     styles={{ body: { padding: 0, flex: 1, display: 'flex', flexDirection: 'column' } }}
@@ -224,7 +226,6 @@ const LeadCard = ({ lead, onAccept, acceptingId, onExpire }) => (
         </div>
       )}
 
-      {/* 6. CTA Button */}
       <div className="mt-auto pt-[14px]">
         {lead.status === 'pending' && !lead.showFullDetails && (
           <Button 
@@ -240,24 +241,78 @@ const LeadCard = ({ lead, onAccept, acceptingId, onExpire }) => (
           </Button>
         )}
 
+        {lead.showFullDetails && !lead.isAcceptedByMe && lead.status === 'pending' && (
+           <div className="flex gap-3">
+             <Button 
+               type="primary" 
+               className="flex-1 bg-emerald-600 hover:bg-emerald-700 border-none rounded-xl h-[44px] font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+               disabled={acceptingId === lead._id}
+               loading={acceptingId === lead._id}
+               onClick={() => onAccept(lead._id)}
+               icon={<CheckCircle2 size={16} />}
+             >
+               Accept
+             </Button>
+             <Button 
+               className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 border-none rounded-xl h-[44px] font-bold text-sm transition-all flex items-center justify-center gap-2"
+               disabled={acceptingId === lead._id}
+               onClick={() => onReject(lead._id)}
+               icon={<XCircle size={16} />}
+             >
+               Reject
+             </Button>
+           </div>
+        )}
+
+        {lead.isAcceptedByMe && (
+           <div className="flex flex-col gap-3">
+             <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+               <div className="flex justify-between items-center mb-2">
+                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Progress</span>
+                 <Tag 
+                   color={
+                     lead.leadStatus === 'done' ? 'success' : 
+                     lead.leadStatus === 'holded' ? 'error' : 
+                     lead.leadStatus === 'in process' ? 'processing' : 'default'
+                   }
+                   className="m-0 text-[9px] font-black uppercase rounded-md border-none"
+                 >
+                   {lead.leadStatus || 'not yet connected'}
+                 </Tag>
+               </div>
+               
+               <Select
+                 value={lead.leadStatus || 'not yet connected'}
+                 onChange={(val) => onStatusChange(lead._id, val)}
+                 className="w-full custom-status-select"
+                 size="middle"
+                 popupClassName="status-dropdown"
+               >
+                 <Option value="not yet connected">Not yet connected</Option>
+                 <Option value="in process">In Process</Option>
+                 <Option value="holded">Holded</Option>
+                 <Option value="done">Done</Option>
+               </Select>
+             </div>
+
+             <Button 
+              block 
+              className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-100 rounded-xl h-[48px] font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+              onClick={() => window.location.href = `tel:${lead.requirement.phoneNumber}`}
+              icon={<Phone size={20} className="animate-pulse" />}
+            >
+              Call Potential Client
+            </Button>
+          </div>
+        )}
+
         {(lead.status === 'accepted' || lead.status === 'closed' || lead.status === 'Deal Closed (Plan Level)') && !lead.isAcceptedByMe && (
           <Button 
             block 
-            className="bg-[#f5f5f5] border-none rounded-[10px] h-[42px] font-medium text-slate-400 cursor-not-allowed"
+            className="bg-[#f5f5f5] border-none rounded-xl h-[44px] font-medium text-slate-400 cursor-not-allowed"
             disabled
           >
             {lead.status === 'Deal Closed (Plan Level)' ? 'Closed (Plan Level)' : 'Deal Closed'}
-          </Button>
-        )}
-        
-        {lead.showFullDetails && (
-           <Button 
-            block 
-            className="bg-[#f5f5f5] text-[#222] hover:bg-emerald-50 hover:text-emerald-700 border-none rounded-[10px] h-[42px] font-semibold flex items-center justify-center gap-2 transition-all"
-            onClick={() => window.location.href = `tel:${lead.requirement.phoneNumber}`}
-            icon={<Phone size={16} />}
-          >
-            Call Potential Client
           </Button>
         )}
       </div>
@@ -343,6 +398,30 @@ const LeadsOverview = () => {
       }
     } finally {
       setAcceptingId(null);
+    }
+  };
+
+  const handleRejectLead = async (leadId) => {
+    setAcceptingId(leadId);
+    try {
+      const response = await rejectSharedLead(leadId);
+      message.success(response.data.message);
+      fetchLeads();
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "Failed to reject lead";
+      message.error(errorMsg);
+    } finally {
+      setAcceptingId(null);
+    }
+  };
+
+  const handleStatusUpdate = async (leadId, newStatus) => {
+    try {
+      await updateLeadStatus(leadId, newStatus);
+      message.success("Lead progress updated");
+      fetchLeads();
+    } catch (error) {
+      message.error("Failed to update lead progress");
     }
   };
 
@@ -455,6 +534,8 @@ const LeadsOverview = () => {
                         key={lead._id}
                         lead={lead} 
                         onAccept={handleAcceptLead} 
+                        onReject={handleRejectLead}
+                        onStatusChange={handleStatusUpdate}
                         acceptingId={acceptingId} 
                         onExpire={fetchLeads}
                       />
@@ -497,6 +578,8 @@ const LeadsOverview = () => {
                         key={lead._id}
                         lead={lead} 
                         onAccept={handleAcceptLead} 
+                        onReject={handleRejectLead}
+                        onStatusChange={handleStatusUpdate}
                         acceptingId={acceptingId} 
                         onExpire={fetchLeads}
                       />

@@ -12,5 +12,7 @@ router.get("/my-leads", protect, leadController.getSharedLeads);
 // @desc    Accept a shared lead
 // @access  Private (Seller/Authenticated)
 router.post("/:id/accept", protect, leadController.acceptLead);
+router.post("/:id/reject", protect, leadController.rejectLead);
+router.patch("/:id/status", protect, leadController.updateLeadStatus);
 
 module.exports = router;

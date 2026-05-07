@@ -75,7 +75,11 @@ exports.getSharedLeads = async (req, res) => {
     const fullLeads = await Promise.all(filteredLeads.map(async (lead) => {
       if (!lead.requirement) return null; // Skip if requirement is missing
 
-      const isAcceptedByMe = lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString();
+      const isAcceptedByMe = (lead.acceptedBy && lead.acceptedBy._id.toString() === userId.toString()) || 
+                             (lead.acceptedByMatchedSellers && lead.acceptedByMatchedSellers.includes(userId));
+      
+      const isRejectedByMe = lead.rejectedByMatchedSellers && lead.rejectedByMatchedSellers.includes(userId);
+
       const leadDate = new Date(lead.createdAt);
       
       // Visibility Logic:
@@ -107,9 +111,11 @@ exports.getSharedLeads = async (req, res) => {
       return {
         _id: lead._id,
         requirement: reqDetails,
-        status: lead.status,
-        acceptedBy: lead.acceptedBy ? lead.acceptedBy.name : null,
+        status: isRejectedByMe ? "closed" : (isAcceptedByMe ? "accepted" : lead.status),
+        leadStatus: isAcceptedByMe ? (lead.sellerStatuses?.find(s => s.seller.toString() === userId.toString())?.status || "not yet connected") : null,
+        acceptedBy: lead.acceptedBy ? lead.acceptedBy.name : (isAcceptedByMe ? currentUser.name : null),
         isAcceptedByMe,
+        isRejectedByMe,
         matchType: lead.matchType,
         matchPriority: lead.matchPriority,
         showFullDetails,
@@ -145,6 +151,26 @@ exports.acceptLead = async (req, res) => {
       return res.status(404).json({ success: false, message: "Lead not found." });
     }
 
+    // 1. Handle Exact Match (Matched to Builder) immediately
+    // No need to check subscription or limits for these as they are already shared/matched
+    if (lead.matchType === "exact") {
+      const updatedLead = await SharedLead.findByIdAndUpdate(
+        id,
+        { 
+          $addToSet: { acceptedByMatchedSellers: userId },
+          $push: { sellerStatuses: { seller: userId, status: "not yet connected" } }
+        },
+        { new: true }
+      ).populate("requirement");
+
+      return res.status(200).json({
+        success: true,
+        data: updatedLead,
+        message: "Lead accepted successfully! It is now in your accepted leads.",
+      });
+    }
+
+    // 2. For regular leads, verify seller has an active subscription
     const activeSubscription = await Subscription.findOne({
       user: userId,
       plan: lead.plan._id,
@@ -181,12 +207,13 @@ exports.acceptLead = async (req, res) => {
       });
     }
 
-    // 2. Atomically accept the lead
+    // 3. Atomically accept the regular (unmatched) lead
     const updatedLead = await SharedLead.findOneAndUpdate(
       { _id: id, status: "pending" },
       { 
         status: "accepted", 
-        acceptedBy: userId 
+        acceptedBy: userId,
+        $push: { sellerStatuses: { seller: userId, status: "not yet connected" } }
       },
       { new: true }
     ).populate("requirement");
@@ -201,16 +228,15 @@ exports.acceptLead = async (req, res) => {
       });
     }
 
-    // 3. Increment usage for all types of accepted leads
+    // 4. Increment usage for regular leads (Exact matches are charged when shared)
     await Subscription.findByIdAndUpdate(activeSubscription._id, { $inc: { leadsUsed: 1 } });
 
-    // 3. Update the parent Requirement status to "Closed"
+    // 5. Update the parent Requirement status to "Closed"
     if (updatedLead.requirement) {
       await Requirement.findByIdAndUpdate(updatedLead.requirement._id, { status: "Closed" });
     }
 
-    // 4. Close all other platforms' shared leads for this same requirement
-    // This ensures that if the lead was shared with multiple plans, it's closed for everyone
+    // 6. Close all other platforms' shared leads for this same requirement
     await SharedLead.updateMany(
       { 
         requirement: updatedLead.requirement._id, 
@@ -223,10 +249,9 @@ exports.acceptLead = async (req, res) => {
       }
     );
 
-    // 4. Emit Socket.io events to notify everyone who saw this lead
+    // 7. Emit Socket.io events
     const io = req.app.get("socketio");
     if (io) {
-      // Find all SharedLead records for this requirement to get all seller IDs
       const allSharedLeads = await SharedLead.find({ 
         requirement: updatedLead.requirement._id 
       }).select("sharedWith");
@@ -236,19 +261,17 @@ exports.acceptLead = async (req, res) => {
         sl.sharedWith.forEach(sid => allSellersToNotify.add(sid.toString()));
       });
 
-      // Notify everyone except the current user
       allSellersToNotify.forEach(sellerId => {
         if (sellerId !== userId.toString()) {
           io.to(`seller-${sellerId}`).emit("lead-accepted-by-other", {
             requirementId: updatedLead.requirement._id,
-            leadId: id, // Original accepted lead ID
+            leadId: id,
             status: "closed",
             acceptedBy: req.user.name || "Another Seller"
           });
         }
       });
 
-      // Notify Admin to refresh the list
       io.emit("admin-lead-updated", { requirementId: updatedLead.requirement._id });
     }
 
@@ -262,6 +285,98 @@ exports.acceptLead = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server Error: Could not accept lead.",
+    });
+  }
+};
+
+// Reject a shared lead
+exports.rejectLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const lead = await SharedLead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ success: false, message: "Lead not found." });
+    }
+
+    if (lead.matchType === "exact") {
+      // Exact match rejection is per-seller
+      const updatedLead = await SharedLead.findByIdAndUpdate(
+        id,
+        { $addToSet: { rejectedByMatchedSellers: userId } },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        success: true,
+        data: updatedLead,
+        message: "Lead moved to history.",
+      });
+    }
+
+    // For non-exact matches, we could implement a general rejection, 
+    // but the request was specifically for matched leads.
+    // For now, let's just use the same per-seller rejection array for consistency
+    // without affecting the global status.
+    const updatedLead = await SharedLead.findByIdAndUpdate(
+        id,
+        { $addToSet: { rejectedByMatchedSellers: userId } },
+        { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedLead,
+      message: "Lead rejected and moved to history.",
+    });
+  } catch (error) {
+    console.error("Error rejecting lead:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error: Could not reject lead.",
+    });
+  }
+};
+
+// Update lead status (for accepted leads)
+exports.updateLeadStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const userId = req.user.id;
+
+    if (!["not yet connected", "in process", "holded", "done"].includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value." });
+    }
+
+    const lead = await SharedLead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ success: false, message: "Lead not found." });
+    }
+
+    // Update or add the status for this seller
+    const sellerStatusIndex = lead.sellerStatuses.findIndex(s => s.seller.toString() === userId.toString());
+    
+    if (sellerStatusIndex !== -1) {
+      lead.sellerStatuses[sellerStatusIndex].status = status;
+    } else {
+      // If for some reason they accepted but didn't have a status record yet
+      lead.sellerStatuses.push({ seller: userId, status });
+    }
+
+    await lead.save();
+
+    res.status(200).json({
+      success: true,
+      data: lead,
+      message: "Lead status updated.",
+    });
+  } catch (error) {
+    console.error("Error updating lead status:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error: Could not update status.",
     });
   }
 };
