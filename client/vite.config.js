@@ -11,14 +11,22 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
+
+      workbox: {
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
+      },
+
       devOptions: {
         enabled: true,
       },
+
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
+
       manifest: {
         name: "Namma Pondy Properties",
         short_name: "NammaPondy",
-        description: "Pondicherry's leading real estate platform. Buy, sell, and rent verified properties.",
+        description:
+          "Pondicherry's leading real estate platform. Buy, sell, and rent verified properties.",
         theme_color: "#003366",
         background_color: "#ffffff",
         display: "standalone",
@@ -42,7 +50,7 @@ export default defineConfig({
           },
         ],
       },
-    }),
+    })
   ],
   resolve: {
     alias: {
