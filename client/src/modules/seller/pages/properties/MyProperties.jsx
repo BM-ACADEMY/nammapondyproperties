@@ -1063,8 +1063,9 @@ const MyProperties = () => {
                               Approval
                             </span>
                             <span className="text-lg font-bold text-gray-800">
-                              {selectedProperty.basicInfo?.approvalType ||
-                                "N/A"}
+                              {Array.isArray(selectedProperty.basicInfo?.approvalType)
+                                ? selectedProperty.basicInfo.approvalType.join(", ")
+                                : selectedProperty.basicInfo?.approvalType || "N/A"}
                             </span>
                           </div>
                           <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex flex-col items-center justify-center text-center">

@@ -1137,6 +1137,7 @@ const StandardPropertyDetailsUI = ({
                       <>
                         <Swiper
                           modules={[Navigation, Pagination, Autoplay]}
+                          autoHeight={true}
                           navigation={{
                             nextEl: ".fp-next",
                             prevEl: ".fp-prev",
@@ -1162,7 +1163,7 @@ const StandardPropertyDetailsUI = ({
                                 <img
                                   src={getImageUrl(fp)}
                                   alt={`Floor Plan ${i + 1}`}
-                                  className="w-full h-auto rounded-2xl shadow-sm object-contain max-h-[600px]"
+                                  className="mx-auto max-w-full h-auto rounded-2xl shadow-sm block"
                                 />
                                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center rounded-2xl">
                                   <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">

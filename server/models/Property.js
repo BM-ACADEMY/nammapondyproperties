@@ -35,7 +35,7 @@ const propertySchema = new mongoose.Schema(
         required: true
       },
 
-      approvalType: String
+      approvalType: [String]
     },
     
 

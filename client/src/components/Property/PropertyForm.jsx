@@ -111,7 +111,13 @@ const PropertyForm = ({
       category: data?.basicInfo?.category || "Sell/Buy",
       usageType: data?.basicInfo?.usageType || "Residential",
       propertyType: data?.basicInfo?.propertyType || data?.property_type || "",
-      approvalType: data?.basicInfo?.approvalType || data?.approval || "",
+      approvalType: Array.isArray(data?.basicInfo?.approvalType)
+        ? data.basicInfo.approvalType
+        : data?.basicInfo?.approvalType
+          ? [data.basicInfo.approvalType]
+          : data?.approval
+            ? [data.approval]
+            : [],
     },
     pricing: {
       sell: {
@@ -971,17 +977,33 @@ const PropertyForm = ({
                   <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-tight">
                     Approval Type
                   </label>
-                  <select
-                    {...register("basicInfo.approvalType")}
-                    className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"
-                  >
-                    <option value="">Select Approval</option>
-                    {approvalTypes.map((type) => (
-                      <option key={type.name || type} value={type.name || type}>
-                        {type.name || type}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex flex-wrap gap-3">
+                    {approvalTypes.map((type) => {
+                      const typeName = type.name || type;
+                      const selectedApprovals = watch("basicInfo.approvalType") || [];
+                      const isChecked = selectedApprovals.includes(typeName);
+                      return (
+                        <label
+                          key={typeName}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 ${
+                            isChecked
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100"
+                              : "bg-white border-gray-100 text-gray-600 hover:border-blue-200"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            value={typeName}
+                            {...register("basicInfo.approvalType")}
+                            className="hidden"
+                          />
+                          <span className="text-xs font-bold uppercase tracking-wider">
+                            {typeName}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
                 {isAdmin && (
                   <div>
