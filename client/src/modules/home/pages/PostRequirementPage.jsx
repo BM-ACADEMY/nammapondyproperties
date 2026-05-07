@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Form, Input, Select, InputNumber, Button, message } from "antd";
+import { Form, Input, Select, InputNumber, Button, message, AutoComplete } from "antd";
 import { useNavigate, Link } from "react-router-dom";
 import { postRequirement } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
@@ -17,6 +17,7 @@ import {
   ChevronRight,
   ShieldCheck,
   Search,
+  Home,
 } from "lucide-react";
 import axios from "axios";
 
@@ -54,6 +55,7 @@ const PostRequirementPage = () => {
   const [searching, setSearching] = useState(false);
   const [minBudgetVal, setMinBudgetVal] = useState(null);
   const [maxBudgetVal, setMaxBudgetVal] = useState(null);
+  const [options, setOptions] = useState([]);
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const { propertyTypes } = useNav();
@@ -100,6 +102,9 @@ const PostRequirementPage = () => {
         "Requirement posted successfully! Our team will contact you soon."
       );
       form.resetFields();
+      setMinBudgetVal(null);
+      setMaxBudgetVal(null);
+      setOptions([]);
       setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       console.error("Error posting requirement:", error);
@@ -117,30 +122,32 @@ const PostRequirementPage = () => {
   };
 
   const handleLocationSearch = async (value) => {
-    if (!value || value.length < 3) return;
+    if (!value || value.length < 2) {
+      setOptions([]);
+      return;
+    }
     setSearching(true);
     try {
-      const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          value
-        )}&limit=1&addressdetails=1`
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/properties/suggestions?query=${value}`
       );
-      if (response.data && response.data.length > 0) {
-        const { lat, lon, display_name, address } = response.data[0];
-        const locality = address.suburb || address.town || address.village || address.hamlet || address.city_district || "";
-        
-        form.setFieldsValue({
-          lat: parseFloat(lat),
-          lng: parseFloat(lon),
-          locationText: display_name,
-          locality: locality,
-        });
-      } else {
-        message.warning("Location not found. Please try a different search term.");
-      }
-    } catch (error) {
-      console.error("Geocoding error:", error);
-      message.error("Error searching location.");
+      // Filter out 'Property' type suggestions to only show City, Locality, etc.
+      const filtered = res.data
+        .filter((item) => item.type !== "Property")
+        .map((item) => ({
+          value: item.mainText,
+          label: (
+            <div className="flex justify-between items-center">
+              <span>{item.mainText}</span>
+              <span className="text-[10px] text-gray-400 uppercase font-bold">
+                {item.type}
+              </span>
+            </div>
+          ),
+        }));
+      setOptions(filtered);
+    } catch (err) {
+      console.error("Location search error:", err);
     } finally {
       setSearching(false);
     }
@@ -284,39 +291,24 @@ const PostRequirementPage = () => {
 
                 <div className="lg:col-span-2 mb-4">
                   <Form.Item
+                    name="preferredLocation"
                     label={<span className="font-semibold text-slate-700">Preferred Location</span>}
-                    required
-                    className="mb-0"
+                    rules={[{ required: true, message: "Please enter or select a location" }]}
                   >
-                    <div className="flex flex-col md:flex-row gap-3">
-                      <Input.Search
-                        placeholder="Type to search location (e.g. Kottakuppam)"
-                        onSearch={handleLocationSearch}
-                        loading={searching}
-                        enterButton={<Search size={18} />}
-                        className="w-full"
+                    <AutoComplete
+                      options={options}
+                      onSearch={handleLocationSearch}
+                    >
+                      <Input
+                        placeholder="Type city, state, or locality (e.g. Kottakuppam)"
+                        prefix={<MapPin size={18} className="text-blue-500" />}
+                        suffix={searching ? <Search className="animate-pulse text-gray-400" size={16} /> : null}
                       />
-                      <Form.Item
-                        name="locationText"
-                        noStyle
-                        rules={[{ required: true, message: "Please search and select a location" }]}
-                      >
-                        <Input 
-                          placeholder="Verified location will appear here..." 
-                          prefix={<MapPin size={18} className="text-blue-500" />}
-                          readOnly
-                          className="bg-blue-50/50 border-blue-100 font-medium"
-                        />
-                      </Form.Item>
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-2 italic">
-                      Note: You must search and select a location from the search bar to ensure accurate matching.
-                    </p>
+                    </AutoComplete>
                   </Form.Item>
-
-                  {/* Hidden inputs for coordinates */}
-                  <Form.Item name="lat" hidden><Input /></Form.Item>
-                  <Form.Item name="lng" hidden><Input /></Form.Item>
+                  <p className="text-[11px] text-slate-400 mt-0 italic">
+                    Note: Your requirement will be matched based on the location entered here.
+                  </p>
                 </div>
 
                 <Form.Item
