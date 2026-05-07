@@ -18,14 +18,14 @@ import {
 } from "antd";
 import { getImageUrl } from "@/utils/imageUrl";
 import { Hash, UserPlus, UserCircle, ShieldCheck as ShieldIcon } from "lucide-react";
-import { 
-  Trash2, 
-  AlertCircle, 
-  MoreVertical, 
-  CheckCircle, 
-  Users, 
-  UserCheck, 
-  UserX, 
+import {
+  Trash2,
+  AlertCircle,
+  MoreVertical,
+  CheckCircle,
+  Users,
+  UserCheck,
+  UserX,
   ShieldCheck,
   ShieldAlert,
   UserCog, ChevronDown
@@ -164,8 +164,8 @@ const UserList = () => {
       key: "name",
       render: (text, record) => (
         <div className="flex items-center gap-3">
-          <Avatar 
-            src={getImageUrl(record.profile_image)} 
+          <Avatar
+            src={getImageUrl(record.profile_image)}
             size={40}
             className="bg-blue-100 text-blue-600 border border-blue-200"
           >
@@ -247,7 +247,7 @@ const UserList = () => {
                 setIsAssignModalOpen(true);
               }}>
                 <UserCog size={14} className="text-indigo-600" />
-                <span>Assign Administrator</span>
+                <span>Assign to Administrator</span>
               </div>
             ),
           },
@@ -342,7 +342,7 @@ const UserList = () => {
                 }}
               >
                 <ShieldAlert size={14} />
-                <span>Make Admin</span>
+                <span>Make to SubAdmin</span>
               </div>
             ),
           },
@@ -394,18 +394,18 @@ const UserList = () => {
                 }}
                 trigger={["click"]}
               >
-                <Button 
-                  type="primary" 
-                  size="small" 
+                <Button
+                  type="primary"
+                  size="small"
                   className="bg-indigo-600 flex items-center gap-2"
                   loading={assigningLoading}
                 >
                   Assign to Admin <ChevronDown size={14} />
                 </Button>
               </Dropdown>
-              <Button 
-                type="text" 
-                size="small" 
+              <Button
+                type="text"
+                size="small"
                 onClick={() => setSelectedRowKeys([])}
               >
                 Cancel
@@ -480,7 +480,7 @@ const UserList = () => {
             spinning: loading,
             indicator: <Loader variant="panel" />
           }}
-          pagination={{ 
+          pagination={{
             pageSize: 10,
             showSizeChanger: false,
             className: "px-4"
@@ -504,12 +504,12 @@ const UserList = () => {
       >
         <div className="py-4">
           <Text className="text-gray-500 block mb-4">
-            {isBulkMode 
+            {isBulkMode
               ? `Assigning ${selectedRowKeys.length} selected users to an administrator.`
               : <>Assign <span className="font-bold text-gray-800">{selectedUser?.name}</span> to a sub-admin for portfolio maintenance.</>
             }
           </Text>
-          
+
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Select Administrator</label>

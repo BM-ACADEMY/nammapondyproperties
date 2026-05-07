@@ -85,10 +85,15 @@ const ViewCountManager = () => {
                         size={48}
                         src={getImageUrl(record.media?.featuredImage || record.media?.images?.[0])}
                         icon={<Building size={20} />}
+                        className="flex-shrink-0"
                     />
-                    <div>
-                        <Text strong className="block">{record.basicInfo?.title || "Untitled"}</Text>
-                        <Text type="secondary" size="small">{record.location?.city || "N/A"}</Text>
+                    <div style={{ maxWidth: 250 }} className="flex flex-col">
+                        <Text strong ellipsis={{ tooltip: record.basicInfo?.title }}>
+                            {record.basicInfo?.title || "Untitled"}
+                        </Text>
+                        <Text type="secondary" size="small" className="text-xs">
+                            {record.location?.city || "N/A"}
+                        </Text>
                     </div>
                 </Space>
             ),
@@ -105,11 +110,13 @@ const ViewCountManager = () => {
             dataIndex: ["seller", "name"],
             key: "seller",
             render: (name) => name || "Admin",
+            ellipsis: true,
         },
         {
             title: "Current Views",
             dataIndex: "view_count",
             key: "view_count",
+            width: 150,
             sorter: (a, b) => (a.view_count || 0) - (b.view_count || 0),
             render: (count) => (
                 <Space>
@@ -121,6 +128,8 @@ const ViewCountManager = () => {
         {
             title: "Actions",
             key: "actions",
+            width: 80,
+            fixed: 'right',
             render: (_, record) => (
                 <Dropdown
                     menu={{
@@ -158,15 +167,15 @@ const ViewCountManager = () => {
                 <Text type="secondary">Manage and update the view counts for all properties.</Text>
             </div>
 
-            <div className="mb-6 flex justify-between items-center">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <Input
                     prefix={<Search size={18} className="text-gray-400" />}
                     placeholder="Search properties by title or location..."
                     onChange={(e) => setSearchText(e.target.value)}
-                    className="max-w-md"
+                    className="w-full md:max-w-md"
                     size="large"
                 />
-                <Button onClick={fetchProperties} loading={loading}>Refresh Data</Button>
+                <Button onClick={fetchProperties} loading={loading} className="w-full md:w-auto">Refresh Data</Button>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden relative min-h-[400px]">
@@ -174,6 +183,7 @@ const ViewCountManager = () => {
                     columns={columns}
                     dataSource={properties}
                     rowKey="_id"
+                    scroll={{ x: 800 }}
                     loading={{
                         spinning: loading,
                         indicator: <Loader variant="panel" />
@@ -220,6 +230,11 @@ const ViewCountManager = () => {
                             value={newViewCount}
                             onChange={setNewViewCount}
                             placeholder="Enter new view count"
+                            onKeyPress={(e) => {
+                                if (!/[0-9]/.test(e.key)) {
+                                    e.preventDefault();
+                                }
+                            }}
                         />
                         <Text type="secondary" className="text-xs mt-2 block">
                             Set the total number of views displayed for this property.

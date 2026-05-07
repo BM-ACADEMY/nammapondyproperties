@@ -41,7 +41,7 @@ const AddProperty = () => {
       if (reason === "unverified") {
         const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
         navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
-      } else if (reason === "limit_reached") {
+      } else if (reason === "limit_reached" || reason === "expired") {
         navigate(redirectPath || "/seller/upgrade-plan");
       }
       return;
@@ -132,9 +132,9 @@ const AddProperty = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-full">
+    <div className="pt-10 p-4 md:pt-12 md:p-8 bg-gray-50 min-h-full">
       <div className="max-w-8xl mx-auto">
-        <div className="mb-2"></div>        <PropertyForm
+        <div className="mb-6"></div>        <PropertyForm
           onSubmit={onSubmit}
           loading={loading}
           isSeller={true}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Row, Col, Form, Input, Button, Checkbox, ConfigProvider } from "antd";
 import {
   HomeOutlined,
@@ -14,8 +14,10 @@ const { TextArea } = Input;
 
 export default function ContactHeroLayout() {
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
+    setLoading(true);
     try {
       const response = await api.post('/forms/contact', values);
       if (response.data.success) {
@@ -25,6 +27,8 @@ export default function ContactHeroLayout() {
     } catch (error) {
       console.error('Error submitting contact message:', error);
       toast.error(error.response?.data?.message || 'Failed to submit message. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -176,11 +180,23 @@ export default function ContactHeroLayout() {
 
                     <Form.Item
                       name="phone"
-                      rules={[{ required: true, message: "Required" }]}
+                      rules={[
+                        { required: true, message: "Required" },
+                        {
+                          pattern: /^[0-9]{10}$/,
+                          message: "Please enter a valid 10-digit phone number",
+                        },
+                      ]}
                       className="mb-4"
                     >
                       <Input
                         placeholder="Phone Number"
+                        maxLength={10}
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         className="font-medium py-3 border-transparent hover:bg-white focus:bg-white transition-all"
                       />
                     </Form.Item>
@@ -232,9 +248,11 @@ export default function ContactHeroLayout() {
                       type="primary"
                       htmlType="submit"
                       block
+                      loading={loading}
+                      disabled={loading}
                       className="h-14 !bg-[#D4AF37] hover:!bg-[#B8860B] !text-[#050B14] font-medium uppercase tracking-widest transition-all shadow-lg hover:shadow-[#D4AF37]/40 border-none"
                     >
-                      Submit Enquiry
+                      {loading ? "Submitting..." : "Submit Enquiry"}
                     </Button>
                   </Form>
                 </div>

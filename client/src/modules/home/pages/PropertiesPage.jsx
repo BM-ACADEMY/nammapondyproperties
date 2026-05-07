@@ -19,6 +19,7 @@ const PropertiesPage = () => {
   const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page")) || 1);
   const [loading, setLoading] = useState(true);
   const { user, setLoginModalOpen } = useAuth();
+  const [pendingWhatsApp, setPendingWhatsApp] = useState(null);
   const navigate = useNavigate();
   const loc = useLocation();
 
@@ -124,7 +125,7 @@ const PropertiesPage = () => {
   };
 
   const handleWhatsAppClick = (e, property) => {
-    e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!property || !property.seller) {
       toast.error("Seller information missing");
       return;
@@ -137,9 +138,18 @@ const PropertiesPage = () => {
       } else {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
+    } else {
+      setPendingWhatsApp(property);
       setLoginModalOpen(true);
     }
   };
+
+  useEffect(() => {
+    if (user && pendingWhatsApp) {
+      handleWhatsAppClick(null, pendingWhatsApp);
+      setPendingWhatsApp(null);
+    }
+  }, [user, pendingWhatsApp]);
 
   const submitEnquiry = async (property, name, email, phone) => {
     const sellerPhone = property.seller.phone || "919000000000";

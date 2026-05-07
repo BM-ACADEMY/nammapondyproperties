@@ -106,6 +106,77 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
+exports.requestPhoneUpdate = async (req, res) => {
+  const { newPhone } = req.body;
+  const userId = req.user.id;
+
+  if (!newPhone || newPhone.length !== 10) {
+    return res.status(400).json({ error: "Please enter a valid 10-digit phone number" });
+  }
+
+  try {
+    const existingUser = await User.findOne({ phone: newPhone });
+    if (existingUser) {
+      return res.status(400).json({ error: "Phone number already in use by another account" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+    const user = await User.findById(userId);
+    user.otp = otp;
+    user.otpExpires = otpExpires;
+    user.pendingPhone = newPhone;
+    await user.save();
+
+    // Send OTP via BulkSMSPlans API
+    const formattedPhone = `91${newPhone}`;
+    const smsMessage = `Your OTP for phone number update on ABM GROUPS is ${otp}. Valid for 10 minutes.`;
+    const smsUrl = process.env.BULKSMS_API_URL
+      .replace("{{phone}}", formattedPhone)
+      .replace("{{message}}", encodeURIComponent(smsMessage));
+
+    try {
+      await axios.get(smsUrl);
+    } catch (smsError) {
+      console.error("SMS Gateway Error:", smsError.message);
+    }
+
+    res.json({ success: true, message: "OTP sent to new phone number" });
+  } catch (error) {
+    console.error("Phone Update Request Error:", error);
+    res.status(500).json({ error: "Failed to request phone update" });
+  }
+};
+
+exports.verifyPhoneUpdate = async (req, res) => {
+  const { otp } = req.body;
+  const userId = req.user.id;
+
+  try {
+    const user = await User.findOne({
+      _id: userId,
+      otp,
+      otpExpires: { $gt: Date.now() },
+    });
+
+    if (!user || !user.pendingPhone) {
+      return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
+
+    user.phone = user.pendingPhone;
+    user.pendingPhone = undefined;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "Phone number updated successfully", phone: user.phone });
+  } catch (error) {
+    console.error("Phone Update Verify Error:", error);
+    res.status(500).json({ error: "Verification failed" });
+  }
+};
+
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).populate([
@@ -202,7 +273,25 @@ exports.getUsers = async (req, res) => {
       .populate(["role_id", "businessType", "builderProfile"])
       .populate("createdBy", "name")
       .populate("assignedAdmin", "name phone");
-    res.json(users);
+
+    // Fetch pending property count for each user
+    const usersWithCounts = await Promise.all(users.map(async (user) => {
+      const pendingPropertyCount = await Property.countDocuments({
+        seller: user._id,
+        status: "Pending"
+      });
+      const editPendingCount = await Property.countDocuments({
+        seller: user._id,
+        status: "Edit Pending Approval"
+      });
+      
+      const userData = user.toObject();
+      userData.pendingPropertyCount = pendingPropertyCount;
+      userData.editPendingCount = editPendingCount;
+      return userData;
+    }));
+
+    res.json(usersWithCounts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

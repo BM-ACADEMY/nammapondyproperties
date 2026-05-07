@@ -1,4 +1,4 @@
-import { Modal, Form, Input, Rate, Button, message, Popconfirm } from "antd";
+import { Modal, Form, Input, Rate, Button, message, Popconfirm, Pagination } from "antd";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState, memo } from "react";
@@ -44,11 +44,12 @@ const ReviewCard = memo(
           <h3 className="text-[20px] font-bold text-slate-800 leading-tight">
             {testimonial.name}
           </h3>
-          {testimonial.role && (
+          {/* Role hidden as per request */}
+          {/* {testimonial.role && (
             <p className="text-[14px] text-slate-500 font-medium mt-0.5">
               {testimonial.role}
             </p>
-          )}
+          )} */}
 
           <div className="flex items-center gap-3 mt-1.5">
             <div className="flex gap-[1px]">
@@ -77,7 +78,7 @@ const ReviewCard = memo(
       {/* Content */}
       <div className="bg-[#f8f9fc] rounded-[14px] p-5 relative min-h-[85px] flex items-start">
         <span className="absolute top-2 left-4 text-[54px] text-[#e2e8ea] font-serif leading-none tracking-tighter mix-blend-multiply"></span>
-        <p className="text-slate-600 text-[15px] leading-[1.6] pl-10 relative z-10 pt-2">
+        <p className="text-slate-600 text-[15px] leading-[1.6] pl-10 relative   pt-2">
           {testimonial.content}
         </p>
       </div>
@@ -134,6 +135,8 @@ const Reviews = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 3;
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -203,7 +206,6 @@ const Reviews = () => {
   const handleEdit = (testimonial) => {
     setEditingTestimonial(testimonial);
     form.setFieldsValue({
-      role: testimonial.role,
       rating: testimonial.rating,
       content: testimonial.content,
     });
@@ -232,7 +234,7 @@ const Reviews = () => {
   const handleWriteNewReview = () => {
     form.resetFields();
     form.setFieldsValue({
-      role: user?.user?.businessType?.name || user?.businessType?.name || "",
+      // role hidden
     });
     setEditingTestimonial(null);
     setIsModalOpen(true);
@@ -280,10 +282,10 @@ const Reviews = () => {
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-tr from-teal-50/50 to-transparent"></div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-7xl w-full flex-1 flex flex-col relative z-10">
+      <div className="container mx-auto px-4 max-w-7xl w-full flex-1 flex flex-col relative  ">
         <div className="p-6 lg:p-8 relative">
           {/* Modern Header */}
-          <div className="flex flex-row justify-between items-center mb-8 gap-4 relative z-10 w-full">
+          <div className="flex flex-row justify-between items-center mb-8 gap-4 relative   w-full">
             <div>
               <h1 className="text-[32px] font-bold text-slate-800">
                 My Reviews
@@ -294,14 +296,14 @@ const Reviews = () => {
             </div>
             <button
               onClick={handleWriteNewReview}
-              className="bg-[#166aa8] hover:bg-[#0078d7]! cursor-pointer text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all font-medium text-[15px] shadow-sm relative z-10"
+              className="bg-[#166aa8] hover:bg-[#0078d7]! cursor-pointer text-white px-5 py-2.5 rounded-lg flex items-center gap-2 transition-all font-medium text-[15px] shadow-sm relative  "
             >
               <Plus className="w-5 h-5" />
               Write New Review
             </button>
           </div>
 
-          <div className="relative z-10">
+          <div className="relative  ">
             {/* Reviews Grid */}
             {testimonials.length === 0 ? (
               <div className="bg-white rounded-[24px] shadow-sm p-6 lg:p-10 flex flex-col items-center justify-center text-center">
@@ -321,16 +323,32 @@ const Reviews = () => {
             ) : (
               <AnimatePresence mode="popLayout">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {testimonials.map((testimonial) => (
-                    <ReviewCard
-                      key={testimonial._id}
-                      testimonial={testimonial}
-                      getStatusBadgeStyles={getStatusBadgeStyles}
-                      handleEdit={handleEdit}
-                      handleDelete={handleDelete}
-                    />
-                  ))}
+                  {testimonials
+                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                    .map((testimonial) => (
+                      <ReviewCard
+                        key={testimonial._id}
+                        testimonial={testimonial}
+                        getStatusBadgeStyles={getStatusBadgeStyles}
+                        handleEdit={handleEdit}
+                        handleDelete={handleDelete}
+                      />
+                    ))}
                 </div>
+
+                {/* Pagination */}
+                {testimonials.length > pageSize && (
+                  <div className="mt-12 flex justify-center">
+                    <Pagination
+                      current={currentPage}
+                      pageSize={pageSize}
+                      total={testimonials.length}
+                      onChange={(page) => setCurrentPage(page)}
+                      showSizeChanger={false}
+                      className="custom-pagination"
+                    />
+                  </div>
+                )}
               </AnimatePresence>
             )}
           </div>
@@ -387,7 +405,8 @@ const Reviews = () => {
           {/* </div> */}
           {/* </div> */}
 
-          <Form.Item
+          {/* Role field hidden as per request */}
+          {/* <Form.Item
             name="role"
             label={
               <span className="font-medium text-slate-700">Your Role</span>
@@ -401,7 +420,7 @@ const Reviews = () => {
                 !!(user?.user?.businessType?.name || user?.businessType?.name)
               }
             />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
             name="rating"

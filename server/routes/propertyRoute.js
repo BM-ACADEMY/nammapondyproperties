@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const propertyController = require("../controllers/propertyController");
-const { protect, optionalProtect } = require("../middleware/authMiddleware");
+const { protect, admin, optionalProtect } = require("../middleware/authMiddleware");
 const propertyUpload = require("../middleware/propertyUploadMiddleware");
 
 // Create a new property
@@ -34,11 +34,11 @@ router.delete("/delete-property-by-id/:id", propertyController.deleteProperty);
 // Increment view count
 router.put("/increment-view-count/:id", propertyController.incrementViewCount);
 // Verify property
-router.put("/verify-property/:id", protect, propertyController.verifyProperty);
+router.put("/verify-property/:id", protect, admin, propertyController.verifyProperty);
 // Reject pending property edit
-router.put("/reject-edit/:id", protect, propertyController.rejectPropertyEdit);
+router.put("/reject-edit/:id", protect, admin, propertyController.rejectPropertyEdit);
 // Approve pending property edit
-router.put("/approve-edit/:id", protect, propertyController.approvePropertyEdit);
+router.put("/approve-edit/:id", protect, admin, propertyController.approvePropertyEdit);
 // Get property types
 // router.get("/property-types", propertyController.getPropertyTypes); // Removed
 // Get approval types
@@ -58,15 +58,15 @@ router.get("/seller-stats", protect, propertyController.getSellerStats);
 router.put("/update-view-count/:id", protect, propertyController.updateViewCount);
 
 // Get Admin Stats (Protected)
-router.get("/admin-stats", protect, propertyController.getAdminStats);
+router.get("/admin-stats", protect, admin, propertyController.getAdminStats);
 
 // Get Seller Overview Stats (Admin only)
-router.get("/seller-overview-stats", protect, propertyController.getSellerOverviewStats);
+router.get("/seller-overview-stats", protect, admin, propertyController.getSellerOverviewStats);
 
 // Get Pending Seller Properties Count (Admin only)
-router.get("/get-pending-seller-properties-count", protect, propertyController.getPendingSellerPropertiesCount);
+router.get("/get-pending-seller-properties-count", protect, admin, propertyController.getPendingSellerPropertiesCount);
 
 // Get specific property view stats (Admin only)
-router.get("/property-view-stats/:id", protect, propertyController.getPropertyViewStats);
+router.get("/property-view-stats/:id", protect, admin, propertyController.getPropertyViewStats);
 
 module.exports = router;

@@ -14,11 +14,13 @@ import {
   Briefcase,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import Loader from "@/components/Common/Loader";
+import PhoneVerificationModal from "@/components/Auth/PhoneVerificationModal";
+import api from "@/services/api";
+import { toast } from "react-hot-toast";
 
 const Profile = () => {
-  const { user, isLoading, refreshUser } = useAuth();
+  const { user, isLoading, refreshUser, refetchUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -26,6 +28,8 @@ const Profile = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -44,19 +48,31 @@ const Profile = () => {
     }));
   };
 
-  const handleSave = async () => {
+  const handleSave = async (isPhoneVerified = false) => {
+    // Check if phone has changed
+    if (formData.phone !== user.phone && !isPhoneVerified) {
+      setIsSaving(true);
+      try {
+        const res = await api.post("/users/request-phone-update", { newPhone: formData.phone });
+        if (res.data.success) {
+          setPendingPhone(formData.phone);
+          setShowVerifyModal(true);
+          setIsSaving(false);
+          return;
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.error || "Failed to request phone update");
+        setIsSaving(false);
+        return;
+      }
+    }
+
     setIsSaving(true);
     setMessage(null);
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/users/update-user-by-id/${user._id}`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+      const response = await api.put(
+        `/users/update-user-by-id/${user._id}`,
+        formData // Now we can safely send the full formData including the new phone
       );
 
       if (response.data) {
@@ -74,6 +90,13 @@ const Profile = () => {
       setIsSaving(false);
       setTimeout(() => setMessage(null), 3000);
     }
+  };
+
+  const handleVerifySuccess = () => {
+    if (refetchUser) refetchUser(); 
+    // Now call handleSave with isPhoneVerified = true to save other changes
+    // and finalize the UI state without re-triggering OTP
+    handleSave(true);
   };
 
   const cancelEdit = () => {
@@ -294,7 +317,7 @@ const Profile = () => {
                         }}
                         placeholder="Phone Number (10 digits)"
                         maxLength={10}
-                        className="block w-full pl-6 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
+                        className="block w-full pl-10 pr-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all text-gray-900"
                       />
                     ) : (
                       <div
@@ -310,6 +333,12 @@ const Profile = () => {
           </motion.div>
         </div>
       </div>
+      <PhoneVerificationModal 
+        open={showVerifyModal} 
+        onCancel={() => setShowVerifyModal(false)} 
+        newPhone={pendingPhone}
+        onSuccess={handleVerifySuccess}
+      />
     </div>
   );
 };

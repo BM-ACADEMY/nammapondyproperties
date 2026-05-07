@@ -369,15 +369,35 @@ const SubscriptionPlanManager = () => {
               label="Price (₹)"
               rules={[{ required: true }]}
             >
-              <InputNumber className="w-full" placeholder="0" />
+              <InputNumber 
+                className="w-full" 
+                placeholder="0" 
+                min={0}
+                precision={0}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
             </Form.Item>
 
             <Form.Item
               name="propertyLimit"
-              label="Property Limit (-1 for unlimited)"
+              label="Property Limit (Use 0 or positive integers)"
               rules={[{ required: true }]}
             >
-              <InputNumber className="w-full" placeholder="3" />
+              <InputNumber 
+                className="w-full" 
+                placeholder="3" 
+                min={0}
+                precision={0}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
             </Form.Item>
 
             <Form.Item
@@ -385,7 +405,17 @@ const SubscriptionPlanManager = () => {
               label="Lead Share Count"
               rules={[{ required: true, message: "Please enter lead share count" }]}
             >
-              <InputNumber className="w-full" placeholder="2" />
+              <InputNumber 
+                className="w-full" 
+                placeholder="2" 
+                min={1}
+                precision={0}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
             </Form.Item>
 
             <Form.Item
@@ -393,7 +423,17 @@ const SubscriptionPlanManager = () => {
               label="Duration (Days) - Leave empty for lifetime"
               rules={[{ required: false }]}
             >
-              <InputNumber className="w-full" placeholder="30" />
+              <InputNumber 
+                className="w-full" 
+                placeholder="30" 
+                min={1}
+                precision={0}
+                onKeyPress={(e) => {
+                  if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+              />
             </Form.Item>
 
             <Form.Item

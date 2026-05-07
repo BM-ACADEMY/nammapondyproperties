@@ -103,9 +103,9 @@ const Testimonials = () => {
                                         <h3 className="text-[20px] font-semibold text-[#0B2149] leading-tight">
                                             {testimonial.name}
                                         </h3>
-                                        <p className="text-[14px] text-[#5C687B] mt-1 font-normal">
+                                        {/* <p className="text-[14px] text-[#5C687B] mt-1 font-normal">
                                             {testimonial.role}
-                                        </p>
+                                        </p> */}
                                     </div>
 
                                     {/* Review Text */}

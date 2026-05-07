@@ -107,7 +107,7 @@ const LoginModal = ({ open, onCancel }) => {
                             resetModal();
                             onCancel();
                         }}
-                        className="absolute top-5 right-5 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        className="absolute top-5 right-5 p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                     >
                         <X className="w-6 h-6 text-gray-500" />
                     </button>
@@ -140,7 +140,7 @@ const LoginModal = ({ open, onCancel }) => {
                                     type="submit"
                                     disabled={loading || phone.length !== 10}
                                     style={{ backgroundColor: primaryColor }}
-                                    className="w-full h-14 rounded-md text-white text-xl font-bold hover:brightness-95 transition-all shadow-sm active:scale-[0.98]"
+                                    className="w-full h-14 rounded-md text-white text-xl font-bold hover:brightness-95 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                                 >
                                     {loading ? "Sending..." : "Continue"}
                                 </button>
@@ -173,7 +173,7 @@ const LoginModal = ({ open, onCancel }) => {
                                 </span>
                                 <button 
                                     onClick={() => setAuthStep("phone")}
-                                    className="p-1 hover:bg-gray-100 rounded-full text-blue-500"
+                                    className="p-1 hover:bg-gray-100 rounded-full text-blue-500 cursor-pointer"
                                 >
                                     <Pencil className="w-5 h-5" />
                                 </button>
@@ -204,7 +204,7 @@ const LoginModal = ({ open, onCancel }) => {
                                     <button 
                                         type="button"
                                         onClick={() => handleSendOtp()}
-                                        className="text-blue-500 hover:underline font-bold"
+                                        className="text-blue-500 hover:underline font-bold cursor-pointer"
                                     >
                                         Resend OTP
                                     </button>
@@ -214,7 +214,7 @@ const LoginModal = ({ open, onCancel }) => {
                                     type="submit"
                                     disabled={loading || otp.join("").length !== 6}
                                     style={{ backgroundColor: primaryColor }}
-                                    className="w-full h-14 rounded-md text-white text-xl font-bold hover:brightness-95 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:grayscale-[0.5]"
+                                    className="w-full h-14 rounded-md text-white text-xl font-bold hover:brightness-95 transition-all shadow-sm active:scale-[0.98] disabled:opacity-70 disabled:grayscale-[0.5] cursor-pointer"
                                 >
                                     {loading ? "Verifying..." : "Verify & Continue"}
                                 </button>

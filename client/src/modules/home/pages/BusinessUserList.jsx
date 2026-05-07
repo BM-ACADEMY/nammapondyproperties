@@ -42,6 +42,7 @@ const BusinessUserList = () => {
   const [propertiesLoading, setPropertiesLoading] = useState(false);
 
   const { user, setLoginModalOpen } = useAuth();
+  const [pendingWhatsApp, setPendingWhatsApp] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
@@ -188,18 +189,49 @@ const BusinessUserList = () => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (!targetUser) return;
 
-    if (user) {
-      if (!user.phone) {
-        setSelectedProperty(property);
-        // We set selectedSeller to targetUser temporarily if needed,
-        // but submitEnquiry handles it
-        setShowPhoneModal(true);
-      } else {
-        submitEnquiry(targetUser, property, user.name, user.email, user.phone);
-      }
+    if (!user) {
+      setPendingWhatsApp({ targetUser, property });
       setLoginModalOpen(true);
+      return;
+    }
+
+    // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
+    const rawPhone = (targetUser.phone || "").toString().replace(/\D/g, "");
+    const sellerPhone =
+      rawPhone.length === 10
+        ? `91${rawPhone}`
+        : rawPhone.length === 12 && rawPhone.startsWith("91")
+          ? rawPhone
+          : rawPhone;
+
+    const message = property
+      ? `Hi, I am interested in your property: ${property.basicInfo?.title || "Untitled"} located at ${typeof property.location === "string" ? property.location : property.location?.city || "Unknown"}. Please provide more details.`
+      : `Hi ${targetUser.name}, I'm interested in your property listings on Namma Pondy.`;
+
+    const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
+
+    // Open WhatsApp directly
+    window.open(whatsappUrl, "_blank");
+
+    // Track enquiry in background if user is logged in
+    if (user) {
+      api.post("/enquiries/create", {
+        property_id: property?._id,
+        seller_id: targetUser._id,
+        message: message,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+      }).catch(err => console.error("Enquiry Error:", err));
     }
   };
+
+  useEffect(() => {
+    if (user && pendingWhatsApp) {
+      handleWhatsAppClick(null, pendingWhatsApp.targetUser, pendingWhatsApp.property);
+      setPendingWhatsApp(null);
+    }
+  }, [user, pendingWhatsApp]);
 
   const submitEnquiry = async (targetUser, property, name, email, phone) => {
     // Normalise phone: strip leading +, 0, or 91 country code then prepend 91
@@ -246,13 +278,20 @@ const BusinessUserList = () => {
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Profile link copied to clipboard!");
+      } else {
+        throw new Error("Sharing not supported");
       }
     } catch (err) {
       if (err.name !== "AbortError") {
-        console.error("Error sharing:", err);
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Profile link copied to clipboard!");
+        } catch (clipError) {
+          toast.error("Could not share or copy profile link");
+        }
       }
     }
   };
@@ -842,7 +881,7 @@ const BusinessUserList = () => {
                             ...property,
                             businessType: property.businessType || businessType,
                           }}
-                          linkQuery="?from=builder"
+                          linkQuery={`?from=${businessTypeSlug || 'professional'}`}
                           onWhatsAppClick={(e, prop) => {
                             handleWhatsAppClick(
                               e,

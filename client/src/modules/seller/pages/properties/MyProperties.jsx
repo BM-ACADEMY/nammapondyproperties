@@ -349,8 +349,9 @@ const MyProperties = () => {
   ).length;
 
   const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, activePropertyCount);
-  const isLimitReached = !canPost && reason === "limit_reached";
-  const planName = user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE";
+  const isLimitReached = !canPost && (reason === "limit_reached" || reason === "expired");
+  const isPlanExpired = user?.activeSubscription?.status === "expired";
+  const planName = isPlanExpired ? "PLAN EXPIRED" : (user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE");
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -362,7 +363,7 @@ const MyProperties = () => {
     <div className="flex items-center gap-5 w-full">
       
       {/* ICON */}
-      <div className="p-4 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-2xl shadow-lg">
+      <div className={`p-4 bg-gradient-to-br ${isPlanExpired ? 'from-red-500 to-rose-600' : 'from-indigo-500 to-purple-600'} text-white rounded-2xl shadow-lg`}>
         <CreditCard size={30} />
       </div>
 
@@ -372,26 +373,30 @@ const MyProperties = () => {
         {/* PLAN LABEL */}
         <div className="flex items-center gap-3 mb-1">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Current Plan
+            Current Status
           </span>
 
-          <span className="bg-indigo-100 text-indigo-600 text-xs font-bold px-3 py-1 rounded-full">
+          <span className={`${isPlanExpired ? "bg-red-100 text-red-600" : "bg-indigo-100 text-indigo-600"} text-xs font-bold px-3 py-1 rounded-full`}>
             {planName}
           </span>
         </div>
 
         {/* MAIN TITLE */}
         <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-          {isLimitReached
-            ? "Property Limit Reached"
-            : `${activePropertyCount} / ${
-                propertyLimit === -1 ? "Unlimited" : propertyLimit
-              } Properties Used`}
+          {isPlanExpired 
+            ? "Your Plan has Expired"
+            : isLimitReached
+              ? "Property Limit Reached"
+              : `${activePropertyCount} / ${
+                  propertyLimit === -1 ? "Unlimited" : propertyLimit
+                } Properties Used`}
         </h2>
 
         {/* DESCRIPTION */}
         <p className="text-gray-500 text-sm mt-1">
-          {planName === (settings?.defaultPlanName || "BASIC")
+          {isPlanExpired 
+            ? "Please renew your subscription to continue listing and managing properties."
+            : planName === (settings?.defaultPlanName || "BASIC")
             ? `${planName} plan allows up to ${propertyLimit} property listings.`
             : planName === "Standard"
             ? "Standard plan supports up to 10 listings with better visibility."
@@ -405,28 +410,15 @@ const MyProperties = () => {
     {/* RIGHT SECTION */}
     <div className="flex flex-col items-center gap-3">
 
-      {/* PROGRESS BAR */}
-      {/* <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
-          style={{
-            width:
-              propertyLimit === -1
-                ? "100%"
-                : `${(properties.length / propertyLimit) * 100}%`,
-          }}
-        ></div>
-      </div> */}
-
       {/* BUTTON */}
       <Button
         type="primary"
         size="large"
         icon={<ArrowUpCircle size={18} />}
         onClick={() => navigate("/seller/upgrade-plan")}
-        className="bg-gradient-to-r from-indigo-600 to-purple-600 border-none hover:opacity-90 rounded-xl px-6 py-3 font-semibold shadow-md flex items-center gap-2"
+        className={`bg-gradient-to-r ${isPlanExpired ? 'from-red-600 to-rose-600' : 'from-indigo-600 to-purple-600'} border-none hover:opacity-90 rounded-xl px-6 py-3 font-semibold shadow-md flex items-center gap-2`}
       >
-        Upgrade Plan
+        {isPlanExpired ? "Renew Plan" : "Upgrade Plan"}
       </Button>
     </div>
   </div>
@@ -449,7 +441,7 @@ const MyProperties = () => {
               if (reason === "unverified") {
                 const role = user?.role_id?.role_name?.toUpperCase() || user?.role?.name?.toUpperCase();
                 navigate(role === "SELLER" ? "/seller/profile" : "/user/profile");
-              } else if (reason === "limit_reached") {
+              } else if (reason === "limit_reached" || reason === "expired") {
                 navigate(redirectPath || "/seller/upgrade-plan");
               }
               return;
@@ -475,7 +467,7 @@ const MyProperties = () => {
         >
           <Input
             prefix={<Search size={18} className="text-gray-400 ml-1" />}
-            placeholder="Search properties..."
+            placeholder="Search by Property Name or Location"
             onChange={(e) => setSearchText(e.target.value)}
             className="w-full border-none h-9 text-sm focus:ring-0"
             size="middle"

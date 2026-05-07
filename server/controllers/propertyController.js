@@ -558,38 +558,67 @@ exports.getProperties = async (req, res) => {
 
 exports.verifyProperty = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const isAdmin = req.user && (req.user.isSuperAdmin || req.user.role_id?.role_name?.toLowerCase() === "admin");
+    if (!isAdmin) {
+      return res.status(403).json({ error: "Only admins can verify properties" });
+    }
+
+    const property = await Property.findById(req.params.id).populate("seller");
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
     }
-    property.isVerified = !property.isVerified;
 
-    if (property.isVerified) {
+    const newIsVerified = !property.isVerified;
+
+    // 🛡️ Restriction: Seller must be badge-verified before their properties can be approved/verified
+    if (newIsVerified && property.seller && !property.seller.badgeVerified) {
+      return res.status(400).json({ 
+        error: "First verify the seller's badge (Badge Verification) before approving their properties.",
+        sellerId: property.seller._id
+      });
+    }
+
+    let updateFields = { isVerified: newIsVerified };
+
+    if (newIsVerified) {
       // Approve and switch to Active if verified
       if (property.status === "Pending") {
-        property.status = "Active";
-        property.approvedAt = property.approvedAt || new Date();
+        updateFields.status = "Active";
+        updateFields.approvedAt = property.approvedAt || new Date();
       } else if (property.status === "Edit Pending Approval") {
         if (property.pendingEdits) {
+          // If applying edits, we MUST use save() to ensure all content is updated correctly and validated
           Object.assign(property, property.pendingEdits);
           property.pendingEdits = null;
+          property.status = "Active";
+          property.approvedAt = property.approvedAt || new Date();
+          property.isVerified = true;
+          await property.save();
+          return res.json({ message: "Property verified and edits applied", property });
         }
-        property.status = "Active";
-        property.approvedAt = property.approvedAt || new Date();
+        updateFields.status = "Active";
+        updateFields.approvedAt = property.approvedAt || new Date();
       }
     } else {
       // If unverified, take it down back to Pending
       if (property.status === "Active" || property.status === "Edit Pending Approval") {
-        property.status = "Pending";
+        updateFields.status = "Pending";
       }
     }
 
-    await property.save();
+    // Use findByIdAndUpdate for simple toggles to avoid unrelated validation errors on existing data
+    const updatedProperty = await Property.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateFields },
+      { new: true, runValidators: false }
+    );
+
     res.json({
-      message: `Property ${property.isVerified ? "verified" : "unverified"}`,
-      property,
+      message: `Property ${updatedProperty.isVerified ? "verified" : "unverified"}`,
+      property: updatedProperty,
     });
   } catch (error) {
+    console.error("Verify Property Error:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -616,8 +645,16 @@ exports.rejectPropertyEdit = async (req, res) => {
 
 exports.approvePropertyEdit = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findById(req.params.id).populate("seller");
     if (!property) return res.status(404).json({ error: "Property not found" });
+
+    // 🛡️ Restriction: Seller must be badge-verified before their property edits can be approved
+    if (property.seller && !property.seller.badgeVerified) {
+      return res.status(400).json({ 
+        error: "First verify the seller's badge (Badge Verification) before approving their property edits.",
+        sellerId: property.seller._id
+      });
+    }
 
     if (property.status === "Edit Pending Approval") {
       if (property.pendingEdits) {

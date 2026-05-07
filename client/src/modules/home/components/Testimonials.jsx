@@ -62,7 +62,7 @@ const Testimonials = () => {
 
   const handleSubmit = async () => {
     if (!city.trim()) return toast.error("Please enter your city");
-    if (!selectedRole) return toast.error("Please select how you're described");
+    // if (!selectedRole) return toast.error("Please select how you're described");
     if (!reviewerName.trim()) return toast.error("Please enter your name");
     if (!reviewText.trim()) return toast.error("Please write your review");
 
@@ -119,7 +119,7 @@ const Testimonials = () => {
         </div>
         <div>
           <p className="font-medium text-slate-800 text-sm">{item.name}</p>
-          <p className="text-slate-500 text-xs">{item.role || "User"}</p>
+          {/* <p className="text-slate-500 text-xs">{item.role || "User"}</p> */}
         </div>
       </div>
     </div>

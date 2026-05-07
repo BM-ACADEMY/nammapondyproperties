@@ -27,6 +27,21 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import BusinessTypeModal from "./BusinessTypeModal";
 
+// Converts a raw number to Indian-scale label: ₹25 Lakhs, ₹1.5 Crores
+const formatBudgetLabel = (value) => {
+  if (!value && value !== 0) return null;
+  const num = Number(String(value).replace(/[^0-9]/g, ""));
+  if (isNaN(num) || num === 0) return null;
+  if (num >= 10000000) return `₹${(num / 10000000).toFixed(num % 10000000 === 0 ? 0 : 1)} Crore${num >= 20000000 ? "s" : ""}`;
+  if (num >= 100000)  return `₹${(num / 100000).toFixed(num % 100000 === 0 ? 0 : 1)} Lakh${num >= 200000 ? "s" : ""}`;
+  if (num >= 1000)    return `₹${(num / 1000).toFixed(num % 1000 === 0 ? 0 : 1)}K`;
+  return `₹${num.toLocaleString("en-IN")}`;
+};
+
+const numericOnly = (e) => {
+  if (!/[0-9]/.test(e.key)) e.preventDefault();
+};
+
 const { BaseLayer } = LayersControl;
 
 // Custom marker icon for properties
@@ -231,6 +246,14 @@ const PropertyForm = ({
   const [businessTypes, setBusinessTypes] = useState([]);
   const [mapPosition, setMapPosition] = useState(null);
   const [showBTModal, setShowBTModal] = useState(false);
+
+  // Price field live-label state
+  const [priceVals, setPriceVals] = useState({
+    minPrice: "", maxPrice: "",
+    minRent: "", maxRent: "",
+    securityDeposit: "", maintenance: "",
+  });
+  const setPV = (key, val) => setPriceVals((p) => ({ ...p, [key]: val }));
 
   const isAdmin = user?.role_id?.role_name?.toLowerCase() === "admin";
   const isBuilderPromoter =
@@ -668,9 +691,9 @@ const PropertyForm = ({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-2 min-h-[800px]">
+    <div className="flex flex-col lg:flex-row gap-8 bg-gray-50/30 p-4 md:p-6 mt-32 md:mt-16 min-h-[800px]">
       {/* Mobile Header */}
-      <div className="lg:hidden mb-2">
+      <div className="lg:hidden mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           {isEdit ? "Edit Property" : "Add New Property"}
         </h1>
@@ -683,7 +706,7 @@ const PropertyForm = ({
 
       {/* Sidebar - Desktop Only */}
       <div className="hidden lg:flex lg:w-1/3 flex-col gap-6 sticky top-24 h-fit self-start">
-        <div className="mb-2">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {isEdit ? "Edit Property" : "Add New Property"}
           </h1>
@@ -1200,6 +1223,7 @@ const PropertyForm = ({
                 <input
                   {...register("location.subArea")}
                   className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                  placeholder="e.g., Anna Salai"
                 />
               </div>
               <div>
@@ -1209,7 +1233,14 @@ const PropertyForm = ({
                 <input
                   {...register("location.pincode", {
                     required: "Pincode is required",
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: "Pincode must be exactly 6 digits",
+                    },
                   })}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+                  }}
                   className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.location?.pincode ? "border-red-500" : "border-gray-100"}`}
                   placeholder="e.g., 605001"
                 />
@@ -1276,37 +1307,57 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Price From (₹) <span className="text-red-500">*</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.sell.minPrice", {
                           required: "Min price is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("minPrice", e.target.value);
+                          register("pricing.sell.minPrice").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.minPrice ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 1500000"
                       />
+                      {formatBudgetLabel(priceVals.minPrice) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.minPrice)}</p>
+                      )}
                       {errors.pricing?.sell?.minPrice && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.sell.minPrice.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.minPrice.message}</p>
                       )}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Price To (₹) <span className="text-red-500">*</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.sell.maxPrice", {
                           required: "Max price is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("maxPrice", e.target.value);
+                          register("pricing.sell.maxPrice").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.sell?.maxPrice ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 1600000"
                       />
+                      {formatBudgetLabel(priceVals.maxPrice) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.maxPrice)}</p>
+                      )}
                       {errors.pricing?.sell?.maxPrice && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.sell.maxPrice.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.sell.maxPrice.message}</p>
                       )}
                     </div>
                     <div>
@@ -1314,9 +1365,16 @@ const PropertyForm = ({
                         Price Per Sqft (₹)
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.sell.pricePerSqft")}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          register("pricing.sell.pricePerSqft").onChange(e);
+                        }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 5000"
                       />
                     </div>
                   </>
@@ -1325,37 +1383,57 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Rent From (₹/mo) <span className="text-red-500">*</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.minRent", {
                           required: "Min rent is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("minRent", e.target.value);
+                          register("pricing.rent.minRent").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.minRent ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 15000"
                       />
+                      {formatBudgetLabel(priceVals.minRent) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.minRent)}</p>
+                      )}
                       {errors.pricing?.rent?.minRent && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.rent.minRent.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.minRent.message}</p>
                       )}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Rent To (₹/mo) <span className="text-red-500">*</span>
+                        <span className="block text-gray-400 font-normal text-[10px] mt-0.5">Amount will be shown in Lakhs/Crores</span>
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.maxRent", {
                           required: "Max rent is required",
+                          validate: (v) => !v || Number(v) >= 0 || "Cannot be negative",
                         })}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("maxRent", e.target.value);
+                          register("pricing.rent.maxRent").onChange(e);
+                        }}
                         className={`w-full px-4 py-3 border-2 rounded-2xl ${errors.pricing?.rent?.maxRent ? "border-red-500" : "border-gray-100"}`}
                         placeholder="e.g. 20000"
                       />
+                      {formatBudgetLabel(priceVals.maxRent) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.maxRent)}</p>
+                      )}
                       {errors.pricing?.rent?.maxRent && (
-                        <p className="text-red-500 text-xs mt-1">
-                          {errors.pricing.rent.maxRent.message}
-                        </p>
+                        <p className="text-red-500 text-xs mt-1">{errors.pricing.rent.maxRent.message}</p>
                       )}
                     </div>
                     <div>
@@ -1363,21 +1441,41 @@ const PropertyForm = ({
                         Security Deposit (₹)
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.securityDeposit")}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("securityDeposit", e.target.value);
+                          register("pricing.rent.securityDeposit").onChange(e);
+                        }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
                       />
+                      {formatBudgetLabel(priceVals.securityDeposit) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.securityDeposit)}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Maintenance (₹/mo)
                       </label>
                       <input
-                        type="number"
+                        type="text"
+                        inputMode="numeric"
                         {...register("pricing.rent.maintenance")}
+                        onKeyPress={numericOnly}
+                        onChange={(e) => {
+                          e.target.value = e.target.value.replace(/[^0-9]/g, "");
+                          setPV("maintenance", e.target.value);
+                          register("pricing.rent.maintenance").onChange(e);
+                        }}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
                         placeholder="e.g. 2000"
                       />
+                      {formatBudgetLabel(priceVals.maintenance) && (
+                        <p className="text-xs font-bold text-blue-600 mt-1 pl-1">= {formatBudgetLabel(priceVals.maintenance)}</p>
+                      )}
                     </div>
                   </>
                 )}
@@ -1392,7 +1490,7 @@ const PropertyForm = ({
                 <div>
                   <label className="block text-sm font-bold mb-2">
                     Area From (sqft) <span className="text-red-500">*</span>
-                    <span className="text-gray-400 font-normal text-xs ml-1">
+                    <span className="block text-gray-400 font-normal text-[10px] mt-0.5">
                       (enter single value or min of range)
                     </span>
                   </label>
@@ -1413,7 +1511,7 @@ const PropertyForm = ({
                 <div>
                   <label className="block text-sm font-bold mb-2">
                     Area To (sqft)
-                    <span className="text-gray-400 font-normal text-xs ml-1">
+                    <span className="block text-gray-400 font-normal text-[10px] mt-0.5">
                       (optional — fill for range)
                     </span>
                   </label>
@@ -1429,21 +1527,25 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Super Built-up Area (sqft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.area.superBuiltupArea")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 1800"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Built-up Area (sqft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.area.builtupArea")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 1600"
                       />
                     </div>
                   </>
@@ -1453,36 +1555,43 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Bedrooms
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.residential.bedrooms")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 3"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Bathrooms
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.residential.bathrooms")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 2"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Balconies
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.residential.balconies")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 1"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Furnishing
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <select
                         {...register("specifications.residential.furnishing")}
@@ -1502,21 +1611,25 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Plot Length (ft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.plot.plotLength")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 50"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Plot Width (ft)
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.plot.plotWidth")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 30"
                       />
                     </div>
                     <div className="flex items-center gap-2 mt-4">
@@ -1541,28 +1654,35 @@ const PropertyForm = ({
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Cabins
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.commercial.cabins")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 2"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-bold mb-2">
                         Workstations
+                        <span className="block text-transparent text-[10px] mt-0.5">.</span>
                       </label>
                       <input
                         type="number"
                         {...register("specifications.commercial.workstations")}
                         className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl"
+                        placeholder="e.g. 10"
                       />
                     </div>
                   </>
                 )}
 
                 <div>
-                  <label className="block text-sm font-bold mb-2">Facing</label>
+                  <label className="block text-sm font-bold mb-2">
+                    Facing
+                    <span className="block text-transparent text-[10px] mt-0.5">.</span>
+                  </label>
                   <select
                     {...register("specifications.facing")}
                     className="w-full px-4 py-3 border-2 border-gray-100 rounded-2xl bg-white"

@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
     otp: { type: String },
     otpExpires: { type: Date },
     isVerified: { type: Boolean, default: false },
+    pendingPhone: { type: String },
     badgeVerified: { type: Boolean, default: false },
     badgeRequestStatus: {
       type: String,

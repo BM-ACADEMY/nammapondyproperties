@@ -391,7 +391,7 @@ const AdminList = () => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-2 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <Title level={3} className="mb-0!">
@@ -657,7 +657,7 @@ const AdminList = () => {
                 label="Full Name"
                 rules={[{ required: true, message: "Please enter admin name" }]}
               >
-                <Input placeholder="Enter name" prefix={<Users size={16} className="text-gray-400" />} />
+                <Input disabled placeholder="Enter name" prefix={<Users size={16} className="text-gray-400" />} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -669,7 +669,7 @@ const AdminList = () => {
                   { pattern: /^[0-9]{10}$/, message: "Please enter a valid 10-digit number" }
                 ]}
               >
-                <Input placeholder="10-digit phone number" prefix={<span className="text-gray-400">+91</span>} />
+                <Input disabled placeholder="10-digit phone number" prefix={<span className="text-gray-400">+91</span>} />
               </Form.Item>
             </Col>
           </Row>
@@ -692,20 +692,44 @@ const AdminList = () => {
               >
                 <Checkbox.Group className="w-full">
                   <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                    {permissionGroups.map((group) => (
-                      <div key={group.title} className="mb-4">
-                        <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold mb-2 bg-gray-50 px-2 py-1 rounded">
-                          {group.title}
+                    {permissionGroups.map((group) => {
+                      const groupValues = group.options.map(o => o.value);
+                      const currentPermissions = editForm.getFieldValue("permissions") || [];
+                      const isAllSelected = groupValues.length > 0 && groupValues.every(val => currentPermissions.includes(val));
+
+                      const toggleGroup = () => {
+                        const otherPermissions = currentPermissions.filter(val => !groupValues.includes(val));
+                        const newPermissions = isAllSelected 
+                          ? otherPermissions 
+                          : Array.from(new Set([...otherPermissions, ...groupValues]));
+                        editForm.setFieldsValue({ permissions: newPermissions });
+                      };
+
+                      return (
+                        <div key={group.title} className="mb-4">
+                          <div className="flex justify-between items-center bg-gray-50 px-2 py-1 rounded mb-2">
+                            <div className="text-[11px] uppercase tracking-wider text-gray-400 font-bold">
+                              {group.title}
+                            </div>
+                            <Button 
+                              type="link" 
+                              size="small" 
+                              className="text-[10px] p-0 h-auto"
+                              onClick={toggleGroup}
+                            >
+                              {isAllSelected ? "Deselect All" : "Select All"}
+                            </Button>
+                          </div>
+                          <Row gutter={[16, 8]}>
+                            {group.options.map((opt) => (
+                              <Col span={12} key={opt.value}>
+                                <Checkbox value={opt.value}>{opt.label}</Checkbox>
+                              </Col>
+                            ))}
+                          </Row>
                         </div>
-                        <Row gutter={[16, 8]}>
-                          {group.options.map((opt) => (
-                            <Col span={12} key={opt.value}>
-                              <Checkbox value={opt.value}>{opt.label}</Checkbox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </Checkbox.Group>
               </Form.Item>

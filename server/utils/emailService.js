@@ -11,7 +11,9 @@ const subscriptionExpiryWarningTemplate = require("../templates/emails/subscript
 const subscriptionExpiredTemplate = require("../templates/emails/subscriptionExpired");
 const requirementNotificationTemplate = require("../templates/emails/requirementNotification");
 const supportTicketNotificationTemplate = require("../templates/emails/supportTicketNotification");
+const thankYouTemplate = require("../templates/emails/thankYouTemplate");
 dotenv.config();
+
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -320,6 +322,38 @@ exports.sendSupportTicketNotificationToAdmin = async (ticket, seller, firstMessa
     return info;
   } catch (error) {
     console.error("Error sending support ticket notification email:", error);
+    return null;
+  }
+};
+
+/**
+ * Sends a "Thank You" email to the user after form submission
+ */
+exports.sendThankYouEmail = async (data, type = "contact") => {
+  try {
+    const recipientEmail = data.email;
+    if (!recipientEmail) {
+      console.warn(`No email found in ${type} submission, cannot send thank you email.`);
+      return null;
+    }
+
+    const htmlContent = thankYouTemplate(data, type);
+    const subject = type === "callback" 
+      ? "We've received your callback request - Namma Pondy Properties"
+      : "Thank you for contacting Namma Pondy Properties";
+
+    const mailOptions = {
+      from: `"Namma Pondy Properties" <${process.env.USER_EMAIL}>`,
+      to: recipientEmail,
+      subject: subject,
+      html: htmlContent,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Thank you email (${type}) sent to ${recipientEmail}:`, info.messageId);
+    return info;
+  } catch (error) {
+    console.error(`Error sending thank you email (${type}):`, error);
     return null;
   }
 };

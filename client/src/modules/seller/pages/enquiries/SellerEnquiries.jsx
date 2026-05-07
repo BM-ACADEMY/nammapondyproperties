@@ -200,8 +200,8 @@ const SellerEnquiries = () => {
       title: "Property",
       dataIndex: "property_id",
       key: "property",
-      render: (property) =>
-        property ? (
+      render: (property, record) =>
+        (property || record.property_title) ? (
           <div
             className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all duration-300"
             onClick={() => handleViewDetail(property)}
@@ -220,7 +220,7 @@ const SellerEnquiries = () => {
             </div>
             <div className="flex flex-col max-w-50">
               <span className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                {property.basicInfo?.title || property.title || "Untitled Property"}
+                {property?.basicInfo?.title || property?.title || record.property_title || "Untitled Property"}
               </span>
               <span className="text-xs text-gray-500 truncate">
                 {typeof property.location === "string" 
@@ -230,7 +230,7 @@ const SellerEnquiries = () => {
             </div>
           </div>
         ) : (
-          <span className="text-gray-400 italic font-medium px-2 py-1 bg-gray-50 rounded-md text-xs">Deleted Property</span>
+          <span className="text-gray-400 italic font-medium px-2 py-1 bg-gray-50 rounded-md text-xs">Property Removed</span>
         ),
     },
     {
@@ -325,11 +325,16 @@ const SellerEnquiries = () => {
 
   // Combined multi-criteria filtering
   const filteredEnquiries = enquiries.filter((item) => {
-    // 1. Search Text Match (Name, Phone, Property)
+    // 1. Search Text Match (Name, Phone, Property, Location)
     const matchesSearch = !searchText || 
       item.property_id?.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.property_id?.basicInfo?.title?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.property_title?.toLowerCase().includes(searchText.toLowerCase()) ||
       item.enquirer_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.enquirer_phone?.includes(searchText);
+      item.enquirer_phone?.includes(searchText) ||
+      item.property_id?.location?.city?.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.property_id?.location?.locality?.toLowerCase().includes(searchText.toLowerCase()) ||
+      (typeof item.property_id?.location === 'string' && item.property_id.location.toLowerCase().includes(searchText.toLowerCase()));
 
     // 2. Status Match
     const matchesStatus = filterStatus === "all" || (item.status || "new") === filterStatus;
@@ -390,7 +395,7 @@ const SellerEnquiries = () => {
 
     const rows = filteredEnquiries.map((item) => [
       moment(item.createdAt).format("DD/MM/YYYY hh:mm A"),
-      item.property_id?.title || "Deleted Property",
+      item.property_title || item.property_id?.basicInfo?.title || item.property_id?.title || "Property Removed",
       item.enquirer_name || "Guest",
       item.enquirer_phone || "N/A",
       `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
@@ -550,7 +555,7 @@ const SellerEnquiries = () => {
               <div className="w-full md:w-64">
                 <Input
                   prefix={<Search size={18} className="text-slate-400 mr-1.5" />}
-                  placeholder="Search Enquiries..."
+                  placeholder="Search by Property Name, Buyer Name, Phone, or Location"
                   allowClear
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}

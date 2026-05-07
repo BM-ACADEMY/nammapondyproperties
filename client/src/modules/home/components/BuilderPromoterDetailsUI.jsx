@@ -81,20 +81,22 @@ const BuilderPromoterDetailsUI = ({
     };
 
     try {
-      if (
-        navigator.share &&
-        navigator.canShare &&
-        navigator.canShare(shareData)
-      ) {
+      if (navigator.share) {
         await navigator.share(shareData);
-      } else {
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(window.location.href);
         toast.success("Link copied to clipboard!");
+      } else {
+        throw new Error("Sharing not supported");
       }
     } catch (error) {
       if (error.name !== "AbortError") {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success("Link copied to clipboard!");
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Link copied to clipboard!");
+        } catch (clipError) {
+          toast.error("Could not share or copy link");
+        }
       }
     }
   };
@@ -687,13 +689,34 @@ const BuilderPromoterDetailsUI = ({
                         ]}
                         icon={CustomIcon}
                       >
-                        <Popup className="rounded-xl overflow-hidden">
-                          <div className="p-1">
-                            <p className="font-bold text-gray-900 mb-1">
-                              {property.basicInfo?.title}
+                        <Popup minWidth={180} maxWidth={220}>
+                          <div className="w-[180px] sm:w-[200px] p-0.5">
+                            <div className="relative h-24 w-full mb-2 rounded-md overflow-hidden">
+                              <img
+                                src={getImageUrl(
+                                  property.media?.featuredImage ||
+                                    property.media?.images?.[0]
+                                )}
+                                alt={property.basicInfo?.title || "Property"}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <h3 className="font-bold text-gray-900 text-sm mb-0.5 leading-tight">
+                              {property.basicInfo?.title || "Untitled Project"}
+                            </h3>
+                            <p className="text-[11px] text-gray-500 mb-1">
+                              {property.location?.locality}, {property.location?.city}
                             </p>
-                            <p className="text-xs text-gray-600">
-                              {property.location?.locality}
+                            <p className="text-sm font-bold text-[#166aa8]">
+                              {formatPriceRange(
+                                property.pricing?.sell?.minPrice ||
+                                  property.pricing?.rent?.minRent,
+                                property.pricing?.sell?.maxPrice ||
+                                  property.pricing?.rent?.maxRent,
+                                property.pricing?.sell?.price ||
+                                  property.pricing?.rent?.monthlyRent ||
+                                  0
+                              )}
                             </p>
                           </div>
                         </Popup>
@@ -736,7 +759,7 @@ const BuilderPromoterDetailsUI = ({
 
           {/* SIDEBAR: Seller Info */}
           <div className="lg:col-span-4 space-y-8">
-            <div className="sticky top-34">
+            <div className="sticky top-40">
               {/* Contact Card */}
               <div className="bg-white p-6 rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100">
                 <div className="flex items-center gap-4 mb-6">
