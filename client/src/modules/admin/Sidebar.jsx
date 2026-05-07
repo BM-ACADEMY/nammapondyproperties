@@ -294,18 +294,19 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const socket = useSocket();
   const { user, logout } = useAuth();
   
-  const [newLeadsCount, setNewLeadsCount] = useState(0);
-  const [pendingBadgeCount, setPendingBadgeCount] = useState(0);
-  const [newPropertyCount, setNewPropertyCount] = useState(0);
-  const [newSellerPropertyCount, setNewSellerPropertyCount] = useState(0);
-  const [newEnquiryCount, setNewEnquiryCount] = useState(0);
-  const [newRequirementCount, setNewRequirementCount] = useState(0);
-  const [newCallRequestCount, setNewCallRequestCount] = useState(0);
-  const [newContactCount, setNewContactCount] = useState(0);
-  const [newExpiringPlansCount, setNewExpiringPlansCount] = useState(0);
-  const [newSupportTicketCount, setNewSupportTicketCount] = useState(0);
+  const [notifications, setNotifications] = useState({
+    badgeRequests: 0,
+    sellerProperties: 0,
+    ourProperties: 0,
+    marketingLeads: 0,
+    enquiries: 0,
+    requirements: 0,
+    callRequests: 0,
+    contactMessages: 0,
+    expiringPlans: 0,
+    supportTickets: 0,
+  });
   const [businessTypes, setBusinessTypes] = useState([]);
-  
   const [openKeys, setOpenKeys] = useState(["properties-sub", "users-sub", "seller-sub"]);
 
   const toggleSubmenu = (key) => {
@@ -314,62 +315,82 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     );
   };
 
+  const fetchCounts = async () => {
+    try {
+      const response = await api.get("/users/fetch-notification-counts");
+      if (response.data.success) {
+        const { counts } = response.data;
+        setNotifications(prev => ({
+          ...prev,
+          badgeRequests: counts.badgeRequests || 0,
+          sellerProperties: counts.sellerProperties || 0,
+          enquiries: counts.enquiries || 0,
+          requirements: counts.requirements || 0,
+          callRequests: counts.callRequests || 0,
+          contactMessages: counts.contactMessages || 0,
+          marketingLeads: counts.marketingRequests || 0,
+          supportTickets: counts.supportTickets || 0,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching notification counts:", error);
+    }
+  };
+
+  const fetchExpiringSoon = async () => {
+    try {
+      const response = await api.get("/subscriptions/admin/expiring-soon");
+      setNotifications(prev => ({ ...prev, expiringPlans: response.data.length || 0 }));
+    } catch (error) {
+      console.error("Error fetching expiring plans count:", error);
+    }
+  };
+
+  const fetchBusinessTypes = async () => {
+    try {
+      const response = await api.get("/business-types");
+      setBusinessTypes(response.data.filter((t) => t.status === "active"));
+    } catch (error) {
+      console.error("Error fetching business types:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const response = await api.get("/users/fetch-notification-counts");
-        if (response.data.success) {
-          const { counts } = response.data;
-          setPendingBadgeCount(counts.badgeRequests || 0);
-          setNewSellerPropertyCount(counts.sellerProperties || 0);
-          setNewEnquiryCount(counts.enquiries || 0);
-          setNewRequirementCount(counts.requirements || 0);
-          setNewCallRequestCount(counts.callRequests || 0);
-          setNewContactCount(counts.contactMessages || 0);
-          setNewLeadsCount(counts.marketingRequests || 0);
-          setNewSupportTicketCount(counts.supportTickets || 0);
-        }
-      } catch (error) {
-        console.error("Error fetching notification counts:", error);
-      }
-    };
-
-    const fetchExpiringSoon = async () => {
-      try {
-        const response = await api.get("/subscriptions/admin/expiring-soon");
-        setNewExpiringPlansCount(response.data.length || 0);
-      } catch (error) {
-        console.error("Error fetching expiring plans count:", error);
-      }
-    };
-
-    const fetchBusinessTypes = async () => {
-      try {
-        const response = await api.get("/business-types");
-        setBusinessTypes(response.data.filter((t) => t.status === "active"));
-      } catch (error) {
-        console.error("Error fetching business types:", error);
-      }
-    };
-
     fetchCounts();
     fetchExpiringSoon();
     fetchBusinessTypes();
+
+    // Polling fallback every 5 minutes
+    const interval = setInterval(() => {
+      fetchCounts();
+      fetchExpiringSoon();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (socket) {
-      const handleNewBadgeRequest = (data) => { if (pathname !== "/admin/sellers") setPendingBadgeCount((prev) => prev + 1); };
-      const handleNewProperty = (data) => {
-        if (data.isSellerProperty) { if (pathname !== "/admin/seller-listings") setNewSellerPropertyCount((prev) => prev + 1); }
-        else { if (!pathname.startsWith("/admin/properties")) setNewPropertyCount((prev) => prev + 1); }
+      const handleNewBadgeRequest = () => { 
+        if (pathname !== "/admin/sellers") 
+          setNotifications(prev => ({ ...prev, badgeRequests: prev.badgeRequests + 1 })); 
       };
-      const handleNewEnquiry = (data) => { if (pathname !== "/admin/enquiries") setNewEnquiryCount((prev) => prev + 1); };
-      const handleNewWhatsappLead = (data) => { if (pathname !== "/admin/enquiries") setNewEnquiryCount((prev) => prev + 1); };
-      const handleNewRequirement = (data) => { if (pathname !== "/admin/requirements") setNewRequirementCount((prev) => prev + 1); };
-      const handleNewCallRequest = (data) => { if (pathname !== "/admin/forms/call-requests") setNewCallRequestCount((prev) => prev + 1); };
-      const handleNewContactMessage = (data) => { if (pathname !== "/admin/forms/contact-messages") setNewContactCount((prev) => prev + 1); };
-      const handleNewMarketingRequest = (data) => { if (pathname !== "/admin/marketing-requests") setNewLeadsCount((prev) => prev + 1); };
+      const handleNewProperty = (data) => {
+        if (data.isSellerProperty) { 
+          if (pathname !== "/admin/seller-listings") 
+            setNotifications(prev => ({ ...prev, sellerProperties: prev.sellerProperties + 1 })); 
+        } else { 
+          if (!pathname.startsWith("/admin/properties")) 
+            setNotifications(prev => ({ ...prev, ourProperties: prev.ourProperties + 1 })); 
+        }
+      };
+      const handleNewEnquiry = () => { if (pathname !== "/admin/enquiries") setNotifications(prev => ({ ...prev, enquiries: prev.enquiries + 1 })); };
+      const handleNewWhatsappLead = () => { if (pathname !== "/admin/enquiries") setNotifications(prev => ({ ...prev, enquiries: prev.enquiries + 1 })); };
+      const handleNewRequirement = () => { if (pathname !== "/admin/requirements") setNotifications(prev => ({ ...prev, requirements: prev.requirements + 1 })); };
+      const handleNewCallRequest = () => { if (pathname !== "/admin/forms/call-requests") setNotifications(prev => ({ ...prev, callRequests: prev.callRequests + 1 })); };
+      const handleNewContactMessage = () => { if (pathname !== "/admin/forms/contact-messages") setNotifications(prev => ({ ...prev, contactMessages: prev.contactMessages + 1 })); };
+      const handleNewMarketingRequest = () => { if (pathname !== "/admin/marketing-requests") setNotifications(prev => ({ ...prev, marketingLeads: prev.marketingLeads + 1 })); };
+      const handleNewSupportMessage = () => { if (pathname !== "/admin/support") setNotifications(prev => ({ ...prev, supportTickets: prev.supportTickets + 1 })); };
 
       socket.on("badge-verification-requested", handleNewBadgeRequest);
       socket.on("new-property-listed", handleNewProperty);
@@ -379,6 +400,8 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       socket.on("new-call-request", handleNewCallRequest);
       socket.on("new-contact-message", handleNewContactMessage);
       socket.on("new-marketing-request", handleNewMarketingRequest);
+      socket.on("new-support-message", handleNewSupportMessage);
+      socket.on("new-support-ticket", handleNewSupportMessage);
 
       return () => {
         socket.off("badge-verification-requested", handleNewBadgeRequest);
@@ -389,16 +412,6 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         socket.off("new-call-request", handleNewCallRequest);
         socket.off("new-contact-message", handleNewContactMessage);
         socket.off("new-marketing-request", handleNewMarketingRequest);
-      };
-    }
-  }, [socket, pathname]);
-
-  useEffect(() => {
-    if (socket) {
-      const handleNewSupportMessage = (data) => { if (pathname !== "/admin/support") setNewSupportTicketCount((prev) => prev + 1); };
-      socket.on("new-support-message", handleNewSupportMessage);
-      socket.on("new-support-ticket", handleNewSupportMessage);
-      return () => {
         socket.off("new-support-message", handleNewSupportMessage);
         socket.off("new-support-ticket", handleNewSupportMessage);
       };
@@ -406,15 +419,15 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   }, [socket, pathname]);
 
   useEffect(() => {
-    if (pathname === "/admin/marketing-requests") setNewLeadsCount(0);
-    if (pathname === "/admin/sellers") setPendingBadgeCount(0);
-    if (pathname.startsWith("/admin/properties")) setNewPropertyCount(0);
-    if (pathname === "/admin/seller-listings") setNewSellerPropertyCount(0);
-    if (pathname === "/admin/enquiries") setNewEnquiryCount(0);
-    if (pathname === "/admin/requirements") setNewRequirementCount(0);
-    if (pathname === "/admin/forms/call-requests") setNewCallRequestCount(0);
-    if (pathname === "/admin/forms/contact-messages") setNewContactCount(0);
-    if (pathname === "/admin/support") setNewSupportTicketCount(0);
+    if (pathname === "/admin/marketing-requests") setNotifications(prev => ({ ...prev, marketingLeads: 0 }));
+    if (pathname === "/admin/sellers") setNotifications(prev => ({ ...prev, badgeRequests: 0 }));
+    if (pathname.startsWith("/admin/properties")) setNotifications(prev => ({ ...prev, ourProperties: 0 }));
+    if (pathname === "/admin/seller-listings") setNotifications(prev => ({ ...prev, sellerProperties: 0 }));
+    if (pathname === "/admin/enquiries") setNotifications(prev => ({ ...prev, enquiries: 0 }));
+    if (pathname === "/admin/requirements") setNotifications(prev => ({ ...prev, requirements: 0 }));
+    if (pathname === "/admin/forms/call-requests") setNotifications(prev => ({ ...prev, callRequests: 0 }));
+    if (pathname === "/admin/forms/contact-messages") setNotifications(prev => ({ ...prev, contactMessages: 0 }));
+    if (pathname === "/admin/support") setNotifications(prev => ({ ...prev, supportTickets: 0 }));
   }, [pathname]);
 
   const handleMenuClick = (path) => {
@@ -426,69 +439,207 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   const allMenuItems = useMemo(() => [
     { key: "/admin/dashboard", icon: <LayoutDashboard size={18} />, label: "Dashboard", onClick: () => handleMenuClick("/admin/dashboard") },
     {
-      key: "properties-sub", icon: <Building size={18} />, label: (
-        <div className="flex items-center gap-2"><span>Properties</span>{newPropertyCount > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}</div>
+      key: "properties-sub", 
+      icon: <Building size={18} />, 
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Properties</span>
+          {notifications.ourProperties > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+        </div>
       ),
       children: [
-        { key: "/admin/properties", label: (<div className="flex justify-between items-center pr-4"><span>Our Properties</span>{newPropertyCount > 0 && <Badge count={newPropertyCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/properties") },
+        { 
+          key: "/admin/properties", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Our Properties</span>
+              {notifications.ourProperties > 0 && <Badge count={notifications.ourProperties} size="small" color="#7c3aed" />}
+            </div>
+          ), 
+          onClick: () => handleMenuClick("/admin/properties") 
+        },
         { key: "/admin/properties/add", label: "Add Property", onClick: () => handleMenuClick("/admin/properties/add") },
       ],
     },
     {
-      key: "seller-sub", icon: <Briefcase size={18} />, label: (
-        <div className="flex items-center gap-2"><span>Seller</span>{(pendingBadgeCount > 0 || newSellerPropertyCount > 0) && <Badge dot offset={[5, -2]} color="#7c3aed" />}</div>
+      key: "seller-sub", 
+      icon: <Briefcase size={18} />, 
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Seller</span>
+          {notifications.sellerProperties > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+        </div>
       ),
       children: [
-        { key: "/admin/seller-listings", label: (<div className="flex justify-between items-center pr-4"><span>Seller Listings</span>{newSellerPropertyCount > 0 && <Badge count={newSellerPropertyCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/seller-listings") },
+        { 
+          key: "/admin/seller-listings", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Seller Listings</span>
+              {notifications.sellerProperties > 0 && <Badge count={notifications.sellerProperties} size="small" color="#7c3aed" />}
+            </div>
+          ), 
+          onClick: () => handleMenuClick("/admin/seller-listings") 
+        },
       ],
     },
-    { key: "analytics-sub", icon: <BarChart3 size={18} />, label: "Analytics / Manager", children: [{ key: "/admin/view-count-manager", label: "View Count Manager", onClick: () => handleMenuClick("/admin/view-count-manager") }] },
+    { 
+      key: "analytics-sub", 
+      icon: <BarChart3 size={18} />, 
+      label: "Analytics / Manager", 
+      children: [
+        { key: "/admin/view-count-manager", label: "View Count Manager", onClick: () => handleMenuClick("/admin/view-count-manager") }
+      ] 
+    },
     {
-      key: "marketing-sub", icon: <Megaphone size={18} />, label: (
-        <div className="flex items-center gap-2"><span>Marketing</span>{newLeadsCount > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}</div>
+      key: "marketing-sub", 
+      icon: <Megaphone size={18} />, 
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Marketing</span>
+          {notifications.marketingLeads > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+        </div>
       ),
       children: [
         { key: "/admin/marketing-plans", label: "Marketing Plans", onClick: () => handleMenuClick("/admin/marketing-plans") },
-        { key: "/admin/marketing-requests", label: (<div className="flex justify-between items-center pr-4"><span>Marketing Leads</span>{newLeadsCount > 0 && <Badge count={newLeadsCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/marketing-requests") },
+        { 
+          key: "/admin/marketing-requests", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Marketing Leads</span>
+              {notifications.marketingLeads > 0 && <Badge count={notifications.marketingLeads} size="small" color="#7c3aed" />}
+            </div>
+          ), 
+          onClick: () => handleMenuClick("/admin/marketing-requests") 
+        },
       ],
     },
     {
-      key: "users-sub", icon: <Users size={18} />, label: "Users",
+      key: "users-sub", 
+      icon: <Users size={18} />, 
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Users</span>
+          {notifications.badgeRequests > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+        </div>
+      ),
       children: [
         { key: "/admin/users", label: "User List", onClick: () => handleMenuClick("/admin/users") },
         { key: "/admin/admins", label: "Admin List", onClick: () => handleMenuClick("/admin/admins") },
         {
-          key: "seller-list-sub", label: (<div className="flex justify-between items-center pr-4"><span>Seller List</span>{pendingBadgeCount > 0 && <Badge count={pendingBadgeCount} size="small" color="#7c3aed" />}</div>),
+          key: "seller-list-sub", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Seller List</span>
+              {notifications.badgeRequests > 0 && <Badge count={notifications.badgeRequests} size="small" color="#7c3aed" />}
+            </div>
+          ),
           children: [
-            { key: "/admin/sellers", label: "All Sellers", onClick: () => handleMenuClick("/admin/sellers") },
+            { 
+              key: "/admin/sellers", 
+              label: (
+                <div className="flex justify-between items-center pr-4">
+                  <span>All Sellers</span>
+                  {notifications.badgeRequests > 0 && <Badge count={notifications.badgeRequests} size="small" color="#7c3aed" />}
+                </div>
+              ), 
+              onClick: () => handleMenuClick("/admin/sellers") 
+            },
             ...businessTypes.map((type) => ({ key: `/admin/sellers?type=${type._id}`, label: type.name, onClick: () => handleMenuClick(`/admin/sellers?type=${type._id}`) })),
           ],
         },
         { key: "/admin/failed-registrations", label: "Failed Registrations", onClick: () => handleMenuClick("/admin/failed-registrations") },
       ],
     },
-    { key: "/admin/enquiries", icon: <LibraryBig size={18} />, label: (<div className="flex justify-between items-center pr-4"><span>Enquiry Leads</span>{newEnquiryCount > 0 && <Badge count={newEnquiryCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/enquiries") },
-    { key: "/admin/requirements", icon: <ClipboardList size={18} />, label: (<div className="flex justify-between items-center pr-4"><span>Posted Requirements</span>{newRequirementCount > 0 && <Badge count={newRequirementCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/requirements") },
+    { 
+      key: "/admin/enquiries", 
+      icon: <LibraryBig size={18} />, 
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Enquiry Leads</span>
+          {notifications.enquiries > 0 && <Badge count={notifications.enquiries} size="small" color="#7c3aed" />}
+        </div>
+      ), 
+      onClick: () => handleMenuClick("/admin/enquiries") 
+    },
+    { 
+      key: "/admin/requirements", 
+      icon: <ClipboardList size={18} />, 
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Posted Requirements</span>
+          {notifications.requirements > 0 && <Badge count={notifications.requirements} size="small" color="#7c3aed" />}
+        </div>
+      ), 
+      onClick: () => handleMenuClick("/admin/requirements") 
+    },
     {
-      key: "forms-sub", icon: <MessageSquare size={18} />, label: (
-        <div className="flex items-center gap-2"><span>Forms Data</span>{(newCallRequestCount > 0 || newContactCount > 0) && <Badge dot offset={[5, -2]} color="#7c3aed" />}</div>
+      key: "forms-sub", 
+      icon: <MessageSquare size={18} />, 
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Forms Data</span>
+          {(notifications.callRequests > 0 || notifications.contactMessages > 0) && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+        </div>
       ),
       children: [
-        { key: "/admin/forms/call-requests", label: (<div className="flex justify-between items-center pr-4"><span>Call Requests</span>{newCallRequestCount > 0 && <Badge count={newCallRequestCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/forms/call-requests") },
-        { key: "/admin/forms/contact-messages", label: (<div className="flex justify-between items-center pr-4"><span>Contact Messages</span>{newContactCount > 0 && <Badge count={newContactCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/forms/contact-messages") },
+        { 
+          key: "/admin/forms/call-requests", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Call Requests</span>
+              {notifications.callRequests > 0 && <Badge count={notifications.callRequests} size="small" color="#7c3aed" />}
+            </div>
+          ), 
+          onClick: () => handleMenuClick("/admin/forms/call-requests") 
+        },
+        { 
+          key: "/admin/forms/contact-messages", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Contact Messages</span>
+              {notifications.contactMessages > 0 && <Badge count={notifications.contactMessages} size="small" color="#7c3aed" />}
+            </div>
+          ), 
+          onClick: () => handleMenuClick("/admin/forms/contact-messages") 
+        },
       ],
     },
     { key: "/admin/banner-ads", icon: <Image size={18} />, label: "Banner Ads", onClick: () => handleMenuClick("/admin/banner-ads") },
     {
-      key: "subscriptions-sub", icon: <CreditCard size={18} />, label: (
-        <div className="flex items-center gap-2"><span>Subscriptions</span>{newExpiringPlansCount > 0 && <Badge count={newExpiringPlansCount} size="small" color="#7c3aed" />}</div>
+      key: "subscriptions-sub", 
+      icon: <CreditCard size={18} />, 
+      label: (
+        <div className="flex items-center gap-2">
+          <span>Subscriptions</span>
+          {notifications.expiringPlans > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+        </div>
       ),
       children: [
         { key: "/admin/subscription-plans", label: "Subscription Plans", onClick: () => handleMenuClick("/admin/subscription-plans") },
-        { key: "/admin/payment-history", label: (<div className="flex justify-between items-center pr-4"><span>Payment History</span>{newExpiringPlansCount > 0 && <Badge count={newExpiringPlansCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/payment-history") },
+        { 
+          key: "/admin/payment-history", 
+          label: (
+            <div className="flex justify-between items-center pr-4">
+              <span>Payment History</span>
+              {notifications.expiringPlans > 0 && <Badge count={notifications.expiringPlans} size="small" color="#7c3aed" />}
+            </div>
+          ), 
+          onClick: () => handleMenuClick("/admin/payment-history") 
+        },
       ],
     },
-    { key: "/admin/support", icon: <Headphones size={18} />, label: (<div className="flex justify-between items-center pr-4"><span>Support Tickets</span>{newSupportTicketCount > 0 && <Badge count={newSupportTicketCount} size="small" color="#7c3aed" />}</div>), onClick: () => handleMenuClick("/admin/support") },
+    { 
+      key: "/admin/support", 
+      icon: <Headphones size={18} />, 
+      label: (
+        <div className="flex justify-between items-center pr-4">
+          <span>Support Tickets</span>
+          {notifications.supportTickets > 0 && <Badge count={notifications.supportTickets} size="small" color="#7c3aed" />}
+        </div>
+      ), 
+      onClick: () => handleMenuClick("/admin/support") 
+    },
     {
       key: "property-settings-sub", icon: <Sliders size={18} />, label: "Property Settings",
       children: [
@@ -505,7 +656,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         { key: "/admin/social-media", label: "Social Media", onClick: () => handleMenuClick("/admin/social-media") },
       ],
     },
-  ], [newPropertyCount, pendingBadgeCount, newSellerPropertyCount, newLeadsCount, newEnquiryCount, newRequirementCount, newCallRequestCount, newContactCount, newExpiringPlansCount, newSupportTicketCount, businessTypes]);
+  ], [notifications, businessTypes]);
 
   const filteredMenuItems = useMemo(() => {
     if (!user) return [];
@@ -579,7 +730,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           onMouseLeave={(e) => { if (!itemPathActive) e.currentTarget.style.background = "transparent"; }}
         >
           {!collapsed && <span style={S.submenuDot(itemPathActive)} />}
-          <span style={{ flex: 1 }}>{item.label}</span>
+          <div style={{ flex: 1 }}>{item.label}</div>
           {hasChildren && !collapsed && <span style={S.chevron(isActive)}>{isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}</span>}
         </div>
         {hasChildren && !collapsed && <div style={S.submenu(isOpen)}>{item.children.map(child => renderItem(child, level + 1))}</div>}
