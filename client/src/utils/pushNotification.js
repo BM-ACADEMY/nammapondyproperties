@@ -40,14 +40,10 @@ export const subscribeToPushNotifications = async () => {
       return;
     }
 
-    // Register service worker
-    console.log("Registering service worker...");
-    const register = await navigator.serviceWorker.register("/sw.js", {
-      scope: "/",
-    });
-
-
-    console.log("Service Worker Registered...");
+    // Wait for service worker to be ready (registered by vite-plugin-pwa or manually)
+    console.log("Waiting for service worker to be ready...");
+    const register = await navigator.serviceWorker.ready;
+    console.log("Service Worker is ready...");
 
     // Get VAPID public key from server
     const { data } = await api.get("/notifications/vapid-public-key");
