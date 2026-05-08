@@ -350,8 +350,9 @@ const MyProperties = () => {
 
   const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, activePropertyCount);
   const isLimitReached = !canPost && (reason === "limit_reached" || reason === "expired");
-  const isPlanExpired = user?.activeSubscription?.status === "expired";
-  const planName = isPlanExpired ? "PLAN EXPIRED" : (user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE");
+  const activePlan = user?.activeSubscription?.plan;
+  const planName = isPlanExpired ? "PLAN EXPIRED" : (activePlan?.displayName || activePlan?.name || settings?.defaultPlanName || "FREE");
+  const internalPlanName = activePlan?.name || settings?.defaultPlanName || "FREE";
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -396,13 +397,13 @@ const MyProperties = () => {
         <p className="text-gray-500 text-sm mt-1">
           {isPlanExpired 
             ? "Please renew your subscription to continue listing and managing properties."
-            : planName === (settings?.defaultPlanName || "BASIC")
-            ? `${planName} plan allows up to ${propertyLimit} property listings.`
-            : planName === "Standard"
-            ? "Standard plan supports up to 10 listings with better visibility."
-            : planName === "Pro"
-            ? "Pro plan gives unlimited listings with the highest priority exposure."
-            : "Premium plan gives enhanced listings with top priority exposure."}
+            : internalPlanName === "Standard"
+            ? `${planName} plan supports up to ${propertyLimit} listings with better visibility.`
+            : internalPlanName === "Premium"
+            ? `${planName} plan gives enhanced listings with top priority exposure.`
+            : internalPlanName === "Pro"
+            ? `${planName} plan gives unlimited listings with the highest priority exposure.`
+            : `${planName} plan allows up to ${propertyLimit} property listings.`}
         </p>
       </div>
     </div>

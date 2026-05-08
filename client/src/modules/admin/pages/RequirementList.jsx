@@ -1004,11 +1004,14 @@ const RequirementList = () => {
                                 />
                               </div>
                               <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white shadow-md shadow-indigo-100">
-                                {plan.planName.charAt(0)}
+                                {(plan.displayName || plan.planName).charAt(0)}
                               </div>
                               <div className="flex flex-col">
                                 <div className="flex items-center gap-2">
-                                  <Text strong className="text-[14.5px] font-bold text-slate-800">{plan.planName} Plan</Text>
+                                  <Text strong className="text-[14.5px] font-bold text-slate-800">
+                                    {plan.displayName || plan.planName} 
+                                    <span className="text-[11px] text-slate-400 font-normal ml-1">({plan.planName})</span>
+                                  </Text>
                                   <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase ring-1 ring-emerald-200">Match Found</span>
                                 </div>
                                 <div className="flex flex-col mt-0.5">
@@ -1129,10 +1132,13 @@ const RequirementList = () => {
                            <div className="flex items-center justify-between p-5">
                               <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasAgents ? 'bg-slate-700 text-white shadow-md shadow-slate-100' : 'bg-slate-200 text-slate-400'}`}>
-                                   {plan.planName.charAt(0)}
+                                   {(plan.displayName || plan.planName).charAt(0)}
                                 </div>
                                 <div className="flex flex-col">
-                                  <Text strong className={`text-[14.5px] font-bold ${hasAgents ? 'text-slate-700' : 'text-slate-400'}`}>{plan.planName} Plan</Text>
+                                  <Text strong className={`text-[14.5px] font-bold ${hasAgents ? 'text-slate-700' : 'text-slate-400'}`}>
+                                    {plan.displayName || plan.planName}
+                                    <span className="text-[11px] text-slate-400 font-normal ml-1">({plan.planName})</span>
+                                  </Text>
                                   <Text className="text-[12px] text-slate-400 font-medium">Shared as fallback (masked)</Text>
                                 </div>
                               </div>

@@ -44,7 +44,8 @@ const UpgradePlan = () => {
       // Filter out any "Free" plans from backend to ensure only static one shows
       const dynamicPlans = res.data.filter(p => p.price > 0).map(p => ({
         ...p,
-        name: p.name.toUpperCase(), 
+        name: (p.displayName || p.name).toUpperCase(), 
+        internalName: p.name,
         features: p.features || [],
         notIncluded: p.notIncluded || [],
         isPopular: p.isPopular || false
@@ -206,9 +207,8 @@ const UpgradePlan = () => {
                     </div>
                   )}
 
-                  {/* Header */}
                   <div className="py-4 text-center border-b border-gray-50 bg-white">
-                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.name || "PLAN"}</h2>
+                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.displayName || plan.name || "PLAN"}</h2>
                   </div>
 
                   {/* Price Banner */}

@@ -420,6 +420,7 @@ exports.getSubscriptionStats = async (req, res) => {
         return {
           planId: plansInGroup[0]._id, // Representative ID for frontend reference
           planName: planName,
+          displayName: plansInGroup[0].displayName || planName,
           sellerCount: sellers.length,
           sellers: sellers,
           isAlreadyShared,
