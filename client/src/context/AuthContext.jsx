@@ -106,28 +106,14 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
 
-      if (!userData?.success) {
+      if (data?.success) {
+        setUser(data.user);
+        setToken(data.token);
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", encryptData(data.user));
+      } else {
         logout();
-        return;
-      }
-
-      // 2️⃣ Get fresh token (UPDATED ROLE)
-      const tokenRes = await fetch(
-        `${import.meta.env.VITE_API_URL}/users/refresh-token`,
-        {
-          headers: {
-            Authorization: `Bearer ${activeToken}`,
-          },
-        },
-      );
-      const tokenData = await tokenRes.json();
-
-      if (tokenData?.success) {
-        setUser(userData.user);
-        setToken(tokenData.token);
-
-        localStorage.setItem("token", tokenData.token);
-        localStorage.setItem("user", encryptData(userData.user));
       }
     } catch (err) {
       console.error("refetchUser failed", err);
@@ -135,6 +121,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = Boolean(user && token);
+
+  const contextValue = {
+    user,
+    token,
+    isLoading,
+    login,
+    logout,
+    refreshUser,
+    refetchUser,
+    isAuthenticated,
+    isLoginModalOpen,
+    setLoginModalOpen
+  };
 
   return (
     <AuthContext.Provider value={contextValue}>
