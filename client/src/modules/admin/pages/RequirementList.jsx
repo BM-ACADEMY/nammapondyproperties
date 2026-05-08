@@ -133,6 +133,7 @@ const RequirementList = () => {
   const [globalForm] = Form.useForm();
   const [minBudgetVal, setMinBudgetVal] = useState(null);
   const [maxBudgetVal, setMaxBudgetVal] = useState(null);
+  const [planDisplayNameMap, setPlanDisplayNameMap] = useState({});
 
   const selectedUsageType = Form.useWatch("usageType", addForm);
 
@@ -170,11 +171,6 @@ const RequirementList = () => {
 
   const socket = useSocket();
 
-  useEffect(() => {
-    fetchRequirements();
-    fetchGlobalSettings();
-  }, []);
-
   const fetchGlobalSettings = async () => {
     try {
       const response = await getWebsiteSettings();
@@ -185,6 +181,28 @@ const RequirementList = () => {
       console.error("Failed to fetch global settings", error);
     }
   };
+
+  const fetchPlans = async () => {
+    try {
+      const response = await api.get("/subscriptions/plans");
+      const map = {};
+      const plans = response.data.data || response.data; // Handle potential wrapping
+      if (Array.isArray(plans)) {
+        plans.forEach(p => {
+          if (!map[p.name]) map[p.name] = p.displayName || p.name;
+        });
+      }
+      setPlanDisplayNameMap(map);
+    } catch (error) {
+      console.error("Failed to fetch plans for mapping", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequirements();
+    fetchGlobalSettings();
+    fetchPlans();
+  }, []);
 
   useEffect(() => {
     if (socket) {
@@ -531,6 +549,11 @@ const RequirementList = () => {
                 <Tag color="green" className="m-0 text-[13px] font-semibold">
                    {record.acceptedBy.name}
                 </Tag>
+                {record.acceptedPlan && (
+                  <Tag color="purple" className="m-0 text-[10px] font-bold uppercase py-0 px-2 leading-5">
+                    {record.acceptedPlan.displayName || record.acceptedPlan.name} ({record.acceptedPlan.name})
+                  </Tag>
+                )}
                 {record.acceptedBy.businessType && (
                   <Tag color="blue" className="m-0 text-[10px] font-bold uppercase py-0 px-2 leading-5">
                     {record.acceptedBy.businessType.name || record.acceptedBy.businessType}
@@ -545,11 +568,13 @@ const RequirementList = () => {
         }
         if (record.sharingStatus === "in-progress") {
           const plans = record.sharingConfig?.plans || [];
-          const currentPlan = plans[record.sharingConfig?.currentPlanIndex] || "N/A";
+          const currentPlanName = plans[record.sharingConfig?.currentPlanIndex] || "N/A";
+          const currentPlanDisplay = planDisplayNameMap[currentPlanName] || currentPlanName;
+          
           return (
             <div className="flex flex-col gap-1">
               <Tag color="processing" icon={<Clock size={12} className="animate-pulse" />} className="m-0 font-bold uppercase text-[10px] flex items-center justify-between">
-                <span>Timer: {currentPlan}</span>
+                <span>Timer: {currentPlanDisplay} ({currentPlanName})</span>
                 <CountdownTimer 
                   startTime={record.sharingConfig?.startTime} 
                   timerInMinutes={record.sharingConfig?.timer} 

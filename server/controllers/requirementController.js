@@ -115,7 +115,7 @@ exports.getRequirements = async (req, res) => {
           path: "acceptedBy",
           select: "name email phone businessType",
           populate: { path: "businessType", select: "name" }
-        });
+        }).populate("plan");
 
         // Get the highest priority match it was shared with (to show in table)
         const anySharedLead = await SharedLead.findOne({ requirement: reqDoc._id })
@@ -124,6 +124,7 @@ exports.getRequirements = async (req, res) => {
         return {
           ...reqDoc.toObject(),
           acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
+          acceptedPlan: acceptedLead ? acceptedLead.plan : null,
           isShared: !!anySharedLead,
           matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
           sharingStatus: reqDoc.sharingStatus,
