@@ -11,7 +11,28 @@ exports.getAllPlans = async (req, res) => {
     }
 
     const plans = await SubscriptionPlan.find(query).populate("businessType");
-    res.json(plans);
+
+    // Add purchase restriction info for 'Standard' plans
+    let purchasedStandard = false;
+    if (req.user) {
+      const PaymentHistory = require("../models/PaymentHistory");
+      const alreadyPurchased = await PaymentHistory.findOne({
+        user: req.user._id,
+        planName: { $regex: /standard/i },
+        paymentStatus: "completed"
+      });
+      if (alreadyPurchased) purchasedStandard = true;
+    }
+
+    const modifiedPlans = plans.map(plan => {
+      const planObj = plan.toObject();
+      if (plan.name.toLowerCase().includes("standard") && purchasedStandard) {
+        planObj.isAlreadyPurchased = true;
+      }
+      return planObj;
+    });
+
+    res.json(modifiedPlans);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

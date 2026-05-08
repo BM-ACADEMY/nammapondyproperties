@@ -17,6 +17,22 @@ exports.createOrder = async (req, res) => {
     const plan = await SubscriptionPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
+    // Restriction: Standard Plan can only be purchased once
+    if (plan.name.toLowerCase().includes("standard")) {
+      const alreadyPurchased = await PaymentHistory.findOne({
+        user: req.user._id,
+        planName: { $regex: /standard/i },
+        paymentStatus: "completed"
+      });
+
+      if (alreadyPurchased) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "The Standard Plan can only be purchased once. Please choose a different plan." 
+        });
+      }
+    }
+
     const options = {
       amount: plan.price * 100, // amount in the smallest currency unit (paise)
       currency: "INR",
