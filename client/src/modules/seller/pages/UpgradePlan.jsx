@@ -41,8 +41,7 @@ const UpgradePlan = () => {
     setLoading(true);
     try {
       const res = await api.get("/subscriptions/plans");
-      // Filter out any "Free" plans from backend to ensure only static one shows
-      const dynamicPlans = res.data.filter(p => p.price > 0).map(p => ({
+      const dynamicPlans = res.data.filter(p => p.name !== "Free").map(p => ({
         ...p,
         name: (p.displayName || p.name).toUpperCase(), 
         internalName: p.name,
@@ -51,10 +50,10 @@ const UpgradePlan = () => {
         isPopular: p.isPopular || false
       }));
       
-      setPlans([freePlan, ...dynamicPlans]);
+      setPlans(dynamicPlans);
     } catch {
       message.error("Failed to load plans");
-      setPlans([freePlan]); // Still show free plan
+      setPlans([]); 
     } finally {
       setLoading(false);
     }

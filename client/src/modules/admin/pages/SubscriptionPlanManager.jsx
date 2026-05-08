@@ -344,7 +344,6 @@ const SubscriptionPlanManager = () => {
               tooltip="The internal name used for business logic (Lead priority, etc.)"
             >
                 <Select placeholder="Select plan type">
-                  <Select.Option value="Free">Free</Select.Option>
                   <Select.Option value="Standard">Standard</Select.Option>
                   <Select.Option value="Premium">Premium</Select.Option>
                   <Select.Option value="Pro">Pro</Select.Option>
