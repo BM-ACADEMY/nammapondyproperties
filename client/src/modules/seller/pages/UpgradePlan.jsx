@@ -252,7 +252,7 @@ const UpgradePlan = () => {
                       block
                       size="large"
                       loading={processingId === plan._id}
-                      disabled={isCurrent || (plan.price === 0 && !currentSubscription)}
+                      disabled={isCurrent || (plan.price === 0 && !currentSubscription) || plan.isAlreadyPurchased}
                       onClick={() => handleUpgrade(plan)}
                       className={`h-14 rounded-md font-black text-sm uppercase tracking-widest transition-all ${
                         isPopular 
@@ -260,7 +260,7 @@ const UpgradePlan = () => {
                           : "premium-navy-btn border-2"
                       }`}
                     >
-                      {isCurrent ? "Active Now" : plan.price === 0 ? "Default Plan" : "Upgrade"}
+                      {isCurrent ? "Active Now" : plan.isAlreadyPurchased ? "Already Purchased" : plan.price === 0 ? "Default Plan" : "Upgrade"}
                     </Button>
                   </div>
 

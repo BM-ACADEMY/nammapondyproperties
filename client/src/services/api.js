@@ -58,5 +58,7 @@ export const updateWebsiteSetting = (id, data) => api.patch(`/website-settings/$
 // Seller Shared Leads
 export const getMySharedLeads = () => api.get("/shared-leads/my-leads");
 export const acceptSharedLead = (id) => api.post(`/shared-leads/${id}/accept`);
+export const rejectSharedLead = (id) => api.post(`/shared-leads/${id}/reject`);
+export const updateLeadStatus = (id, status) => api.patch(`/shared-leads/${id}/status`, { status });
 
 export default api;
