@@ -189,7 +189,7 @@ const MyProperties = () => {
     }
   }, [user]);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = React.useCallback(async () => {
     setLoadingSubscription(true);
     try {
       const res = await api.get("/subscriptions/my-subscription");
@@ -199,7 +199,7 @@ const MyProperties = () => {
     } finally {
       setLoadingSubscription(false);
     }
-  };
+  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -225,8 +225,13 @@ const MyProperties = () => {
     const success = params.get("success");
     const property_id = params.get("property_id");
 
-    if (success && properties.length > 0) {
-      if (property_id) {
+    if (success) {
+      message.success("Payment successful! Your plan has been updated.");
+      refetchUser();
+      fetchSubscription();
+      fetchProperties();
+      
+      if (properties.length > 0 && property_id) {
         const prop = properties.find((p) => p._id === property_id);
         if (prop) {
           setSelectedProperty(prop);
@@ -237,7 +242,7 @@ const MyProperties = () => {
       // Clear the query param without refreshing
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [properties]);
+  }, [properties, refetchUser, fetchProperties, fetchSubscription]);
 
   const fetchMarketingRequests = async () => {
     try {
@@ -348,11 +353,12 @@ const MyProperties = () => {
     ["Active", "Pending", "Edit Pending Approval"].includes(p.status)
   ).length;
 
-  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, activePropertyCount);
+  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, properties.length);
+  const isPlanExpired = reason === "expired" || user?.activeSubscription?.status === "expired";
   const isLimitReached = !canPost && (reason === "limit_reached" || reason === "expired");
   const activePlan = user?.activeSubscription?.plan;
-  const planName = isPlanExpired ? "PLAN EXPIRED" : (activePlan?.displayName || activePlan?.name || settings?.defaultPlanName || "FREE");
-  const internalPlanName = activePlan?.name || settings?.defaultPlanName || "FREE";
+  const planName = isPlanExpired ? "PLAN EXPIRED" : (activePlan?.displayName || activePlan?.name || "FREE");
+  const internalPlanName = activePlan?.name || "FREE";
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -436,7 +442,7 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user, activePropertyCount);
+            const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user, activePropertyCount);
             if (!canPost) {
               message.warning(limitMessage);
               if (reason === "unverified") {

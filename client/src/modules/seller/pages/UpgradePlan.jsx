@@ -12,13 +12,13 @@ const UpgradePlan = () => {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const [settings, setSettings] = useState(null);
 
   // Static Free Plan definition
   const freePlan = {
     _id: "static_free",
-    name: (settings?.defaultPlanName || "BASIC").toUpperCase(),
+    name: "FREE",
     price: 0,
     duration: 0,
     propertyLimit: settings?.sellerPropertyLimit || 3,
@@ -141,7 +141,8 @@ const UpgradePlan = () => {
 
             if (verifyRes.data.success) {
               message.success("Subscribed successfully!");
-              navigate("/seller/my-properties");
+              await refetchUser();
+              navigate("/seller/my-properties?success=true");
             }
           } catch (err) {
             console.error("Payment Verification Error:", err);
