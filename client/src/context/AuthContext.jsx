@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useMemo, useContext } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import CryptoJS from "crypto-js";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
 
@@ -7,15 +7,19 @@ export const AuthContext = createContext(null);
 const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
 
 /* ================== CRYPTO HELPERS ================== */
-const encryptData = (data) =>
-  CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+const encryptData = (data) => {
+  if (!data || !SECRET_KEY) return null;
+  return CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+};
 
 const decryptData = (cipherText) => {
+  if (!cipherText || !SECRET_KEY) return null;
   try {
     const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
     const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
     return JSON.parse(decryptedData);
-  } catch {
+  } catch (error) {
+    console.error("Decryption failed:", error);
     return null;
   }
 };
@@ -41,17 +45,20 @@ export const AuthProvider = ({ children }) => {
             setToken(storedToken);
             setUser(decryptedUser);
 
-            // 🛡️ Validate with server immediately to ensure session is still valid
-            // We do this in the background but keep isLoading=true until it finishes
-            // to avoid multiple "flashes" of content.
-            await refetchUser(storedToken);
+            // 🛡️ Validate with server immediately to ensure user still exists in DB
+            // We don't await this to avoid blocking the initial render
+            refetchUser(storedToken);
             
             // 🔔 Subscribe to push notifications
             subscribeToPushNotifications();
+          } else {
+             // If decryption fails, data is likely corrupt or key changed
+             localStorage.removeItem("token");
+             localStorage.removeItem("user");
           }
         }
-      } catch (error) {
-        console.error("Session validation failed:", error);
+      } catch (err) {
+        console.error("Session restoration failed", err);
       } finally {
         setIsLoading(false);
       }
@@ -59,14 +66,6 @@ export const AuthProvider = ({ children }) => {
 
     validateSession();
   }, []);
-
-  /* 🔁 Sync storage whenever token/user changes */
-  useEffect(() => {
-    if (token && user) {
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", encryptData(user));
-    }
-  }, [token, user]);
 
   /* ================== ACTIONS ================== */
 
@@ -89,13 +88,9 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", encryptData(updatedUserData));
   };
 
-  /**
-   * Fetches fresh user data and a fresh token from the server.
-   * Uses the /refresh-token endpoint which returns both.
-   */
-  const refetchUser = async (explicitToken = null) => {
+  const refetchUser = async (providedToken) => {
     try {
-      const activeToken = explicitToken || token || localStorage.getItem("token");
+      const activeToken = providedToken || token || localStorage.getItem("token");
       if (!activeToken) return;
 
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/refresh-token`, {
@@ -111,39 +106,35 @@ export const AuthProvider = ({ children }) => {
 
       const data = await res.json();
 
-      if (data?.success && data?.user && data?.token) {
-        // Update both user and token in one go
-        setUser(data.user);
-        setToken(data.token);
-        
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", encryptData(data.user));
-      } else {
-        // If the refresh endpoint doesn't return success, we might want to logout
-        // but only if it was a definitive failure.
-        if (data?.error === "User not found") {
-           logout();
-        }
+      if (!userData?.success) {
+        logout();
+        return;
+      }
+
+      // 2️⃣ Get fresh token (UPDATED ROLE)
+      const tokenRes = await fetch(
+        `${import.meta.env.VITE_API_URL}/users/refresh-token`,
+        {
+          headers: {
+            Authorization: `Bearer ${activeToken}`,
+          },
+        },
+      );
+      const tokenData = await tokenRes.json();
+
+      if (tokenData?.success) {
+        setUser(userData.user);
+        setToken(tokenData.token);
+
+        localStorage.setItem("token", tokenData.token);
+        localStorage.setItem("user", encryptData(userData.user));
       }
     } catch (err) {
-      console.error("refetchUser failed:", err);
+      console.error("refetchUser failed", err);
     }
   };
 
-  const isAuthenticated = useMemo(() => Boolean(user && token), [user, token]);
-
-  const contextValue = useMemo(() => ({
-    user,
-    token,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-    refetchUser,
-    refreshUser,
-    isLoginModalOpen,
-    setLoginModalOpen,
-  }), [user, token, isAuthenticated, isLoading, isLoginModalOpen]);
+  const isAuthenticated = Boolean(user && token);
 
   return (
     <AuthContext.Provider value={contextValue}>
