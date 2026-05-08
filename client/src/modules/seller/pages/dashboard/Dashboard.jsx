@@ -52,6 +52,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState("30d"); // 7d, 30d, 90d, all
+  const [refreshKey, setRefreshKey] = useState(0);
   const [enquiryPage, setEnquiryPage] = useState(1);
   const ENQUIRIES_PER_PAGE = 5;
   const [data, setData] = useState({
@@ -90,11 +91,16 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [range]);
+  }, [range, refreshKey]);
 
   if (loading && !data.summary.totalProperties) {
     return <Loader variant="panel" />;
   }
+
+  const handleRetry = () => {
+    setError(null);
+    setRefreshKey(prev => prev + 1);
+  };
 
   if (error) {
     return (
@@ -105,12 +111,13 @@ const Dashboard = () => {
           type="error"
           showIcon
           action={
-            <Link
-              to="/seller/dashboard"
-              onClick={() => window.location.reload()}
+            <Button
+              type="primary"
+              ghost
+              onClick={handleRetry}
             >
               Retry
-            </Link>
+            </Button>
           }
         />
       </div>

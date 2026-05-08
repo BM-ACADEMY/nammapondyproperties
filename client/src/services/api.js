@@ -1,4 +1,5 @@
 import axios from "axios";
+import { navigate } from "./navigationService";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -30,7 +31,7 @@ api.interceptors.response.use(
       if (token) {
         // Only clear if we actually had a session
         localStorage.clear();
-        window.location.href = "/login?message=session_expired";
+        navigate("/login?message=session_expired");
       }
     }
     return Promise.reject(error);

@@ -1,7 +1,6 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useMemo, useContext } from "react";
 import CryptoJS from "crypto-js";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
-
 
 export const AuthContext = createContext(null);
 
@@ -38,17 +37,21 @@ export const AuthProvider = ({ children }) => {
         if (storedToken && storedUser) {
           const decryptedUser = decryptData(storedUser);
           if (decryptedUser) {
+            // Set initial state from storage immediately
             setToken(storedToken);
             setUser(decryptedUser);
 
-            // 🛡️ Validate with server immediately to ensure user still exists in DB
-            await refetchUser();
+            // 🛡️ Validate with server immediately to ensure session is still valid
+            // We do this in the background but keep isLoading=true until it finishes
+            // to avoid multiple "flashes" of content.
+            await refetchUser(storedToken);
             
             // 🔔 Subscribe to push notifications
             subscribeToPushNotifications();
           }
-
         }
+      } catch (error) {
+        console.error("Session validation failed:", error);
       } finally {
         setIsLoading(false);
       }
@@ -57,34 +60,28 @@ export const AuthProvider = ({ children }) => {
     validateSession();
   }, []);
 
-  /* 🔁 Sync storage (NO AUTO LOGOUT HERE) */
+  /* 🔁 Sync storage whenever token/user changes */
   useEffect(() => {
     if (token && user) {
       localStorage.setItem("token", token);
       localStorage.setItem("user", encryptData(user));
     }
-    // ❌ DO NOT clear storage here
   }, [token, user]);
 
   /* ================== ACTIONS ================== */
 
   const login = (userData, authToken) => {
-    console.log(userData, "token data");
-
     setUser(userData);
     setToken(authToken);
     localStorage.setItem("token", authToken);
     localStorage.setItem("user", encryptData(userData));
-
-    // 🔔 Subscribe to push notifications
     subscribeToPushNotifications();
   };
-
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.clear(); // ✅ explicit logout only
+    localStorage.clear();
   };
 
   const refreshUser = (updatedUserData) => {
@@ -92,83 +89,73 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", encryptData(updatedUserData));
   };
 
-  const refetchUser = async () => {
+  /**
+   * Fetches fresh user data and a fresh token from the server.
+   * Uses the /refresh-token endpoint which returns both.
+   */
+  const refetchUser = async (explicitToken = null) => {
     try {
-      const oldToken = localStorage.getItem("token");
-      if (!oldToken) return;
+      const activeToken = explicitToken || token || localStorage.getItem("token");
+      if (!activeToken) return;
 
-      // 1️⃣ Get fresh user
-      const userRes = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/refresh-token`, {
         headers: {
-          Authorization: `Bearer ${oldToken}`,
+          Authorization: `Bearer ${activeToken}`,
         },
       });
 
-      // 🚨 Handle User Not Found / Invalid Token
-      if (userRes.status === 401 || userRes.status === 404) {
+      if (res.status === 401 || res.status === 404) {
         logout();
         return;
       }
 
-      const userData = await userRes.json();
+      const data = await res.json();
 
-      if (!userData?.success) {
-        logout();
-        return;
-      }
-
-      // 2️⃣ Get fresh token (UPDATED ROLE)
-      const tokenRes = await fetch(
-        `${import.meta.env.VITE_API_URL}/users/refresh-token`,
-        {
-          headers: {
-            Authorization: `Bearer ${oldToken}`,
-          },
-        },
-      );
-      const tokenData = await tokenRes.json();
-
-      if (tokenData?.success) {
-        setUser(userData.user);
-        setToken(tokenData.token);
-
-        localStorage.setItem("token", tokenData.token);
-        localStorage.setItem("user", encryptData(userData.user));
+      if (data?.success && data?.user && data?.token) {
+        // Update both user and token in one go
+        setUser(data.user);
+        setToken(data.token);
+        
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", encryptData(data.user));
+      } else {
+        // If the refresh endpoint doesn't return success, we might want to logout
+        // but only if it was a definitive failure.
+        if (data?.error === "User not found") {
+           logout();
+        }
       }
     } catch (err) {
-      console.error("refetchUser failed", err);
-      // Optional: logout on massive failure?
-      // logout();
+      console.error("refetchUser failed:", err);
     }
   };
 
-  const isAuthenticated = Boolean(user && token);
+  const isAuthenticated = useMemo(() => Boolean(user && token), [user, token]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    token,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+    refetchUser,
+    refreshUser,
+    isLoginModalOpen,
+    setLoginModalOpen,
+  }), [user, token, isAuthenticated, isLoading, isLoginModalOpen]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        isLoading,
-        login,
-        logout,
-        refetchUser,
-        refreshUser,
-        isLoginModalOpen,
-        setLoginModalOpen,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
-
-import React from "react";

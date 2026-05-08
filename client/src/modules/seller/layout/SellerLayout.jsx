@@ -27,9 +27,6 @@ const SellerLayout = () => {
   const socket = useSocket();
 
 
-  useEffect(() => {
-    refetchUser();
-  }, []);
 
   useEffect(() => {
     if (user?.activeSubscription) {
