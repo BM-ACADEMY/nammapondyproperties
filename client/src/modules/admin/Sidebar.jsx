@@ -370,6 +370,15 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
   }, []);
 
   useEffect(() => {
+    const handleRefresh = () => {
+      fetchCounts();
+      fetchExpiringSoon();
+    };
+    window.addEventListener("refresh-admin-counts", handleRefresh);
+    return () => window.removeEventListener("refresh-admin-counts", handleRefresh);
+  }, []);
+
+  useEffect(() => {
     if (socket) {
       const handleNewBadgeRequest = () => { 
         if (pathname !== "/admin/sellers") 
@@ -418,17 +427,8 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     }
   }, [socket, pathname]);
 
-  useEffect(() => {
-    if (pathname === "/admin/marketing-requests") setNotifications(prev => ({ ...prev, marketingLeads: 0 }));
-    if (pathname === "/admin/sellers") setNotifications(prev => ({ ...prev, badgeRequests: 0 }));
-    if (pathname.startsWith("/admin/properties")) setNotifications(prev => ({ ...prev, ourProperties: 0 }));
-    if (pathname === "/admin/seller-listings") setNotifications(prev => ({ ...prev, sellerProperties: 0 }));
-    if (pathname === "/admin/enquiries") setNotifications(prev => ({ ...prev, enquiries: 0 }));
-    if (pathname === "/admin/requirements") setNotifications(prev => ({ ...prev, requirements: 0 }));
-    if (pathname === "/admin/forms/call-requests") setNotifications(prev => ({ ...prev, callRequests: 0 }));
-    if (pathname === "/admin/forms/contact-messages") setNotifications(prev => ({ ...prev, contactMessages: 0 }));
-    if (pathname === "/admin/support") setNotifications(prev => ({ ...prev, supportTickets: 0 }));
-  }, [pathname]);
+  // Removed automatic count reset on navigation to allow tracking individual record status changes.
+  // Counts will now update via polling or socket events.
 
   const handleMenuClick = (path) => {
     if (!path) return;
@@ -442,9 +442,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "properties-sub", 
       icon: <Building size={18} />, 
       label: (
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center pr-4">
           <span>Properties</span>
-          {notifications.ourProperties > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+          {notifications.ourProperties > 0 && <Badge count={notifications.ourProperties} size="small" color="#7c3aed" />}
         </div>
       ),
       children: [
@@ -465,9 +465,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "seller-sub", 
       icon: <Briefcase size={18} />, 
       label: (
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center pr-4">
           <span>Seller</span>
-          {notifications.sellerProperties > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+          {notifications.sellerProperties > 0 && <Badge count={notifications.sellerProperties} size="small" color="#7c3aed" />}
         </div>
       ),
       children: [
@@ -495,9 +495,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "marketing-sub", 
       icon: <Megaphone size={18} />, 
       label: (
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center pr-4">
           <span>Marketing</span>
-          {notifications.marketingLeads > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+          {notifications.marketingLeads > 0 && <Badge count={notifications.marketingLeads} size="small" color="#7c3aed" />}
         </div>
       ),
       children: [
@@ -518,9 +518,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "users-sub", 
       icon: <Users size={18} />, 
       label: (
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center pr-4">
           <span>Users</span>
-          {notifications.badgeRequests > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+          {notifications.badgeRequests > 0 && <Badge count={notifications.badgeRequests} size="small" color="#7c3aed" />}
         </div>
       ),
       children: [
@@ -577,9 +577,11 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "forms-sub", 
       icon: <MessageSquare size={18} />, 
       label: (
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center pr-4">
           <span>Forms Data</span>
-          {(notifications.callRequests > 0 || notifications.contactMessages > 0) && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+          {(notifications.callRequests + notifications.contactMessages) > 0 && (
+            <Badge count={notifications.callRequests + notifications.contactMessages} size="small" color="#7c3aed" />
+          )}
         </div>
       ),
       children: [
@@ -610,9 +612,9 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
       key: "subscriptions-sub", 
       icon: <CreditCard size={18} />, 
       label: (
-        <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center pr-4">
           <span>Subscriptions</span>
-          {notifications.expiringPlans > 0 && <Badge dot offset={[5, -2]} color="#7c3aed" />}
+          {notifications.expiringPlans > 0 && <Badge count={notifications.expiringPlans} size="small" color="#7c3aed" />}
         </div>
       ),
       children: [

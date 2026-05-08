@@ -89,6 +89,8 @@ const CallRequests = () => {
       if (res.data.success) {
         message.success(`Status updated to ${status}`);
         fetchData();
+        // Refresh sidebar counts
+        window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
       }
     } catch (error) {
       console.error("Error updating status:", error);

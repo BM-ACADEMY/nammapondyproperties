@@ -201,6 +201,8 @@ const RequirementList = () => {
       await updateRequirementStatus(id, newStatus);
       message.success(`Status updated to ${newStatus}`);
       fetchRequirements();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       message.error("Failed to update status");
     }
@@ -263,6 +265,8 @@ const RequirementList = () => {
       setIsTimerModalOpen(false);
       setSelectedRequirement(null);
       fetchRequirements();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to start lead sharing timer");
     } finally {
@@ -305,6 +309,8 @@ const RequirementList = () => {
       await stopLeadSharingTimer(id);
       message.success("Lead sharing timer stopped");
       fetchRequirements();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       message.error("Failed to stop lead sharing timer");
     }

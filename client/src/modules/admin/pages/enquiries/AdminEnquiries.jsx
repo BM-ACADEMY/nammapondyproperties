@@ -56,6 +56,8 @@ const AdminEnquiries = () => {
       await api.patch(`/enquiries/update-status/${id}`, { status, type });
       message.success(`Status updated to ${status}`);
       fetchEnquiries();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       console.error("Error updating status", error);
       message.error("Failed to update status");

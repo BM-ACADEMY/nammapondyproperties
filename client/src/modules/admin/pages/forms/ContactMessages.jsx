@@ -94,6 +94,8 @@ const ContactMessages = () => {
       if (res.data.success) {
         message.success(`Status updated to ${status}`);
         fetchData();
+        // Refresh sidebar counts
+        window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
         if (selectedMessage && selectedMessage._id === id) {
           setSelectedMessage(res.data.data);
         }
