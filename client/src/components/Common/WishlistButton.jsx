@@ -76,7 +76,7 @@ const WishlistButton = ({ propertyId, className = "" }) => {
         onClick={handleToggleWishlist}
         disabled={loading}
         whileTap={{ scale: 0.8 }}
-        className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${isWishlisted
+        className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 cursor-pointer ${isWishlisted
           ? "bg-red-50 text-red-500 hover:bg-red-100"
           : "bg-black/20 text-white hover:bg-black/40 hover:scale-110"
           } ${className}`}

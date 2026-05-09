@@ -227,36 +227,38 @@ const CouponManager = () => {
 
         {/* Add/Edit Modal */}
         <Modal
-          title={
-            <div className="flex items-center gap-2 border-b pb-4 mb-4">
-              {editingCoupon ? <Edit size={20} className="text-blue-500" /> : <Plus size={20} className="text-green-500" />}
-              <span className="text-lg font-black">{editingCoupon ? "Edit Coupon" : "Create New Coupon"}</span>
-            </div>
-          }
+          title={editingCoupon ? "Edit Coupon" : "Create New Coupon"}
           open={isModalOpen}
           onCancel={() => setIsModalOpen(false)}
           footer={null}
-          width={700}
+          width={650}
           centered
           className="coupon-modal"
         >
-          <Form layout="vertical" form={form} onFinish={onFinish} initialValues={{ status: true, maxUsagePerUser: 1, minSpend: 0 }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+          <Form 
+            layout="vertical" 
+            form={form} 
+            onFinish={onFinish} 
+            initialValues={{ status: true, maxUsagePerUser: 1, minSpend: 0 }}
+            className="compact-form"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1">
               <Form.Item
                 name="code"
-                label={<span className="font-bold flex items-center gap-2"><Ticket size={14} /> Coupon Code</span>}
+                label="Coupon Code"
                 rules={[{ required: true, message: "Enter coupon code" }]}
+                normalize={(value) => value ? value.toUpperCase().replace(/[^A-Z0-9_]/g, "") : ""}
               >
-                <Input placeholder="E.g. WELCOME50" className="uppercase font-bold" />
+                <Input placeholder="E.g. WELCOME50" />
               </Form.Item>
 
               <Form.Item
                 name="discountType"
-                label={<span className="font-bold flex items-center gap-2"><Percent size={14} /> Discount Type</span>}
+                label="Discount Type"
                 rules={[{ required: true }]}
                 initialValue="percentage"
               >
-                <Select>
+                <Select className="w-full">
                   <Select.Option value="percentage">Percentage (%)</Select.Option>
                   <Select.Option value="fixed">Fixed Amount (₹)</Select.Option>
                 </Select>
@@ -269,16 +271,17 @@ const CouponManager = () => {
                 {({ getFieldValue }) => (
                   <Form.Item
                     name="discountValue"
-                    label={<span className="font-bold flex items-center gap-2">{getFieldValue('discountType') === 'percentage' ? <Percent size={14} /> : <IndianRupee size={14} />} Discount Value</span>}
+                    label={getFieldValue('discountType') === 'percentage' ? "Discount Percentage (%)" : "Discount Amount (₹)"}
                     rules={[{ required: true, message: "Enter value" }]}
                   >
                     <InputNumber 
                       min={0} 
                       max={getFieldValue('discountType') === 'percentage' ? 100 : undefined} 
                       className="w-full" 
-                      placeholder="50" 
-                      formatter={value => getFieldValue('discountType') === 'percentage' ? `${value}%` : `₹ ${value}`}
-                      parser={value => value.replace(/[₹\s%]/g, '')}
+                      placeholder="0"
+                      onKeyPress={(e) => {
+                        if (!/[0-9]/.test(e.key)) e.preventDefault();
+                      }}
                     />
                   </Form.Item>
                 )}
@@ -286,30 +289,49 @@ const CouponManager = () => {
 
               <Form.Item
                 name="maxUsageTotal"
-                label={<span className="font-bold flex items-center gap-2"><Users size={14} /> Max Users (Total Usage)</span>}
+                label="Max Users (Total Usage)"
                 tooltip="How many times this coupon can be used overall. Leave empty for unlimited."
               >
-                <InputNumber min={1} className="w-full" placeholder="Unlimited" />
+                <InputNumber 
+                  min={1} 
+                  className="w-full" 
+                  placeholder="Unlimited" 
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
               </Form.Item>
 
               <Form.Item
                 name="maxUsagePerUser"
-                label={<span className="font-bold flex items-center gap-2"><Users size={14} /> Max Usage Per User</span>}
+                label="Max Usage Per User"
                 rules={[{ required: true }]}
               >
-                <InputNumber min={1} className="w-full" />
+                <InputNumber 
+                  min={1} 
+                  className="w-full" 
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
               </Form.Item>
 
               <Form.Item
                 name="minSpend"
-                label={<span className="font-bold flex items-center gap-2"><IndianRupee size={14} /> Minimum Spend (₹)</span>}
+                label="Minimum Spend (₹)"
               >
-                <InputNumber min={0} className="w-full" />
+                <InputNumber 
+                  min={0} 
+                  className="w-full" 
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
+                  }}
+                />
               </Form.Item>
 
               <Form.Item
                 name="status"
-                label={<span className="font-bold flex items-center gap-2"><CheckCircle size={14} /> Status</span>}
+                label="Status"
                 valuePropName="checked"
               >
                 <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
@@ -317,34 +339,35 @@ const CouponManager = () => {
 
               <Form.Item
                 name="startDate"
-                label={<span className="font-bold flex items-center gap-2"><Calendar size={14} /> Start Date</span>}
+                label="Start Date"
               >
-                <DatePicker className="w-full" />
+                <DatePicker className="w-full" inputReadOnly={true} />
               </Form.Item>
 
               <Form.Item
                 name="endDate"
-                label={<span className="font-bold flex items-center gap-2"><Calendar size={14} /> End Date</span>}
+                label="End Date"
               >
-                <DatePicker className="w-full" placeholder="No Expiry" />
+                <DatePicker className="w-full" placeholder="No Expiry" inputReadOnly={true} />
               </Form.Item>
             </div>
 
             <Form.Item
               name="termsAndConditions"
-              label={<span className="font-bold flex items-center gap-2"><FileText size={14} /> Terms and Conditions</span>}
+              label="Terms and Conditions"
+              className="mt-2"
             >
-              <Input.TextArea rows={4} placeholder="Enter T&C here..." />
+              <Input.TextArea rows={3} placeholder="Enter T&C here..." />
             </Form.Item>
 
-            <div className="flex justify-end gap-3 pt-6 border-t mt-4">
-              <Button onClick={() => setIsModalOpen(false)} className="rounded-xl px-6 h-11 font-bold">
+            <div className="flex justify-end gap-3 pt-4">
+              <Button onClick={() => setIsModalOpen(false)} className="rounded-xl px-6 h-10 font-semibold text-gray-500">
                 Cancel
               </Button>
               <Button
                 type="primary"
                 htmlType="submit"
-                className="bg-purple-600 rounded-xl px-10 h-11 font-bold shadow-md hover:bg-purple-700"
+                className="bg-purple-600 rounded-xl px-10 h-10 font-semibold shadow-md hover:bg-purple-700"
               >
                 {editingCoupon ? "Update Coupon" : "Create Coupon"}
               </Button>
@@ -361,16 +384,28 @@ const CouponManager = () => {
           font-size: 13px;
         }
         .coupon-modal .ant-modal-content {
-          border-radius: 20px !important;
+          border-radius: 16px !important;
           padding: 24px !important;
         }
-        .ant-input-number-input, .ant-input {
-          height: 40px !important;
-          border-radius: 8px !important;
+        .coupon-modal .ant-modal-header {
+          margin-bottom: 20px !important;
         }
-        .ant-picker {
-          height: 40px !important;
+        .ant-input-number, .ant-input, .ant-select-selector, .ant-picker {
+          height: 44px !important;
           border-radius: 8px !important;
+          display: flex !important;
+          align-items: center !important;
+        }
+        .ant-select-selector {
+           padding: 0 12px !important;
+        }
+        .compact-form .ant-form-item {
+          margin-bottom: 12px !important;
+        }
+        .ant-form-item-label > label {
+          font-size: 13px !important;
+          color: #4b5563 !important;
+          font-weight: 500 !important;
         }
       `}</style>
     </div>
