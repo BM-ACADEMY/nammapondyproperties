@@ -14,6 +14,8 @@ const paymentHistorySchema = new mongoose.Schema(
     },
     planName: { type: String, required: true },
     amountPaid: { type: Number, required: true },
+    finalAmount: { type: Number },
+    originalPrice: { type: Number },
     razorpayOrderId: { type: String, required: true },
     razorpayPaymentId: { type: String, required: true },
     paymentStatus: { 
@@ -22,7 +24,9 @@ const paymentHistorySchema = new mongoose.Schema(
       default: "completed" 
     },
     transactionDate: { type: Date, default: Date.now },
-    expiryDate: { type: Date }
+    expiryDate: { type: Date },
+    couponCode: { type: String },
+    discountAmount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

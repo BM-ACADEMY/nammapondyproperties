@@ -32,6 +32,7 @@ const RequirementList = lazy(() => import("./pages/RequirementList"));
 const SubscriptionPlanManager = lazy(() => import("./pages/SubscriptionPlanManager"));
 const PaymentHistory = lazy(() => import("./pages/PaymentHistory"));
 const SupportManagement = lazy(() => import("./pages/SupportManagement"));
+const CouponManager = lazy(() => import("./pages/CouponManager"));
 
 const PageLoader = () => <Loader variant="panel" />;
 
@@ -73,6 +74,7 @@ const AdminRoute = () => {
           <Route path="requirements" element={<RequirementList />} />
           <Route path="subscription-plans" element={<SubscriptionPlanManager />} />
           <Route path="payment-history" element={<PaymentHistory />} />
+          <Route path="coupons" element={<CouponManager />} />
 
           <Route path="support" element={<SupportManagement />} />
 

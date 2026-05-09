@@ -13,6 +13,7 @@ router.get("/plans", optionalAuth, subscriptionPlanController.getAllPlans);
 router.get("/my-subscription", authMiddleware, subscriptionController.getUserSubscription);
 router.post("/create-order", authMiddleware, subscriptionController.createOrder);
 router.post("/verify-payment", authMiddleware, subscriptionController.verifyPayment);
+router.post("/activate-free-plan", authMiddleware, subscriptionController.activateFreePlan);
 router.get("/my-history", authMiddleware, subscriptionController.getMyPaymentHistory);
 
 // Admin Routes

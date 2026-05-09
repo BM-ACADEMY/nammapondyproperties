@@ -346,7 +346,7 @@ const AdminLayout = () => {
                 trigger={["click"]}
                 placement="bottomRight"
                 arrow={{ pointAtCenter: true }}
-                overlayClassName="notification-dropdown"
+                classNames={{ root: "notification-dropdown" }}
               >
                 <Button
                   type="text"
