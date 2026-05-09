@@ -195,7 +195,7 @@ const BuilderPromoterDetailsUI = ({
           <WishlistButton propertyId={property._id} />
           <button
             onClick={handleShare}
-            className="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg hover:bg-white transition-all active:scale-95 group/share"
+            className="p-2 bg-white/90 backdrop-blur rounded-full shadow-lg hover:bg-white transition-all active:scale-95 group/share cursor-pointer"
             title="Share Property"
           >
             <Share2
@@ -823,7 +823,7 @@ const BuilderPromoterDetailsUI = ({
                 <button
                   onClick={handleWhatsAppClick}
                   disabled={enquiryLoading || property.isSold}
-                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg ${
+                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg cursor-pointer ${
                     property.isSold
                       ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
                       : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"

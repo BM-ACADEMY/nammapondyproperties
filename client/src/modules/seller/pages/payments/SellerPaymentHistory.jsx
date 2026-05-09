@@ -85,46 +85,40 @@ const SellerPaymentHistory = () => {
       title: "Plan Details",
       dataIndex: "planName",
       key: "description",
-      render: (name, record) => (
+      render: (name) => (
         <div className="flex flex-col gap-1">
-          <span className="font-bold text-gray-700 capitalize text-sm">
+          <Tag color="blue" className="bg-blue-50 text-blue-600 border-blue-100 rounded-lg px-3 py-1 font-bold text-xs w-fit capitalize">
             {name} Plan
-          </span>
-          {record.couponCode && (
-            <Tag color="blue" className="bg-blue-50 text-blue-600 border-blue-100 rounded-full px-2 py-0 font-bold text-[9px] w-fit flex items-center gap-1">
-              <Ticket size={10} /> {record.couponCode}
-            </Tag>
-          )}
+          </Tag>
         </div>
       ),
     },
     {
-      title: "Amount Paid",
+      title: "Pricing Summary",
       key: "amountPaid",
       render: (_, record) => {
-        const originalPrice = record.originalPrice || record.plan?.price || 0;
         const discountAmount = record.discountAmount || 0;
-        const finalAmount = record.finalAmount || record.amountPaid || (originalPrice - discountAmount);
+        const finalAmount = record.finalAmount || record.amountPaid || 0;
 
-        if (discountAmount > 0) {
-          return (
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-1 text-[10px] text-gray-400 line-through">
-                <IndianRupee size={8} />{originalPrice}
+        return (
+          <div className="flex flex-col gap-1.5 min-w-[180px] bg-white p-3 rounded-2xl border border-gray-50 shadow-sm">
+            {discountAmount > 0 && (
+              <div className="flex items-center justify-between text-[11px] mb-1">
+                <span className="text-gray-400 font-medium uppercase tracking-wider">Discount Applied:</span>
+                <span className="flex items-center" style={{ color: "#16A34A", fontWeight: "600" }}>
+                  -<IndianRupee size={10} />{parseFloat(discountAmount).toLocaleString('en-IN')}
+                </span>
               </div>
-              <span className="font-bold text-gray-900 flex items-center text-base">
-                <IndianRupee size={14} className="mr-0.5 text-gray-700" />
+            )}
+
+            <div className={`flex items-center justify-between ${discountAmount > 0 ? "mt-1 pt-2 border-t border-dashed border-gray-200" : ""}`}>
+              <span className="text-gray-900 font-bold text-[10px] uppercase tracking-widest">Paid Amount:</span>
+              <span className="text-gray-900 flex items-center" style={{ fontSize: "18px", fontWeight: "700", letterSpacing: "-0.02em" }}>
+                <IndianRupee size={16} className="mr-0.5 text-gray-400" />
                 {parseFloat(finalAmount).toLocaleString('en-IN')}
               </span>
             </div>
-          );
-        }
-
-        return (
-          <span className="font-bold text-gray-900 flex items-center text-base">
-            <IndianRupee size={14} className="mr-0.5 text-gray-700" />
-            {parseFloat(finalAmount).toLocaleString('en-IN')}
-          </span>
+          </div>
         );
       },
     },
