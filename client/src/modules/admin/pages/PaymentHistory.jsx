@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Table, Tag, message, Card, Input, Row, Col } from "antd";
 
-import { CreditCard, IndianRupee, User, Calendar, CheckCircle, XCircle, Clock, Search } from "lucide-react";
+import { CreditCard, IndianRupee, User, Calendar, CheckCircle, XCircle, Clock, Search, Ticket } from "lucide-react";
 import axios from "axios";
 import moment from "moment";
 import Loader from "@/components/Common/Loader";
@@ -55,20 +55,82 @@ const PaymentHistory = () => {
       title: "Plan",
       key: "plan",
       render: (_, record) => (
-        <Tag color="blue" className="rounded-lg font-semibold px-3 py-1 border-none shadow-sm">
-          {record.plan?.name || "N/A"}
-        </Tag>
+        <div className="flex flex-col gap-1">
+          <Tag color="blue" className="w-fit rounded-lg font-semibold px-3 py-1 border-none shadow-sm">
+            {record.plan?.name || record.planName || "N/A"}
+          </Tag>
+          {record.couponCode ? (
+            <div className="mt-1">
+              <span style={{
+                background: "#EEF4FF",
+                color: "#2563EB",
+                padding: "4px 10px",
+                borderRadius: "999px",
+                fontSize: "11px",
+                fontWeight: "700",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                border: "1px solid #d0e0ff"
+              }}>
+                <Ticket size={10} /> {record.couponCode}
+              </span>
+            </div>
+          ) : (
+            <span className="text-[10px] text-gray-400 font-medium ml-1">Coupon: —</span>
+          )}
+        </div>
       ),
     },
     {
-      title: "Amount",
+      title: "Pricing Details",
       key: "amount",
-      render: (_, record) => (
-        <div className="flex items-center gap-1 font-bold text-gray-900 whitespace-nowrap">
-          <IndianRupee size={14} />
-          <span>{record.amountPaid || record.plan?.price || 0}</span>
-        </div>
-      ),
+      render: (_, record) => {
+        const originalPrice = record.originalPrice || record.plan?.price || 0;
+        const discountAmount = record.discountAmount || 0;
+        const finalAmount = record.finalAmount || record.amountPaid || (originalPrice - discountAmount);
+
+        if (discountAmount > 0) {
+          return (
+            <div className="flex flex-col gap-0.5 min-w-[120px]">
+              <div className="flex items-center justify-between text-[11px] text-gray-500">
+                <span>Original:</span>
+                <span className="flex items-center line-through">
+                  <IndianRupee size={10} />{originalPrice}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-blue-600 font-semibold bg-blue-50 px-1.5 py-0.5 rounded">
+                <span>Discount:</span>
+                <span className="flex items-center">
+                  - <IndianRupee size={10} />{discountAmount}
+                </span>
+              </div>
+              <div className="flex items-center justify-between font-bold text-gray-900 text-sm mt-0.5 border-t border-gray-100 pt-0.5">
+                <span>Final Paid:</span>
+                <span className="flex items-center text-emerald-600">
+                  <IndianRupee size={12} />{finalAmount}
+                </span>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="flex flex-col gap-0.5 min-w-[120px]">
+             <div className="flex items-center justify-between text-[11px] text-gray-400">
+                <span>Discount:</span>
+                <span>₹0</span>
+              </div>
+            <div className="flex items-center justify-between font-bold text-gray-900 text-sm">
+              <span>Paid:</span>
+              <span className="flex items-center">
+                <IndianRupee size={14} />
+                <span>{finalAmount}</span>
+              </span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: "Payment Status",

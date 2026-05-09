@@ -256,7 +256,7 @@ const UpgradePlan = () => {
                   <div className={`py-4 text-center ${isPopular ? "bg-[#f97316]" : "bg-[#002B49]"}`}>
                     <div className="flex items-center justify-center text-white gap-1">
                       <IndianRupee size={20} strokeWidth={3} />
-                      <span className="text-2xl font-black">{plan.price}</span>
+                      <span className="text-2xl font-bold">{plan.price}</span>
                       <span className="text-sm font-bold opacity-70">/ {plan.duration} Days</span>
                     </div>
                   </div>
@@ -382,7 +382,7 @@ const UpgradePlan = () => {
                 <Divider className="my-2 border-gray-100" />
                 <div className="flex justify-between items-center">
                    <span className="font-bold text-gray-900 text-sm uppercase">To Pay</span>
-                   <span className="font-black text-gray-900 text-xl">₹{calculateFinalPrice()}</span>
+                   <span className="font-bold text-gray-900 text-xl">₹{calculateFinalPrice()}</span>
                 </div>
              </div>
 
@@ -410,20 +410,20 @@ const UpgradePlan = () => {
         closeIcon={<X size={18} />}
         className="coupon-drawer"
         headerStyle={{ borderBottom: '1px solid #f0f0f0', padding: '16px 20px' }}
-        bodyStyle={{ padding: '0 0 20px 0' }}
+        bodyStyle={{ padding: '0 0 20px 0', background: '#f8fafc' }}
       >
         <div className="sticky top-0 bg-white p-5 pb-4 z-10 border-b border-gray-50">
-           <div className="flex gap-0 border border-gray-200 rounded overflow-hidden focus-within:border-orange-500 transition-colors">
+           <div className="flex items-center p-1.5 bg-white border border-[#BFDBFE] rounded-xl focus-within:border-[#2563EB] focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-sm">
               <Input 
                 placeholder="Enter coupon code" 
                 bordered={false}
-                className="h-10 font-bold uppercase placeholder:font-medium placeholder:normal-case text-xs"
+                className="flex-1 h-9 font-bold uppercase placeholder:font-medium placeholder:normal-case text-xs"
                 value={manualCouponCode}
                 onChange={(e) => setManualCouponCode(e.target.value.toUpperCase())}
               />
               <Button 
                 type="primary" 
-                className="h-10 bg-[#f97316] hover:bg-[#ea580c] border-none font-bold px-6 rounded-none uppercase tracking-wider text-[10px]"
+                className="h-9 bg-[#2563EB] hover:bg-[#1D4ED8] border-none font-bold px-6 rounded-lg uppercase tracking-widest text-[10px] shadow-sm flex items-center justify-center transition-all"
                 onClick={() => handleApplyCoupon()}
                 loading={couponLoading}
               >
@@ -438,30 +438,52 @@ const UpgradePlan = () => {
               
               <div className="space-y-3">
                  {availableCoupons.length > 0 ? availableCoupons.map((coupon) => (
-                   <div key={coupon._id} className="bg-white border border-gray-100 rounded-lg p-4 shadow-sm hover:shadow transition-shadow border-l-4 border-l-orange-500">
-                      <div className="flex items-center gap-2 mb-2">
-                         <Tag color="orange" className="m-0 font-bold px-1.5 py-0 rounded border-none bg-orange-50 text-orange-600 uppercase text-[9px]">
-                            {coupon.code}
-                         </Tag>
-                      </div>
-                      
-                      <h4 className="font-bold text-gray-900 text-sm mb-1">
-                         {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
-                      </h4>
-                      
-                      <Text className="text-gray-500 text-[11px] font-medium leading-relaxed block mb-3">
-                         {coupon.termsAndConditions || "Standard terms and conditions apply."}
-                      </Text>
+                   <div 
+                    key={coupon._id} 
+                    className="premium-coupon shadow-sm hover:shadow-xl transition-all duration-300 mb-5 border border-[#BFDBFE]"
+                    onClick={() => handleApplyCoupon(coupon.code)}
+                   >
+                      <div className="flex w-full">
+                         {/* Left Section - Code/Value */}
+                         <div className="w-[71px] flex flex-col items-center justify-center p-2 bg-[#2563EB] text-white shrink-0 shadow-[inset_-2px_0_10px_rgba(0,0,0,0.1)]">
+                            <div className="rotate-[-90deg] whitespace-nowrap font-bold text-[13px] tracking-[0.25em] uppercase">
+                               {coupon.code}
+                            </div>
+                         </div>
+                         
+                         {/* Right Section - Details */}
+                         <div className="flex-1 p-5 pl-7 relative flex flex-col bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE]">
+                            <div className="flex justify-between items-start mb-2">
+                               <h4 className="font-normal text-[#1D4ED8] text-base leading-tight tracking-tight">
+                                  {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
+                                </h4>
 
-                      <Divider className="my-2 border-gray-50" />
-                      
-                      <Button 
-                        type="link" 
-                        className="p-0 h-auto font-bold text-orange-500 text-[10px] uppercase tracking-wider hover:text-orange-600"
-                        onClick={() => handleApplyCoupon(coupon.code)}
-                      >
-                        Apply Coupon
-                      </Button>
+                            </div>
+                            
+                            <Text className="text-[#334155] text-[10px] font-medium leading-relaxed block mb-5 line-clamp-2">
+                               {coupon.termsAndConditions || "Valid on all property subscription plans for a limited time."}
+                            </Text>
+
+                            <div className="mt-auto flex justify-start">
+                               <div className="flex flex-col items-start gap-1">
+                                  <Button 
+                                    type="primary" 
+                                    size="small"
+                                    className="h-10 px-6 bg-[#2563EB] hover:bg-[#1D4ED8] border-none font-bold text-[12px] rounded-lg shadow-md shadow-blue-200/50 uppercase tracking-widest transition-all hover:-translate-y-0.5 active:translate-y-0"
+                                    onClick={(e) => {
+                                       e.stopPropagation();
+                                       handleApplyCoupon(coupon.code);
+                                    }}
+                                  >
+                                    Apply Coupon
+                                  </Button>
+                                  <span className="text-[10px] text-[#64748B] font-normal tracking-wide pl-1">
+                                     T&C Apply
+                                  </span>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
                    </div>
                  )) : (
                    <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
@@ -501,6 +523,32 @@ const UpgradePlan = () => {
         }
         .ant-drawer-right .ant-drawer-content-wrapper {
            box-shadow: -8px 0 24px rgba(0,0,0,0.03) !important;
+        }
+        .premium-coupon {
+          position: relative;
+          background: transparent;
+          min-height: 120px;
+          border-radius: 14px;
+          overflow: hidden;
+          display: flex;
+          cursor: pointer;
+          -webkit-mask-image: radial-gradient(circle at 71px 10px, transparent 10px, red 10.5px), radial-gradient(closest-side circle at 50%, red 99%, transparent 100%);
+          -webkit-mask-size: 100%, 4px 12px;
+          -webkit-mask-repeat: repeat, repeat-y;
+          -webkit-mask-position: 0 -10px, 69px;
+          -webkit-mask-composite: source-out;
+          mask-composite: subtract;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+          transition: all 0.3s ease;
+        }
+        .premium-coupon::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          border: 1px solid transparent;
+          border-radius: 14px;
+          pointer-events: none;
+          z-index: 10;
         }
       `}</style>
     </div>

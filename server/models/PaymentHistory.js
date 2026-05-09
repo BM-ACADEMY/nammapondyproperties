@@ -14,6 +14,8 @@ const paymentHistorySchema = new mongoose.Schema(
     },
     planName: { type: String, required: true },
     amountPaid: { type: Number, required: true },
+    finalAmount: { type: Number },
+    originalPrice: { type: Number },
     razorpayOrderId: { type: String, required: true },
     razorpayPaymentId: { type: String, required: true },
     paymentStatus: { 

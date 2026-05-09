@@ -181,12 +181,15 @@ exports.verifyPayment = async (req, res) => {
 
     await subscription.save();
 
+    const finalAmount = plan.price - (discountAmount || 0);
     // Create Payment History record (Permanent)
     const paymentHistory = new PaymentHistory({
       user: req.user._id,
       plan: planId,
       planName: plan.name,
-      amountPaid: plan.price - (discountAmount || 0),
+      amountPaid: finalAmount,
+      finalAmount: finalAmount,
+      originalPrice: plan.price,
       razorpayOrderId: razorpay_order_id,
       razorpayPaymentId: razorpay_payment_id,
       paymentStatus: "completed",
@@ -303,6 +306,8 @@ exports.activateFreePlan = async (req, res) => {
       plan: planId,
       planName: plan.name,
       amountPaid: 0,
+      finalAmount: 0,
+      originalPrice: plan.price,
       razorpayOrderId: subscription.razorpayOrderId,
       razorpayPaymentId: subscription.razorpayPaymentId,
       paymentStatus: "completed",
