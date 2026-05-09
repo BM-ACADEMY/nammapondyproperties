@@ -629,6 +629,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           ), 
           onClick: () => handleMenuClick("/admin/payment-history") 
         },
+        { key: "/admin/coupons", label: "Coupons", onClick: () => handleMenuClick("/admin/coupons") },
       ],
     },
     { 

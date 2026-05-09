@@ -139,13 +139,16 @@ const StandardPropertyDetailsUI = ({
               </div>
 
               {/* Approval Badge - Large and prominent */}
-              {property.basicInfo?.approvalType && (
+              {property.basicInfo?.approvalType && (Array.isArray(property.basicInfo.approvalType) ? property.basicInfo.approvalType.length > 0 : property.basicInfo.approvalType) && (
                 <div className="mt-4">
                   <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-700 text-sm font-bold rounded-lg border border-green-100 shadow-sm">
                     <FileCheck size={16} className="text-green-600" />
-                    {Array.isArray(property.basicInfo.approvalType)
-                      ? property.basicInfo.approvalType.join(", ")
-                      : property.basicInfo.approvalType} Approved
+                    {(() => {
+                      const types = Array.isArray(property.basicInfo.approvalType) 
+                        ? property.basicInfo.approvalType 
+                        : [property.basicInfo.approvalType];
+                      return types.map(t => t.toLowerCase().includes("approved") ? t : `${t} Approved`).join(", ");
+                    })()}
                   </span>
                 </div>
               )}
@@ -553,7 +556,7 @@ const StandardPropertyDetailsUI = ({
                     </div>
                   )}
                   {/* item — Approval */}
-                  {property.basicInfo?.approvalType && (
+                  {property.basicInfo?.approvalType && (Array.isArray(property.basicInfo.approvalType) ? property.basicInfo.approvalType.length > 0 : property.basicInfo.approvalType) && (
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 flex-shrink-0 bg-green-50 rounded-full flex items-center justify-center text-green-500">
                         <FileCheck size={20} />
@@ -563,9 +566,12 @@ const StandardPropertyDetailsUI = ({
                           Approval
                         </span>
                         <span className="text-[15px] font-medium text-gray-800 leading-tight">
-                          {Array.isArray(property.basicInfo.approvalType)
-                            ? property.basicInfo.approvalType.join(", ")
-                            : property.basicInfo.approvalType}
+                          {(() => {
+                            const types = Array.isArray(property.basicInfo.approvalType) 
+                              ? property.basicInfo.approvalType 
+                              : [property.basicInfo.approvalType];
+                            return types.map(t => t.toLowerCase().includes("approved") ? t : `${t} Approved`).join(", ");
+                          })()}
                         </span>
                       </div>
                     </div>

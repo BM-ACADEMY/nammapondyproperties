@@ -1062,19 +1062,24 @@ const MyProperties = () => {
                                 "N/A"}
                             </span>
                           </div>
-                          <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex flex-col items-center justify-center text-center">
-                            <span className="text-green-400 mb-2">
-                              <FileCheck size={24} />
-                            </span>
-                            <span className="text-sm text-gray-500 font-medium">
-                              Approval
-                            </span>
-                            <span className="text-lg font-bold text-gray-800">
-                              {Array.isArray(selectedProperty.basicInfo?.approvalType)
-                                ? selectedProperty.basicInfo.approvalType.join(", ")
-                                : selectedProperty.basicInfo?.approvalType || "N/A"}
-                            </span>
-                          </div>
+                          {selectedProperty.basicInfo?.approvalType && (Array.isArray(selectedProperty.basicInfo.approvalType) ? selectedProperty.basicInfo.approvalType.length > 0 : selectedProperty.basicInfo.approvalType) && (
+                            <div className="bg-green-50 p-4 rounded-xl border border-green-100 flex flex-col items-center justify-center text-center">
+                              <span className="text-green-400 mb-2">
+                                <FileCheck size={24} />
+                              </span>
+                              <span className="text-sm text-gray-500 font-medium">
+                                Approval
+                              </span>
+                              <span className="text-lg font-bold text-gray-800">
+                                {(() => {
+                                  const types = Array.isArray(selectedProperty.basicInfo.approvalType) 
+                                    ? selectedProperty.basicInfo.approvalType 
+                                    : [selectedProperty.basicInfo.approvalType];
+                                  return types.map(t => t.toLowerCase().includes("approved") ? t : `${t} Approved`).join(", ");
+                                })()}
+                              </span>
+                            </div>
+                          )}
                           <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex flex-col items-center justify-center text-center">
                             <span className="text-orange-400 mb-2">
                               <Calendar size={24} />

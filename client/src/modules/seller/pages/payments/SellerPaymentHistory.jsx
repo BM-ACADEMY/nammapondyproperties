@@ -10,7 +10,8 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Info
+  Info,
+  Ticket
 } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
@@ -84,24 +85,48 @@ const SellerPaymentHistory = () => {
       title: "Plan Details",
       dataIndex: "planName",
       key: "description",
-      render: (name) => (
-        <div className="flex flex-col">
+      render: (name, record) => (
+        <div className="flex flex-col gap-1">
           <span className="font-bold text-gray-700 capitalize text-sm">
             {name} Plan
           </span>
+          {record.couponCode && (
+            <Tag color="blue" className="bg-blue-50 text-blue-600 border-blue-100 rounded-full px-2 py-0 font-bold text-[9px] w-fit flex items-center gap-1">
+              <Ticket size={10} /> {record.couponCode}
+            </Tag>
+          )}
         </div>
       ),
     },
     {
       title: "Amount Paid",
-      dataIndex: "amountPaid",
       key: "amountPaid",
-      render: (val) => (
-        <span className="font-bold text-gray-900 flex items-center text-base">
-          <IndianRupee size={14} className="mr-0.5 text-gray-700" />
-          {parseFloat(val).toLocaleString('en-IN')}
-        </span>
-      ),
+      render: (_, record) => {
+        const originalPrice = record.originalPrice || record.plan?.price || 0;
+        const discountAmount = record.discountAmount || 0;
+        const finalAmount = record.finalAmount || record.amountPaid || (originalPrice - discountAmount);
+
+        if (discountAmount > 0) {
+          return (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1 text-[10px] text-gray-400 line-through">
+                <IndianRupee size={8} />{originalPrice}
+              </div>
+              <span className="font-bold text-gray-900 flex items-center text-base">
+                <IndianRupee size={14} className="mr-0.5 text-gray-700" />
+                {parseFloat(finalAmount).toLocaleString('en-IN')}
+              </span>
+            </div>
+          );
+        }
+
+        return (
+          <span className="font-bold text-gray-900 flex items-center text-base">
+            <IndianRupee size={14} className="mr-0.5 text-gray-700" />
+            {parseFloat(finalAmount).toLocaleString('en-IN')}
+          </span>
+        );
+      },
     },
     {
       title: "Payment Status",
