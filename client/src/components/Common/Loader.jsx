@@ -3,11 +3,11 @@ import React from "react";
 const Loader = ({ variant = "full" }) => {
   if (variant === "inline") {
     return (
-      <div className="flex justify-center items-center p-4">
+      <div className="flex justify-center items-center p-8">
         <img 
           src="/Loader/Loader.gif" 
           alt="Loading..." 
-          className="w-16 h-16 object-contain"
+          className="w-24 h-24 object-contain"
         />
       </div>
     );
@@ -19,7 +19,7 @@ const Loader = ({ variant = "full" }) => {
         <img 
           src="/Loader/Loader.gif" 
           alt="Loading..." 
-          className="w-40 h-40 md:w-56 md:h-56 object-contain"
+          className="w-48 h-48 md:w-64 md:h-64 object-contain"
         />
       </div>
     );
@@ -31,7 +31,7 @@ const Loader = ({ variant = "full" }) => {
         <img 
           src="/Loader/Loader.gif" 
           alt="Loading..." 
-          className="w-32 h-32 md:w-48 md:h-48 object-contain"
+          className="w-40 h-40 md:w-56 md:h-56 object-contain"
         />
       </div>
     </div>
