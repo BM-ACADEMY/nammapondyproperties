@@ -33,6 +33,7 @@ const formRoutes = require("./routes/formRoutes");
 const requirementRoutes = require("./routes/requirementRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const leadRoutes = require("./routes/leadRoutes");
+const couponRoutes = require("./routes/couponRoute");
 
 const supportTicketRoutes = require("./routes/supportTicketRoute");
 const notificationRoutes = require("./routes/notificationRoute");
@@ -122,6 +123,7 @@ app.use("/api/forms", formRoutes);
 app.use("/api/requirements", requirementRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/shared-leads", leadRoutes);
+app.use("/api/coupons", couponRoutes);
 
 app.use("/api/support-tickets", supportTicketRoutes);
 app.use("/api/notifications", notificationRoutes);
