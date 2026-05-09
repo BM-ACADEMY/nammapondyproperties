@@ -234,12 +234,15 @@ const BuilderPromoterDetailsUI = ({
                   {property.location?.pincode &&
                     `- ${property.location.pincode}`}
                 </div>
-                {property.basicInfo?.approvalType && (
+                {property.basicInfo?.approvalType && (Array.isArray(property.basicInfo.approvalType) ? property.basicInfo.approvalType.length > 0 : property.basicInfo.approvalType) && (
                   <div className="flex">
                     <span className="px-4 py-1.5 bg-green-500/20 border border-green-500/50 rounded-lg text-sm md:text-base font-bold text-green-400 capitalize shadow-sm backdrop-blur-sm">
-                      {Array.isArray(property.basicInfo.approvalType)
-                        ? property.basicInfo.approvalType.join(", ")
-                        : property.basicInfo.approvalType} Approved
+                      {(() => {
+                        const types = Array.isArray(property.basicInfo.approvalType) 
+                          ? property.basicInfo.approvalType 
+                          : [property.basicInfo.approvalType];
+                        return types.map(t => t.toLowerCase().includes("approved") ? t : `${t} Approved`).join(", ");
+                      })()}
                     </span>
                   </div>
                 )}
@@ -445,15 +448,18 @@ const BuilderPromoterDetailsUI = ({
                       {property.location?.locality}
                     </div>
                   </div>
-                  {property.basicInfo?.approvalType && (
+                  {property.basicInfo?.approvalType && (Array.isArray(property.basicInfo.approvalType) ? property.basicInfo.approvalType.length > 0 : property.basicInfo.approvalType) && (
                     <div>
                       <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
                         Approval
                       </div>
                       <div className="font-bold text-gray-800">
-                        {Array.isArray(property.basicInfo.approvalType)
-                          ? property.basicInfo.approvalType.join(", ")
-                          : property.basicInfo.approvalType}
+                        {(() => {
+                          const types = Array.isArray(property.basicInfo.approvalType) 
+                            ? property.basicInfo.approvalType 
+                            : [property.basicInfo.approvalType];
+                          return types.map(t => t.toLowerCase().includes("approved") ? t : `${t} Approved`).join(", ");
+                        })()}
                       </div>
                     </div>
                   )}
