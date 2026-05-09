@@ -1,6 +1,6 @@
 import "./App.css";
-import { lazy, Suspense } from "react";
-import { BrowserRouter } from "react-router-dom";
+import { useEffect, lazy, Suspense } from "react";
+import { BrowserRouter, useNavigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { NavProvider } from "./context/NavContext";
 import { SocketProvider } from "./context/SocketContext";
@@ -11,7 +11,18 @@ import ScrollToTop from "./components/Common/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
 import Loader from "./components/Common/Loader";
 
+import { setGlobalNavigate } from "./services/navigationService";
+
 const AppRoutes = lazy(() => import("./AppRoute"));
+
+// Helper component to capture the navigate function from React Router
+const NavigateSetter = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setGlobalNavigate(navigate);
+  }, [navigate]);
+  return null;
+};
 
 function App() {
   return (
@@ -29,6 +40,7 @@ function App() {
               <SocketProvider>
                 <NavProvider>
                   <BrowserRouter>
+                    <NavigateSetter />
                     <ScrollToTop />
                     <Suspense fallback={<Loader />}>
                       <AppRoutes />

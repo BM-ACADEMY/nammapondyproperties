@@ -6,6 +6,10 @@ const subscriptionPlanSchema = new mongoose.Schema(
       type: String, 
       required: true, 
     },
+    displayName: { 
+      type: String, 
+      required: false, // Fallback to name if not provided
+    },
     businessType: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BusinessType",

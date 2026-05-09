@@ -1,22 +1,25 @@
-import { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 import CryptoJS from "crypto-js";
 import { subscribeToPushNotifications } from "../utils/pushNotification";
-
 
 export const AuthContext = createContext(null);
 
 const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
 
 /* ================== CRYPTO HELPERS ================== */
-const encryptData = (data) =>
-  CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+const encryptData = (data) => {
+  if (!data || !SECRET_KEY) return null;
+  return CryptoJS.AES.encrypt(JSON.stringify(data), SECRET_KEY).toString();
+};
 
 const decryptData = (cipherText) => {
+  if (!cipherText || !SECRET_KEY) return null;
   try {
     const bytes = CryptoJS.AES.decrypt(cipherText, SECRET_KEY);
     const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
     return JSON.parse(decryptedData);
-  } catch {
+  } catch (error) {
+    console.error("Decryption failed:", error);
     return null;
   }
 };
@@ -38,17 +41,24 @@ export const AuthProvider = ({ children }) => {
         if (storedToken && storedUser) {
           const decryptedUser = decryptData(storedUser);
           if (decryptedUser) {
+            // Set initial state from storage immediately
             setToken(storedToken);
             setUser(decryptedUser);
 
             // 🛡️ Validate with server immediately to ensure user still exists in DB
-            await refetchUser();
+            // We don't await this to avoid blocking the initial render
+            refetchUser(storedToken);
             
             // 🔔 Subscribe to push notifications
             subscribeToPushNotifications();
+          } else {
+             // If decryption fails, data is likely corrupt or key changed
+             localStorage.removeItem("token");
+             localStorage.removeItem("user");
           }
-
         }
+      } catch (err) {
+        console.error("Session restoration failed", err);
       } finally {
         setIsLoading(false);
       }
@@ -57,34 +67,20 @@ export const AuthProvider = ({ children }) => {
     validateSession();
   }, []);
 
-  /* 🔁 Sync storage (NO AUTO LOGOUT HERE) */
-  useEffect(() => {
-    if (token && user) {
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", encryptData(user));
-    }
-    // ❌ DO NOT clear storage here
-  }, [token, user]);
-
   /* ================== ACTIONS ================== */
 
   const login = (userData, authToken) => {
-    console.log(userData, "token data");
-
     setUser(userData);
     setToken(authToken);
     localStorage.setItem("token", authToken);
     localStorage.setItem("user", encryptData(userData));
-
-    // 🔔 Subscribe to push notifications
     subscribeToPushNotifications();
   };
-
 
   const logout = () => {
     setUser(null);
     setToken(null);
-    localStorage.clear(); // ✅ explicit logout only
+    localStorage.clear();
   };
 
   const refreshUser = (updatedUserData) => {
@@ -92,83 +88,64 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("user", encryptData(updatedUserData));
   };
 
-  const refetchUser = async () => {
+  const refetchUser = async (providedToken) => {
     try {
-      const oldToken = localStorage.getItem("token");
-      if (!oldToken) return;
+      const activeToken = providedToken || token || localStorage.getItem("token");
+      if (!activeToken) return;
 
-      // 1️⃣ Get fresh user
-      const userRes = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/refresh-token`, {
         headers: {
-          Authorization: `Bearer ${oldToken}`,
+          Authorization: `Bearer ${activeToken}`,
         },
       });
 
-      // 🚨 Handle User Not Found / Invalid Token
-      if (userRes.status === 401 || userRes.status === 404) {
+      if (res.status === 401 || res.status === 404) {
         logout();
         return;
       }
 
-      const userData = await userRes.json();
+      const data = await res.json();
 
-      if (!userData?.success) {
+      if (data?.success) {
+        setUser(data.user);
+        setToken(data.token);
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", encryptData(data.user));
+      } else {
         logout();
-        return;
-      }
-
-      // 2️⃣ Get fresh token (UPDATED ROLE)
-      const tokenRes = await fetch(
-        `${import.meta.env.VITE_API_URL}/users/refresh-token`,
-        {
-          headers: {
-            Authorization: `Bearer ${oldToken}`,
-          },
-        },
-      );
-      const tokenData = await tokenRes.json();
-
-      if (tokenData?.success) {
-        setUser(userData.user);
-        setToken(tokenData.token);
-
-        localStorage.setItem("token", tokenData.token);
-        localStorage.setItem("user", encryptData(userData.user));
       }
     } catch (err) {
       console.error("refetchUser failed", err);
-      // Optional: logout on massive failure?
-      // logout();
     }
   };
 
   const isAuthenticated = Boolean(user && token);
+
+  const contextValue = {
+    user,
+    token,
+    isLoading,
+    login,
+    logout,
+    refreshUser,
+    refetchUser,
+    isAuthenticated,
+    isLoginModalOpen,
+    setLoginModalOpen
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        isLoading,
-        login,
-        logout,
-        refetchUser,
-        refreshUser,
-        isLoginModalOpen,
-        setLoginModalOpen,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  const context = React.useContext(AuthContext);
+  const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
-
-import React from "react";

@@ -19,6 +19,7 @@ import {
   Form,
   InputNumber,
   Switch,
+  Pagination
 } from "antd";
 import { 
   Trash2, 
@@ -133,6 +134,9 @@ const RequirementList = () => {
   const [globalForm] = Form.useForm();
   const [minBudgetVal, setMinBudgetVal] = useState(null);
   const [maxBudgetVal, setMaxBudgetVal] = useState(null);
+  const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
+  const [viewingSellers, setViewingSellers] = useState([]);
+  const [sellerPagination, setSellerPagination] = useState({ current: 1, pageSize: 5 });
 
   const selectedUsageType = Form.useWatch("usageType", addForm);
 
@@ -170,11 +174,6 @@ const RequirementList = () => {
 
   const socket = useSocket();
 
-  useEffect(() => {
-    fetchRequirements();
-    fetchGlobalSettings();
-  }, []);
-
   const fetchGlobalSettings = async () => {
     try {
       const response = await getWebsiteSettings();
@@ -185,6 +184,28 @@ const RequirementList = () => {
       console.error("Failed to fetch global settings", error);
     }
   };
+
+  const fetchPlans = async () => {
+    try {
+      const response = await api.get("/subscriptions/plans");
+      const map = {};
+      const plans = response.data.data || response.data; // Handle potential wrapping
+      if (Array.isArray(plans)) {
+        plans.forEach(p => {
+          if (!map[p.name]) map[p.name] = p.displayName || p.name;
+        });
+      }
+      setPlanDisplayNameMap(map);
+    } catch (error) {
+      console.error("Failed to fetch plans for mapping", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRequirements();
+    fetchGlobalSettings();
+    fetchPlans();
+  }, []);
 
   useEffect(() => {
     if (socket) {
@@ -201,6 +222,8 @@ const RequirementList = () => {
       await updateRequirementStatus(id, newStatus);
       message.success(`Status updated to ${newStatus}`);
       fetchRequirements();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       message.error("Failed to update status");
     }
@@ -263,6 +286,8 @@ const RequirementList = () => {
       setIsTimerModalOpen(false);
       setSelectedRequirement(null);
       fetchRequirements();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to start lead sharing timer");
     } finally {
@@ -305,6 +330,8 @@ const RequirementList = () => {
       await stopLeadSharingTimer(id);
       message.success("Lead sharing timer stopped");
       fetchRequirements();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       message.error("Failed to stop lead sharing timer");
     }
@@ -468,16 +495,26 @@ const RequirementList = () => {
       key: "requirement",
       render: (_, record) => (
         <div className="flex flex-col">
-          <Tag color="blue">{record.category}</Tag>
+          <Tag color="blue" className="w-fit">{record.category}</Tag>
           <Text className="text-xs mt-1">
             <span className="font-semibold">{record.usageType}:</span> {record.propertyType}
           </Text>
           {(record.preferredLocation || record.locationText) && (
-            <div className="flex items-center gap-1 text-[11px] text-slate-500 italic">
+            <div className="flex items-center gap-1 text-[11px] text-slate-500 italic mt-0.5">
               <MapPin size={10} /> {record.locationText || record.preferredLocation}
             </div>
           )}
         </div>
+      ),
+    },
+    {
+      title: "When do you need it?",
+      dataIndex: "needTimeframe",
+      key: "needTimeframe",
+      render: (timeframe) => (
+        <Tag color="orange" className="m-0 font-bold text-[10px] uppercase border-none bg-orange-50 text-orange-600">
+          {timeframe || "Not specified"}
+        </Tag>
       ),
     },
 
@@ -515,35 +552,48 @@ const RequirementList = () => {
       ),
     },
     {
-      title: "Accepted Seller",
+      title: "Sellers & Progress",
       key: "acceptedSeller",
       render: (_, record) => {
-        if (record.acceptedBy) {
+        if (record.allSellers && record.allSellers.length > 0) {
           return (
-            <div className="flex flex-col">
-              <div className="flex flex-wrap gap-1 mb-1">
-                <Tag color="green" className="m-0 text-[13px] font-semibold">
-                   {record.acceptedBy.name}
-                </Tag>
-                {record.acceptedBy.businessType && (
-                  <Tag color="blue" className="m-0 text-[10px] font-bold uppercase py-0 px-2 leading-5">
-                    {record.acceptedBy.businessType.name || record.acceptedBy.businessType}
-                  </Tag>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 text-[12px] text-slate-500 ml-1">
-                <Phone size={12} /> {record.acceptedBy.phone}
+            <div className="flex flex-col gap-1.5 min-w-[140px]">
+              <div className="flex items-center justify-between bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-100">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={14} className="text-emerald-600" />
+                  <span className="text-[12px] font-bold text-emerald-800">
+                    {record.allSellers.length} {record.allSellers.length === 1 ? 'Seller' : 'Sellers'}
+                  </span>
+                </div>
+                <Tooltip title="View Detailed Status">
+                  <Button 
+                    type="text" 
+                    size="small" 
+                    className="p-0 h-6 w-6 flex items-center justify-center hover:bg-emerald-100 rounded-md transition-colors"
+                    onClick={() => {
+                      setViewingSellers(record.allSellers);
+                      setSellerPagination({ current: 1, pageSize: 5 });
+                      setIsSellerModalOpen(true);
+                    }}
+                  >
+                    <Eye size={16} className="text-emerald-700" />
+                  </Button>
+                </Tooltip>
               </div>
             </div>
           );
         }
+        
+        // Timer/Sharing status logic remains same...
         if (record.sharingStatus === "in-progress") {
           const plans = record.sharingConfig?.plans || [];
-          const currentPlan = plans[record.sharingConfig?.currentPlanIndex] || "N/A";
+          const currentPlanName = plans[record.sharingConfig?.currentPlanIndex] || "N/A";
+          const currentPlanDisplay = planDisplayNameMap[currentPlanName] || currentPlanName;
+          
           return (
             <div className="flex flex-col gap-1">
               <Tag color="processing" icon={<Clock size={12} className="animate-pulse" />} className="m-0 font-bold uppercase text-[10px] flex items-center justify-between">
-                <span>Timer: {currentPlan}</span>
+                <span>Timer: {currentPlanDisplay} ({currentPlanName})</span>
                 <CountdownTimer 
                   startTime={record.sharingConfig?.startTime} 
                   timerInMinutes={record.sharingConfig?.timer} 
@@ -870,7 +920,28 @@ const RequirementList = () => {
                   </p>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  {selectedRequirement.needTimeframe && (
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                      <Text type="secondary" className="text-xs uppercase font-semibold text-blue-600 block">Requirement Timeframe</Text>
+                      <p className="m-0 text-blue-800 font-bold text-base mt-1">
+                        {selectedRequirement.needTimeframe}
+                      </p>
+                    </div>
+                  )}
 
+                  {selectedRequirement.closureDate && (
+                    <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
+                      <div>
+                        <Text type="secondary" className="text-xs uppercase font-semibold text-emerald-600 block">Lead Closure Date</Text>
+                        <p className="m-0 text-emerald-800 font-bold text-base mt-1">
+                          {dayjs(selectedRequirement.closureDate).format("DD MMMM YYYY")}
+                        </p>
+                      </div>
+                      <CheckCircle2 className="text-emerald-500" size={24} />
+                    </div>
+                  )}
+                </div>
               </Col>
             </Row>
           </div>
@@ -1004,11 +1075,14 @@ const RequirementList = () => {
                                 />
                               </div>
                               <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-indigo-600 text-white shadow-md shadow-indigo-100">
-                                {plan.planName.charAt(0)}
+                                {(plan.displayName || plan.planName).charAt(0)}
                               </div>
                               <div className="flex flex-col">
                                 <div className="flex items-center gap-2">
-                                  <Text strong className="text-[14.5px] font-bold text-slate-800">{plan.planName} Plan</Text>
+                                  <Text strong className="text-[14.5px] font-bold text-slate-800">
+                                    {plan.displayName || plan.planName} 
+                                    <span className="text-[11px] text-slate-400 font-normal ml-1">({plan.planName})</span>
+                                  </Text>
                                   <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 rounded-md font-black uppercase ring-1 ring-emerald-200">Match Found</span>
                                 </div>
                                 <div className="flex flex-col mt-0.5">
@@ -1129,10 +1203,13 @@ const RequirementList = () => {
                            <div className="flex items-center justify-between p-5">
                               <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${hasAgents ? 'bg-slate-700 text-white shadow-md shadow-slate-100' : 'bg-slate-200 text-slate-400'}`}>
-                                   {plan.planName.charAt(0)}
+                                   {(plan.displayName || plan.planName).charAt(0)}
                                 </div>
                                 <div className="flex flex-col">
-                                  <Text strong className={`text-[14.5px] font-bold ${hasAgents ? 'text-slate-700' : 'text-slate-400'}`}>{plan.planName} Plan</Text>
+                                  <Text strong className={`text-[14.5px] font-bold ${hasAgents ? 'text-slate-700' : 'text-slate-400'}`}>
+                                    {plan.displayName || plan.planName}
+                                    <span className="text-[11px] text-slate-400 font-normal ml-1">({plan.planName})</span>
+                                  </Text>
                                   <Text className="text-[12px] text-slate-400 font-medium">Shared as fallback (masked)</Text>
                                 </div>
                               </div>
@@ -1595,6 +1672,90 @@ const RequirementList = () => {
           </div>
         </Form>
           </Modal>
+
+      {/* Seller Status Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-3 border-b border-gray-100 pb-4">
+             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
+                <CheckCircle2 size={22} />
+             </div>
+             <div>
+                <h3 className="text-lg font-bold m-0 text-slate-800">Connected Sellers</h3>
+                <Text type="secondary" className="text-xs">Individual progress tracking for this lead</Text>
+             </div>
+          </div>
+        }
+        open={isSellerModalOpen}
+        onCancel={() => setIsSellerModalOpen(false)}
+        footer={[
+          <Button key="close" type="primary" className="bg-emerald-600 hover:bg-emerald-700 h-10 px-8 rounded-lg" onClick={() => setIsSellerModalOpen(false)}>
+            Close
+          </Button>
+        ]}
+        width={500}
+        centered
+        styles={{ body: { padding: '24px 24px 8px 24px' } }}
+      >
+        <div className="flex flex-col gap-4 max-h-[550px] overflow-y-auto pr-1">
+          {viewingSellers
+            .slice((sellerPagination.current - 1) * sellerPagination.pageSize, sellerPagination.current * sellerPagination.pageSize)
+            .map((seller, idx) => (
+            <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex flex-col">
+                  <Text strong className="text-base text-slate-900">{seller.name}</Text>
+                  <div className="flex items-center gap-2 mt-1">
+                    {seller.businessType && (
+                      <Tag color="blue" className="m-0 text-[10px] font-black uppercase rounded-md border-none px-2">
+                        {seller.businessType.name || seller.businessType}
+                      </Tag>
+                    )}
+                    <span className="text-slate-300">|</span>
+                    <Text type="secondary" className="text-[12px] flex items-center gap-1.5">
+                      <Phone size={12} className="text-slate-400" /> {seller.phone}
+                    </Text>
+                  </div>
+                </div>
+                <Tag 
+                  color={
+                    seller.leadStatus === 'done' ? 'success' : 
+                    seller.leadStatus === 'holded' ? 'error' : 
+                    seller.leadStatus === 'in process' ? 'processing' : 'default'
+                  }
+                  className="m-0 text-[10px] font-black uppercase py-1 px-3 rounded-lg border-none shadow-sm"
+                >
+                  {seller.leadStatus || 'not connected'}
+                </Tag>
+              </div>
+              
+              <div className="bg-slate-50 p-2.5 rounded-xl flex items-center justify-between">
+                <Text className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">Email Contact</Text>
+                <Text className="text-[12px] font-semibold text-slate-600">{seller.email}</Text>
+              </div>
+            </div>
+          ))}
+
+          {viewingSellers.length > sellerPagination.pageSize && (
+            <div className="flex justify-center mt-4 pb-2">
+              <Pagination
+                current={sellerPagination.current}
+                pageSize={sellerPagination.pageSize}
+                total={viewingSellers.length}
+                onChange={(page) => setSellerPagination({ ...sellerPagination, current: page })}
+                size="small"
+                showSizeChanger={false}
+              />
+            </div>
+          )}
+
+          {viewingSellers.length === 0 && (
+            <div className="text-center py-10">
+              <Text type="secondary">No sellers have accepted this lead yet.</Text>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

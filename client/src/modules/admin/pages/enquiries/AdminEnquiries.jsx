@@ -6,6 +6,7 @@ import moment from "moment";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "@/utils/imageUrl";
 import Loader from "@/components/Common/Loader";
+import { exportEnquiriesExcel } from "@/utils/exportEnquiriesExcel";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -56,6 +57,8 @@ const AdminEnquiries = () => {
       await api.patch(`/enquiries/update-status/${id}`, { status, type });
       message.success(`Status updated to ${status}`);
       fetchEnquiries();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch (error) {
       console.error("Error updating status", error);
       message.error("Failed to update status");
@@ -265,48 +268,12 @@ const AdminEnquiries = () => {
       item.seller_id?.name?.toLowerCase().includes(searchText.toLowerCase()),
   );
 
-  const downloadCSV = () => {
+  const handleDownloadExcel = () => {
     if (!filteredEnquiries.length) {
       message.warning("No data to export");
       return;
     }
-
-    const headers = [
-      "Date",
-      "Property Title",
-      "Seller Name",
-      "Enquirer Name",
-      "Enquirer Phone",
-      "Message",
-      "Status",
-    ];
-
-    const rows = filteredEnquiries.map((item) => [
-      moment(item.createdAt).format("DD/MM/YYYY hh:mm A"),
-      item.property_id?.title || "Deleted Property",
-      item.seller_id?.name || "Unknown",
-      item.enquirer_name || "Guest",
-      item.enquirer_phone || "N/A",
-      `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
-      item.status?.toUpperCase() || "NEW",
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `enquiries_export_${moment().format("YYYYMMDD_HHmm")}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportEnquiriesExcel(filteredEnquiries, true);
   };
 
   return (
@@ -319,7 +286,7 @@ const AdminEnquiries = () => {
         <Button
           type="primary"
           icon={<Download size={18} />}
-          onClick={downloadCSV}
+          onClick={handleDownloadExcel}
           className="bg-indigo-600 hover:bg-indigo-700 h-10 px-6 rounded-lg flex items-center gap-2 border-none transition-all shadow-sm"
         >
           Export Leads

@@ -17,6 +17,22 @@ exports.createOrder = async (req, res) => {
     const plan = await SubscriptionPlan.findById(planId);
     if (!plan) return res.status(404).json({ error: "Plan not found" });
 
+    // Restriction: Standard Plan can only be purchased once
+    if (plan.name.toLowerCase().includes("standard")) {
+      const alreadyPurchased = await PaymentHistory.findOne({
+        user: req.user._id,
+        planName: { $regex: /standard/i },
+        paymentStatus: "completed"
+      });
+
+      if (alreadyPurchased) {
+        return res.status(403).json({ 
+          success: false, 
+          message: "The Standard Plan can only be purchased once. Please choose a different plan." 
+        });
+      }
+    }
+
     const options = {
       amount: plan.price * 100, // amount in the smallest currency unit (paise)
       currency: "INR",
@@ -77,7 +93,26 @@ exports.verifyPayment = async (req, res) => {
     console.log("End Date (Calculated):", endDate);
     console.log("--------------------------");
 
-    // Remove old active subscriptions for this user (as requested)
+    // --- Lead Carry Forward Logic ---
+    const oldActiveSubscription = await Subscription.findOne({ 
+      user: req.user._id, 
+      status: "active" 
+    }).populate("plan");
+
+    if (oldActiveSubscription && oldActiveSubscription.plan) {
+      const leadsLimit = oldActiveSubscription.plan.leadsLimit || 0;
+      if (leadsLimit !== -1) { // Only carry forward if it wasn't unlimited
+        const unusedLeads = Math.max(0, leadsLimit - oldActiveSubscription.leadsUsed);
+        if (unusedLeads > 0) {
+          await User.findByIdAndUpdate(req.user._id, {
+            $inc: { carriedLeads: unusedLeads }
+          });
+          console.log(`Carried forward ${unusedLeads} leads for user ${req.user._id}`);
+        }
+      }
+    }
+
+    // Remove old active subscriptions for this user
     await Subscription.deleteMany({ user: req.user._id });
 
     // Create Subscription record (Current Active Plan)
@@ -133,6 +168,18 @@ exports.getUserSubscription = async (req, res) => {
     // On-the-fly expiry check
     if (subscription && subscription.endDate && new Date(subscription.endDate) < new Date()) {
       if (subscription.status !== "expired") {
+        // Carry forward unused leads before marking as expired
+        const leadsLimit = subscription.plan?.leadsLimit || 0;
+        if (leadsLimit !== -1) {
+          const unusedLeads = Math.max(0, leadsLimit - subscription.leadsUsed);
+          if (unusedLeads > 0) {
+            await User.findByIdAndUpdate(req.user._id, {
+              $inc: { carriedLeads: unusedLeads }
+            });
+            console.log(`Auto-carried forward ${unusedLeads} leads for user ${req.user._id}`);
+          }
+        }
+        
         subscription.status = "expired";
         await subscription.save();
       }

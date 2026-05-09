@@ -29,6 +29,7 @@ exports.createRequirement = async (req, res) => {
       lng,
       locationText,
       locality,
+      needTimeframe,
     } = req.body;
 
     const userId = req.user ? req.user.id : null;
@@ -51,6 +52,7 @@ exports.createRequirement = async (req, res) => {
       propertyPreferences,
       message,
       heardFrom,
+      needTimeframe,
       user: userId,
       createdBy: isAdmin ? req.user._id : null
     });
@@ -107,14 +109,42 @@ exports.getRequirements = async (req, res) => {
     // Enhance requirements with sharing info (who accepted it)
     const enhancedRequirements = await Promise.all(
       requirements.map(async (reqDoc) => {
-        // Find if any record was accepted
-        const acceptedLead = await SharedLead.findOne({ 
+        const acceptedLeads = await SharedLead.find({ 
           requirement: reqDoc._id, 
-          status: "accepted" 
+          $or: [
+            { status: "accepted" },
+            { acceptedByMatchedSellers: { $exists: true, $not: { $size: 0 } } }
+          ]
         }).populate({
           path: "acceptedBy",
           select: "name email phone businessType",
           populate: { path: "businessType", select: "name" }
+        }).populate({
+          path: "sellerStatuses.seller",
+          select: "name email phone businessType",
+          populate: { path: "businessType", select: "name" }
+        });
+
+        // Flatten all sellers across all shared leads for this requirement
+        const allSellersWithStatus = [];
+        acceptedLeads.forEach(sl => {
+          // Add sellers from sellerStatuses (New System)
+          sl.sellerStatuses.forEach(ss => {
+            if (ss.seller) {
+              allSellersWithStatus.push({
+                ...ss.seller.toObject(),
+                leadStatus: ss.status
+              });
+            }
+          });
+
+          // Fallback for Legacy Data: If status is accepted but sellerStatuses is empty, add acceptedBy
+          if (sl.status === "accepted" && sl.acceptedBy && sl.sellerStatuses.length === 0) {
+            allSellersWithStatus.push({
+              ...sl.acceptedBy.toObject(),
+              leadStatus: "not yet connected"
+            });
+          }
         });
 
         // Get the highest priority match it was shared with (to show in table)
@@ -123,7 +153,8 @@ exports.getRequirements = async (req, res) => {
 
         return {
           ...reqDoc.toObject(),
-          acceptedBy: acceptedLead ? acceptedLead.acceptedBy : null,
+          acceptedBy: allSellersWithStatus.length > 0 ? allSellersWithStatus[0] : null, // Fallback for backward compatibility
+          allSellers: allSellersWithStatus,
           isShared: !!anySharedLead,
           matchPriority: anySharedLead ? anySharedLead.matchPriority : null,
           sharingStatus: reqDoc.sharingStatus,
@@ -149,7 +180,7 @@ exports.getRequirements = async (req, res) => {
 exports.updateRequirementStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, closureDate, needTimeframe } = req.body;
 
     if (!["Pending", "Contacted", "Closed"].includes(status)) {
       return res.status(400).json({
@@ -162,6 +193,8 @@ exports.updateRequirementStatus = async (req, res) => {
       id,
       { 
         status,
+        closureDate,
+        needTimeframe,
         updatedBy: req.user._id
       },
       { new: true }
@@ -420,6 +453,7 @@ exports.getSubscriptionStats = async (req, res) => {
         return {
           planId: plansInGroup[0]._id, // Representative ID for frontend reference
           planName: planName,
+          displayName: plansInGroup[0].displayName || planName,
           sellerCount: sellers.length,
           sellers: sellers,
           isAlreadyShared,

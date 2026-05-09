@@ -91,6 +91,8 @@ const MarketingRequests = () => {
       message.success("Request status updated");
       setIsModalOpen(false);
       fetchRequests();
+      // Refresh sidebar counts
+      window.dispatchEvent(new CustomEvent("refresh-admin-counts"));
     } catch {
       message.error("Failed to update status");
     }

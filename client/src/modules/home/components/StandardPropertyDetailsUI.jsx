@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Share2,
   Flame,
+  FileCheck,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
@@ -136,6 +137,18 @@ const StandardPropertyDetailsUI = ({
                   ? property.location
                   : `${property.location?.locality ? property.location.locality + ", " : ""}${property.location?.city || ""}`}
               </div>
+
+              {/* Approval Badge - Large and prominent */}
+              {property.basicInfo?.approvalType && (
+                <div className="mt-4">
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-700 text-sm font-bold rounded-lg border border-green-100 shadow-sm">
+                    <FileCheck size={16} className="text-green-600" />
+                    {Array.isArray(property.basicInfo.approvalType)
+                      ? property.basicInfo.approvalType.join(", ")
+                      : property.basicInfo.approvalType} Approved
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
@@ -539,7 +552,26 @@ const StandardPropertyDetailsUI = ({
                       </div>
                     </div>
                   )}
-                  {/* item */}
+                  {/* item — Approval */}
+                  {property.basicInfo?.approvalType && (
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 flex-shrink-0 bg-green-50 rounded-full flex items-center justify-center text-green-500">
+                        <FileCheck size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">
+                          Approval
+                        </span>
+                        <span className="text-[15px] font-medium text-gray-800 leading-tight">
+                          {Array.isArray(property.basicInfo.approvalType)
+                            ? property.basicInfo.approvalType.join(", ")
+                            : property.basicInfo.approvalType}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* item — Possession */}
                   {property.legal?.propertyStatus === "Under Construction" &&
                     property.legal?.expectedCompletionYear && (
                       <div className="flex items-center gap-4">
@@ -556,6 +588,7 @@ const StandardPropertyDetailsUI = ({
                         </div>
                       </div>
                     )}
+
                   {/* item */}
                   {property.legal?.propertyStatus && (
                     <div className="flex items-center gap-4">
@@ -1137,6 +1170,7 @@ const StandardPropertyDetailsUI = ({
                       <>
                         <Swiper
                           modules={[Navigation, Pagination, Autoplay]}
+                          autoHeight={true}
                           navigation={{
                             nextEl: ".fp-next",
                             prevEl: ".fp-prev",
@@ -1162,7 +1196,7 @@ const StandardPropertyDetailsUI = ({
                                 <img
                                   src={getImageUrl(fp)}
                                   alt={`Floor Plan ${i + 1}`}
-                                  className="w-full h-auto rounded-2xl shadow-sm object-contain max-h-[600px]"
+                                  className="mx-auto max-w-full h-auto rounded-2xl shadow-sm block"
                                 />
                                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center rounded-2xl">
                                   <span className="bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sm font-bold text-gray-900 shadow-sm flex items-center gap-2">

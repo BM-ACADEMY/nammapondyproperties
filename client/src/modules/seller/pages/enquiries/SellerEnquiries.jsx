@@ -44,6 +44,7 @@ import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import Loader from "@/components/Common/Loader";
+import { exportEnquiriesExcel } from "@/utils/exportEnquiriesExcel";
 
 const CountdownTimer = ({ createdAt, validityDays = 21, isAdmin = false }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -379,44 +380,12 @@ const SellerEnquiries = () => {
     }
   };
 
-  const downloadCSV = () => {
+  const handleDownloadExcel = () => {
     if (!filteredEnquiries.length) {
       message.warning("No data to export");
       return;
     }
-
-    const headers = [
-      "Date",
-      "Property Title",
-      "Enquirer Name",
-      "Enquirer Phone",
-      "Message",
-    ];
-
-    const rows = filteredEnquiries.map((item) => [
-      moment(item.createdAt).format("DD/MM/YYYY hh:mm A"),
-      item.property_title || item.property_id?.basicInfo?.title || item.property_id?.title || "Property Removed",
-      item.enquirer_name || "Guest",
-      item.enquirer_phone || "N/A",
-      `"${(item.message || "").replace(/"/g, '""')}"`, // Escape quotes
-    ]);
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `my_enquiries_export_${moment().format("YYYYMMDD_HHmm")}.csv`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    exportEnquiriesExcel(filteredEnquiries, false);
   };
 
   return (
@@ -435,10 +404,10 @@ const SellerEnquiries = () => {
             <Button
               type="primary"
               icon={<Download size={18} />}
-              onClick={downloadCSV}
+              onClick={handleDownloadExcel}
               className="h-11 px-6 rounded-xl font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-none text-white shadow-[0_4px_14px_rgba(37,99,235,0.25)] transition-all hover:shadow-[0_6px_20px_rgba(37,99,235,0.35)] hover:-translate-y-0.5 active:scale-[0.98] w-full sm:w-auto"
             >
-              Export Leads (CSV)
+              Export Leads (Excel)
             </Button>
           </div>
         </div>

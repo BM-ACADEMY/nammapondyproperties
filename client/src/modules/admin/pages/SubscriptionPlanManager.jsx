@@ -193,7 +193,7 @@ const SubscriptionPlanManager = () => {
 
         {/* Header */}
         <div className={`py-4 text-center border-b border-gray-50 bg-white pt-10 px-4`}>
-          <h2 className="text-2xl font-black text-[#002B49] tracking-widest uppercase">{plan.name}</h2>
+          <h2 className="text-2xl font-black text-[#002B49] tracking-widest uppercase">{plan.displayName || plan.name}</h2>
           <div className="mt-1">
             <Tag color="blue" className="rounded-md border-none bg-blue-50 text-blue-600 font-bold text-[10px] uppercase">
               {plan.businessType?.name || "Global"}
@@ -339,15 +339,24 @@ const SubscriptionPlanManager = () => {
           <Form layout="vertical" form={form} onFinish={onFinish}>
             <Form.Item
               name="name"
-              label="Plan Name"
+              label="Plan Type (Internal)"
               rules={[{ required: true }]}
+              tooltip="The internal name used for business logic (Lead priority, etc.)"
             >
-                <Select placeholder="Select plan name">
-                  <Select.Option value="Free">Free</Select.Option>
+                <Select placeholder="Select plan type">
                   <Select.Option value="Standard">Standard</Select.Option>
                   <Select.Option value="Premium">Premium</Select.Option>
                   <Select.Option value="Pro">Pro</Select.Option>
                 </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="displayName"
+              label="Display Name (UI)"
+              rules={[{ required: true, message: "Please enter a display name" }]}
+              tooltip="This is the name users will see on the website (e.g. Starter, Growth, Elite)"
+            >
+                <Input placeholder="Enter plan name to display to users" />
             </Form.Item>
 
             <Form.Item

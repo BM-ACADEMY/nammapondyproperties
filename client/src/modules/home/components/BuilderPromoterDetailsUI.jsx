@@ -233,12 +233,16 @@ const BuilderPromoterDetailsUI = ({
                   {property.location?.locality}, {property.location?.city}{" "}
                   {property.location?.pincode &&
                     `- ${property.location.pincode}`}
-                  {property.basicInfo?.approvalType && (
-                    <span className="ml-4 px-2 py-0.5 bg-green-500/20 border border-green-500/50 rounded text-xs font-bold text-green-400 capitalize">
-                      {property.basicInfo.approvalType} Approved
-                    </span>
-                  )}
                 </div>
+                {property.basicInfo?.approvalType && (
+                  <div className="flex">
+                    <span className="px-4 py-1.5 bg-green-500/20 border border-green-500/50 rounded-lg text-sm md:text-base font-bold text-green-400 capitalize shadow-sm backdrop-blur-sm">
+                      {Array.isArray(property.basicInfo.approvalType)
+                        ? property.basicInfo.approvalType.join(", ")
+                        : property.basicInfo.approvalType} Approved
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="text-right text-white">
@@ -441,6 +445,18 @@ const BuilderPromoterDetailsUI = ({
                       {property.location?.locality}
                     </div>
                   </div>
+                  {property.basicInfo?.approvalType && (
+                    <div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
+                        Approval
+                      </div>
+                      <div className="font-bold text-gray-800">
+                        {Array.isArray(property.basicInfo.approvalType)
+                          ? property.basicInfo.approvalType.join(", ")
+                          : property.basicInfo.approvalType}
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
                       Project Size
@@ -520,6 +536,7 @@ const BuilderPromoterDetailsUI = ({
                     <>
                       <Swiper
                         modules={[Navigation, Pagination, Autoplay]}
+                        autoHeight={true}
                         navigation={{ nextEl: ".fp-next", prevEl: ".fp-prev" }}
                         pagination={{ clickable: true, dynamicBullets: true }}
                         autoplay={{ delay: 4000, disableOnInteraction: false }}
@@ -536,11 +553,11 @@ const BuilderPromoterDetailsUI = ({
                                 window.open(getImageUrl(fp), "_blank")
                               }
                             >
-                              <img
-                                src={getImageUrl(fp)}
-                                className="max-h-[500px] mx-auto rounded-2xl object-contain"
-                                alt={`Floor Plan ${i + 1}`}
-                              />
+                                <img
+                                  src={getImageUrl(fp)}
+                                  className="mx-auto max-w-full h-auto rounded-2xl shadow-sm block"
+                                  alt={`Floor Plan ${i + 1}`}
+                                />
                             </div>
                           </SwiperSlide>
                         ))}
@@ -559,11 +576,11 @@ const BuilderPromoterDetailsUI = ({
                         window.open(getImageUrl(floorPlans[0]), "_blank")
                       }
                     >
-                      <img
-                        src={getImageUrl(floorPlans[0])}
-                        className="max-h-[500px] mx-auto rounded-2xl"
-                        alt="Floor Plan"
-                      />
+                       <img
+                         src={getImageUrl(floorPlans[0])}
+                         className="mx-auto max-w-full h-auto rounded-2xl shadow-sm block"
+                         alt="Floor Plan"
+                       />
                     </div>
                   )}
                 </div>

@@ -21,7 +21,8 @@ const Unauthorized = () => {
     } else if (role === 'SELLER') {
       navigate('/seller/dashboard', { replace: true });
     } else {
-      navigate('/login', { replace: true });
+      // Navigate to home instead of non-existent /login
+      navigate('/', { replace: true, state: { openLogin: true } });
     }
   };
 

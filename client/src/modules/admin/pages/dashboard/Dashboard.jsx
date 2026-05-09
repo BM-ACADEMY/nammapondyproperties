@@ -67,6 +67,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState("30d"); // 7d, 30d, 90d, all
+  const [refreshKey, setRefreshKey] = useState(0);
   const [data, setData] = useState({
     summary: {
       totalUsers: 0,
@@ -104,7 +105,7 @@ const Dashboard = () => {
     };
 
     fetchStats();
-  }, [range]);
+  }, [range, refreshKey]);
 
   if (loading && !data.summary.totalProperties) {
     return <Loader variant="panel" />;
@@ -119,12 +120,13 @@ const Dashboard = () => {
           type="error"
           showIcon
           action={
-            <Link
-              to="/admin/dashboard"
-              onClick={() => window.location.reload()}
+            <Button
+              type="primary"
+              ghost
+              onClick={() => setRefreshKey(prev => prev + 1)}
             >
               Retry
-            </Link>
+            </Button>
           }
         />
       </div>

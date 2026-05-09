@@ -11,7 +11,28 @@ exports.getAllPlans = async (req, res) => {
     }
 
     const plans = await SubscriptionPlan.find(query).populate("businessType");
-    res.json(plans);
+
+    // Add purchase restriction info for 'Standard' plans
+    let purchasedStandard = false;
+    if (req.user) {
+      const PaymentHistory = require("../models/PaymentHistory");
+      const alreadyPurchased = await PaymentHistory.findOne({
+        user: req.user._id,
+        planName: { $regex: /standard/i },
+        paymentStatus: "completed"
+      });
+      if (alreadyPurchased) purchasedStandard = true;
+    }
+
+    const modifiedPlans = plans.map(plan => {
+      const planObj = plan.toObject();
+      if (plan.name.toLowerCase().includes("standard") && purchasedStandard) {
+        planObj.isAlreadyPurchased = true;
+      }
+      return planObj;
+    });
+
+    res.json(modifiedPlans);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -30,18 +51,18 @@ exports.adminGetAllPlans = async (req, res) => {
 // Admin: Create/Update Plan
 exports.savePlan = async (req, res) => {
   try {
-    const { id, name, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType } = req.body;
+    const { id, name, displayName, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType } = req.body;
     
     if (id) {
       const plan = await SubscriptionPlan.findByIdAndUpdate(
         id,
-        { name, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType },
+        { name, displayName, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType },
         { new: true }
       ).populate("businessType");
       return res.json({ message: "Plan updated successfully", plan });
     }
 
-    const plan = new SubscriptionPlan({ name, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType });
+    const plan = new SubscriptionPlan({ name, displayName, price, propertyLimit, leadsLimit, duration, features, notIncluded, isPopular, status, businessType });
     await plan.save();
     res.status(201).json({ message: "Plan created successfully", plan });
   } catch (error) {

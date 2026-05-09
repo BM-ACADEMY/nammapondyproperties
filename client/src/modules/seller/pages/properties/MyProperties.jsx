@@ -189,7 +189,7 @@ const MyProperties = () => {
     }
   }, [user]);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = React.useCallback(async () => {
     setLoadingSubscription(true);
     try {
       const res = await api.get("/subscriptions/my-subscription");
@@ -199,7 +199,7 @@ const MyProperties = () => {
     } finally {
       setLoadingSubscription(false);
     }
-  };
+  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -225,8 +225,13 @@ const MyProperties = () => {
     const success = params.get("success");
     const property_id = params.get("property_id");
 
-    if (success && properties.length > 0) {
-      if (property_id) {
+    if (success) {
+      message.success("Payment successful! Your plan has been updated.");
+      refetchUser();
+      fetchSubscription();
+      fetchProperties();
+      
+      if (properties.length > 0 && property_id) {
         const prop = properties.find((p) => p._id === property_id);
         if (prop) {
           setSelectedProperty(prop);
@@ -237,7 +242,7 @@ const MyProperties = () => {
       // Clear the query param without refreshing
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [properties]);
+  }, [properties, refetchUser, fetchProperties, fetchSubscription]);
 
   const fetchMarketingRequests = async () => {
     try {
@@ -348,10 +353,12 @@ const MyProperties = () => {
     ["Active", "Pending", "Edit Pending Approval"].includes(p.status)
   ).length;
 
-  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, activePropertyCount);
+  const { canPost, limit: propertyLimit, reason } = checkPropertyListingLimit(user, properties.length);
+  const isPlanExpired = reason === "expired" || user?.activeSubscription?.status === "expired";
   const isLimitReached = !canPost && (reason === "limit_reached" || reason === "expired");
-  const isPlanExpired = user?.activeSubscription?.status === "expired";
-  const planName = isPlanExpired ? "PLAN EXPIRED" : (user?.activeSubscription?.plan?.name || settings?.defaultPlanName || "FREE");
+  const activePlan = user?.activeSubscription?.plan;
+  const planName = isPlanExpired ? "PLAN EXPIRED" : (activePlan?.displayName || activePlan?.name || "FREE");
+  const internalPlanName = activePlan?.name || "FREE";
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -396,13 +403,13 @@ const MyProperties = () => {
         <p className="text-gray-500 text-sm mt-1">
           {isPlanExpired 
             ? "Please renew your subscription to continue listing and managing properties."
-            : planName === (settings?.defaultPlanName || "BASIC")
-            ? `${planName} plan allows up to ${propertyLimit} property listings.`
-            : planName === "Standard"
-            ? "Standard plan supports up to 10 listings with better visibility."
-            : planName === "Pro"
-            ? "Pro plan gives unlimited listings with the highest priority exposure."
-            : "Premium plan gives enhanced listings with top priority exposure."}
+            : internalPlanName === "Standard"
+            ? `${planName} plan supports up to ${propertyLimit} listings with better visibility.`
+            : internalPlanName === "Premium"
+            ? `${planName} plan gives enhanced listings with top priority exposure.`
+            : internalPlanName === "Pro"
+            ? `${planName} plan gives unlimited listings with the highest priority exposure.`
+            : `${planName} plan allows up to ${propertyLimit} property listings.`}
         </p>
       </div>
     </div>
@@ -435,7 +442,7 @@ const MyProperties = () => {
           type="primary"
           icon={<Plus size={18} />}
           onClick={() => {
-            const { canPost, reason, message: limitMessage } = checkPropertyListingLimit(user, activePropertyCount);
+            const { canPost, reason, message: limitMessage, redirectPath } = checkPropertyListingLimit(user, activePropertyCount);
             if (!canPost) {
               message.warning(limitMessage);
               if (reason === "unverified") {
@@ -1063,8 +1070,9 @@ const MyProperties = () => {
                               Approval
                             </span>
                             <span className="text-lg font-bold text-gray-800">
-                              {selectedProperty.basicInfo?.approvalType ||
-                                "N/A"}
+                              {Array.isArray(selectedProperty.basicInfo?.approvalType)
+                                ? selectedProperty.basicInfo.approvalType.join(", ")
+                                : selectedProperty.basicInfo?.approvalType || "N/A"}
                             </span>
                           </div>
                           <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex flex-col items-center justify-center text-center">

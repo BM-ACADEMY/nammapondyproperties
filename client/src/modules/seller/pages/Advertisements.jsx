@@ -9,6 +9,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import api from "@/services/api";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { getImageUrl } from "@/utils/imageUrl";
 import Loader from "@/components/Common/Loader";
@@ -20,6 +21,8 @@ const SellerAdvertisements = () => {
   const [marketingRequests, setMarketingRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+
+  const navigate = useNavigate();
 
   const fetchData = async () => {
     setLoading(true);
@@ -140,7 +143,7 @@ const SellerAdvertisements = () => {
               )
             }
             onClick={() => {
-              window.location.href = `/seller/my-properties?advertise=${record._id}`;
+              navigate(`/seller/my-properties?advertise=${record._id}`);
             }}
           >
             {hasActiveRequest ? "Request Pending" : "Boost Listing"}

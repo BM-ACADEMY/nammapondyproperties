@@ -36,6 +36,31 @@ const sharedLeadSchema = new mongoose.Schema(
       type: Number,
       default: 3, // 1: Builder Match, 2: Agent Match, 3: No Match
     },
+    acceptedByMatchedSellers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    rejectedByMatchedSellers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    sellerStatuses: [
+      {
+        seller: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        status: {
+          type: String,
+          enum: ["not yet connected", "in process", "holded", "done"],
+          default: "not yet connected",
+        },
+      },
+    ],
   },
   {
     timestamps: true,

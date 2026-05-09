@@ -66,6 +66,7 @@ const FeaturedProperties = () => {
       } else {
         submitEnquiry(property, user.name, user.email, user.phone);
       }
+    } else {
       setLoginModalOpen(true);
     }
   };

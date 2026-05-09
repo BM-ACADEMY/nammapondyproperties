@@ -52,6 +52,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [range, setRange] = useState("30d"); // 7d, 30d, 90d, all
+  const [refreshKey, setRefreshKey] = useState(0);
   const [enquiryPage, setEnquiryPage] = useState(1);
   const ENQUIRIES_PER_PAGE = 5;
   const [data, setData] = useState({
@@ -90,11 +91,16 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [range]);
+  }, [range, refreshKey]);
 
   if (loading && !data.summary.totalProperties) {
     return <Loader variant="panel" />;
   }
+
+  const handleRetry = () => {
+    setError(null);
+    setRefreshKey(prev => prev + 1);
+  };
 
   if (error) {
     return (
@@ -105,12 +111,13 @@ const Dashboard = () => {
           type="error"
           showIcon
           action={
-            <Link
-              to="/seller/dashboard"
-              onClick={() => window.location.reload()}
+            <Button
+              type="primary"
+              ghost
+              onClick={handleRetry}
             >
               Retry
-            </Link>
+            </Button>
           }
         />
       </div>
@@ -142,6 +149,14 @@ const Dashboard = () => {
       color: "#fff7e6",
       desc: "Manage shared leads",
       path: "/seller/leads-overview",
+    },
+    {
+      title: "Lead Balance",
+      value: (data.summary.activeSubscription?.leadsUsed === undefined ? 0 : (data.summary.activeSubscription?.plan?.leadsLimit === -1 ? "∞" : Math.max(0, data.summary.activeSubscription?.plan?.leadsLimit - data.summary.activeSubscription?.leadsUsed))) + (data.summary.carriedLeads || 0),
+      icon: <CheckCircle size={24} className="text-emerald-500" />,
+      color: "#f0fdf4",
+      desc: data.summary.carriedLeads > 0 ? `Incl. ${data.summary.carriedLeads} carried forward` : "Available leads balance",
+      path: "/seller/upgrade-plan",
     },
     {
       title: "Support Tickets",
@@ -227,7 +242,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
         {statCardsData.map((stat, index) => (
           <Link
             to={stat.path}

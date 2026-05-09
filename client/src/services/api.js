@@ -1,4 +1,5 @@
 import axios from "axios";
+import { navigate } from "./navigationService";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -30,7 +31,10 @@ api.interceptors.response.use(
       if (token) {
         // Only clear if we actually had a session
         localStorage.clear();
-        window.location.href = "/login?message=session_expired";
+        // Do NOT use window.location.href here as it causes infinite loops if /login doesn't exist
+        // or if the component re-renders and re-triggers the 401.
+        // Instead, let the app detect the missing token or handle it via a toast.
+        console.warn("Session expired. User logged out.");
       }
     }
     return Promise.reject(error);
@@ -54,5 +58,7 @@ export const updateWebsiteSetting = (id, data) => api.patch(`/website-settings/$
 // Seller Shared Leads
 export const getMySharedLeads = () => api.get("/shared-leads/my-leads");
 export const acceptSharedLead = (id) => api.post(`/shared-leads/${id}/accept`);
+export const rejectSharedLead = (id) => api.post(`/shared-leads/${id}/reject`);
+export const updateLeadStatus = (id, status) => api.patch(`/shared-leads/${id}/status`, { status });
 
 export default api;

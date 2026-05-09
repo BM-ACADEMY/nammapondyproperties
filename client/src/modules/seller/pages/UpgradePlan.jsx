@@ -12,13 +12,13 @@ const UpgradePlan = () => {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [processingId, setProcessingId] = useState(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const [settings, setSettings] = useState(null);
 
   // Static Free Plan definition
   const freePlan = {
     _id: "static_free",
-    name: (settings?.defaultPlanName || "BASIC").toUpperCase(),
+    name: "FREE",
     price: 0,
     duration: 0,
     propertyLimit: settings?.sellerPropertyLimit || 3,
@@ -41,19 +41,19 @@ const UpgradePlan = () => {
     setLoading(true);
     try {
       const res = await api.get("/subscriptions/plans");
-      // Filter out any "Free" plans from backend to ensure only static one shows
-      const dynamicPlans = res.data.filter(p => p.price > 0).map(p => ({
+      const dynamicPlans = res.data.filter(p => p.name !== "Free").map(p => ({
         ...p,
-        name: p.name.toUpperCase(), 
+        name: (p.displayName || p.name).toUpperCase(), 
+        internalName: p.name,
         features: p.features || [],
         notIncluded: p.notIncluded || [],
         isPopular: p.isPopular || false
       }));
       
-      setPlans([freePlan, ...dynamicPlans]);
+      setPlans(dynamicPlans);
     } catch {
       message.error("Failed to load plans");
-      setPlans([freePlan]); // Still show free plan
+      setPlans([]); 
     } finally {
       setLoading(false);
     }
@@ -140,7 +140,8 @@ const UpgradePlan = () => {
 
             if (verifyRes.data.success) {
               message.success("Subscribed successfully!");
-              navigate("/seller/my-properties");
+              await refetchUser();
+              navigate("/seller/my-properties?success=true");
             }
           } catch (err) {
             console.error("Payment Verification Error:", err);
@@ -206,9 +207,8 @@ const UpgradePlan = () => {
                     </div>
                   )}
 
-                  {/* Header */}
                   <div className="py-4 text-center border-b border-gray-50 bg-white">
-                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.name || "PLAN"}</h2>
+                    <h2 className="text-2xl font-black text-[#002B49] tracking-widest">{plan.displayName || plan.name || "PLAN"}</h2>
                   </div>
 
                   {/* Price Banner */}
@@ -252,7 +252,7 @@ const UpgradePlan = () => {
                       block
                       size="large"
                       loading={processingId === plan._id}
-                      disabled={isCurrent || (plan.price === 0 && !currentSubscription)}
+                      disabled={isCurrent || (plan.price === 0 && !currentSubscription) || plan.isAlreadyPurchased}
                       onClick={() => handleUpgrade(plan)}
                       className={`h-14 rounded-md font-black text-sm uppercase tracking-widest transition-all ${
                         isPopular 
@@ -260,7 +260,7 @@ const UpgradePlan = () => {
                           : "premium-navy-btn border-2"
                       }`}
                     >
-                      {isCurrent ? "Active Now" : plan.price === 0 ? "Default Plan" : "Upgrade"}
+                      {isCurrent ? "Active Now" : plan.isAlreadyPurchased ? "Already Purchased" : plan.price === 0 ? "Default Plan" : "Upgrade"}
                     </Button>
                   </div>
 
