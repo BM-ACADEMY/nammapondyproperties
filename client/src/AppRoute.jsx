@@ -17,6 +17,7 @@ const About = lazy(() => import("./modules/about/About"));
 const Contact = lazy(() => import("./modules/contact/Contact"));
 const TermsAndConditions = lazy(() => import("./modules/home/pages/TermsAndConditions"));
 const PrivacyPolicy = lazy(() => import("./modules/home/pages/PrivacyPolicy"));
+const DeactivateAccount = lazy(() => import("./modules/home/pages/DeactivateAccount"));
 const AddProperty = lazy(() => import("./modules/seller/pages/properties/AddProperty"));
 const PostRequirementPage = lazy(() => import("./modules/home/pages/PostRequirementPage"));
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
@@ -57,6 +58,14 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <PrivacyPolicy />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/deactivate-account"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DeactivateAccount />
             </Suspense>
           }
         />
