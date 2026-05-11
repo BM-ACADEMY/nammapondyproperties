@@ -26,8 +26,11 @@ exports.sendOtp = async (req, res) => {
     return res.status(400).json({ error: "Please enter a valid 10-digit phone number" });
   }
 
+  // Hardcoded test account for app store review
+  const isTestAccount = phone === "9999999999";
+
   // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = isTestAccount ? "123456" : Math.floor(100000 + Math.random() * 900000).toString();
   const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes duration
 
   try {
@@ -51,18 +54,20 @@ exports.sendOtp = async (req, res) => {
     user.otpExpires = otpExpires;
     await user.save();
 
-    // Send OTP via BulkSMSPlans API
-    const formattedPhone = phone.length === 10 ? `91${phone}` : phone;
-    const smsMessage = `Your OTP for ABM GROUPS verification is ${otp}. It is valid for 10 minutes. Do not share this OTP with anyone.`;
-    const smsUrl = process.env.BULKSMS_API_URL
-      .replace("{{phone}}", formattedPhone)
-      .replace("{{message}}", encodeURIComponent(smsMessage));
+    if (!isTestAccount) {
+      // Send OTP via BulkSMSPlans API
+      const formattedPhone = phone.length === 10 ? `91${phone}` : phone;
+      const smsMessage = `Your OTP for ABM GROUPS verification is ${otp}. It is valid for 10 minutes. Do not share this OTP with anyone.`;
+      const smsUrl = process.env.BULKSMS_API_URL
+        .replace("{{phone}}", formattedPhone)
+        .replace("{{message}}", encodeURIComponent(smsMessage));
 
-    try {
-      await axios.get(smsUrl);
-      console.log(`SMS sent successfully to ${phone}`);
-    } catch (smsError) {
-      console.error("SMS Gateway Error:", smsError.message);
+      try {
+        await axios.get(smsUrl);
+        console.log(`SMS sent successfully to ${phone}`);
+      } catch (smsError) {
+        console.error("SMS Gateway Error:", smsError.message);
+      }
     }
 
     res.json({ success: true, message: "OTP sent successfully" });
@@ -76,11 +81,17 @@ exports.verifyOtp = async (req, res) => {
   const { phone, otp } = req.body;
 
   try {
-    const user = await User.findOne({
-      phone,
-      otp,
-      otpExpires: { $gt: Date.now() },
-    }).populate(["role_id", "businessType", "builderProfile"]);
+    let user;
+
+    if (phone === "9999999999" && otp === "123456") {
+      user = await User.findOne({ phone }).populate(["role_id", "businessType", "builderProfile"]);
+    } else {
+      user = await User.findOne({
+        phone,
+        otp,
+        otpExpires: { $gt: Date.now() },
+      }).populate(["role_id", "businessType", "builderProfile"]);
+    }
 
     if (!user) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
