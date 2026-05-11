@@ -8,10 +8,24 @@ const User = require("../models/User");
 
 exports.createPlan = async (req, res) => {
   try {
-    const plan = await MarketingPlan.create(req.body);
+    if (!req.body.serviceName?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Service name is required"
+      });
+    }
+
+    const marketingPlan = new MarketingPlan({
+      name: req.body.serviceName,
+      priceRange: req.body.priceRange,
+      description: req.body.description,
+      isPopular: req.body.isPopular,
+      status: req.body.status
+    });
+
+    const plan = await marketingPlan.save();
     res.status(201).json({ success: true, data: plan });
   } catch (error) {
-    console.error("Create Marketing Plan Error:", error);
     res.status(400).json({ success: false, error: error.message });
   }
 };
@@ -36,9 +50,15 @@ exports.getAllPlansAdmin = async (req, res) => {
 
 exports.updatePlan = async (req, res) => {
   try {
+    const updateData = { ...req.body };
+    if (updateData.serviceName) {
+      updateData.name = updateData.serviceName;
+      delete updateData.serviceName;
+    }
+
     const plan = await MarketingPlan.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       {
         new: true,
         runValidators: true,
@@ -48,7 +68,6 @@ exports.updatePlan = async (req, res) => {
       return res.status(404).json({ success: false, error: "Plan not found" });
     res.status(200).json({ success: true, data: plan });
   } catch (error) {
-    console.error("Update Marketing Plan Error:", error);
     res.status(400).json({ success: false, error: error.message });
   }
 };
@@ -111,7 +130,7 @@ exports.createRequest = async (req, res) => {
     // Populate for the notification
     const populatedRequest = await MarketingRequest.findById(request._id)
       .populate("seller_id", "name")
-      .populate("plan_id", "serviceName");
+      .populate("plan_id", "name");
 
     // Emit socket event to notify admins
     const io = req.app.get("socketio");
@@ -144,7 +163,7 @@ exports.getSellerRequests = async (req, res) => {
   try {
     const requests = await MarketingRequest.find({ seller_id: req.user._id })
       .populate("property_id", "title images price")
-      .populate("plan_id", "serviceName priceRange")
+      .populate("plan_id", "name priceRange")
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: requests });
   } catch (error) {
@@ -159,7 +178,7 @@ exports.getAdminRequests = async (req, res) => {
     const requests = await MarketingRequest.find()
       .populate("seller_id", "name phone customId")
       .populate("property_id", "title images price location")
-      .populate("plan_id", "serviceName priceRange")
+      .populate("plan_id", "name priceRange")
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: requests });
   } catch (error) {

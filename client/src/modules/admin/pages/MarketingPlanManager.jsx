@@ -16,7 +16,7 @@ import axios from "axios";
 import { Dropdown } from "antd";
 import Loader from "@/components/Common/Loader";
 
-const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const API = import.meta.env.VITE_API_URL;
 
 const MarketingPlanManager = () => {
   const [plans, setPlans] = useState([]);
@@ -79,16 +79,9 @@ const MarketingPlanManager = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       };
 
-      // Clean payload: ensure boolean and only send what model expects
       const payload = {
-        serviceName: values.serviceName,
-        priceRange: values.priceRange,
-        description: values.description,
-        isPopular: !!values.isPopular,
-        status: values.status || "active",
+        ...values,
       };
-
-      console.log("Submitting Marketing Plan:", payload);
 
       if (editingPlan) {
         await axios.put(
@@ -105,7 +98,6 @@ const MarketingPlanManager = () => {
       setIsModalOpen(false);
       fetchPlans();
     } catch (error) {
-      console.error("Marketing Plan Error:", error.response?.data || error);
       message.error(error.response?.data?.error || "Operation failed");
     }
   };
