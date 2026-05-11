@@ -11,6 +11,7 @@ exports.createPlan = async (req, res) => {
     const plan = await MarketingPlan.create(req.body);
     res.status(201).json({ success: true, data: plan });
   } catch (error) {
+    console.error("Create Marketing Plan Error:", error);
     res.status(400).json({ success: false, error: error.message });
   }
 };
@@ -47,6 +48,7 @@ exports.updatePlan = async (req, res) => {
       return res.status(404).json({ success: false, error: "Plan not found" });
     res.status(200).json({ success: true, data: plan });
   } catch (error) {
+    console.error("Update Marketing Plan Error:", error);
     res.status(400).json({ success: false, error: error.message });
   }
 };
