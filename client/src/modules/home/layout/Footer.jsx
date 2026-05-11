@@ -231,6 +231,14 @@ const Footer = () => {
                   Terms & Conditions
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/deactivate-account"
+                  className="text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
+                >
+                  Deactivate Account
+                </Link>
+              </li>
             </ul>
           </div>
 
