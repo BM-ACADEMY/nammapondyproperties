@@ -17,6 +17,27 @@ exports.createEnquiry = async (req, res) => {
         .json({ error: "Property ID and Seller ID are required" });
     }
 
+    // Check if an enquiry already exists for this property by this user/phone
+    let existingEnquiry = null;
+    if (req.user) {
+      existingEnquiry = await Enquiry.findOne({
+        property_id,
+        $or: [
+          { user_id: req.user._id },
+          ...(phone ? [{ enquirer_phone: phone }] : [])
+        ]
+      });
+    } else if (phone) {
+      existingEnquiry = await Enquiry.findOne({
+        property_id,
+        enquirer_phone: phone
+      });
+    }
+
+    if (existingEnquiry) {
+      return res.status(400).json({ error: "You already enquired about this property" });
+    }
+
     // Fetch property title for snapshot
     const property = await Property.findById(property_id);
     const propertyTitle = property?.basicInfo?.title || property?.title || "Untitled Property";
@@ -102,6 +123,9 @@ exports.getEnquiries = async (req, res) => {
       if (req.query.view === "my") {
         // Admin viewing leads for their own properties
         filter.seller_id = req.user._id;
+      } else if (req.query.view === "seller") {
+        // Admin viewing leads for seller-owned properties (sellers, i.e., non-admins)
+        filter.seller_id = { $nin: adminUserIds };
       } else {
         // Only show leads for admin-owned properties
         filter.seller_id = { $in: adminUserIds };

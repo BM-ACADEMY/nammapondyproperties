@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MapPin, Heart, ArrowRight, Store, Eye } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import toast from "react-hot-toast";
 import {
   formatIndianPrice,
   formatPriceRange,
@@ -148,10 +149,13 @@ const FavoritesPage = () => {
         email,
         phone,
       });
+      toast.success("Enquiry sent! Opening WhatsApp...");
+      window.open(whatsappUrl, "_blank");
     } catch (error) {
       console.error("Enquiry Error:", error);
+      const errMsg = error.response?.data?.error || "Failed to submit enquiry";
+      toast.error(errMsg);
     } finally {
-      window.open(whatsappUrl, "_blank");
       setEnquiryLoading(false);
     }
   };

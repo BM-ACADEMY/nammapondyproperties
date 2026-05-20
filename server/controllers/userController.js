@@ -142,7 +142,7 @@ exports.requestPhoneUpdate = async (req, res) => {
 
     // Send OTP via BulkSMSPlans API
     const formattedPhone = `91${newPhone}`;
-    const smsMessage = `Your OTP for phone number update on ABM GROUPS is ${otp}. Valid for 10 minutes.`;
+    const smsMessage = `Your OTP for ABM GROUPS verification is ${otp}. It is valid for 10 minutes. Do not share this OTP with anyone.`;
     const smsUrl = process.env.BULKSMS_API_URL
       .replace("{{phone}}", formattedPhone)
       .replace("{{message}}", encodeURIComponent(smsMessage));

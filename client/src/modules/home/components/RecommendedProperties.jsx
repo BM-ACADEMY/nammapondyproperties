@@ -73,6 +73,7 @@ const RecommendedProperties = () => {
             } else {
                 submitEnquiry(property, user.name, user.email, user.phone);
             }
+        } else {
             setLoginModalOpen(true);
         }
     };
@@ -102,10 +103,12 @@ const RecommendedProperties = () => {
                 email,
                 phone,
             });
+            toast.success("Enquiry sent! Opening WhatsApp...");
+            window.open(whatsappUrl, "_blank");
         } catch (error) {
             console.error("Enquiry Error:", error);
-        } finally {
-            window.open(whatsappUrl, "_blank");
+            const errMsg = error.response?.data?.error || "Failed to submit enquiry";
+            toast.error(errMsg);
         }
     };
 

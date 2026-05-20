@@ -307,7 +307,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
     supportTickets: 0,
   });
   const [businessTypes, setBusinessTypes] = useState([]);
-  const [openKeys, setOpenKeys] = useState(["properties-sub", "users-sub", "seller-sub"]);
+  const [openKeys, setOpenKeys] = useState(["properties-sub", "users-sub", "seller-sub", "enquiries-sub"]);
 
   const toggleSubmenu = (key) => {
     setOpenKeys(prev => 
@@ -551,16 +551,27 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
         { key: "/admin/failed-registrations", label: "Failed Registrations", onClick: () => handleMenuClick("/admin/failed-registrations") },
       ],
     },
-    { 
-      key: "/admin/enquiries", 
-      icon: <LibraryBig size={18} />, 
+    {
+      key: "enquiries-sub",
+      icon: <LibraryBig size={18} />,
       label: (
         <div className="flex justify-between items-center pr-4">
           <span>Enquiry Leads</span>
           {notifications.enquiries > 0 && <Badge count={notifications.enquiries} size="small" color="#7c3aed" />}
         </div>
-      ), 
-      onClick: () => handleMenuClick("/admin/enquiries") 
+      ),
+      children: [
+        { 
+          key: "/admin/enquiries", 
+          label: "Our Enquiry Leads", 
+          onClick: () => handleMenuClick("/admin/enquiries") 
+        },
+        { 
+          key: "/admin/enquiries?view=seller", 
+          label: "Seller Enquiry Leads", 
+          onClick: () => handleMenuClick("/admin/enquiries?view=seller") 
+        },
+      ],
     },
     { 
       key: "/admin/requirements", 
@@ -671,7 +682,7 @@ const Sidebar = ({ collapsed, setCollapsed, isMobile }) => {
           const filteredChildren = filterItems(item.children);
           if (filteredChildren.length > 0) return { ...item, children: filteredChildren };
         }
-        if (userPermissions.includes(item.key)) return item;
+        if (userPermissions.includes(item.key) || (item.key && item.key.includes("/admin/enquiries") && userPermissions.includes("/admin/enquiries"))) return item;
         return null;
       }).filter(Boolean);
     };

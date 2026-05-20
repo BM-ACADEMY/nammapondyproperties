@@ -251,12 +251,12 @@ const Footer = () => {
               <li className="flex items-start justify-start gap-4">
                 {/* <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" /> */}
                 <a
-                  href="https://www.google.com/maps/search/?api=1&query=123,+Anna+Salai,+Pondicherry+-+605001"
+                  href="https://www.google.com/maps/search/?api=1&query=2nd+floor,+252,+Mahatma+Gandhi+Rd,+Solai+Nagar,+Kottakuppam,+Vanur,+Puducherry,+Tamil+Nadu+605104"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline-offset-4 hover:underline cursor-pointer hover:text-white transition-colors"
                 >
-                  123, Anna Salai, Pondicherry - 605001
+                  2nd floor, 252, Mahatma Gandhi Rd, Solai Nagar, Kottakuppam, Vanur, Puducherry, Tamil Nadu 605104
                 </a>
               </li>
               <li className="flex items-center justify-start gap-4">

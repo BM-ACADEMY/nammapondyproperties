@@ -79,6 +79,7 @@ const UserPropertiesPage = () => {
       } else {
         submitEnquiry(property, authUser.name, authUser.email, authUser.phone);
       }
+    } else {
       setLoginModalOpen(true);
     }
   };
@@ -108,10 +109,12 @@ const UserPropertiesPage = () => {
         email,
         phone,
       });
+      toast.success("Enquiry sent! Opening WhatsApp...");
+      window.open(whatsappUrl, "_blank");
     } catch (error) {
       console.error("Enquiry Error:", error);
-    } finally {
-      window.open(whatsappUrl, "_blank");
+      const errMsg = error.response?.data?.error || "Failed to submit enquiry";
+      toast.error(errMsg);
     }
   };
 
