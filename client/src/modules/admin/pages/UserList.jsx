@@ -33,6 +33,7 @@ import {
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import Loader from "@/components/Common/Loader";
+import moment from "moment";
 
 const { Title, Text } = Typography;
 
@@ -206,6 +207,16 @@ const UserList = () => {
           <span className="text-sm font-medium">{record.phone || "No Phone"}</span>
           <span className="text-xs text-gray-500">{record.email}</span>
         </div>
+      ),
+    },
+    {
+      title: "Registered At",
+      key: "createdAt",
+      sorter: (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0),
+      render: (_, record) => (
+        <span className="text-xs text-gray-500 font-medium">
+          {record.createdAt ? moment(record.createdAt).format("DD MMM YYYY, hh:mm A") : "---"}
+        </span>
       ),
     },
     {

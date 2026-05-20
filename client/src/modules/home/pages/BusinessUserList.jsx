@@ -185,7 +185,7 @@ const BusinessUserList = () => {
     };
   }, [isDrawerOpen]);
 
-  const handleWhatsAppClick = (e, targetUser, property = null) => {
+  const handleWhatsAppClick = async (e, targetUser, property = null) => {
     if (e && e.stopPropagation) e.stopPropagation();
     if (!targetUser) return;
 
@@ -210,19 +210,26 @@ const BusinessUserList = () => {
 
     const whatsappUrl = `https://wa.me/${sellerPhone}?text=${encodeURIComponent(message)}`;
 
-    // Open WhatsApp directly
-    window.open(whatsappUrl, "_blank");
-
-    // Track enquiry in background if user is logged in
+    // Track enquiry if user is logged in
     if (user) {
-      api.post("/enquiries/create", {
-        property_id: property?._id,
-        seller_id: targetUser._id,
-        message: message,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || "",
-      }).catch(err => console.error("Enquiry Error:", err));
+      try {
+        await api.post("/enquiries/create", {
+          property_id: property?._id,
+          seller_id: targetUser._id,
+          message: message,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || "",
+        });
+        toast.success("Enquiry sent! Opening WhatsApp...");
+        window.open(whatsappUrl, "_blank");
+      } catch (err) {
+        console.error("Enquiry Error:", err);
+        const errMsg = err.response?.data?.error || "Failed to submit enquiry";
+        toast.error(errMsg);
+      }
+    } else {
+      window.open(whatsappUrl, "_blank");
     }
   };
 
@@ -259,10 +266,13 @@ const BusinessUserList = () => {
         email,
         phone,
       });
+      toast.success("Enquiry sent! Opening WhatsApp...");
+      window.open(whatsappUrl, "_blank");
     } catch (error) {
       console.error("Enquiry Error:", error);
+      const errMsg = error.response?.data?.error || "Failed to submit enquiry";
+      toast.error(errMsg);
     } finally {
-      window.open(whatsappUrl, "_blank");
       setEnquiryLoading(false);
     }
   };

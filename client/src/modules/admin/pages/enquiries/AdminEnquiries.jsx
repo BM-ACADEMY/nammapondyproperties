@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space, Select } from "antd";
+import { Table, Tag, Button, message, Input, Popconfirm, Card, Row, Col, Typography, Tooltip, Space, Select, Tabs } from "antd";
 import { Search, Download, Trash2, MessageSquare, Phone, User, Inbox, MoreVertical, ExternalLink } from "lucide-react";
 import api from "@/services/api";
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { getImageUrl } from "@/utils/imageUrl";
 import Loader from "@/components/Common/Loader";
 import { exportEnquiriesExcel } from "@/utils/exportEnquiriesExcel";
@@ -16,7 +16,16 @@ const AdminEnquiries = () => {
   const [enquiries, setEnquiries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
-  const [viewMode] = useState("all"); // Default and only view: 'all' to show platform-wide leads
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialView = searchParams.get("view") === "seller" ? "seller" : "all";
+  const [viewMode, setViewMode] = useState(initialView);
+
+  useEffect(() => {
+    const currentView = searchParams.get("view") === "seller" ? "seller" : "all";
+    if (currentView !== viewMode) {
+      setViewMode(currentView);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchEnquiries();
@@ -209,6 +218,7 @@ const AdminEnquiries = () => {
           size="small"
           style={{ width: 110 }}
           className={`status-select-${status?.toLowerCase()}`}
+          disabled={viewMode === "seller"}
         >
           <Option value="new">NEW</Option>
           <Option value="contacted">CONTACTED</Option>
@@ -239,21 +249,27 @@ const AdminEnquiries = () => {
       align: "right",
       render: (_, record) => (
         <Space>
-          <Popconfirm
-            title="Delete Enquiry"
-            description="Are you sure you want to delete this enquiry?"
-            onConfirm={() => handleDelete(record)}
-            okText="Yes"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Button
-              type="text"
-              danger
-              icon={<Trash2 size={16} />}
-              className="hover:bg-red-50 flex items-center justify-center p-2 rounded-lg"
-            />
-          </Popconfirm>
+          {viewMode === "seller" ? (
+            <Tag color="default" className="text-[10px] font-semibold opacity-60 border-none bg-gray-100 text-gray-500 m-0">
+              VIEW ONLY
+            </Tag>
+          ) : (
+            <Popconfirm
+              title="Delete Enquiry"
+              description="Are you sure you want to delete this enquiry?"
+              onConfirm={() => handleDelete(record)}
+              okText="Yes"
+              cancelText="No"
+              okButtonProps={{ danger: true }}
+            >
+              <Button
+                type="text"
+                danger
+                icon={<Trash2 size={16} />}
+                className="hover:bg-red-50 flex items-center justify-center p-2 rounded-lg"
+              />
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -354,7 +370,7 @@ const AdminEnquiries = () => {
           {/* Title and results tag: Top on mobile, Left on desktop */}
           <div className="flex items-center gap-3">
             <Title level={4} className="mb-0 text-gray-800 font-semibold tracking-tight">
-              All Platform Inquiries
+              {viewMode === "seller" ? "Seller Properties Inquiries" : "Our Platform Inquiries"}
             </Title>
             <Tag color="indigo" className="rounded-full border-none px-3 font-semibold text-xs whitespace-nowrap">
               {filteredEnquiries.length} TOTAL LEADS
