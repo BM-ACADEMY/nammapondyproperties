@@ -381,12 +381,13 @@ const AdminProperties = ({ mode }) => {
               return "blue";
           }
         };
+        const isSoldOut = record.isSold || status?.toLowerCase() === "sold";
         return (
           <div className="flex flex-col gap-1">
             <Tag color={getStatusColor(status)}>
               {status?.toUpperCase() || "UNKNOWN"}
             </Tag>
-            {record.isSold && <Tag color="red">SOLD</Tag>}
+            {isSoldOut && <Tag color="red">SOLD</Tag>}
           </div>
         );
       },
@@ -745,7 +746,7 @@ const AdminProperties = ({ mode }) => {
                       <Tag className="border-none px-3 py-1 text-sm font-semibold shadow-sm backdrop-blur-md bg-black/40 text-white">
                         {selectedProperty.basicInfo?.propertyType || "Unknown"}
                       </Tag>
-                      {selectedProperty.isSold && (
+                      {(selectedProperty.isSold || selectedProperty.status?.toLowerCase() === "sold") && (
                         <Tag className="border-none px-3 py-1 text-sm font-semibold shadow-sm backdrop-blur-md bg-red-600/80 text-white">
                           SOLD OUT
                         </Tag>

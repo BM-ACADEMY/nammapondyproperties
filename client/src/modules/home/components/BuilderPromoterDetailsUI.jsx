@@ -101,6 +101,8 @@ const BuilderPromoterDetailsUI = ({
     }
   };
 
+  const isPropertySold = property.isSold || property.status?.toLowerCase() === "sold";
+
   const [activeTab, setActiveTab] = useState("overview");
   const scrollRefs = {
     overview: useRef(null),
@@ -186,7 +188,7 @@ const BuilderPromoterDetailsUI = ({
         <img
           src={getImageUrl(property.media?.featuredImage || mainImage)}
           alt={property.basicInfo?.title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-transform duration-700 ${isPropertySold ? "grayscale-[0.8]" : ""}`}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
@@ -215,6 +217,12 @@ const BuilderPromoterDetailsUI = ({
                       ? "For Rent"
                       : "For Sale"}
                   </span>
+                  
+                  {isPropertySold && (
+                    <span className="bg-red-600 text-white text-[10px] uppercase font-bold px-3 py-1 rounded w-fit shadow-lg border border-white/20">
+                      Sold Out
+                    </span>
+                  )}
 
                   {property.view_count >= 2000 && (
                     <div className="bg-red-50 text-red-600 px-2 py-1 rounded flex items-center gap-1.5 shadow-sm border border-red-200 w-fit whitespace-nowrap">
@@ -822,14 +830,14 @@ const BuilderPromoterDetailsUI = ({
 
                 <button
                   onClick={handleWhatsAppClick}
-                  disabled={enquiryLoading || property.isSold}
+                  disabled={enquiryLoading || isPropertySold}
                   className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg cursor-pointer ${
-                    property.isSold
+                    isPropertySold
                       ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
                       : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"
                   }`}
                 >
-                  {property.isSold ? (
+                  {isPropertySold ? (
                     "Property Sold Out"
                   ) : enquiryLoading ? (
                     "Processing..."

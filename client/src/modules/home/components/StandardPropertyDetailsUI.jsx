@@ -110,6 +110,8 @@ const StandardPropertyDetailsUI = ({
     }
   };
 
+  const isPropertySold = property.isSold || property.status?.toLowerCase() === "sold";
+
   return (
     <div className="bg-white min-h-screen py-8 font-sans text-gray-900">
       <div className="container mx-auto px-4 pt-19 max-w-7xl">
@@ -228,7 +230,7 @@ const StandardPropertyDetailsUI = ({
               <div className="relative h-[350px] md:h-[450px] bg-gray-100 rounded-xl overflow-hidden group">
                 {/* Badges Container - Top Left */}
                 <div className="absolute top-6 left-6 z-20 flex flex-col gap-3">
-                  {property.isSold && (
+                  {isPropertySold && (
                     <div className="w-fit">
                       <span className="bg-red-600 shadow-lg text-white text-sm font-bold px-4 py-2 rounded-sm uppercase tracking-wider border border-white/20 whitespace-nowrap">
                         Sold Out
@@ -263,7 +265,7 @@ const StandardPropertyDetailsUI = ({
                 <img
                   src={getImageUrl(mainImage)}
                   alt={property.basicInfo?.title || "Property"}
-                  className={`w-full h-full object-cover transition-transform duration-700 ${property.isSold ? "grayscale-[0.8]" : ""}`}
+                  className={`w-full h-full object-cover transition-transform duration-700 ${isPropertySold ? "grayscale-[0.8]" : ""}`}
                 />
 
                 <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
@@ -1289,13 +1291,13 @@ const StandardPropertyDetailsUI = ({
 
                 <button
                   onClick={handleWhatsAppClick}
-                  disabled={enquiryLoading || property.isSold}
-                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg cursor-pointer ${property.isSold
+                  disabled={enquiryLoading || isPropertySold}
+                  className={`w-full font-bold py-4 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-[0.98] shadow-lg cursor-pointer ${isPropertySold
                       ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
                       : "bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-green-100"
                     }`}
                 >
-                  {property.isSold ? (
+                  {isPropertySold ? (
                     "Property Sold Out"
                   ) : enquiryLoading ? (
                     "Processing..."

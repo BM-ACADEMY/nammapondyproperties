@@ -203,8 +203,8 @@ const PropertyTypeList = () => {
             </div>
           )}
 
-          {/* Post by Requirement - Only for authenticated users */}
-          {isAuthenticated && <PostRequirementCard />}
+          {/* Post by Requirement */}
+          <PostRequirementCard />
 
           {/* Promo Widget - At Bottom */}
           <div className="mt-auto">
