@@ -170,11 +170,11 @@ const PropertiesPage = () => {
         phone,
       });
       toast.success("Enquiry sent! Opening WhatsApp...");
+      window.open(whatsappUrl, "_blank");
     } catch (error) {
       console.error(error);
-      toast.error("Redirecting to WhatsApp...");
-    } finally {
-      window.open(whatsappUrl, "_blank");
+      const errMsg = error.response?.data?.error || "Failed to submit enquiry";
+      toast.error(errMsg);
     }
   };
 

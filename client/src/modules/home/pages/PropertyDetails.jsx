@@ -4,6 +4,7 @@ import axios from "axios";
 import api from "../../../services/api";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { toast } from "react-hot-toast";
 
 import { useAuth } from "../../../context/AuthContext";
 import { recordPropertyView } from "../../../utils/propertyViewTracker";
@@ -146,10 +147,13 @@ const PropertyDetails = () => {
         email,
         phone,
       });
+      toast.success("Enquiry sent! Opening WhatsApp...");
+      window.open(whatsappUrl, "_blank");
     } catch (error) {
       console.error("Enquiry Error:", error);
+      const errMsg = error.response?.data?.error || "Failed to submit enquiry";
+      toast.error(errMsg);
     } finally {
-      window.open(whatsappUrl, "_blank");
       setEnquiryLoading(false);
     }
   };
