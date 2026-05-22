@@ -1007,6 +1007,28 @@ exports.updateProperty = async (req, res) => {
       return data;
     };
 
+    // Fast-path for "Mark as Sold" partial updates
+    const isOnlyStatusUpdate = Object.keys(req.body).every(key => 
+      ["isSold", "soldPrice"].includes(key)
+    );
+    
+    if (isOnlyStatusUpdate && req.body.isSold !== undefined) {
+      const updatedProperty = await Property.findByIdAndUpdate(
+        id,
+        { 
+          $set: { 
+            isSold: req.body.isSold,
+            soldPrice: req.body.soldPrice
+          } 
+        },
+        { new: true, runValidators: false }
+      ).populate([
+        { path: "seller", populate: { path: "role_id" } },
+        { path: "businessType" }
+      ]);
+      return res.json(updatedProperty);
+    }
+
     // Handle Image Deletion
     const imagesToDelete = parseJSON(req.body.images_to_delete) || [];
     if (imagesToDelete.length > 0) {

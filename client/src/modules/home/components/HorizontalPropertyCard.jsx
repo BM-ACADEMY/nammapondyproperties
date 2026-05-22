@@ -55,6 +55,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
     const city = property.location?.city || "";
     const posterType = property.businessType?.name || (typeof property.businessType === 'string' ? property.businessType : null) || property.seller?.role_id?.role_name || property.seller?.role?.name || "Owner";
     const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
+    const isPropertySold = property.isSold || property.status?.toLowerCase() === "sold";
 
     const bedrooms = property.specifications?.residential?.bedrooms || 0;
     const minArea = property.specifications?.area?.minArea;
@@ -101,7 +102,7 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                             <img
                                 src={getImageUrl(img)}
                                 alt={`${property.basicInfo?.title || "Property"} - ${idx + 1}`}
-                                className="w-full h-full object-cover scale-[1.03]"
+                                className={`w-full h-full object-cover scale-[1.03] ${isPropertySold ? "grayscale-[0.8]" : ""}`}
                                 loading="lazy"
                             />
                         </div>
@@ -111,6 +112,15 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                 <div className="absolute top-3 right-3 z-40">
                     <WishlistButton propertyId={property._id} />
                 </div>
+
+                {/* Sold Out Badge */}
+                {isPropertySold && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-50 pointer-events-none">
+                        <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider pointer-events-auto shadow-lg border border-red-500/50">
+                            Sold Out
+                        </span>
+                    </div>
+                )}
 
                 {/* Top Left Badges */}
                 <div className="absolute top-3 left-3 z-40 flex flex-col gap-2 items-start pointer-events-none">
@@ -218,13 +228,15 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                         <span className="text-[13px] font-bold text-slate-700 capitalize mt-1 leading-none">{posterType}</span>
                     </div>
 
-                    <button
-                        onClick={(e) => onWhatsAppClick && onWhatsAppClick(e, property)}
-                        className="px-6 py-2 rounded-xl bg-[#166aa8] text-white font-bold text-[13px] tracking-wide flex items-center gap-2 hover:bg-[#125a8e] transition-all shadow-md active:scale-95"
-                    >
-                        <Phone className="w-4 h-4" />
-                        <span>Contact</span>
-                    </button>
+                    {!isPropertySold && (
+                        <button
+                            onClick={(e) => onWhatsAppClick && onWhatsAppClick(e, property)}
+                            className="px-6 py-2 rounded-xl bg-[#166aa8] text-white font-bold text-[13px] tracking-wide flex items-center gap-2 hover:bg-[#125a8e] transition-all shadow-md active:scale-95"
+                        >
+                            <Phone className="w-4 h-4" />
+                            <span>Contact</span>
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

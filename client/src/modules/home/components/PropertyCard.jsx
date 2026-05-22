@@ -21,6 +21,7 @@ const PropertyCard = ({ property }) => {
   const isPosterAdmin = property.seller?.role_id?.role_name === 'admin' || property.seller?.role?.name === 'admin';
   const posterType = isPosterAdmin ? (property.seller?.name || "Admin") : (property.businessType?.name || (typeof property.businessType === 'string' && property.businessType !== "" ? property.businessType : null) || "Owner");
   const timeAgo = property.createdAt ? moment(property.createdAt).fromNow() : "Recently";
+  const isPropertySold = property.isSold || property.status?.toLowerCase() === "sold";
 
   // Price range display
   const minPrice = property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent;
@@ -42,7 +43,7 @@ const PropertyCard = ({ property }) => {
         <img
           src={imgUrl}
           alt={property.basicInfo?.title || "Property"}
-          className={`w-full h-full object-cover ${property.isSold ? "grayscale-[0.8]" : ""}`}
+          className={`w-full h-full object-cover ${isPropertySold ? "grayscale-[0.8]" : ""}`}
           loading="lazy"
         />
 
@@ -87,7 +88,7 @@ const PropertyCard = ({ property }) => {
           </div>
         )}
 
-        {property.isSold && (
+        {isPropertySold && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 pointer-events-none">
             <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider pointer-events-auto">
               Sold Out
