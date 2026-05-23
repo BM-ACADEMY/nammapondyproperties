@@ -137,6 +137,7 @@ const RequirementList = () => {
   const [isSellerModalOpen, setIsSellerModalOpen] = useState(false);
   const [viewingSellers, setViewingSellers] = useState([]);
   const [sellerPagination, setSellerPagination] = useState({ current: 1, pageSize: 5 });
+  const [planDisplayNameMap, setPlanDisplayNameMap] = useState({});
 
   const selectedUsageType = Form.useWatch("usageType", addForm);
 
