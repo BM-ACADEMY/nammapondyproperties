@@ -166,15 +166,13 @@ const StandardPropertyDetailsUI = ({
                         Price:
                       </span>
                       <span className="text-gray-900">
-                        {formatPriceRange(
-                          property.pricing?.sell?.minPrice ||
-                          property.pricing?.rent?.minRent,
-                          property.pricing?.sell?.maxPrice ||
-                          property.pricing?.rent?.maxRent,
-                          property.pricing?.sell?.price ||
-                          property.pricing?.rent?.monthlyRent ||
-                          0,
-                        )}
+                        {(() => {
+                          const isRent = property.basicInfo?.category === "Rent";
+                          const min = isRent ? property.pricing?.rent?.minRent : property.pricing?.sell?.minPrice;
+                          const max = isRent ? property.pricing?.rent?.maxRent : property.pricing?.sell?.maxPrice;
+                          const price = isRent ? property.pricing?.rent?.monthlyRent : property.pricing?.sell?.price;
+                          return formatPriceRange(min, max, price);
+                        })()}
                       </span>
                     </div>
                   </h1>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MapPin, Eye, ArrowRight, Phone, MessageSquare, Flame } from "lucide-react";
+import { Heart, MapPin, Eye, ArrowRight, Phone, MessageSquare, Flame, Building } from "lucide-react";
 import { formatIndianPrice, formatPriceRange } from "@/utils/formatPrice";
 import { formatNumber } from "../../../utils/formatNumber";
 import { getImageUrl } from "@/utils/imageUrl";
@@ -169,6 +169,14 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                             <MapPin className="w-3 h-3 inline mr-1" />
                             {locality}{city ? `, ${city}` : ""}
                         </p>
+
+                        {/* Property Type Details */}
+                        {property.basicInfo?.category && (
+                          <div className="flex items-center flex-wrap gap-1.5 text-xs text-slate-500 font-semibold mt-1">
+                            <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{property.basicInfo.category === "Rent" ? "For Rent" : "For Sale"}</span>
+                          </div>
+                        )}
                     </div>
                     <span className="bg-gray-100 text-[9px] font-bold px-2 py-0.5 rounded text-gray-500 uppercase tracking-widest shrink-0">
                         {property.basicInfo?.category === "Rent" ? "FOR RENT" : "SELL/BUY"}
@@ -179,14 +187,16 @@ const HorizontalPropertyCard = ({ property, onWhatsAppClick, linkQuery = "" }) =
                 <div className="flex items-center gap-4 py-3 my-1 border-y border-slate-50">
                     <div className="flex-1 min-w-0 flex flex-col">
                         <span className="text-base font-bold text-slate-800 truncate">
-                            {formatPriceRange(
-                                property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent,
-                                property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent,
-                                property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0
-                            )}
+                            {(() => {
+                                const isRent = property.basicInfo?.category === "Rent";
+                                const min = isRent ? property.pricing?.rent?.minRent : property.pricing?.sell?.minPrice;
+                                const max = isRent ? property.pricing?.rent?.maxRent : property.pricing?.sell?.maxPrice;
+                                const price = isRent ? property.pricing?.rent?.monthlyRent : property.pricing?.sell?.price;
+                                return formatPriceRange(min, max, price);
+                            })()}
                         </span>
                         <span className="text-[11px] text-slate-400 font-medium truncate">
-                            {property.pricing?.sell?.pricePerSqft ? `₹${property.pricing.sell.pricePerSqft.toLocaleString()}/sqft` : "Price"}
+                            {property.basicInfo?.category !== "Rent" && property.pricing?.sell?.pricePerSqft ? `₹${property.pricing.sell.pricePerSqft.toLocaleString()}/sqft` : "Price"}
                         </span>
                     </div>
 

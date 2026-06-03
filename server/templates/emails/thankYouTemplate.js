@@ -18,6 +18,7 @@ const thankYouTemplate = (data, type = 'contact') => {
       <strong>Phone:</strong> ${data.phone || 'N/A'}<br>
       <strong>Email:</strong> ${data.email || 'N/A'}<br>
       <strong>Category:</strong> ${data.category || 'N/A'}<br>
+      <strong>Preferred Date:</strong> ${data.preferred_date ? new Date(data.preferred_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}<br>
       <strong>Preferred Time:</strong> ${data.preferredTime || 'N/A'}
     `;
   } else {

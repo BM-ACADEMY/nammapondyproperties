@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { MapPin, Eye, Flame } from "lucide-react";
+import { MapPin, Eye, Flame, Building } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../../context/AuthContext";
 import WishlistButton from "../../../components/Common/WishlistButton";
@@ -24,9 +24,10 @@ const PropertyCard = ({ property }) => {
   const isPropertySold = property.isSold || property.status?.toLowerCase() === "sold";
 
   // Price range display
-  const minPrice = property.pricing?.sell?.minPrice || property.pricing?.rent?.minRent;
-  const maxPrice = property.pricing?.sell?.maxPrice || property.pricing?.rent?.maxRent;
-  const singlePrice = property.pricing?.sell?.price || property.pricing?.rent?.monthlyRent || 0;
+  const isRent = property.basicInfo?.category === "Rent";
+  const minPrice = isRent ? property.pricing?.rent?.minRent : property.pricing?.sell?.minPrice;
+  const maxPrice = isRent ? property.pricing?.rent?.maxRent : property.pricing?.sell?.maxPrice;
+  const singlePrice = isRent ? (property.pricing?.rent?.monthlyRent || 0) : (property.pricing?.sell?.price || 0);
   const displayPrice = formatPriceRange(minPrice, maxPrice, singlePrice);
 
   return (
@@ -105,9 +106,17 @@ const PropertyCard = ({ property }) => {
         </h3>
 
         {/* Location */}
-        <p className="text-gray-500 text-sm mb-3 font-medium">
+        <p className="text-gray-500 text-sm mb-2 font-medium">
           In <span className="font-bold text-gray-800">{locality}</span>{city ? `, ${city}` : ""}
         </p>
+
+        {/* Property Type Details */}
+        {property.basicInfo?.category && (
+          <div className="flex items-center flex-wrap gap-1.5 text-xs text-slate-500 font-semibold mb-3">
+            <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span>{property.basicInfo.category === "Rent" ? "For Rent" : "For Sale"}</span>
+          </div>
+        )}
 
         {/* Footer Meta */}
         <div className="mt-auto flex items-center justify-between text-gray-500 text-sm">
