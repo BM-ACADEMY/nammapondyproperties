@@ -563,15 +563,29 @@ exports.verifyProperty = async (req, res) => {
       return res.status(403).json({ error: "Only admins can verify properties" });
     }
 
-    const property = await Property.findById(req.params.id).populate("seller");
+    const property = await Property.findById(req.params.id)
+      .populate({
+        path: "seller",
+        populate: { path: "role_id" }
+      })
+      .populate({
+        path: "createdBy",
+        populate: { path: "role_id" }
+      });
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
     }
 
     const newIsVerified = !property.isVerified;
 
+    const creatorIsAdmin = property.createdBy && 
+      (property.createdBy.isSuperAdmin || property.createdBy.role_id?.role_name?.toLowerCase() === "admin");
+    const sellerIsAdmin = property.seller && 
+      (property.seller.isSuperAdmin || property.seller.role_id?.role_name?.toLowerCase() === "admin");
+    const isPostedByAdmin = creatorIsAdmin || sellerIsAdmin;
+
     // 🛡️ Restriction: Seller must be badge-verified before their properties can be approved/verified
-    if (newIsVerified && property.seller && !property.seller.badgeVerified) {
+    if (newIsVerified && !isPostedByAdmin && property.seller && !property.seller.badgeVerified) {
       return res.status(400).json({ 
         error: "First verify the seller's badge (Badge Verification) before approving their properties.",
         sellerId: property.seller._id
@@ -588,6 +602,12 @@ exports.verifyProperty = async (req, res) => {
       } else if (property.status === "Edit Pending Approval") {
         if (property.pendingEdits) {
           // If applying edits, we MUST use save() to ensure all content is updated correctly and validated
+          const category = property.pendingEdits.basicInfo?.category || property.basicInfo?.category;
+          if (category === "Sell/Buy") {
+            if (property.pricing) property.pricing.rent = undefined;
+          } else if (category === "Rent") {
+            if (property.pricing) property.pricing.sell = undefined;
+          }
           Object.assign(property, property.pendingEdits);
           property.pendingEdits = null;
           property.status = "Active";
@@ -645,11 +665,25 @@ exports.rejectPropertyEdit = async (req, res) => {
 
 exports.approvePropertyEdit = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id).populate("seller");
+    const property = await Property.findById(req.params.id)
+      .populate({
+        path: "seller",
+        populate: { path: "role_id" }
+      })
+      .populate({
+        path: "createdBy",
+        populate: { path: "role_id" }
+      });
     if (!property) return res.status(404).json({ error: "Property not found" });
 
+    const creatorIsAdmin = property.createdBy && 
+      (property.createdBy.isSuperAdmin || property.createdBy.role_id?.role_name?.toLowerCase() === "admin");
+    const sellerIsAdmin = property.seller && 
+      (property.seller.isSuperAdmin || property.seller.role_id?.role_name?.toLowerCase() === "admin");
+    const isPostedByAdmin = creatorIsAdmin || sellerIsAdmin;
+
     // 🛡️ Restriction: Seller must be badge-verified before their property edits can be approved
-    if (property.seller && !property.seller.badgeVerified) {
+    if (!isPostedByAdmin && property.seller && !property.seller.badgeVerified) {
       return res.status(400).json({ 
         error: "First verify the seller's badge (Badge Verification) before approving their property edits.",
         sellerId: property.seller._id
@@ -658,6 +692,12 @@ exports.approvePropertyEdit = async (req, res) => {
 
     if (property.status === "Edit Pending Approval") {
       if (property.pendingEdits) {
+        const category = property.pendingEdits.basicInfo?.category || property.basicInfo?.category;
+        if (category === "Sell/Buy") {
+          if (property.pricing) property.pricing.rent = undefined;
+        } else if (category === "Rent") {
+          if (property.pricing) property.pricing.sell = undefined;
+        }
         Object.assign(property, property.pendingEdits);
         property.pendingEdits = null;
       }
@@ -1113,7 +1153,39 @@ exports.updateProperty = async (req, res) => {
     // Apply nested parsing
     if (updates.location) updates.location = removeEmptyStrings(parseJSON(updates.location));
     if (parsedBasicInfo) updates.basicInfo = { ...property.basicInfo, ...parsedBasicInfo };
-    if (parsedPricing) updates.pricing = { ...property.pricing, ...parsedPricing };
+    if (parsedPricing) {
+      const category = parsedBasicInfo?.category || property.basicInfo?.category;
+      if (category === "Sell/Buy") {
+        updates.pricing = {
+          sell: parsedPricing.sell || {}
+        };
+        updates.pricing.rent = undefined;
+        if (property.pricing) {
+          property.pricing.rent = undefined;
+        }
+      } else if (category === "Rent") {
+        updates.pricing = {
+          rent: parsedPricing.rent || {}
+        };
+        updates.pricing.sell = undefined;
+        if (property.pricing) {
+          property.pricing.sell = undefined;
+        }
+      } else {
+        updates.pricing = { ...property.pricing, ...parsedPricing };
+      }
+    } else {
+      const updatedCategory = parsedBasicInfo?.category;
+      if (updatedCategory) {
+        if (updatedCategory === "Sell/Buy") {
+          if (property.pricing) property.pricing.rent = undefined;
+          if (updates.pricing) updates.pricing.rent = undefined;
+        } else if (updatedCategory === "Rent") {
+          if (property.pricing) property.pricing.sell = undefined;
+          if (updates.pricing) updates.pricing.sell = undefined;
+        }
+      }
+    }
     if (parsedSpecs) updates.specifications = { ...property.specifications, ...parsedSpecs };
     if (parsedLegal) updates.legal = { ...property.legal, ...parsedLegal };
     if (parsedAmenities) updates.amenities = parsedAmenities;

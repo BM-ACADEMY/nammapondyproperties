@@ -58,6 +58,7 @@ const CallRequests = () => {
       Phone: item.phone || "-",
       Email: item.email || "-",
       Category: item.category || "-",
+      "Preferred Date": item.preferred_date ? moment(item.preferred_date).format("DD MMM, YYYY") : "-",
       "Preferred Time": timeMapping[item.preferredTime] || item.preferredTime || "-",
       "Date": moment(item.createdAt).format("DD MMM, YYYY"),
       "Time": moment(item.createdAt).format("hh:mm A"),
@@ -169,6 +170,18 @@ const CallRequests = () => {
             {text || "General"}
           </span>
         </Tag>
+      ),
+    },
+    {
+      title: "Pref. Date",
+      dataIndex: "preferred_date",
+      key: "preferred_date",
+      width: 140,
+      render: (date) => (
+        <div className="flex items-center gap-1.5 text-indigo-600 font-semibold whitespace-nowrap text-xs">
+          <Calendar size={14} />
+          <span>{date ? moment(date).format("DD MMM, YYYY") : "-"}</span>
+        </div>
       ),
     },
     {

@@ -39,11 +39,19 @@ const callRequestNotificationTemplate = (callRequest) => {
             <div class="section-title">User Details</div>
             <div class="info-item">
               <span class="label">Full Name</span>
-              <span class="value">${callRequest.name}</span>
+              <span class="value">${callRequest.fullName || callRequest.name || "N/A"}</span>
             </div>
             <div class="info-item">
               <span class="label">Phone Number</span>
               <span class="value">${callRequest.phone}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Preferred Date</span>
+              <span class="value">${callRequest.preferred_date ? new Date(callRequest.preferred_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : "N/A"}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Preferred Time</span>
+              <span class="value">${callRequest.preferredTime || "N/A"}</span>
             </div>
           </div>
 

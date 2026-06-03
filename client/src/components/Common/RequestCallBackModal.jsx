@@ -9,11 +9,20 @@ const RequestCallBackModal = ({ isOpen, onClose }) => {
     phone: '',
     email: '',
     category: '',
+    preferred_date: '',
     preferredTime: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  const getTodayString = () => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,6 +36,7 @@ const RequestCallBackModal = ({ isOpen, onClose }) => {
           phone: '',
           email: '',
           category: '',
+          preferred_date: '',
           preferredTime: ''
         });
         onClose();
@@ -135,6 +145,20 @@ const RequestCallBackModal = ({ isOpen, onClose }) => {
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
               </div>
+            </div>
+
+            {/* Preferred Date */}
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 pl-1">Preferred Date</span>
+              <input 
+                type="date" 
+                name="preferred_date"
+                value={formData.preferred_date}
+                onChange={handleChange}
+                min={getTodayString()}
+                required
+                className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-600 bg-white"
+              />
             </div>
 
             {/* Time dropdown */}
