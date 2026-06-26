@@ -177,7 +177,7 @@ const AdminEnquiries = () => {
       key: "message",
       width: 220,
       render: (msg) => (
-        <Tooltip title={msg} placement="topLeft" overlayStyle={{ maxWidth: "320px" }}>
+        <Tooltip title={msg} placement="topLeft" styles={{ root: { maxWidth: "320px" } }}>
           <div className="ae-message-cell">
             "{msg || "No message provided"}"
           </div>

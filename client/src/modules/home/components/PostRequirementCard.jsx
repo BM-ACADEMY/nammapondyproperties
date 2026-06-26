@@ -7,11 +7,7 @@ const PostRequirementCard = () => {
   const { isAuthenticated, setLoginModalOpen } = useAuth();
   
   const handlePostClick = () => {
-    if (isAuthenticated) {
-      navigate("/post-requirement");
-    } else {
-      setLoginModalOpen(true);
-    }
+    navigate("/post-requirement");
   };
   return (
     <div
