@@ -475,9 +475,9 @@ const BuilderPromoterDetailsUI = ({
               </div>
 
               {/* DETAILED SPECIFICATIONS */}
-              {(property.specifications?.residential ||
-                property.specifications?.commercial ||
-                property.specifications?.plot) && (
+              {((property.specifications?.residential?.bedrooms > 0) ||
+                (property.specifications?.residential?.bathrooms > 0) ||
+                (property.specifications?.commercial?.cabins > 0)) && (
                 <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
                   <h4 className="font-bold text-gray-800 border-b border-gray-50 pb-4 flex items-center gap-2 text-sm uppercase tracking-widest">
                     Project Specifications
