@@ -471,12 +471,6 @@ const BuilderPromoterDetailsUI = ({
                       </div>
                     </div>
                   )}
-                  <div>
-                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">
-                      Project Size
-                    </div>
-                    <div className="font-bold text-gray-800">5 Acres</div>
-                  </div>
                 </div>
               </div>
 
