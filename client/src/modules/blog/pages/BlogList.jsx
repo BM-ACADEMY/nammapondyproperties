@@ -1,0 +1,135 @@
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Home, ChevronRight } from "lucide-react";
+
+const BlogList = () => {
+  useEffect(() => {
+    // Scroll to top on mount
+    const mainContent = document.getElementById("main-content");
+    if (mainContent) {
+      mainContent.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, []);
+
+  const blogs = [
+    {
+      id: 1,
+      slug: "dtcp-approved-plots-in-pondicherry",
+      title: "DTCP Approved Plots in Pondicherry – Everything You Need to Know Before Buying",
+      excerpt:
+        "Buying land is one of the biggest financial decisions a family makes. Make sure your residential layout is legally planned, bank-loan friendly, and safe from future legal disputes.",
+      category: "Real Estate Guide",
+      image: "/blog/dtcp-approved-plots.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Jul 24, 2026",
+      categoryBg: "bg-blue-50 text-blue-700 border border-blue-100",
+    },
+    {
+      id: 2,
+      slug: "plot-price-in-pondicherry",
+      title: "Plot Price in Pondicherry (Area-Wise) – Complete Guide for Home Buyers & Investors",
+      excerpt:
+        "Pondicherry has become one of South India's fastest-growing real estate destinations. Understanding the plot price in Pondicherry is the first step toward making a smart investment.",
+      category: "Pricing & Investment Guide",
+      image: "/blog/pondicherry-growth.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Jul 24, 2026",
+      categoryBg: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+    },
+    {
+      id: 3,
+      slug: "dtcp-vs-cmda-approval",
+      title: "DTCP vs CMDA Approval – Which One Should You Choose?",
+      excerpt:
+        "DTCP vs CMDA vs RERA explained in simple English — where each applies, how they differ, and which approval matters for plots near Pondicherry, Villupuram, and Chennai.",
+      category: "Legal & Approval Guide",
+      image: "/blog/land-registration-docs.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Jul 24, 2026",
+      categoryBg: "bg-amber-50 text-amber-700 border border-amber-100",
+    },
+  ];
+
+  return (
+    <div className="bg-[#f8fafc] min-h-screen pt-28 pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-1.5 mb-8 text-xs font-semibold text-slate-500">
+          <Home className="w-3.5 h-3.5" />
+          <Link to="/" className="hover:text-[#166aa8] transition-colors">Home</Link>
+          <ChevronRight className="w-3 h-3 text-slate-400" />
+          <span className="text-slate-800">Blog</span>
+        </div>
+
+        {/* Header Section */}
+        <div className="text-left max-w-3xl mb-12">
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight mb-3 font-sans">
+            Our Latest Insights
+          </h1>
+          <p className="text-base text-slate-600 font-normal">
+            Explore the latest guides, market trends, and expert advice on buying plots and properties in Pondicherry.
+          </p>
+        </div>
+
+        {/* Blog Grid */}
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl">
+          {blogs.map((blog) => (
+            <article
+              key={blog.id}
+              className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 w-full"
+            >
+              {/* Image with Zoom Effect */}
+              <Link to={`/blog/${blog.slug}`} className="block overflow-hidden relative aspect-video">
+                <img
+                  src={blog.image}
+                  alt={blog.title}
+                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  loading="lazy"
+                />
+              </Link>
+
+              {/* Content */}
+              <div className="flex-1 p-6 flex flex-col justify-between">
+                <div>
+                  {/* Category Pill */}
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase mb-4 ${blog.categoryBg}`}
+                  >
+                    {blog.category}
+                  </span>
+
+                  {/* Title */}
+                  <h3 className="text-xl font-bold text-slate-900 mb-3 leading-snug hover:text-[#166aa8] transition-colors">
+                    <Link to={`/blog/${blog.slug}`}>{blog.title}</Link>
+                  </h3>
+
+                  {/* Excerpt */}
+                  <p className="text-slate-600 text-sm leading-relaxed mb-6 font-normal">
+                    {blog.excerpt}
+                  </p>
+                </div>
+
+                {/* Author Info */}
+                <div className="flex items-center pt-4 border-t border-slate-100">
+                  <img
+                    src="/Logo/logo.webp"
+                    alt="Namma Pondy Properties"
+                    className="w-12 h-12 object-contain mr-3 shrink-0"
+                  />
+                  <div>
+                    <h5 className="text-sm font-bold text-slate-900 leading-tight">
+                      {blog.author}
+                    </h5>
+                    <p className="text-xs text-slate-500 mt-0.5">{blog.date}</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BlogList;
