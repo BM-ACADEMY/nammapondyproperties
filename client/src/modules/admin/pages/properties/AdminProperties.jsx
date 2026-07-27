@@ -263,9 +263,15 @@ const AdminProperties = ({ mode }) => {
       key: "title",
       width: 200,
       render: (_, record) => (
-        <div className="font-medium text-gray-800 truncate max-w-[250px]" title={record.basicInfo?.title}>
+        <a
+          href={`/properties/${record.slug || record._id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-blue-600 hover:text-blue-800 hover:underline truncate max-w-[250px] block"
+          title={record.basicInfo?.title}
+        >
           {record.basicInfo?.title || "Untitled"}
-        </div>
+        </a>
       ),
       filteredValue: [searchText],
       onFilter: (value, record) => {

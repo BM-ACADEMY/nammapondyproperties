@@ -217,7 +217,14 @@ const SellerList = () => {
             {text ? text.charAt(0).toUpperCase() : "S"}
           </Avatar>
           <div className="flex flex-col">
-            <span className="font-semibold text-gray-900">{text || "Unnamed Seller"}</span>
+            <a
+              href={`/properties/user/${record._id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+            >
+              {text || "Unnamed Seller"}
+            </a>
             <span className="text-[10px] text-gray-400 font-mono tracking-tighter uppercase">{record.userId || "NO ID"}</span>
           </div>
         </div>
