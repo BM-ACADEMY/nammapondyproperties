@@ -407,13 +407,12 @@ const Header = () => {
                       </div>
                     );
                   })}
-
-                  {/* <Link
-                    to="/contact"
-                    className="text-white hover:text-yellow-300 font-medium transition-colors text-[15px] tracking-wide"
+                  <Link
+                    to="/blog"
+                    className="text-white hover:text-yellow-300 font-medium transition-colors lg:text-[13px] xl:text-[15px] tracking-wide cursor-pointer"
                   >
-                    Contact
-                  </Link> */}
+                    Blog
+                  </Link>
                 </nav>
               )}
 
@@ -995,16 +994,13 @@ const Header = () => {
                       </div>
                     );
                   })}
-
-                  <div className="border-t border-gray-100 my-2"></div>
-
-                  {/* <Link
-                    to="/contact"
+                  <Link
+                    to="/blog"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center px-2 py-3 text-slate-700 hover:text-[#166aa8] hover:bg-blue-50 transition-colors rounded-lg text-[15px]"
                   >
-                    <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Contact
-                  </Link> */}
+                    <ChevronRight className="w-4 h-4 mr-2 text-slate-400" /> Blog
+                  </Link>
                 </div>
               </div>
             </motion.div>

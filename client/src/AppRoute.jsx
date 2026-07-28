@@ -21,6 +21,10 @@ const DeactivateAccount = lazy(() => import("./modules/home/pages/DeactivateAcco
 const AddProperty = lazy(() => import("./modules/seller/pages/properties/AddProperty"));
 const PostRequirementPage = lazy(() => import("./modules/home/pages/PostRequirementPage"));
 const FavoritesPage = lazy(() => import("./modules/home/pages/FavoritesPage"));
+const BlogList = lazy(() => import("./modules/blog/pages/BlogList"));
+const DtcpApprovedPlots = lazy(() => import("./modules/blog/pages/dtcp-approved-plots-in-pondicherry/DtcpApprovedPlots"));
+const PlotPriceInPondicherry = lazy(() => import("./modules/blog/pages/plot-price-in-pondicherry/PlotPriceInPondicherry"));
+const DtcpVsCmdaApproval = lazy(() => import("./modules/blog/pages/dtcp-vs-cmda-approval/DtcpVsCmdaApproval"));
 
 const PageLoader = () => <Loader />;
 
@@ -82,6 +86,38 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <PostRequirementPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <BlogList />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/dtcp-approved-plots-in-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DtcpApprovedPlots />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/plot-price-in-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PlotPriceInPondicherry />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/dtcp-vs-cmda-approval"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DtcpVsCmdaApproval />
             </Suspense>
           }
         />
