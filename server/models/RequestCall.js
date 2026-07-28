@@ -7,6 +7,7 @@ const requestCallSchema = new mongoose.Schema(
     email: { type: String },
     category: { type: String, required: true }, // buyer, seller, agent, builder
     preferredTime: { type: String, required: true },
+    preferred_date: { type: Date, required: true },
     status: {
       type: String,
       enum: ["new", "contacted", "closed"],

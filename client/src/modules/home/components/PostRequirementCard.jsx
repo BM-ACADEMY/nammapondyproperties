@@ -1,8 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const PostRequirementCard = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, setLoginModalOpen } = useAuth();
+  
   const handlePostClick = () => {
     navigate("/post-requirement");
   };

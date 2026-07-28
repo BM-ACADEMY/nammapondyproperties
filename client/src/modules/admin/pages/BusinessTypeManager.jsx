@@ -282,7 +282,7 @@ const BusinessTypeManager = () => {
             label={<span className="font-medium">Status</span>}
             initialValue="active"
           >
-            <Select className="h-11 w-full" dropdownClassName="rounded-lg">
+            <Select className="h-11 w-full" classNames={{ popup: { root: "rounded-lg" } }}>
               <Select.Option value="active">Active</Select.Option>
               <Select.Option value="inactive">Inactive</Select.Option>
             </Select>
