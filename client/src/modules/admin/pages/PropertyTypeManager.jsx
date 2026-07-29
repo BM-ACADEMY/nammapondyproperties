@@ -357,7 +357,7 @@ const PropertyTypeManager = () => {
             label={<span className="font-medium">Usage Category</span>}
             initialValue="Residential"
           >
-            <Select className="h-11" dropdownClassName="rounded-lg">
+            <Select className="h-11" classNames={{ popup: { root: "rounded-lg" } }}>
               <Select.Option value="Residential">Residential</Select.Option>
               <Select.Option value="Commercial">Commercial</Select.Option>
             </Select>
@@ -400,7 +400,7 @@ const PropertyTypeManager = () => {
           </div>
 
           <Form.Item name="status" label={<span className="font-medium">Status</span>} initialValue="active">
-            <Select className="h-11" dropdownClassName="rounded-lg">
+            <Select className="h-11" classNames={{ popup: { root: "rounded-lg" } }}>
               <Select.Option value="active">Active</Select.Option>
               <Select.Option value="inactive">Inactive</Select.Option>
             </Select>

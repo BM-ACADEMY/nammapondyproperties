@@ -362,7 +362,7 @@ const SocialMediaManager = () => {
             <Input placeholder="https://..." className="h-11 rounded-lg" />
           </Form.Item>
           <Form.Item name="icon" label={<span className="font-medium">Display Icon</span>} initialValue="Globe">
-            <Select className="h-11" dropdownClassName="rounded-lg">
+            <Select className="h-11" classNames={{ popup: { root: "rounded-lg" } }}>
               {Object.keys(iconMap).map((key) => (
                 <Option key={key} value={key}>
                   <Space>

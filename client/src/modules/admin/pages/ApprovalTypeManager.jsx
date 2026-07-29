@@ -285,7 +285,7 @@ const ApprovalTypeManager = () => {
           </Form.Item>
 
           <Form.Item name="status" label={<span className="font-medium">Status</span>} initialValue="active">
-            <Select className="h-11" dropdownClassName="rounded-lg">
+            <Select className="h-11" classNames={{ popup: { root: "rounded-lg" } }}>
               <Select.Option value="active">Active</Select.Option>
               <Select.Option value="inactive">Inactive</Select.Option>
             </Select>
@@ -296,7 +296,7 @@ const ApprovalTypeManager = () => {
             label={<span className="font-medium">Visible to Seller</span>}
             initialValue={true}
           >
-            <Select className="h-11" dropdownClassName="rounded-lg">
+            <Select className="h-11" classNames={{ popup: { root: "rounded-lg" } }}>
               <Select.Option value={true}>Yes</Select.Option>
               <Select.Option value={false}>No</Select.Option>
             </Select>

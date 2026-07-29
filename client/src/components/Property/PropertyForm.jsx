@@ -582,8 +582,15 @@ const PropertyForm = ({
       return obj;
     };
 
+    const pricingData = { ...data.pricing };
+    if (data.basicInfo?.category === "Sell/Buy") {
+      pricingData.rent = undefined;
+    } else if (data.basicInfo?.category === "Rent") {
+      pricingData.sell = undefined;
+    }
+
     const sanitizedBasicInfo = removeEmptyStrings({ ...data.basicInfo });
-    const sanitizedPricing = removeEmptyStrings({ ...data.pricing });
+    const sanitizedPricing = removeEmptyStrings(pricingData);
     const sanitizedSpecs = removeEmptyStrings({ ...data.specifications });
     const sanitizedLegal = removeEmptyStrings({ ...data.legal });
     const sanitizedLocation = removeEmptyStrings({ ...data.location });

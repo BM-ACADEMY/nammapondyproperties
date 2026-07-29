@@ -201,38 +201,74 @@ const SellerEnquiries = () => {
       title: "Property",
       dataIndex: "property_id",
       key: "property",
-      render: (property, record) =>
-        (property || record.property_title) ? (
+      render: (property, record) => {
+        if (!property && !record.property_title) {
+          return (
+            <span className="text-gray-400 italic font-medium px-2 py-1 bg-gray-50 rounded-md text-xs">Property Removed</span>
+          );
+        }
+
+        const title = property?.basicInfo?.title || property?.title || record.property_title || "Untitled Property";
+        const locationStr = property 
+          ? (typeof property.location === "string" 
+              ? property.location 
+              : (property.location?.locality || property.location?.city || "Pondicherry"))
+          : "Pondicherry";
+
+        const imageUrl = property
+          ? getImageUrl(
+              property.media?.featuredImage || 
+              property.media?.images?.[0] || 
+              property.images?.[0]?.image_url || 
+              property.images?.[0]
+            )
+          : getImageUrl(null);
+
+        if (!property) {
+          return (
+            <div className="flex items-center gap-3 opacity-60">
+              <div className="relative shrink-0">
+                <img
+                  src={imageUrl}
+                  alt="prop"
+                  className="w-10 h-10 rounded-lg object-cover shadow-sm border border-gray-100"
+                />
+              </div>
+              <div className="flex flex-col max-w-50">
+                <span className="font-semibold text-gray-700 truncate">
+                  {title}
+                </span>
+                <span className="text-xs text-gray-400 truncate flex items-center gap-1">
+                  {locationStr} <Tag color="default" className="text-[9px] px-1 py-0 m-0 border-none rounded bg-gray-100 text-gray-500">Removed</Tag>
+                </span>
+              </div>
+            </div>
+          );
+        }
+
+        return (
           <div
             className="flex items-center gap-3 cursor-pointer group hover:opacity-80 transition-all duration-300"
             onClick={() => handleViewDetail(property)}
           >
             <div className="relative shrink-0">
               <img
-                src={getImageUrl(
-                  property.media?.featuredImage || 
-                  property.media?.images?.[0] || 
-                  property.images?.[0]?.image_url || 
-                  property.images?.[0]
-                )}
+                src={imageUrl}
                 alt="prop"
                 className="w-10 h-10 rounded-lg object-cover shadow-sm border border-gray-100 group-hover:border-blue-300 group-hover:shadow-md transition-all"
               />
             </div>
             <div className="flex flex-col max-w-50">
               <span className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                {property?.basicInfo?.title || property?.title || record.property_title || "Untitled Property"}
+                {title}
               </span>
               <span className="text-xs text-gray-500 truncate">
-                {typeof property.location === "string" 
-                  ? property.location 
-                  : (property.location?.locality || property.location?.city || "Pondicherry")}
+                {locationStr}
               </span>
             </div>
           </div>
-        ) : (
-          <span className="text-gray-400 italic font-medium px-2 py-1 bg-gray-50 rounded-md text-xs">Property Removed</span>
-        ),
+        );
+      }
     },
     {
       title: "Enquirer",
@@ -279,7 +315,7 @@ const SellerEnquiries = () => {
               "This is a private message from a potential property buyer interested in your listing."
             </div>
           ) : (
-            <Tooltip title={msg} placement="topLeft" overlayStyle={{ maxWidth: "300px" }}>
+            <Tooltip title={msg} placement="topLeft" styles={{ root: { maxWidth: "300px" } }}>
               <div className="max-w-60 truncate text-gray-600 text-sm italic">
                 "{msg || "No message provided"}"
               </div>
@@ -314,7 +350,7 @@ const SellerEnquiries = () => {
           onChange={(val) => handleStatusUpdate(record._id, val, record.type)}
           className={`status-select ${status === "new" ? "select-new" : "select-contact"}`}
           variant="borderless"
-          dropdownClassName="rounded-xl border-none shadow-xl"
+          classNames={{ popup: { root: "rounded-xl border-none shadow-xl" } }}
         >
           <Option value="new">NEW</Option>
           <Option value="contacted">CONTACT</Option>
@@ -335,7 +371,7 @@ const SellerEnquiries = () => {
       item.enquirer_phone?.includes(searchText) ||
       item.property_id?.location?.city?.toLowerCase().includes(searchText.toLowerCase()) ||
       item.property_id?.location?.locality?.toLowerCase().includes(searchText.toLowerCase()) ||
-      (typeof item.property_id?.location === 'string' && item.property_id.location.toLowerCase().includes(searchText.toLowerCase()));
+      (typeof item.property_id?.location === 'string' && item.property_id?.location?.toLowerCase().includes(searchText.toLowerCase()));
 
     // 2. Status Match
     const matchesStatus = filterStatus === "all" || (item.status || "new") === filterStatus;
