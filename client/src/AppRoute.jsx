@@ -98,7 +98,7 @@ const AppRoutes = () => {
           }
         />
         <Route
-          path="/blog/dtcp-approved-plots-in-pondicherry"
+          path="/dtcp-approved-plots-in-pondicherry"
           element={
             <Suspense fallback={<PageLoader />}>
               <DtcpApprovedPlots />
