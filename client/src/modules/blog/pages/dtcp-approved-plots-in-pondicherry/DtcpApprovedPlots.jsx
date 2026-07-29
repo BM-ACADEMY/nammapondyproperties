@@ -480,7 +480,7 @@ const DtcpApprovedPlots = () => {
 
           <div className="byline">
             <span className="flex items-center gap-1.5"><User className="w-4 h-4 text-[#166aa8]" /> Namma Pondy Properties Team</span>
-            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#166aa8]" /> 24 July 2026</span>
+            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#166aa8]" /> 29 July 2026</span>
           </div>
 
           <img

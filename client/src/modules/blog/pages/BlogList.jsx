@@ -22,7 +22,7 @@ const BlogList = () => {
       category: "Real Estate Guide",
       image: "/blog/dtcp-approved-plots.webp",
       author: "Namma Pondy Properties Team",
-      date: "Jul 24, 2026",
+      date: "Jul 29, 2026",
       categoryBg: "bg-blue-50 text-blue-700 border border-blue-100",
     },
     {
@@ -35,7 +35,7 @@ const BlogList = () => {
       category: "Pricing & Investment Guide",
       image: "/blog/pondicherry-growth.webp",
       author: "Namma Pondy Properties Team",
-      date: "Jul 24, 2026",
+      date: "Jul 30, 2026",
       categoryBg: "bg-emerald-50 text-emerald-700 border border-emerald-100",
     },
     {
@@ -48,7 +48,7 @@ const BlogList = () => {
       category: "Legal & Approval Guide",
       image: "/blog/land-registration-docs.webp",
       author: "Namma Pondy Properties Team",
-      date: "Jul 24, 2026",
+      date: "Aug 3, 2026",
       categoryBg: "bg-amber-50 text-amber-700 border border-amber-100",
     },
   ];
