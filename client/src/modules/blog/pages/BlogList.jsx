@@ -15,6 +15,7 @@ const BlogList = () => {
     {
       id: 1,
       slug: "dtcp-approved-plots-in-pondicherry",
+      url: "/dtcp-approved-plots-in-pondicherry",
       title: "DTCP Approved Plots in Pondicherry – Everything You Need to Know Before Buying",
       excerpt:
         "Buying land is one of the biggest financial decisions a family makes. Make sure your residential layout is legally planned, bank-loan friendly, and safe from future legal disputes.",
@@ -27,6 +28,7 @@ const BlogList = () => {
     {
       id: 2,
       slug: "plot-price-in-pondicherry",
+      url: "/blog/plot-price-in-pondicherry",
       title: "Plot Price in Pondicherry (Area-Wise) – Complete Guide for Home Buyers & Investors",
       excerpt:
         "Pondicherry has become one of South India's fastest-growing real estate destinations. Understanding the plot price in Pondicherry is the first step toward making a smart investment.",
@@ -39,6 +41,7 @@ const BlogList = () => {
     {
       id: 3,
       slug: "dtcp-vs-cmda-approval",
+      url: "/blog/dtcp-vs-cmda-approval",
       title: "DTCP vs CMDA Approval – Which One Should You Choose?",
       excerpt:
         "DTCP vs CMDA vs RERA explained in simple English — where each applies, how they differ, and which approval matters for plots near Pondicherry, Villupuram, and Chennai.",
@@ -79,7 +82,7 @@ const BlogList = () => {
               className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 w-full"
             >
               {/* Image with Zoom Effect */}
-              <Link to={`/blog/${blog.slug}`} className="block overflow-hidden relative aspect-video">
+              <Link to={blog.url} className="block overflow-hidden relative aspect-video">
                 <img
                   src={blog.image}
                   alt={blog.title}
@@ -100,7 +103,7 @@ const BlogList = () => {
 
                   {/* Title */}
                   <h3 className="text-xl font-bold text-slate-900 mb-3 leading-snug hover:text-[#166aa8] transition-colors">
-                    <Link to={`/blog/${blog.slug}`}>{blog.title}</Link>
+                    <Link to={blog.url}>{blog.title}</Link>
                   </h3>
 
                   {/* Excerpt */}
