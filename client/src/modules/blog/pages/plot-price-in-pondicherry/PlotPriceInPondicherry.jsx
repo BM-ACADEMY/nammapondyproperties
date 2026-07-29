@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Home, ChevronRight, User, Calendar, Send, ClipboardList, MessageSquare } from "lucide-react";
+import { Home, ChevronRight, User, Calendar, Send, ClipboardList, MessageSquare, Building, FileText } from "lucide-react";
 
 const PlotPriceInPondicherry = () => {
   useEffect(() => {
@@ -583,16 +583,6 @@ const PlotPriceInPondicherry = () => {
               tourism, growing commercial demand, and a lifestyle with less traffic, cleaner air, and good schools and hospitals,
               and it's easy to see why families are choosing to settle here for good.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20current%20plot%20prices%20in%20Pondicherry."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Get Today's Plot Prices from Namma Pondy Properties
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
@@ -609,16 +599,6 @@ const PlotPriceInPondicherry = () => {
               all push prices up. Upcoming infrastructure projects can also significantly increase a plot's value over the next
               few years — which is why it pays to check the master plan, not just today's map.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20can%20you%20explain%20what%20affects%20plot%20pricing%20in%20a%20specific%20area%20of%20Pondicherry%3F"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Ask About a Specific Location's Pricing
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
@@ -657,15 +637,11 @@ const PlotPriceInPondicherry = () => {
               <strong>ECR</strong> commands premium pricing for beach proximity and long-term appreciation.
               <strong>Villianur</strong> and <strong>Tindivanam Road</strong> remain the best entry points for first-time and budget-conscious buyers.
             </p>
+            {/* CTA 1: Browse Properties Navigation */}
             <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20the%20latest%20area-wise%20plot%20price%20list%20for%20Pondicherry."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Get the Full Area-Wise Price List
-              </a>
+              <Link to="/properties" className="cta-pill">
+                <Building className="w-4 h-4" /> Explore Properties in Pondicherry
+              </Link>
             </div>
           </div>
 
@@ -683,16 +659,6 @@ const PlotPriceInPondicherry = () => {
               patta, Encumbrance Certificate (EC), DTCP approval, and survey details — and always visit the site in person rather
               than relying on photos or brochures.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20can%20you%20help%20me%20verify%20documents%20for%20a%20DTCP%20approved%20plot%20in%20Pondicherry%3F"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Get Free Document &amp; Price Verification
-              </a>
-            </div>
           </div>
 
           <div className="who-benefits">
@@ -707,16 +673,6 @@ const PlotPriceInPondicherry = () => {
               neighbourhoods like Lawspet. And long-term investors get a limited-supply asset that keeps compounding in value as
               infrastructure improves.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20which%20area%20fits%20my%20budget%20and%20goals."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Find the Right Area for Your Budget
-              </a>
-            </div>
           </div>
 
           <div className="why-choose">
@@ -733,15 +689,11 @@ const PlotPriceInPondicherry = () => {
                 <b>End-to-End Support</b> — document verification, site visits, and investment guidance from enquiry to registration.
               </li>
             </ul>
+            {/* CTA 2: Post Requirement Navigation */}
             <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20work%20with%20Namma%20Pondy%20Properties%20to%20find%20a%20verified%2C%20fairly-priced%20plot."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Start Your Plot Search Today
-              </a>
+              <Link to="/post-requirement" className="cta-pill">
+                <FileText className="w-4 h-4" /> Post Your Plot Requirement
+              </Link>
             </div>
           </div>
 

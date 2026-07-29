@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Home, ChevronRight, User, Calendar, Send, ClipboardList, MessageSquare } from "lucide-react";
+import { Home, ChevronRight, User, Calendar, Send, ClipboardList, MessageSquare, Building, FileText } from "lucide-react";
 
 const DtcpVsCmdaApproval = () => {
   useEffect(() => {
@@ -579,16 +579,6 @@ const DtcpVsCmdaApproval = () => {
               requiring DTCP approval include Pondicherry border areas, Villupuram, Cuddalore, Tindivanam, Salem, Madurai,
               Coimbatore, and many developing towns.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20verify%20DTCP%20approval%20for%20a%20plot%20near%20Pondicherry."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Verify DTCP Approval With Our Team
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
@@ -605,16 +595,6 @@ const DtcpVsCmdaApproval = () => {
               developments. It may cover parts of Chennai, Tambaram, Avadi, and Chengalpattu. Since metropolitan boundaries can
               shift, always verify whether a property actually falls within CMDA jurisdiction before assuming DTCP applies.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20if%20my%20plot%20falls%20under%20CMDA%20or%20DTCP%20jurisdiction."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Check CMDA vs DTCP Jurisdiction
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
@@ -651,15 +631,11 @@ const DtcpVsCmdaApproval = () => {
               Villupuram should generally carry DTCP approval; a plot within Chennai Metropolitan limits should generally carry
               CMDA approval.
             </p>
+            {/* CTA 1: Browse Properties Navigation */}
             <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20can%20you%20explain%20the%20DTCP%2C%20CMDA%20and%20RERA%20difference%20for%20my%20plot%3F"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Get a Simple Explanation for Your Plot
-              </a>
+              <Link to="/properties" className="cta-pill">
+                <Building className="w-4 h-4" /> Browse Approved Properties
+              </Link>
             </div>
           </div>
 
@@ -678,16 +654,6 @@ const DtcpVsCmdaApproval = () => {
               Nadu locations may require DTCP approval instead. Always verify the applicable authority before making a
               purchase — never assume based on the seller's word alone.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20confirm%20which%20approval%20authority%20applies%20near%20Pondicherry."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Confirm the Right Authority for Your Area
-              </a>
-            </div>
           </div>
 
           <div className="who-benefits">
@@ -701,16 +667,6 @@ const DtcpVsCmdaApproval = () => {
               CMDA-zoned property (or vice versa). Families building a home get smoother building-plan approvals. And anyone
               applying for a bank loan benefits from documentation that's correctly matched to the right authority from day one.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20help%20verifying%20approvals%20before%20I%20buy%20a%20plot."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Get Help Before You Buy
-              </a>
-            </div>
           </div>
 
           <div className="why-choose">
@@ -726,15 +682,11 @@ const DtcpVsCmdaApproval = () => {
                 <b>End-to-End Guidance</b> — from jurisdiction verification through registration, so you never guess which authority applies.
               </li>
             </ul>
+            {/* CTA 2: Post Requirement Navigation */}
             <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20explore%20verified%20plots%20with%20Namma%20Pondy%20Properties."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Explore Verified Plots Today
-              </a>
+              <Link to="/post-requirement" className="cta-pill">
+                <FileText className="w-4 h-4" /> Post Your Land Requirement
+              </Link>
             </div>
           </div>
 
