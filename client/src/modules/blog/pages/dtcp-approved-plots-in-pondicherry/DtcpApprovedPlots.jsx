@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Home, ChevronRight, User, Calendar, Send, ClipboardList, MessageSquare } from "lucide-react";
+import { Home, ChevronRight, User, Calendar, Send, ClipboardList, MessageSquare, Building, FileText } from "lucide-react";
 
 const DtcpApprovedPlots = () => {
   useEffect(() => {
@@ -525,16 +525,6 @@ const DtcpApprovedPlots = () => {
               classification, and public infrastructure. A DTCP number on your documents means the
               layout is legally planned for residential use.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20more%20about%20DTCP%20approved%20plots%20in%20Pondicherry."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Check DTCP Approved Plots with Namma Pondy Properties
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
@@ -551,16 +541,6 @@ const DtcpApprovedPlots = () => {
               destinations. Areas like Kottakuppam, Lawspet, and the JIPMER surroundings are seeing
               steady demand.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27m%20interested%20in%20DTCP%20approved%20plots%20near%20Kottakuppam%2FLawspet."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Explore Verified Locations in Pondicherry
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
@@ -576,15 +556,11 @@ const DtcpApprovedPlots = () => {
               documents, DTCP approval number, patta, and Encumbrance Certificate (EC) before making
               any payment — and get a lawyer or trusted advisor to review everything.
             </p>
+            {/* CTA 1: Browse Properties Navigation */}
             <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20can%20you%20help%20me%20verify%20the%20documents%20for%20a%20plot%20in%20Pondicherry%3F"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Get Free Document Verification Support
-              </a>
+              <Link to="/properties" className="cta-pill">
+                <Building className="w-4 h-4" /> Browse DTCP Approved Plots
+              </Link>
             </div>
           </div>
 
@@ -602,16 +578,6 @@ const DtcpApprovedPlots = () => {
               DTCP number are non-negotiable — a cheap plot today can become an expensive mistake
               tomorrow.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%20want%20to%20avoid%20common%20mistakes%20while%20buying%20a%20plot%20in%20Pondicherry.%20Can%20you%20guide%20me%3F"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Talk to a Verified Plot Advisor
-              </a>
-            </div>
           </div>
 
           <div className="who-benefits">
@@ -625,16 +591,6 @@ const DtcpApprovedPlots = () => {
               from choosing DTCP-approved land — it means lower legal risk, easier bank financing, and
               a smoother path to building a home or growing an investment.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20which%20DTCP%20approved%20plot%20suits%20my%20needs."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Find the Right Plot for You
-              </a>
-            </div>
           </div>
 
           <div className="why-choose">
@@ -653,15 +609,11 @@ const DtcpApprovedPlots = () => {
                 registration.
               </li>
             </ul>
+            {/* CTA 2: Post Requirement Navigation */}
             <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20work%20with%20Namma%20Pondy%20Properties%20to%20find%20a%20verified%20plot."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Send className="w-4 h-4" /> Start Your Plot Search Today
-              </a>
+              <Link to="/post-requirement" className="cta-pill">
+                <FileText className="w-4 h-4" /> Post Your Land Requirement
+              </Link>
             </div>
           </div>
 
