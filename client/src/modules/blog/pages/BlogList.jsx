@@ -15,7 +15,7 @@ const BlogList = () => {
     {
       id: 1,
       slug: "dtcp-approved-plots-in-pondicherry",
-      url: "/dtcp-approved-plots-in-pondicherry",
+      url: "/blog/dtcp-approved-plots-in-pondicherry",
       title: "DTCP Approved Plots in Pondicherry – Everything You Need to Know Before Buying",
       excerpt:
         "Buying land is one of the biggest financial decisions a family makes. Make sure your residential layout is legally planned, bank-loan friendly, and safe from future legal disputes.",
