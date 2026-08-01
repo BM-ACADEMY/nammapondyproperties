@@ -58,6 +58,7 @@ const UserPropertiesPage = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        navigate("/properties", { replace: true });
       } finally {
         setLoading(false);
       }

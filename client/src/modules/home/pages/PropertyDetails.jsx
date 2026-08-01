@@ -51,6 +51,12 @@ const PropertyDetails = () => {
           `${import.meta.env.VITE_API_URL}/properties/fetch-property-by-slug/${slug}`,
         );
         const propertyData = res.data;
+
+        if (!propertyData || !propertyData._id) {
+          navigate("/properties", { replace: true });
+          return;
+        }
+
         setProperty(propertyData);
 
         // Set dynamic meta title
@@ -64,47 +70,50 @@ const PropertyDetails = () => {
           setMainImage(propertyData.media.featuredImage || propertyData.media.images[0]);
         }
 
-        // Check if this is a builder/promoter property and if we came from the builder list
-        const isBuilder = propertyData.businessType?.name?.toLowerCase().includes("builder") ||
-          propertyData.businessType?.name?.toLowerCase().includes("promoter");
-        
-        const queryParams = new URLSearchParams(location.search);
-        const fromBuilderList = queryParams.get("from") === "builder";
+        // Check if this is a builder/promoter property and fetch related items
+        try {
+          const isBuilder = propertyData.businessType?.name?.toLowerCase().includes("builder") ||
+            propertyData.businessType?.name?.toLowerCase().includes("promoter");
+          
+          const queryParams = new URLSearchParams(location.search);
+          const fromBuilderList = queryParams.get("from") === "builder";
 
-        if (isBuilder && fromBuilderList) {
-          // For builder properties, fetch other properties by the same builder
-          const builderRes = await axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/fetch-builder-other-properties/${propertyData._id}`,
-          );
-          if (Array.isArray(builderRes.data)) {
-            setMoreProperties(builderRes.data);
+          if (isBuilder && fromBuilderList) {
+            const builderRes = await axios.get(
+              `${import.meta.env.VITE_API_URL}/properties/fetch-builder-other-properties/${propertyData._id}`,
+            );
+            if (Array.isArray(builderRes.data)) {
+              setMoreProperties(builderRes.data);
+            }
+          } else {
+            const relatedRes = await axios.get(
+              `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${propertyData._id}`,
+            );
+            if (Array.isArray(relatedRes.data)) {
+              setMoreProperties(relatedRes.data);
+            }
           }
-        } else {
-          // For non-builder properties or if not navigated from builder list, fetch location-based recommendations
-          const relatedRes = await axios.get(
-            `${import.meta.env.VITE_API_URL}/properties/fetch-recommended-properties/${propertyData._id}`,
-          );
-          if (Array.isArray(relatedRes.data)) {
-            setMoreProperties(relatedRes.data);
-          }
-        }
 
-        const viewResult = await recordPropertyView(propertyData._id);
-        if (viewResult && viewResult.success && !viewResult.alreadyViewed) {
-          setProperty(prev => ({
-            ...prev,
-            view_count: viewResult.view_count || (prev?.view_count + 50)
-          }));
+          const viewResult = await recordPropertyView(propertyData._id);
+          if (viewResult && viewResult.success && !viewResult.alreadyViewed) {
+            setProperty(prev => ({
+              ...prev,
+              view_count: viewResult.view_count || (prev?.view_count + 50)
+            }));
+          }
+        } catch (subError) {
+          console.error("Error fetching recommended properties or recording view:", subError);
         }
       } catch (error) {
         console.error("Error fetching property details", error);
+        navigate("/properties", { replace: true });
       } finally {
         setLoading(false);
       }
     };
     fetchProperty();
     window.scrollTo(0, 0);
-  }, [slug]);
+  }, [slug, navigate, location.search]);
 
   const handleWhatsAppClick = (e = null, clickedProp = null) => {
     if (e && e.stopPropagation) e.stopPropagation();
@@ -177,7 +186,7 @@ const PropertyDetails = () => {
   };
 
   if (loading) return <Loader />;
-  if (!property) return <div className="flex justify-center items-center h-screen bg-white">Property Not Found</div>;
+  if (!property) return null;
 
   const isBuilderProperty = property.businessType?.name?.toLowerCase().includes("builder") ||
     property.businessType?.name?.toLowerCase().includes("promoter");
