@@ -13,6 +13,7 @@ import Loader from "./components/Common/Loader";
 
 import { setGlobalNavigate } from "./services/navigationService";
 
+
 const AppRoutes = lazy(() => import("./AppRoute"));
 
 // Helper component to capture the navigate function from React Router
