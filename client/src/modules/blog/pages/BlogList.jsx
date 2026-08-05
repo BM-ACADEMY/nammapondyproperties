@@ -51,6 +51,45 @@ const BlogList = () => {
       date: "Aug 3, 2026",
       categoryBg: "bg-amber-50 text-amber-700 border border-amber-100",
     },
+    {
+      id: 4,
+      slug: "land-investment-pondicherry",
+      url: "/blog/land-investment-pondicherry",
+      title: "Is Land Investment in Pondicherry Worth It? A Complete Guide for Smart Property Buyers",
+      excerpt:
+        "Is land investment in Pondicherry a good idea? A complete guide covering why land beats apartments, popular areas, factors to check, and Pondicherry vs nearby Tamil Nadu.",
+      category: "Investment Guide",
+      image: "/blog/rockbeach.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 6, 2026",
+      categoryBg: "bg-sky-50 text-sky-700 border border-sky-100",
+    },
+    {
+      id: 5,
+      slug: "property-registration-process-tamil-nadu",
+      url: "/blog/property-registration-process-tamil-nadu",
+      title: "Home Loan for Plot Purchase — Complete Process, Eligibility & Documents Guide (2026)",
+      excerpt:
+        "Can you get a home loan for a plot? Complete 2026 guide to eligibility, step-by-step process, required documents, and what to verify before applying — with Pondicherry examples.",
+      category: "Home Loan Guide",
+      image: "/blog/land-registration-docs.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 8, 2026",
+      categoryBg: "bg-violet-50 text-violet-700 border border-violet-100",
+    },
+    {
+      id: 6,
+      slug: "best-areas-to-buy-plots-pondicherry",
+      url: "/blog/best-areas-to-buy-plots-pondicherry",
+      title: "Best Areas to Buy Plots in Pondicherry (2026) — A Complete Location Guide",
+      excerpt:
+        "Kottakuppam, Kalapet, Villianur, Lawspet and more — a complete area-by-area guide to the best locations to buy plots in Pondicherry, with a comparison table and buyer checklist.",
+      category: "Pondicherry Real Estate",
+      image: "/blog/beach.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 10, 2026",
+      categoryBg: "bg-rose-50 text-rose-700 border border-rose-100",
+    },
   ];
 
   return (

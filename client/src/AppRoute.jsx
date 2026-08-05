@@ -25,6 +25,9 @@ const BlogList = lazy(() => import("./modules/blog/pages/BlogList"));
 const DtcpApprovedPlots = lazy(() => import("./modules/blog/pages/dtcp-approved-plots-in-pondicherry/DtcpApprovedPlots"));
 const PlotPriceInPondicherry = lazy(() => import("./modules/blog/pages/plot-price-in-pondicherry/PlotPriceInPondicherry"));
 const DtcpVsCmdaApproval = lazy(() => import("./modules/blog/pages/dtcp-vs-cmda-approval/DtcpVsCmdaApproval"));
+const LandInvestmentPondicherry = lazy(() => import("./modules/blog/pages/land-investment-pondicherry/LandInvestmentPondicherry"));
+const HomeLoanForPlotPurchase = lazy(() => import("./modules/blog/pages/property-registration-process-tamil-nadu/HomeLoanForPlotPurchase"));
+const BestAreasToBuyPlots = lazy(() => import("./modules/blog/pages/best-areas-to-buy-plots-pondicherry/BestAreasToBuyPlots"));
 
 const PageLoader = () => <Loader />;
 
@@ -118,6 +121,30 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <DtcpVsCmdaApproval />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/land-investment-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <LandInvestmentPondicherry />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/property-registration-process-tamil-nadu"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <HomeLoanForPlotPurchase />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/best-areas-to-buy-plots-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <BestAreasToBuyPlots />
             </Suspense>
           }
         />
