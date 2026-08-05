@@ -18,6 +18,12 @@ const ScrollToTop = () => {
         if (adminContent) {
             adminContent.scrollTo(0, 0);
         }
+        // Send pageview to Google Analytics if available
+        if (typeof window.gtag === 'function') {
+            window.gtag('config', 'G-W39NTXN03D', {
+                page_path: pathname + search,
+            });
+        }
     }, [pathname, search]);
 
     return null;
