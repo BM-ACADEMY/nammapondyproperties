@@ -519,7 +519,7 @@ const LandInvestmentPondicherry = () => {
 
           <img
             className="hero-img"
-            src="https://imgmediagumlet.lbb.in/media/2024/07/6687a9e5d3c49964559586de_1720166885382.jpg"
+            src="https://images.travelandleisureasia.com/wp-content/uploads/sites/3/2024/11/25152004/rue-francois-martin-street.jpeg"
             alt="Rock Beach Pondicherry at dawn"
           />
 
@@ -545,7 +545,7 @@ const LandInvestmentPondicherry = () => {
               <span className="num-badge">1</span> Why Land Is Often Preferred Over Apartments
             </h3>
             <img
-              src="/blog/dtcp-approved-plots.webp"
+              src="https://d1di04ifehjy6m.cloudfront.net/media/filer_public/ed/a1/eda1ca5b-5970-4c41-b4dd-c755f529349c/is_land_still_the_best_investment_in_2026.png"
               alt="Aerial view of open land divided by an approach road"
             />
             <p>
@@ -572,7 +572,7 @@ const LandInvestmentPondicherry = () => {
               <span className="num-badge">2</span> Why Pondicherry Is Attracting Investors
             </h3>
             <img
-              src="/blog/pondicherry-growth.webp"
+              src="https://media-cdn.tripadvisor.com/media/attractions-splice-spp-674x446/17/01/8b/a8.jpg"
               alt="Aerial view of a Pondicherry highway lined with palm trees"
             />
             <p>
@@ -646,7 +646,7 @@ const LandInvestmentPondicherry = () => {
           <div className="who-benefits">
             <h2>Who Benefits Most From Land Investment Here?</h2>
             <img
-              src="https://images.unsplash.com/photo-1589674424882-3e6e4e89c517?fm=jpg&auto=format&fit=crop&w=1200&q=80"
+              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgaWfz5Z_ax_y-DmDQjcpdZwAn8Eebmzg7i57tAS5JVkzHNAMREWy0tQDiWcUd7xjCgqpV1B-HKOq5wu-y32x5qPau8BbkBjAvRUntkBzP90ZyeYZcUIbehGjtxU03Zvw53jLm9tZob3FTU/s1600/PondicherryBeachRoad.JPG"
               alt="Man and woman sitting together on a bench"
             />
             <p>

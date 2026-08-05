@@ -59,7 +59,7 @@ const BlogList = () => {
       excerpt:
         "Is land investment in Pondicherry a good idea? A complete guide covering why land beats apartments, popular areas, factors to check, and Pondicherry vs nearby Tamil Nadu.",
       category: "Investment Guide",
-      image: "/blog/rockbeach.webp",
+      image: "/blog/pondy1.webp",
       author: "Namma Pondy Properties Team",
       date: "Aug 6, 2026",
       categoryBg: "bg-sky-50 text-sky-700 border border-sky-100",
