@@ -26,9 +26,11 @@ const DtcpApprovedPlots = lazy(() => import("./modules/blog/pages/dtcp-approved-
 const PlotPriceInPondicherry = lazy(() => import("./modules/blog/pages/plot-price-in-pondicherry/PlotPriceInPondicherry"));
 const DtcpVsCmdaApproval = lazy(() => import("./modules/blog/pages/dtcp-vs-cmda-approval/DtcpVsCmdaApproval"));
 const LandInvestmentPondicherry = lazy(() => import("./modules/blog/pages/land-investment-pondicherry/LandInvestmentPondicherry"));
-const HomeLoanForPlotPurchase = lazy(() => import("./modules/blog/pages/property-registration-process-tamil-nadu/HomeLoanForPlotPurchase"));
+const PropertyRegistrationProcess = lazy(() => import("./modules/blog/pages/property-registration-process-tamil-nadu/PropertyRegistrationProcess"));
 const BestAreasToBuyPlots = lazy(() => import("./modules/blog/pages/best-areas-to-buy-plots-pondicherry/BestAreasToBuyPlots"));
 const DtcpPlotsMarakkanam = lazy(() => import("./modules/blog/pages/dtcp-plots-marakkanam/DtcpPlotsMarakkanam"));
+const HomeLoanForPlotPurchase = lazy(() => import("./modules/blog/pages/home-loan-for-plot/HomeLoanForPlotPurchase"));
+const NriPropertyInvestment = lazy(() => import("./modules/blog/pages/nri-property-investment-pondicherry/NriPropertyInvestment"));
 
 const PageLoader = () => <Loader />;
 
@@ -137,7 +139,7 @@ const AppRoutes = () => {
           path="/blog/property-registration-process-tamil-nadu"
           element={
             <Suspense fallback={<PageLoader />}>
-              <HomeLoanForPlotPurchase />
+              <PropertyRegistrationProcess />
             </Suspense>
           }
         />
@@ -154,6 +156,22 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <DtcpPlotsMarakkanam />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/home-loan-for-plot"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <HomeLoanForPlotPurchase />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/nri-property-investment-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <NriPropertyInvestment />
             </Suspense>
           }
         />

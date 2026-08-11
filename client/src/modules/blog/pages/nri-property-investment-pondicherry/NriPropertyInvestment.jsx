@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { Home, ChevronRight, User, Calendar, ClipboardList, MessageSquare, Building, FileText } from "lucide-react";
+import { Home, ChevronRight, User, Calendar, MessageSquare, Building, FileText } from "lucide-react";
 
-const CANONICAL_URL = "https://nammapondyproperties.com/blog/dtcp-plots-marakkanam";
+const CANONICAL_URL = "https://nammapondyproperties.com/blog/nri-property-investment-pondicherry";
 
-const DtcpPlotsMarakkanam = () => {
+const NriPropertyInvestment = () => {
   useEffect(() => {
     // Scroll to top on mount
     const mainContent = document.getElementById("main-content");
@@ -17,22 +17,23 @@ const DtcpPlotsMarakkanam = () => {
   return (
     <div className="blog-detail-wrapper">
       <Helmet>
-        <title>DTCP Plots in Marakkanam (2026) – Complete Buyer's Guide | Namma Pondy Properties</title>
+        <title>NRI Property Investment Pondicherry (2026) | Namma Pondy Properties</title>
         <meta
           name="description"
-          content="Planning to invest in land near Pondicherry or Chennai? Complete guide to DTCP-approved plots in Marakkanam — location advantages, documents to verify, and buyer tips."
+          content="Complete guide to NRI property investment in Pondicherry — eligibility, best areas, documents to verify, planning approvals, and mistakes to avoid before buying land in 2026."
         />
         <link rel="canonical" href={CANONICAL_URL} />
         <meta property="og:type" content="article" />
         <meta property="og:url" content={CANONICAL_URL} />
         <meta
           property="og:title"
-          content="DTCP Plots in Marakkanam (2026) – Complete Buyer's Guide"
+          content="NRI Property Investment Pondicherry — Complete Guide to Buying Plots & Land in 2026"
         />
         <meta
           property="og:description"
-          content="Complete buyer's guide to DTCP-approved plots in Marakkanam — location advantages, documents to verify, and smart land investment tips."
+          content="Eligibility, best areas, documents to verify, planning approvals, and mistakes to avoid — a complete guide for NRIs investing in Pondicherry land."
         />
+        <meta property="og:image" content="https://nammapondyproperties.com/blog/beach.webp" />
       </Helmet>
 
       <style>{`
@@ -110,7 +111,7 @@ const DtcpPlotsMarakkanam = () => {
         .cat-pill {
           display: inline-block;
           background: var(--blue-fill);
-          color: var(--ocean);
+          color: var(--primary);
           font-weight: 800;
           font-size: 0.72rem;
           letter-spacing: 0.6px;
@@ -157,7 +158,7 @@ const DtcpPlotsMarakkanam = () => {
 
         .callout {
           background: var(--blue-fill);
-          border-left: 4px solid var(--ocean);
+          border-left: 4px solid var(--primary);
           border-radius: 0 12px 12px 0;
           padding: 22px 26px;
           margin: 28px 0 34px;
@@ -172,6 +173,16 @@ const DtcpPlotsMarakkanam = () => {
           margin: 0;
           color: #334155;
           font-size: 0.98rem;
+        }
+
+        .subsection-plain {
+          margin: 44px 0;
+        }
+        .subsection-plain h2 {
+          font-size: 1.6rem;
+          color: var(--navy-deep);
+          font-weight: 800;
+          margin-bottom: 16px;
         }
 
         .subsection {
@@ -264,6 +275,30 @@ const DtcpPlotsMarakkanam = () => {
           padding-left: 18px;
         }
 
+        .mistake-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+          margin: 20px 0;
+        }
+        .mistake-card {
+          background: #FEF2F2;
+          border-left: 3px solid var(--coral);
+          border-radius: 0 12px 12px 0;
+          padding: 16px 20px;
+        }
+        .mistake-card h3 {
+          font-size: 0.98rem;
+          color: var(--coral);
+          margin-bottom: 6px;
+          font-weight: 800;
+        }
+        .mistake-card p {
+          margin: 0;
+          color: #374151;
+          font-size: 0.9rem;
+        }
+
         .cta-strip {
           background: var(--blue-fill);
           border-radius: 16px;
@@ -294,7 +329,7 @@ const DtcpPlotsMarakkanam = () => {
           transform: translateY(-2px);
         }
 
-        .compare-table-wrap {
+        .table-wrap {
           overflow-x: auto;
           margin: 20px 0;
         }
@@ -304,7 +339,7 @@ const DtcpPlotsMarakkanam = () => {
           border-radius: 14px;
           overflow: hidden;
           box-shadow: 0 4px 18px rgba(13,27,42,0.08);
-          min-width: 560px;
+          min-width: 480px;
         }
         table.compare-table thead tr {
           background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%);
@@ -345,15 +380,6 @@ const DtcpPlotsMarakkanam = () => {
         .why-list b {
           color: var(--navy-deep);
           font-weight: 800;
-        }
-
-        .who-benefits h2,
-        .success-stories h2,
-        .subsection-plain h2 {
-          font-size: 1.7rem;
-          color: var(--navy-deep);
-          font-weight: 800;
-          margin-bottom: 16px;
         }
 
         .success-card {
@@ -553,7 +579,8 @@ const DtcpPlotsMarakkanam = () => {
           .blog-aside {
             position: static;
           }
-          .usecase-grid {
+          .usecase-grid,
+          .mistake-grid {
             grid-template-columns: 1fr;
           }
         }
@@ -567,222 +594,177 @@ const DtcpPlotsMarakkanam = () => {
             <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
             <Link to="/blog">Blog</Link>
             <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-gray-800 font-semibold truncate">DTCP Plots &bull; Marakkanam</span>
+            <span className="text-gray-800 font-semibold truncate">NRI Investment &bull; Pondicherry</span>
           </div>
 
-          <div className="cat-pill">DTCP Plots &bull; Marakkanam</div>
+          <div className="cat-pill">NRI Investment &bull; Pondicherry</div>
 
           <h1 className="title">
-            DTCP Plots in Marakkanam — Complete Buyer's Guide for Smart Land Investment (2026)
+            NRI Property Investment Pondicherry — Complete Guide to Buying Plots &amp; Land in 2026
           </h1>
 
           <div className="byline">
             <span><User className="w-4 h-4 text-[#166aa8]" /> Namma Pondy Properties Team</span>
-            <span><Calendar className="w-4 h-4 text-[#166aa8]" /> 13 August 2026</span>
+            <span><Calendar className="w-4 h-4 text-[#166aa8]" /> 19 August 2026</span>
           </div>
 
           <img
             className="hero-img"
-            src="/blog/marakkanam.webp"
-            alt="East Coast Road near Marakkanam coastal town"
+            src="https://www.adanirealty.com/-/media/project/realty/blogs/why-nris-should-invest-india.ashx"
+            alt="Pondicherry coastline popular among NRI property buyers"
           />
 
           <p>
-            If you're planning to invest in land near Pondicherry or Chennai, you've probably come
-            across Marakkanam as a recommended location. Over the past few years, many homebuyers
-            and investors have started exploring this coastal town because of its connectivity,
-            peaceful surroundings, and future growth potential.
+            For many Non-Resident Indians (NRIs), owning property back home is more than just an
+            investment — it's an emotional connection. Whether it's for retirement, future family
+            needs, or wealth creation, buying land in Pondicherry has become an attractive option.
           </p>
           <p>
-            Whether you're buying your first residential plot, planning to build your dream home,
-            or looking for a long-term investment, choosing a DTCP-approved plot in Marakkanam can
-            offer greater confidence when backed by proper legal verification.
+            With its peaceful lifestyle, beautiful coastline, educational institutions, healthcare
+            facilities, and easy connectivity to Chennai, Pondicherry continues to attract buyers
+            from across the world. This guide explains everything you need to know about NRI
+            property investment in Pondicherry — in simple terms.
           </p>
 
           <div className="callout">
             <h4>Quick Answer</h4>
             <p>
-              Marakkanam is becoming a popular destination for residential and long-term land
-              investment because of its strategic location between Chennai and Pondicherry, good
-              road connectivity, and growing development. Before purchasing, always verify DTCP
-              approval, ownership documents, and the property's legal status to make a safe
-              investment.
+              NRI property investment in Pondicherry can be a smart long-term decision for eligible
+              buyers looking to invest in residential plots, retirement homes, or future family
+              properties. Before purchasing, verify ownership, planning approvals, legal documents,
+              and ensure your investment complies with applicable Indian laws and RBI/FEMA
+              regulations.
             </p>
           </div>
 
           <div className="subsection-plain">
-            <h2>Why Marakkanam Is Becoming a Popular Investment Destination</h2>
+            <h2>Why NRIs Are Choosing Pondicherry</h2>
             <p>
-              Marakkanam is a coastal town in Villupuram district, Tamil Nadu, located along the
-              scenic East Coast Road (ECR) between Chennai and Pondicherry. Its location makes it
-              attractive for both residential buyers and investors — offering easy connectivity to
-              Pondicherry, direct access to Chennai through ECR, peaceful coastal surroundings, and
-              growing residential developments. Many people who work in Chennai or Pondicherry also
-              look at Marakkanam as a location for weekend homes or future retirement plans.
+              Many NRIs who originally belong to Tamil Nadu or nearby regions prefer Pondicherry
+              because it offers a balance of modern living and peaceful surroundings — for retirement
+              planning, buying property for parents or family, long-term investment, future home
+              construction, a weekend home near the beach, or returning to India after working
+              abroad. For many families, buying land today provides flexibility for future plans.
             </p>
           </div>
 
           <div className="subsection-plain">
-            <h2>What Is a DTCP Plot?</h2>
+            <h2>Can NRIs Buy Property in Pondicherry?</h2>
             <p>
-              A DTCP plot is a plot that forms part of a layout approved by the Directorate of Town
-              and Country Planning (DTCP), where applicable. DTCP approval helps ensure that the
-              layout follows planning norms related to road planning, open spaces, public utility
-              areas, and layout planning regulations. It's important to understand that DTCP
-              approval relates to the layout — buyers should still independently verify ownership,
-              title, and all other legal documents before purchasing.
+              In many cases, NRIs are permitted to purchase residential and commercial immovable
+              property in India, subject to applicable laws and regulations. However, eligibility
+              depends on factors such as citizenship status, NRI/OCI status, applicable RBI and FEMA
+              regulations, and the type of property being purchased. Because regulations may change,
+              always consult a qualified legal advisor or financial professional before making a
+              purchase.
             </p>
           </div>
 
           <div className="subsection-plain">
-            <h2>Why Choose DTCP Plots in Marakkanam?</h2>
+            <h2>Why Pondicherry Is a Good Choice for Property Investment</h2>
           </div>
 
           <div className="subsection">
             <h3>
-              <span className="num-badge">1</span> Better Planning
+              <span className="num-badge">1</span> Excellent Connectivity
             </h3>
             <img
-              src="https://img.magnific.com/premium-photo/indian-businesswoman-leading-team-meeting-modern-corporate-office_1442126-411.jpg?semt=ais_hybrid&w=740&q=80"
-              alt="Planned residential layout with roads"
+              src="https://www.therkrealestate.com/images/pondicherry-rk-real-estate-trichy.webp"
+              alt="East Coast Road connecting Pondicherry to Chennai"
             />
             <p>
-              Approved layouts generally include planned roads and designated common spaces
-              according to applicable planning norms, giving buyers a clearer picture of how the
-              neighbourhood will develop.
+              Pondicherry is well connected to Chennai, Cuddalore, Villupuram, Thindivanam, and
+              Bengaluru through road networks. The East Coast Road (ECR) makes travel convenient for
+              many families.
             </p>
             <div className="cta-pill-wrap">
               <a
                 className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20about%20DTCP-approved%20layouts%20in%20Marakkanam."
+                href="https://wa.me/919403892971?text=Hi%2C%20I%27m%20an%20NRI%20interested%20in%20verified%20plots%20in%20Pondicherry."
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <MessageSquare className="w-4 h-4" /> Ask About Approved Layouts
+                <MessageSquare className="w-4 h-4" /> Ask About Verified Plots
               </a>
             </div>
           </div>
 
           <div className="subsection">
             <h3>
-              <span className="num-badge">2</span> Easier Documentation
+              <span className="num-badge">2</span> Peaceful Lifestyle
             </h3>
             <img
-              src="https://media.istockphoto.com/id/1480777768/photo/businesswoman-hands-working-in-stacks-of-paper-files-for-searching-and-checking-unfinished.jpg?s=612x612&w=0&k=20&c=AIbDXxv79E2aDAoMJ3h69Lwm1OmIKL1Wz3gJFpAexTQ="
-              alt="Reviewing property documents"
+              src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80"
+              alt="Peaceful coastal living in Pondicherry"
             />
             <p>
-              Properties with proper documentation often make the buying process smoother, although
-              every buyer should still complete independent legal verification before proceeding.
+              Compared to many metro cities, Pondicherry offers less congestion, a relaxed
+              environment, coastal living, and cleaner surroundings in many areas — attractive for
+              retirement and holiday homes.
             </p>
-            <div className="cta-pill-wrap">
-              <a
-                className="cta-pill"
-                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20help%20reviewing%20documentation%20for%20a%20Marakkanam%20plot."
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MessageSquare className="w-4 h-4" /> Ask About Documentation
-              </a>
-            </div>
           </div>
 
           <div className="subsection">
             <h3>
-              <span className="num-badge">3</span> Long-Term Investment
+              <span className="num-badge">3</span> Educational Institutions
             </h3>
             <img
-              src="https://www.sunteckindia.com/blog/isystem/wp-content/uploads/2024/01/Investing-in-Tomorrow.webp"
-              alt="Open plot of land near the coast"
+              src="https://images.shiksha.com/mediadata/images/articles/1642594189phpAmuecB.jpeg"
+              alt="Educational campus near Pondicherry attracting residential demand"
             />
             <p>
-              Many investors prefer approved residential layouts for future resale or home
-              construction, viewing Marakkanam's growth trajectory as a reason to hold land for the
-              long term.
+              Families often choose Pondicherry because of institutions such as Pondicherry
+              University, JIPMER, Pondicherry Engineering College, and other reputed schools and
+              colleges — creating steady residential demand.
             </p>
             {/* CTA: Browse Properties Navigation */}
             <div className="cta-pill-wrap">
               <Link to="/properties" className="cta-pill">
-                <Building className="w-4 h-4" /> Browse Investment Plots
+                <Building className="w-4 h-4" /> Ask About Family Plots
               </Link>
             </div>
           </div>
 
           <div className="subsection">
             <h3>
-              <span className="num-badge">4</span> Peace of Mind
+              <span className="num-badge">4</span> Healthcare Facilities
             </h3>
             <img
-              src="https://d3cnqzq0ivprch.cloudfront.net/public-site/freeprod/assets/images/profile/cover-image/real-estate/real-estate-agents.png"
-              alt="Family reviewing a property purchase together"
+              src="https://www.joonsquare.com/usermanage/image/business/rani-hospital-pondicherry-a-multi-speciality-hospital-pondicherry-13068/rani-hospital-pondicherry-a-multi-speciality-hospital-pondicherry-rani-hospital-pondicherry-a-multi-speciality-hospital-1.jpg"
+              alt="Family reviewing healthcare and lifestyle facilities near Pondicherry"
             />
             <p>
-              Choosing a plot with verified approvals and clear documents helps reduce unnecessary
-              risks, so you can move forward with greater confidence.
+              Quality healthcare is another reason many families prefer Pondicherry for long-term
+              living, particularly those planning to settle or retire in the region.
             </p>
           </div>
 
-          <div className="who-benefits">
-            <h2>Location Advantages of Marakkanam</h2>
-            <div className="usecase-grid">
-              <div className="usecase-card">
-                <h3>Close to Pondicherry</h3>
-                <p>Marakkanam is within convenient driving distance of Pondicherry, making it attractive for families and professionals.</p>
-              </div>
-              <div className="usecase-card">
-                <h3>Excellent ECR Connectivity</h3>
-                <ul>
-                  <li>Chennai</li>
-                  <li>Mahabalipuram</li>
-                  <li>Kalpakkam</li>
-                  <li>Pondicherry</li>
-                </ul>
-              </div>
-              <div className="usecase-card">
-                <h3>Nearby Tourist Attractions</h3>
-                <ul>
-                  <li>Pondicherry</li>
-                  <li>Auroville</li>
-                  <li>Paradise Beach</li>
-                </ul>
-              </div>
-              <div className="usecase-card">
-                <h3>Nearby Attractions (contd.)</h3>
-                <ul>
-                  <li>Mahabalipuram</li>
-                  <li>Alamparai Fort</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+          <p>
+            Tourism also contributes to demand for accommodation in certain locations. However,
+            rental returns depend on several factors, including location, property type, and market
+            conditions — avoid assuming guaranteed income.
+          </p>
 
-          <div className="who-benefits">
-            <h2>Who Should Buy Plots in Marakkanam?</h2>
-            <div className="usecase-grid">
-              <div className="usecase-card">
-                <h3>First-Time Home Buyers</h3>
-                <p>If you plan to build your own house in the future, Marakkanam offers a peaceful environment with good connectivity.</p>
-              </div>
-              <div className="usecase-card">
-                <h3>Long-Term Investors</h3>
-                <p>Buyers looking to hold land for several years often explore developing locations like Marakkanam.</p>
-              </div>
-              <div className="usecase-card">
-                <h3>Retirement Planning</h3>
-                <p>Many families prefer quieter coastal areas for retirement living.</p>
-              </div>
-              <div className="usecase-card">
-                <h3>Weekend Home Buyers</h3>
-                <p>People from Chennai and Pondicherry sometimes look for land near the coast to build holiday homes.</p>
-              </div>
-            </div>
+          <div className="subsection-plain">
+            <h2>Best Areas for NRI Property Investment Around Pondicherry</h2>
+            <p>
+              Choosing the right location is just as important as choosing the right property.
+              Buyers commonly explore <b>Kottakuppam</b> (near the Tamil Nadu–Puducherry border,
+              suited to residential investment and family homes), <b>Kalapet</b> (educational
+              institutions and ECR connectivity), <b>Villianur</b> (established area for independent
+              homes), <b>Lawspet</b> (developed neighbourhood with schools and hospitals),{" "}
+              <b>Ariyankuppam</b> (peaceful surroundings near the city), <b>Madagadipet</b>{" "}
+              (developing area for long-term investment), the <b>Cuddalore Road</b> corridor, and
+              nearby <b>Villupuram</b> and <b>Thindivanam</b>, which offer a wider selection of
+              residential plots while remaining connected to Pondicherry.
+            </p>
           </div>
 
           <div className="cta-strip">
-            <p>Want a shortlist of verified DTCP plots in Marakkanam?</p>
+            <p>Want a shortlist of verified plots matched to your NRI investment goals?</p>
             <a
               className="btn-solid"
-              href="https://wa.me/919403892971?text=Hi%2C%20please%20send%20me%20the%20Verified%20Plot-List%20PDF%20for%20Marakkanam."
+              href="https://wa.me/919403892971?text=Hi%2C%20please%20send%20me%20the%20Verified%20Plot-List%20PDF%20for%20Pondicherry."
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -790,66 +772,133 @@ const DtcpPlotsMarakkanam = () => {
             </a>
           </div>
 
-          <div className="subsection-plain">
-            <h2>DTCP Plot vs Non-Approved Plot</h2>
-            <div className="compare-table-wrap">
-              <table className="compare-table">
-                <thead>
-                  <tr>
-                    <th>Feature</th>
-                    <th>DTCP-Approved Plot</th>
-                    <th>Non-Approved Plot</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr><td>Layout Planning</td><td>Planned as per applicable approval</td><td>May not have approved planning</td></tr>
-                  <tr><td>Road Layout</td><td>Generally planned</td><td>May vary</td></tr>
-                  <tr><td>Documentation</td><td>Approval documents available</td><td>May require additional verification</td></tr>
-                  <tr><td>Buyer Confidence</td><td>Generally higher</td><td>Requires extra caution</td></tr>
-                  <tr><td>Legal Verification</td><td>Still required</td><td>Essential and often more complex</td></tr>
-                </tbody>
-              </table>
+          <div className="who-benefits">
+            <h2>Why Many NRIs Prefer Buying Land</h2>
+            <div className="usecase-grid">
+              <div className="usecase-card">
+                <h3>Future Home Construction</h3>
+                <p>Buy now, build later when returning to India.</p>
+              </div>
+              <div className="usecase-card">
+                <h3>Family Asset</h3>
+                <p>Land can become a long-term family investment.</p>
+              </div>
+              <div className="usecase-card">
+                <h3>Retirement Planning</h3>
+                <p>Many NRIs plan to retire in India after several years abroad — buying land early supports those plans.</p>
+              </div>
+              <div className="usecase-card">
+                <h3>Flexibility</h3>
+                <ul>
+                  <li>Home construction</li>
+                  <li>Family use</li>
+                  <li>Long-term holding</li>
+                  <li>Resale if required</li>
+                </ul>
+              </div>
             </div>
-            <p style={{ marginTop: "14px", color: "#4b5563", fontSize: "0.92rem" }}>
-              Regardless of the approval status, independent legal verification is always recommended.
+          </div>
+
+          <div className="subsection-plain">
+            <h2>Documents Every NRI Buyer Should Verify</h2>
+            <p>
+              Never purchase property based only on advertisements. Ask for copies of the{" "}
+              <b>parent documents</b>, <b>sale deed</b>, <b>Patta</b>,{" "}
+              <b>Encumbrance Certificate (EC)</b>, <b>survey records</b>, <b>layout approval</b>,{" "}
+              <b>tax receipts</b>, and <b>seller identity documents</b>. Independent legal
+              verification is strongly recommended before completing the transaction.
             </p>
           </div>
 
           <div className="subsection-plain">
-            <h2>What Should You Verify Before Buying a DTCP Plot?</h2>
+            <h2>Planning Approvals Matter</h2>
             <p>
-              Buying land is a major financial decision. Before making any payment, verify the{" "}
-              <b>parent documents</b> and ownership history, confirm the <b>sale deed</b>, check
-              the <b>Patta</b> details, review the <b>Encumbrance Certificate (EC)</b>, request a
-              copy of the <b>DTCP approval</b> and verify it with the relevant authority if
-              required, confirm the <b>survey number</b> matches all documents, check{" "}
-              <b>tax receipts</b>, and ensure the plot has proper legal <b>road access</b>.
+              Depending on the property's location, verify the relevant planning approval — examples
+              may include DTCP approval, CMDA approval (where applicable), or other local planning
+              authority approvals. Approval requirements vary based on jurisdiction.
             </p>
           </div>
 
           <div className="subsection">
-            <h3>Things to Check During a Site Visit</h3>
+            <h3>Things NRIs Should Check Before Buying</h3>
             <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTY5s8OrEtW4fbS_KLdT3ZwpNa1cNULTaJtF2faskRX6aIF7d-bvJpi0sQ&s=10"
-              alt="Site visit to inspect a residential plot"
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpGa3zqaeHOyydJhJcFkw0DACZpxu6A9ocfKMu7_C6Sv0lM9ya25vdUzQ&s=10"
+              alt="Reviewing property ownership and encumbrance documents"
             />
             <p>
-              Never rely only on photos or brochures. Visit the property and check the actual plot
-              location, road width, neighbouring developments, boundary markings, access roads,
-              electricity availability nearby, water sources in the area, and overall surroundings.
-              A physical inspection helps you compare the documents with the actual site.
+              Confirm that the seller has a valid legal title, review the{" "}
+              <b>Encumbrance Certificate</b> to understand registered transactions, and ensure the
+              plot has proper legal <b>road access</b>. If you're abroad, consider asking a trusted
+              family member or authorized representative to inspect the property — virtual tours can
+              help, but they should not replace proper verification. Always consult a qualified
+              property lawyer before registration, and seek legal advice if a Power of Attorney is
+              being used for the transaction.
             </p>
           </div>
 
+          <div className="subsection-plain">
+            <h2>NRI Property Investment Checklist</h2>
+            <div className="table-wrap">
+              <table className="compare-table">
+                <thead>
+                  <tr>
+                    <th>Checklist Item</th>
+                    <th>Why It Matters</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td>Verify Ownership</td><td>Confirms legal title</td></tr>
+                  <tr><td>Review Parent Documents</td><td>Checks ownership history</td></tr>
+                  <tr><td>Check Patta</td><td>Confirms land records</td></tr>
+                  <tr><td>Obtain Encumbrance Certificate</td><td>Reviews registered transactions</td></tr>
+                  <tr><td>Verify Planning Approval</td><td>Ensures applicable approvals are in place</td></tr>
+                  <tr><td>Inspect Site</td><td>Confirms actual property condition</td></tr>
+                  <tr><td>Consult Lawyer</td><td>Helps identify legal risks</td></tr>
+                  <tr><td>Confirm Registration Process</td><td>Ensures lawful transfer of ownership</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div className="why-choose">
-            <h2>Common Mistakes Buyers Make</h2>
-            <ul className="why-list">
-              <li><b>Buying only because it's cheap.</b> A lower price should never replace legal verification.</li>
-              <li><b>Not checking DTCP documents.</b> Always ask for the approval copy and verify it where necessary.</li>
-              <li><b>Ignoring legal opinion.</b> A qualified property lawyer can help identify potential issues before registration.</li>
-              <li><b>Skipping the site visit.</b> Never buy land without seeing it in person or through a trusted representative.</li>
-              <li><b>Believing verbal promises.</b> Request written proof instead of relying only on verbal assurances.</li>
-            </ul>
+            <h2>Common Mistakes NRIs Should Avoid</h2>
+            <div className="mistake-grid">
+              <div className="mistake-card">
+                <h3>Buying Without Legal Verification</h3>
+                <p>Never depend only on online listings or recommendations.</p>
+              </div>
+              <div className="mistake-card">
+                <h3>Believing "Limited-Time Offers"</h3>
+                <p>Don't rush your decision — take time to verify documents.</p>
+              </div>
+              <div className="mistake-card">
+                <h3>Ignoring Local Market Conditions</h3>
+                <p>Compare multiple locations before deciding.</p>
+              </div>
+              <div className="mistake-card">
+                <h3>Buying Without a Site Inspection</h3>
+                <p>Whenever possible, inspect the property or appoint a trusted representative.</p>
+              </div>
+              <div className="mistake-card">
+                <h3>Assuming Every Layout Is Approved</h3>
+                <p>Always ask for documentary proof of approvals.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="subsection-plain">
+            <h2>Should NRIs Invest Inside Pondicherry or Nearby Tamil Nadu?</h2>
+            <div className="usecase-grid">
+              <div className="usecase-card">
+                <h3>Pondicherry</h3>
+                <p>Suitable for buyers seeking established residential neighbourhoods, city convenience, and lifestyle benefits.</p>
+              </div>
+              <div className="usecase-card">
+                <h3>Nearby Tamil Nadu</h3>
+                <p>Locations such as Villupuram, Cuddalore, and Thindivanam may provide more options in developing residential areas.</p>
+              </div>
+            </div>
+            <p>The best choice depends on your budget, goals, and preferred location.</p>
           </div>
 
           <div className="success-stories">
@@ -857,25 +906,24 @@ const DtcpPlotsMarakkanam = () => {
             <div className="success-card">
               <div className="stars">★★★★★</div>
               <p className="quote">
-                "Knowing the layout was DTCP-approved gave us confidence, but what really helped
-                was having every document explained before we signed anything."
+                "Being overseas, I was worried about verifying everything remotely. Having a trusted
+                representative inspect the plot and walk me through each document on a call made the
+                whole process manageable."
               </p>
               <div className="client">
-                Karthik S. <span>Investor, Marakkanam</span>
+                Vijay N. <span>NRI Investor, based in Dubai</span>
               </div>
             </div>
           </div>
 
           <div className="why-choose">
-            <h2>Tips for First-Time Plot Buyers</h2>
+            <h2>Tips for First-Time NRI Property Buyers</h2>
             <ul className="why-list">
-              <li><b>Compare multiple layouts</b> before deciding.</li>
-              <li><b>Verify every document</b> independently.</li>
-              <li><b>Visit the site personally</b> rather than relying on photos.</li>
-              <li><b>Confirm DTCP approval</b> with the relevant authority.</li>
-              <li><b>Check surrounding development</b> and future plans.</li>
-              <li><b>Consult a property lawyer</b> before registration.</li>
-              <li><b>Keep copies of every document</b> for your records.</li>
+              <li><b>Understand the applicable legal requirements</b> before you begin.</li>
+              <li><b>Verify every document</b> using trusted legal professionals.</li>
+              <li><b>Avoid cash transactions</b> that are not legally compliant.</li>
+              <li><b>Read every agreement carefully</b> before signing.</li>
+              <li><b>Keep digital copies</b> of all documents and stay updated on applicable regulations.</li>
             </ul>
             {/* CTA: Post Requirement Navigation */}
             <div className="cta-pill-wrap">
@@ -888,45 +936,45 @@ const DtcpPlotsMarakkanam = () => {
           <div className="subsection-plain">
             <h2>Frequently Asked Questions</h2>
             <div className="faq-item">
-              <h3>Is Marakkanam a good place to buy a plot?</h3>
-              <p>Many buyers consider Marakkanam attractive because of its location between Chennai and Pondicherry, ECR connectivity, and peaceful environment. Suitability depends on your investment goals and proper legal verification.</p>
+              <h3>Can NRIs buy residential property in Pondicherry?</h3>
+              <p>Many NRIs can purchase residential property in India, subject to applicable laws and RBI/FEMA regulations. Consult a legal expert for advice specific to your situation.</p>
             </div>
             <div className="faq-item">
-              <h3>What is a DTCP-approved plot?</h3>
-              <p>A DTCP-approved plot is part of a layout approved by the Directorate of Town and Country Planning, where applicable.</p>
+              <h3>Which areas are popular among NRI buyers?</h3>
+              <p>Kottakuppam, Kalapet, Villianur, Lawspet, Ariyankuppam, and nearby locations in Villupuram, Cuddalore, and Thindivanam are commonly explored.</p>
             </div>
             <div className="faq-item">
-              <h3>Is DTCP approval enough before buying?</h3>
-              <p>No. Along with DTCP approval, you should verify ownership, Patta, Encumbrance Certificate, survey records, and other legal documents.</p>
+              <h3>What documents should I verify before buying?</h3>
+              <p>Review the sale deed, parent documents, Patta, Encumbrance Certificate (EC), survey records, and applicable planning approvals.</p>
             </div>
             <div className="faq-item">
-              <h3>Can I get a bank loan for a DTCP plot?</h3>
-              <p>Many lenders consider loans for eligible residential plots, subject to their policies and property verification.</p>
+              <h3>Is a site visit necessary?</h3>
+              <p>Yes. If you cannot visit personally, arrange for a trusted representative or professional to inspect the property.</p>
             </div>
             <div className="faq-item">
-              <h3>Why is a site visit important?</h3>
-              <p>A site visit helps you verify road access, surroundings, boundaries, and whether the actual property matches the documents.</p>
+              <h3>Can I purchase property through a Power of Attorney?</h3>
+              <p>This may be possible in certain situations, subject to legal requirements. Always seek professional legal advice.</p>
             </div>
             <div className="faq-item">
-              <h3>Why choose verified plots?</h3>
-              <p>Verified plots generally provide better transparency regarding documentation, helping buyers make informed decisions. Independent legal verification is still recommended.</p>
+              <h3>Why should I choose verified plots?</h3>
+              <p>Verified plots generally offer greater transparency because important legal and planning documents have been reviewed before marketing. Buyers should still complete their own due diligence.</p>
             </div>
           </div>
 
           <div className="final-cta">
-            <h2>Ready to Explore Verified DTCP Plots in Marakkanam?</h2>
+            <h2>Ready to Explore Verified Plots in Pondicherry?</h2>
             <p>
-              Let Namma Pondy Properties help you discover verified DTCP-approved residential plots
-              in Marakkanam, Pondicherry, Cuddalore, Villupuram, Tindivanam, and Chennai — with
-              transparent guidance from selection to documentation.
+              Let Namma Pondy Properties help you discover verified residential plots across
+              Pondicherry, Cuddalore, Villupuram, Thindivanam, and Chennai — with transparent
+              support, including virtual consultations for buyers overseas.
             </p>
             <a
               className="final-cta-btn"
-              href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20schedule%20a%20site%20visit%20for%20DTCP%20plots%20in%20Marakkanam."
+              href="https://wa.me/919403892971?text=Hi%2C%20I%27m%20an%20NRI%20and%20I%27d%20like%20to%20schedule%20a%20site%20visit%20or%20virtual%20consultation%20for%20plots%20in%20Pondicherry."
               target="_blank"
               rel="noopener noreferrer"
             >
-              <ClipboardList className="w-5 h-5 mr-1" /> Schedule Your Site Visit
+              🏡 Schedule Your Site Visit
             </a>
           </div>
         </main>
@@ -939,15 +987,15 @@ const DtcpPlotsMarakkanam = () => {
               <div className="name">Namma Pondy Properties</div>
             </div>
             <p className="desc">
-              Helping buyers find verified DTCP-approved plots across Marakkanam, Pondicherry, and
-              surrounding growth corridors — from site selection to documentation.
+              Helping NRIs and Indian buyers discover verified residential plots across Pondicherry
+              and surrounding Tamil Nadu, with transparent support from selection to documentation.
             </p>
             <hr className="side-divider" />
             <div className="tags">
-              <span className="tag-chip">#DTCPApproved</span>
-              <span className="tag-chip">#Marakkanam</span>
-              <span className="tag-chip">#ECR</span>
+              <span className="tag-chip">#NRIInvestment</span>
+              <span className="tag-chip">#Pondicherry</span>
               <span className="tag-chip">#VerifiedPlots</span>
+              <span className="tag-chip">#RealEstate</span>
             </div>
           </div>
 
@@ -958,19 +1006,19 @@ const DtcpPlotsMarakkanam = () => {
               <li>📝 Sale Deed</li>
               <li>📋 Patta Verification</li>
               <li>🔍 Encumbrance Certificate (EC)</li>
-              <li>✅ DTCP Approval Copy</li>
-              <li>🗺️ Survey Number Match</li>
+              <li>✅ Planning / DTCP Approval</li>
+              <li>🗺️ Survey Records</li>
               <li>🧾 Tax Receipts</li>
-              <li>🛣️ Legal Road Access</li>
+              <li>🪪 Seller Identity Documents</li>
             </ul>
           </div>
 
           <div className="side-card consult">
             <h4>Need a Consultation?</h4>
-            <p>Talk to our team about verified DTCP plots in Marakkanam that match your budget and purpose.</p>
+            <p>Talk to our team about verified plots in Pondicherry — including virtual consultations if you're overseas.</p>
             <a
               className="wa-btn"
-              href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20a%20consultation%20about%20DTCP%20plots%20in%20Marakkanam."
+              href="https://wa.me/919403892971?text=Hi%2C%20I%27m%20an%20NRI%20and%20I%27d%20like%20a%20consultation%20about%20plots%20in%20Pondicherry."
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -983,4 +1031,4 @@ const DtcpPlotsMarakkanam = () => {
   );
 };
 
-export default DtcpPlotsMarakkanam;
+export default NriPropertyInvestment;

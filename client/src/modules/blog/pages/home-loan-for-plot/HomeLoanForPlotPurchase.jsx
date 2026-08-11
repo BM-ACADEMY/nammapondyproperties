@@ -1,6 +1,9 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Home, ChevronRight, User, Calendar, MessageSquare, Landmark, FileText } from "lucide-react";
+
+const CANONICAL_URL = "https://nammapondyproperties.com/blog/home-loan-for-plot";
 
 const HomeLoanForPlotPurchase = () => {
   useEffect(() => {
@@ -13,6 +16,26 @@ const HomeLoanForPlotPurchase = () => {
 
   return (
     <div className="blog-detail-wrapper">
+      <Helmet>
+        <title>Home Loan for Plot Purchase – Complete Process, Eligibility & Documents Guide (2026) | Namma Pondy Properties</title>
+        <meta
+          name="description"
+          content="Can you get a home loan for a plot? Complete 2026 guide to eligibility, step-by-step process, required documents, and what to verify before applying — with Pondicherry examples."
+        />
+        <link rel="canonical" href={CANONICAL_URL} />
+        <meta property="og:type" content="article" />
+        <meta property="og:url" content={CANONICAL_URL} />
+        <meta
+          property="og:title"
+          content="Home Loan for Plot Purchase – Complete Process, Eligibility & Documents Guide (2026)"
+        />
+        <meta
+          property="og:description"
+          content="Eligibility, step-by-step process, required documents, and what to verify before applying for a plot loan — with Pondicherry examples."
+        />
+        <meta property="og:image" content="https://nammapondyproperties.com/blog/land-registration-docs.webp" />
+      </Helmet>
+
       <style>{`
         .blog-detail-wrapper {
           --coral: #fb2c36;
@@ -524,7 +547,7 @@ const HomeLoanForPlotPurchase = () => {
 
           <div className="byline">
             <span className="flex items-center gap-1.5"><User className="w-4 h-4 text-[#166aa8]" /> Namma Pondy Properties Team</span>
-            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#166aa8]" /> 8 August 2026</span>
+            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-[#166aa8]" /> 24 July 2026</span>
           </div>
 
           <img
@@ -687,6 +710,16 @@ const HomeLoanForPlotPurchase = () => {
               investors and retirement planners can secure a plot now and build later. And families building their
               dream home get a structured, verified path from purchase through construction.
             </p>
+            <div className="cta-pill-wrap">
+              <a
+                className="cta-pill"
+                href="https://wa.me/919403892971?text=Hi%2C%20I%27d%20like%20to%20know%20if%20a%20plot%20loan%20fits%20my%20situation."
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Landmark className="w-4 h-4" /> Ask If a Plot Loan Fits You
+              </a>
+            </div>
           </div>
 
           <div className="why-choose">

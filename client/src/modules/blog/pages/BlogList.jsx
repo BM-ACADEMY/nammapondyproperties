@@ -66,13 +66,13 @@ const BlogList = () => {
     },
     {
       id: 5,
-      slug: "property-registration-process-tamil-nadu",
-      url: "/blog/property-registration-process-tamil-nadu",
+      slug: "home-loan-for-plot",
+      url: "/blog/home-loan-for-plot",
       title: "Home Loan for Plot Purchase — Complete Process, Eligibility & Documents Guide (2026)",
       excerpt:
         "Can you get a home loan for a plot? Complete 2026 guide to eligibility, step-by-step process, required documents, and what to verify before applying — with Pondicherry examples.",
       category: "Home Loan Guide",
-      image: "/blog/land-registration-docs.webp",
+      image: "/blog/homeloan.webp",
       author: "Namma Pondy Properties Team",
       date: "Aug 8, 2026",
       categoryBg: "bg-violet-50 text-violet-700 border border-violet-100",
@@ -98,10 +98,36 @@ const BlogList = () => {
       excerpt:
         "Marakkanam is emerging as a popular land investment destination between Chennai and Pondicherry. A complete guide to DTCP-approved plots, documents to verify, and buyer tips.",
       category: "DTCP Plots • Marakkanam",
-      image: "/blog/beach.webp",
+      image: "/blog/marakkanam.webp",
       author: "Namma Pondy Properties Team",
-      date: "Aug 11, 2026",
+      date: "Aug 13, 2026",
       categoryBg: "bg-cyan-50 text-cyan-700 border border-cyan-100",
+    },
+    {
+      id: 8,
+      slug: "property-registration-process-tamil-nadu",
+      url: "/blog/property-registration-process-tamil-nadu",
+      title: "Property Registration Process in Tamil Nadu — Complete Step-by-Step Guide for Land & Plot Buyers (2026)",
+      excerpt:
+        "Complete step-by-step guide to the property registration process in Tamil Nadu — documents required, Sub-Registrar Office visit, biometric verification, and what to check before signing.",
+      category: "Legal & Registration Guide",
+      image: "/blog/land-registration-docs.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 17, 2026",
+      categoryBg: "bg-violet-50 text-violet-700 border border-violet-100",
+    },
+    {
+      id: 9,
+      slug: "nri-property-investment-pondicherry",
+      url: "/blog/nri-property-investment-pondicherry",
+      title: "NRI Property Investment Pondicherry — Complete Guide to Buying Plots & Land in 2026",
+      excerpt:
+        "Complete guide to NRI property investment in Pondicherry — eligibility, best areas, documents to verify, planning approvals, and mistakes to avoid before buying land.",
+      category: "NRI Investment • Pondicherry",
+      image: "/blog/nri.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 19, 2026",
+      categoryBg: "bg-indigo-50 text-indigo-700 border border-indigo-100",
     },
   ];
 
