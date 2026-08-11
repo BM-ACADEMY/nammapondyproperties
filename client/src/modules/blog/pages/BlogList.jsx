@@ -90,6 +90,19 @@ const BlogList = () => {
       date: "Aug 10, 2026",
       categoryBg: "bg-rose-50 text-rose-700 border border-rose-100",
     },
+    {
+      id: 7,
+      slug: "dtcp-plots-marakkanam",
+      url: "/blog/dtcp-plots-marakkanam",
+      title: "DTCP Plots in Marakkanam — Complete Buyer's Guide for Smart Land Investment (2026)",
+      excerpt:
+        "Marakkanam is emerging as a popular land investment destination between Chennai and Pondicherry. A complete guide to DTCP-approved plots, documents to verify, and buyer tips.",
+      category: "DTCP Plots • Marakkanam",
+      image: "/blog/beach.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 11, 2026",
+      categoryBg: "bg-cyan-50 text-cyan-700 border border-cyan-100",
+    },
   ];
 
   return (

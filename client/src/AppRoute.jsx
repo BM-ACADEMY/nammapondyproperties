@@ -28,6 +28,7 @@ const DtcpVsCmdaApproval = lazy(() => import("./modules/blog/pages/dtcp-vs-cmda-
 const LandInvestmentPondicherry = lazy(() => import("./modules/blog/pages/land-investment-pondicherry/LandInvestmentPondicherry"));
 const HomeLoanForPlotPurchase = lazy(() => import("./modules/blog/pages/property-registration-process-tamil-nadu/HomeLoanForPlotPurchase"));
 const BestAreasToBuyPlots = lazy(() => import("./modules/blog/pages/best-areas-to-buy-plots-pondicherry/BestAreasToBuyPlots"));
+const DtcpPlotsMarakkanam = lazy(() => import("./modules/blog/pages/dtcp-plots-marakkanam/DtcpPlotsMarakkanam"));
 
 const PageLoader = () => <Loader />;
 
@@ -145,6 +146,14 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <BestAreasToBuyPlots />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/dtcp-plots-marakkanam"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DtcpPlotsMarakkanam />
             </Suspense>
           }
         />
