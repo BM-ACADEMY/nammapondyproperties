@@ -154,7 +154,7 @@ const BlogList = () => {
 
         {/* Blog Grid */}
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl">
-          {blogs.map((blog) => (
+          {[...blogs].reverse().map((blog) => (
             <article
               key={blog.id}
               className="flex flex-col bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 w-full"
