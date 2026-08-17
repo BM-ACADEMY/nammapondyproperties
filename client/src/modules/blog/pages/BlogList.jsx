@@ -129,6 +129,45 @@ const BlogList = () => {
       date: "Aug 19, 2026",
       categoryBg: "bg-indigo-50 text-indigo-700 border border-indigo-100",
     },
+    {
+      id: 10,
+      slug: "plots-for-sale-villupuram",
+      url: "/blog/plots-for-sale-villupuram",
+      title: "Plots for Sale in Villupuram — Complete Guide for Homebuyers & Investors",
+      excerpt:
+        "Complete guide to plots for sale in Villupuram — connectivity, popular locations, documents to verify, DTCP approval, and tips for homebuyers and investors.",
+      category: "Plots for Sale • Villupuram",
+      image: "/blog/Villupuram.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 24, 2026",
+      categoryBg: "bg-teal-50 text-teal-700 border border-teal-100",
+    },
+    {
+      id: 11,
+      slug: "dtcp-plots-tindivanam",
+      url: "/blog/dtcp-plots-tindivanam",
+      title: "DTCP Plots in Tindivanam — Complete Guide for Homebuyers & Investors",
+      excerpt:
+        "Complete guide to DTCP plots in Tindivanam — connectivity, documents to verify, DTCP approval explained, common mistakes, and tips for homebuyers and investors.",
+      category: "DTCP Plots • Tindivanam",
+      image: "/blog/Tindivanam.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 26, 2026",
+      categoryBg: "bg-orange-50 text-orange-700 border border-orange-100",
+    },
+    {
+      id: 12,
+      slug: "plots-for-sale-cuddalore",
+      url: "/blog/plots-for-sale-cuddalore",
+      title: "Plots for Sale in Cuddalore — Complete Guide for Homebuyers & Investors",
+      excerpt:
+        "Complete guide to plots for sale in Cuddalore — connectivity, popular localities, documents to verify, approved layouts, and tips for homebuyers and investors.",
+      category: "Plots for Sale • Cuddalore",
+      image: "/blog/Cuddalore.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 28, 2026",
+      categoryBg: "bg-cyan-50 text-cyan-700 border border-cyan-100",
+    },
   ];
 
   return (

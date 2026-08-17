@@ -31,6 +31,9 @@ const BestAreasToBuyPlots = lazy(() => import("./modules/blog/pages/best-areas-t
 const DtcpPlotsMarakkanam = lazy(() => import("./modules/blog/pages/dtcp-plots-marakkanam/DtcpPlotsMarakkanam"));
 const HomeLoanForPlotPurchase = lazy(() => import("./modules/blog/pages/home-loan-for-plot/HomeLoanForPlotPurchase"));
 const NriPropertyInvestment = lazy(() => import("./modules/blog/pages/nri-property-investment-pondicherry/NriPropertyInvestment"));
+const PlotsForSaleVillupuram = lazy(() => import("./modules/blog/pages/plots-for-sale-villupuram/PlotsForSaleVillupuram"));
+const DtcpPlotsTindivanam = lazy(() => import("./modules/blog/pages/dtcp-plots-tindivanam/DtcpPlotsTindivanam"));
+const PlotsForSaleCuddalore = lazy(() => import("./modules/blog/pages/plots-for-sale-cuddalore/PlotsForSaleCuddalore"));
 
 const PageLoader = () => <Loader />;
 
@@ -172,6 +175,30 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <NriPropertyInvestment />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/plots-for-sale-villupuram"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PlotsForSaleVillupuram />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/dtcp-plots-tindivanam"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <DtcpPlotsTindivanam />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/plots-for-sale-cuddalore"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PlotsForSaleCuddalore />
             </Suspense>
           }
         />
