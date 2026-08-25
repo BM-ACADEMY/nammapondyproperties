@@ -168,6 +168,19 @@ const BlogList = () => {
       date: "Aug 28, 2026",
       categoryBg: "bg-cyan-50 text-cyan-700 border border-cyan-100",
     },
+    {
+      id: 13,
+      slug: "plots-near-pondicherry",
+      url: "/blog/plots-near-pondicherry",
+      title: "Plots Near Pondicherry — Panruti, Chidambaram & Karaikal Buyer's Guide",
+      excerpt:
+        "Comparing plots near Pondicherry across Panruti, Chidambaram, and Karaikal — connectivity, lifestyle fit, documents to verify, and mistakes to avoid.",
+      category: "Plots Near Pondicherry",
+      image: "/blog/pondicherry.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Aug 31, 2026",
+      categoryBg: "bg-blue-50 text-blue-700 border border-blue-100",
+    },
   ];
 
   return (

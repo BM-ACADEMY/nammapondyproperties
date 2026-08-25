@@ -34,6 +34,7 @@ const NriPropertyInvestment = lazy(() => import("./modules/blog/pages/nri-proper
 const PlotsForSaleVillupuram = lazy(() => import("./modules/blog/pages/plots-for-sale-villupuram/PlotsForSaleVillupuram"));
 const DtcpPlotsTindivanam = lazy(() => import("./modules/blog/pages/dtcp-plots-tindivanam/DtcpPlotsTindivanam"));
 const PlotsForSaleCuddalore = lazy(() => import("./modules/blog/pages/plots-for-sale-cuddalore/PlotsForSaleCuddalore"));
+const PlotsNearPondicherry = lazy(() => import("./modules/blog/pages/plots-near-pondicherry/PlotsNearPondicherry"));
 
 const PageLoader = () => <Loader />;
 
@@ -199,6 +200,14 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <PlotsForSaleCuddalore />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/plots-near-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PlotsNearPondicherry />
             </Suspense>
           }
         />
