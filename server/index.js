@@ -67,9 +67,16 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
 app.use(cookieParser());
 
 // CORS (after parsers)
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://127.0.0.1:5173"
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
@@ -162,7 +169,7 @@ const { initCronJobs } = require("./utils/cronJobs");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
   },
 });

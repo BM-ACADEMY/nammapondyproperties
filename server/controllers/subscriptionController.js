@@ -6,10 +6,23 @@ const User = require("../models/User");
 const PaymentHistory = require("../models/PaymentHistory");
 const Coupon = require("../models/Coupon");
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpayInstance = null;
+const getRazorpayInstance = () => {
+  if (razorpayInstance) return razorpayInstance;
+
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!key_id || !key_secret) {
+    throw new Error("Razorpay credentials (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) are not configured in .env");
+  }
+
+  razorpayInstance = new Razorpay({
+    key_id,
+    key_secret,
+  });
+  return razorpayInstance;
+};
 
 // 1. Create Order
 exports.createOrder = async (req, res) => {
@@ -86,6 +99,7 @@ exports.createOrder = async (req, res) => {
       receipt: `receipt_${Date.now()}`,
     };
 
+    const razorpay = getRazorpayInstance();
     const order = await razorpay.orders.create(options);
     res.json({
       orderId: order.id,
