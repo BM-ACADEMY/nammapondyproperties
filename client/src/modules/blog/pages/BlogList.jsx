@@ -181,6 +181,19 @@ const BlogList = () => {
       date: "Aug 31, 2026",
       categoryBg: "bg-blue-50 text-blue-700 border border-blue-100",
     },
+    {
+      id: 14,
+      slug: "property-management-away-from-pondicherry",
+      url: "/blog/property-management-away-from-pondicherry",
+      title: "How to Protect and Maintain Your Property When You Live Away From Pondicherry",
+      excerpt:
+        "Practical guide for owners living in another city or abroad — regular inspections, document upkeep, tax tracking, local contacts, boundary protection, and NRI tips.",
+      category: "Property Management • Pondicherry",
+      image: "/blog/PropertyManagementAwayFromPondicherry.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Sep 19, 2026",
+      categoryBg: "bg-sky-50 text-sky-700 border border-sky-100",
+    },
   ];
 
   return (

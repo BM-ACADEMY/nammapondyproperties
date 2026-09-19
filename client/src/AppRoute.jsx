@@ -35,6 +35,7 @@ const PlotsForSaleVillupuram = lazy(() => import("./modules/blog/pages/plots-for
 const DtcpPlotsTindivanam = lazy(() => import("./modules/blog/pages/dtcp-plots-tindivanam/DtcpPlotsTindivanam"));
 const PlotsForSaleCuddalore = lazy(() => import("./modules/blog/pages/plots-for-sale-cuddalore/PlotsForSaleCuddalore"));
 const PlotsNearPondicherry = lazy(() => import("./modules/blog/pages/plots-near-pondicherry/PlotsNearPondicherry"));
+const PropertyManagementAwayFromPondicherry = lazy(() => import("./modules/blog/pages/property-management-away-from-pondicherry/PropertyManagementAwayFromPondicherry"));
 
 const PageLoader = () => <Loader />;
 
@@ -208,6 +209,14 @@ const AppRoutes = () => {
           element={
             <Suspense fallback={<PageLoader />}>
               <PlotsNearPondicherry />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/blog/property-management-away-from-pondicherry"
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <PropertyManagementAwayFromPondicherry />
             </Suspense>
           }
         />
