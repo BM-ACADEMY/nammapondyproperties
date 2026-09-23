@@ -1,6 +1,7 @@
 const Contact = require("../models/Contact");
 const RequestCall = require("../models/RequestCall");
 const { sendContactNotificationToAdmin, sendCallRequestNotificationToAdmin, sendThankYouEmail } = require("../utils/emailService");
+const axios = require("axios");
 
 // --- Contact Form ---
 
@@ -27,6 +28,13 @@ exports.createContact = async (req, res) => {
       await sendThankYouEmail(savedContact, "contact");
     } catch (emailError) {
       console.error("Failed to send email notifications:", emailError);
+    }
+
+    // Send data to webhook
+    try {
+      await axios.post("https://leados-n8n.abmgroups.org/webhook/contact-form", req.body);
+    } catch (webhookError) {
+      console.error("Failed to send data to webhook:", webhookError.message);
     }
 
     res.status(201).json({
