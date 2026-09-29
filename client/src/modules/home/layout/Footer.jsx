@@ -137,8 +137,8 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-              {businessTypes.map((type) => (
-                <li key={type._id}>
+              {(Array.isArray(businessTypes) ? businessTypes : []).map((type) => (
+                <li key={type._id || type.name}>
                   <Link
                     to={`/business/${slugify(type.name)}`}
                     className="text-gray-400 hover:text-white transition-colors capitalize underline-offset-4 hover:underline"
