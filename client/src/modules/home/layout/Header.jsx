@@ -46,8 +46,7 @@ const Header = () => {
 
   // Sort business types: Agent -> Builder/Promoter -> Owner
   const sortedBusinessTypes = useMemo(() => {
-    const types = Array.isArray(businessTypes) ? businessTypes : [];
-    return [...types].sort((a, b) => {
+    return [...businessTypes].sort((a, b) => {
       const nameA = (
         typeof a.name === "string" ? a.name : a.name?.name || ""
       ).toLowerCase();
@@ -67,8 +66,7 @@ const Header = () => {
   }, [businessTypes]);
 
   const builderType = useMemo(() => {
-    const types = Array.isArray(businessTypes) ? businessTypes : [];
-    return types.find((t) => {
+    return businessTypes.find((t) => {
       const n = typeof t.name === "string" ? t.name : t.name?.name || "";
       return (
         n.toLowerCase().includes("builder") ||
