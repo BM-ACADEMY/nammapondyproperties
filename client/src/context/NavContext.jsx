@@ -23,12 +23,12 @@ export const NavProvider = ({ children }) => {
                     axios.get(`${import.meta.env.VITE_API_URL}/property-types?status=active`)
                 ]);
 
-                setBusinessTypes(Array.isArray(businessRes.data) ? businessRes.data : []);
-                setPropertyCategories(Array.isArray(filtersRes.data?.categories) ? filtersRes.data.categories : []);
-                setPropertyTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
-                setLocations(Array.isArray(filtersRes.data?.locations) ? filtersRes.data.locations : []);
-                setApprovalTypes(Array.isArray(filtersRes.data?.approvals) ? filtersRes.data.approvals : []);
-                setPriceRanges(Array.isArray(filtersRes.data?.priceRanges) ? filtersRes.data.priceRanges : []);
+                setBusinessTypes(businessRes.data);
+                setPropertyCategories(filtersRes.data.categories || []);
+                setPropertyTypes(typesRes.data);
+                setLocations(filtersRes.data.locations || []);
+                setApprovalTypes(filtersRes.data.approvals || []);
+                setPriceRanges(filtersRes.data.priceRanges || []);
                 setMaxPrice(filtersRes.data.maxPrice || 10000000);
             } catch (error) {
                 console.error("Error fetching navigation data:", error);
