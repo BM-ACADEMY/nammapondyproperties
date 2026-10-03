@@ -194,6 +194,19 @@ const BlogList = () => {
       date: "Sep 19, 2026",
       categoryBg: "bg-sky-50 text-sky-700 border border-sky-100",
     },
+    {
+      id: 15,
+      slug: "property-management",
+      url: "/blog/property-management",
+      title: "What Property Management Actually Costs in Pondicherry",
+      excerpt:
+        "There is no single fixed price — see how property type, location, visit frequency, and maintenance needs affect the cost, and what to confirm before hiring a property manager.",
+      category: "Property Management • Pondicherry",
+      image: "/blog/propertymanagement.webp",
+      author: "Namma Pondy Properties Team",
+      date: "Oct 3, 2026",
+      categoryBg: "bg-sky-50 text-sky-700 border border-sky-100",
+    },
   ];
 
   return (
