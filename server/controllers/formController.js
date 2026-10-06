@@ -31,11 +31,29 @@ exports.createContact = async (req, res) => {
     }
 
     // Send data to webhook
-    try {
-      await axios.post("https://leados-n8n.abmgroups.org/webhook/contact-form", req.body);
-    } catch (webhookError) {
-      console.error("Failed to send data to webhook:", webhookError.message);
-    }
+    // Send data to webhook
+try {
+  const website =
+    req.headers.origin ||
+    req.headers.referer ||
+    "Unknown Website";
+
+  const webhookData = {
+    ...req.body,
+    website: website,
+  };
+
+  await axios.post(
+    "https://leados-n8n.abmgroups.org/webhook/contact-form",
+    webhookData
+  );
+
+} catch (webhookError) {
+  console.error(
+    "Failed to send data to webhook:",
+    webhookError.message
+  );
+}
 
     res.status(201).json({
       success: true,
